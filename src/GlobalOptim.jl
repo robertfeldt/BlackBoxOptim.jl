@@ -1,6 +1,10 @@
 module GlobalOptim
 
-export SingleObjectiveProblems
+export  SingleObjectiveProblems, Optimizer, PopulationOptimizer, 
+        DEOpt
+
+abstract Optimizer
+abstract PopulationOptimizer <: Optimizer
 
 # We base our design on the object-oriented, ask-and-tell "API format" for 
 # writing optimizers as proposed in:
@@ -32,7 +36,9 @@ export SingleObjectiveProblems
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
 
-# Problem for testing
+include("differential_evolution.jl")
+
+# Problems for testing
 include(joinpath("problems", "single_objective.jl"))
 
 end # module GlobalOptim
