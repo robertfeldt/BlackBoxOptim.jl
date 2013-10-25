@@ -1,6 +1,7 @@
 module GlobalOptim
 
-export  SingleObjectiveProblems, Optimizer, PopulationOptimizer, 
+export  SingleObjectiveProblems, OptimizationProblem,
+        Optimizer, PopulationOptimizer, 
         DEOpt
 
 abstract Optimizer
@@ -40,5 +41,29 @@ include("differential_evolution.jl")
 
 # Problems for testing
 include(joinpath("problems", "single_objective.jl"))
+
+# Duplicate a tuple to indicate a whole search space, i.e. symmetrically.
+function symmetric_search_space(dims, dimRange)
+  [dimRange for i=1:dims]
+end
+
+function rand_population(populationSize, searchSpace)
+  dims = length(searchSpace)
+  mins = [s[1] for s=searchSpace]
+  maxs = [s[2] for s=searchSpace]
+  deltas = maxs - mins
+  # Basically min + delta * rand(), but broadcast over the columns...
+  broadcast(+, mins', broadcast(*, deltas', rand(populationSize, dims)))
+end
+
+function optimize(problem::SingleObjectiveProblems.OptimizationProblem, opt::Optimizer, numSteps = 1e4)
+  for(step in 1:numSteps)
+    candidates = ask(de)
+    fitness = [(problem.f(c[1]), c[1], c[2]) for c=candidates]
+    sorted = sort(fitness; by = (t) -> t[1])
+    ranked_candidates = map((t) -> (t[2], t[3]), sorted)
+    tell(de, ranked_candidates)
+  end
+end
 
 end # module GlobalOptim

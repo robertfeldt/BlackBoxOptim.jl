@@ -7,7 +7,7 @@ type DEOpt <: PopulationOptimizer
   # A search space is defined by the min and max values (in tuples) for each
   # of its dimenions. The dimension is the length of an individual, i.e. the
   # number of Float64 values in it.
-  searchSpace::Array{(Float64,Float64),1}
+  search_space::Array{(Float64,Float64),1}
 
   # Options
   options::Dict{Any,Any}
@@ -26,12 +26,17 @@ function ask(de::DEOpt)
   # Sample parents and target
   numparents = de.options["NumParents"]
   indices = de.sample(de, 1 + numparents)
+  #print("indices = "); show(indices); println("")
   parent_indices = indices[1:numparents]
+  #print("parent_indices = "); show(parent_indices); println("")
   target_index = indices[end]
+  #print("target_index = "); show(target_index); println("")
   target = de.population[target_index,:]
+  #print("target = "); show(target); println("")
 
   # DE/rand/1 mutation strategy
   donor = de.mutate(de, parent_indices)
+  #print("donor = "); show(donor); println("")
 
   # Crossover donor and target
   trial = de.crossover(de, target, donor)
@@ -45,7 +50,7 @@ function ask(de::DEOpt)
 end
 
 function random_sampler(de::DEOpt, numSamples)
-  sample(1:length(de.population), numSamples)
+  sample(1:length(de.population), numSamples; replace = false)
 end
 
 # DE/rand/1 mutation strategy
@@ -65,7 +70,7 @@ function de_crossover_binomial(de::DEOpt, target, donor)
 
   # Now crossover randomly for the rest of the indices
   switch = rand(length(trial)) .<= de.options["cr"]
-  trial[switch] = donor[switch]
+  trial[switch,:] = donor[switch,:]
 
   return trial
 end
@@ -73,12 +78,17 @@ end
 # If we come out-of-bounds we randomly sample between the target value
 # and the bound.
 function rand_bound_from_target!(individual, target, searchSpace)
-  for i in 1:length(searchSpace)
+  for i in 1:length(individual)
     min, max = searchSpace[i]
-    if individual[i] < min
-      individual[i] = min + rand() * (target[i] - min)
-    elseif individual[i] > max
-      individual[i] = target[i] + rand() * (max - target[i])
+    #print("min = "); show(min); println("")
+    #print("max = "); show(max); println("")
+    #print("i = "); show(i); println("")
+    #print("ind[i,1] = "); show(individual[i,1]); println("")
+
+    if individual[i,1] < min
+      individual[i,1] = min + rand() * (target[i,1] - min)
+    elseif individual[i,1] > max
+      individual[i,1] = target[i,1] + rand() * (max - target[i,1])
     end
   end
   individual
@@ -111,6 +121,3 @@ DEOpt(population, searchSpace, options) =
     de_mutation_rand_1, 
     de_crossover_binomial, 
     rand_bound_from_target!)
-
-#DEOpt(population, searchSpace) =
-#  DEOpt(population, searchSpace, DE_DefaultOptions)
