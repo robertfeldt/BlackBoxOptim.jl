@@ -30,18 +30,7 @@ module GlobalOptim
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
 
-  module Problems
-    immutable OptimizationProblem
-      name::ASCIIString
-      f::Function
-      initial_range::Vector{Float64}      
-    end
-
-    examples = Dict{ASCIIString, OptimizationProblem}()
-
-    include(joinpath("problems", "sphere.jl"))
-    include(joinpath("problems", "schwefel.jl"))
-  end
-end
+  # Problem for testing
+  include(joinpath("problems", "single_objective.jl"))
 
 end # module GlobalOptim
