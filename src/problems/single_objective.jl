@@ -51,11 +51,11 @@ examples["Schwefel1.2"] = OptimizationProblem("Schwefel1.2",
 #  http://150.214.190.154/EAMHCO/pdf/JADE.pdf
 # Initial range: [-100, 100]^d
 function schwefel2_21(x)
-  maximum(abs(x))
+  indmax(abs(x))
 end
 
 examples["Schwefel2.21"] = OptimizationProblem("Schwefel2.21",
-                            schwefel2_22,
+                            schwefel2_21,
                             [-100.0, 100.0])
 
 end # module SingleObjectiveProblems
