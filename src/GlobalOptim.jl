@@ -1,5 +1,7 @@
 module GlobalOptim
 
+export SingleObjectiveProblems
+
 # We base our design on the object-oriented, ask-and-tell "API format" for 
 # writing optimizers as proposed in:
 #
@@ -30,7 +32,7 @@ module GlobalOptim
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
 
-  # Problem for testing
-  include(joinpath("problems", "single_objective.jl"))
+# Problem for testing
+include(joinpath("problems", "single_objective.jl"))
 
 end # module GlobalOptim
