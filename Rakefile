@@ -1,5 +1,5 @@
-task :test do
-  sh "julia -L src/GlobalOptim.jl test/test_problems_single_objective.jl"
+task :runtest do
+  sh "julia -L src/GlobalOptim.jl test/runtests.jl"
 end
 
-task :default => :test
+task :default => :runtest

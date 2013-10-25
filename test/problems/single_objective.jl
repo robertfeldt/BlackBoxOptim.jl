@@ -1,4 +1,3 @@
-using FactCheck
 using GlobalOptim.SingleObjectiveProblems
 
 facts("Sphere") do
