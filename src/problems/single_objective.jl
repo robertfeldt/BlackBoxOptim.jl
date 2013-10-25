@@ -1,5 +1,7 @@
 module SingleObjectiveProblems
 
+  export OptimizationProblem, examples
+
   immutable OptimizationProblem
     name::ASCIIString
     f::Function
