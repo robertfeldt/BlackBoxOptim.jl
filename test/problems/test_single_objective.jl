@@ -18,6 +18,10 @@ facts("Sphere") do
 
   @fact numdims(p) => 2 # Default is 2 if not specified
   @fact search_space(p) => [(-100.0, 100.0), (-100.0, 100.0)]
+
+  p2 = GlobalOptim.Problems.set_numdims!(3, p)
+  @fact numdims(p2) => 3
+  @fact search_space(p2) => [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
 facts("Schwefel2.22") do
@@ -38,6 +42,10 @@ facts("Schwefel2.22") do
 
   @fact numdims(p) => 2 # Default is 2 if not specified
   @fact search_space(p) => [(-10.0, 10.0), (-10.0, 10.0)]
+
+  p2 = GlobalOptim.Problems.set_numdims!(4, p)
+  @fact numdims(p2) => 4
+  @fact search_space(p2) => [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
 facts("Schwefel1.2") do

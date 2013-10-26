@@ -50,7 +50,7 @@ function ask(de::DEOpt)
 end
 
 function random_sampler(de::DEOpt, numSamples)
-  sample(1:length(de.population), numSamples; replace = false)
+  sample(1:size(de.population,1), numSamples; replace = false)
 end
 
 # DE/rand/1 mutation strategy
@@ -70,7 +70,11 @@ function de_crossover_binomial(de::DEOpt, target, donor)
 
   # Now crossover randomly for the rest of the indices
   switch = rand(length(trial)) .<= de.options["cr"]
-  trial[switch,:] = donor[switch,:]
+  #print("switch = "); show(switch); println("")
+  #print("trial = "); show(trial); println("")
+  #print("donor = "); show(donor); println("")
+  trial[:,switch] = donor[:,switch]
+  #print("trial = "); show(trial); println("")
 
   return trial
 end
@@ -85,10 +89,10 @@ function rand_bound_from_target!(individual, target, searchSpace)
     #print("i = "); show(i); println("")
     #print("ind[i,1] = "); show(individual[i,1]); println("")
 
-    if individual[i,1] < min
-      individual[i,1] = min + rand() * (target[i,1] - min)
-    elseif individual[i,1] > max
-      individual[i,1] = target[i,1] + rand() * (max - target[i,1])
+    if individual[i] < min
+      individual[i] = min + rand() * (target[i] - min)
+    elseif individual[i] > max
+      individual[i] = target[i] + rand() * (max - target[i])
     end
   end
   individual
@@ -97,13 +101,18 @@ end
 # Tell the optimizer about the ranking of candidates.
 function tell!(de::DEOpt, 
   # archive::Archive, # Skip for now
-  rankedCandidates::Vector{Float64})
+  rankedCandidates)
   num_candidates = length(rankedCandidates)
   for i in 1:div(num_candidates, 2)
     candidate, index = rankedCandidates[i]
-    if candidate != de.population[index]
-      de.population[index] = candidate
-      print("Better candidates found! (", show(candidate), " > ", show(de.population[index]))
+    if candidate != de.population[index, :]
+      #print("candidate = "); show(candidate); println("")
+      #print("index = "); show(index); println("")
+      #print("target = "); show(de.population[index,:]); println("")
+      old = de.population[index,:]
+      de.population[index,:] = candidate
+      #println("\n!!! Better candidates found !!!"); show(candidate); println(" > "); show(old)
+      print("+")
     end
   end
 end

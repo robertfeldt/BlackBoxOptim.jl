@@ -46,7 +46,7 @@ facts("de_crossover_binomial") do
   context("always copies at least one element from donor") do
     for(i in 1:NumTestRepetitions)
       len = rand(1:100)
-      target, donor = rand(len, 1), rand(len, 1)
+      target, donor = rand(1, len), rand(1, len)
       res = GlobalOptim.de_crossover_binomial(DE, target, donor)
       @fact any([ in(x, donor) for x = res ]) => true
     end
@@ -55,7 +55,7 @@ facts("de_crossover_binomial") do
   context("unlikely to copy everything if vectors are large") do
     for(i in 1:NumTestRepetitions)
       len = 50
-      target, donor = rand(len, 1), rand(len, 1)
+      target, donor = rand(1, len), rand(1, len)
       res = GlobalOptim.de_crossover_binomial(DE, target, donor)
       @fact any([ in(x, target) for x = res ]) => true
     end

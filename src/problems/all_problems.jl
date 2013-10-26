@@ -1,9 +1,9 @@
 module Problems
 
 export  OptimizationProblem,
-        numdims, search_space
+        numdims, search_space, set_numdims!
 
-immutable OptimizationProblem
+type OptimizationProblem
   name::ASCIIString
 
   # Objective functions
@@ -23,7 +23,15 @@ immutable OptimizationProblem
 end
 
 # Number of dimensions is by default 2, unless already specified.
-numdims(p::OptimizationProblem) = (p.dimensions == nothing) ? 2 : p.dims
+numdims(p::OptimizationProblem) = (p.dimensions == nothing) ? 2 : p.dimensions
+
+function set_numdims!(ndims, p::OptimizationProblem)
+  p.dimensions = ndims
+  if (p.any_dimensional)
+    p.search_space = [p.range_per_dimension for i in 1:numdims(p)]
+  end
+  p
+end
 
 function search_space(p::OptimizationProblem)
   if (p.search_space == nothing)

@@ -6,6 +6,6 @@ my_tests = [
   "test_differential_evolution.jl"
 ]
 
-for my_test in my_tests
-  include(my_test)
+for t in my_tests
+  include(t)
 end
