@@ -1,6 +1,53 @@
 NumTestRepetitions = 100
 
+DE = de_rand_1_bin(
+  reshape([1.0:10.0], 10, 1),
+  [(0.0, 10.0)],
+  {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
+)
+
 facts("Differential evolution optimizer") do
+
+context("random_sampler") do
+  for(i in 1:NumTestRepetitions)
+    numSamples = rand(1:8)
+    sampled = GlobalOptim.random_sampler(DE, numSamples)
+
+    @fact length(sampled) => numSamples
+
+    popindices = 1:popsize(DE)
+
+    # All sampled indices are indices into the population
+    @fact all([in(index, popindices) for index in sampled]) => true
+  end
+end
+
+context("radius_limited_sampler") do
+  DE = de_rand_1_bin(
+    rand(100,1),
+    [(0.0, 10.0)],
+    {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
+  )
+
+  psize = popsize(DE)
+  popindices = 1:popsize(DE)
+  sampler_radius = DE.options["SamplerRadius"]
+
+  for(i in 1:NumTestRepetitions)
+    numSamples = rand(1:sampler_radius)
+    sampled = GlobalOptim.radius_limited_sampler(DE, numSamples)
+
+    @fact length(sampled) => numSamples
+
+    # All sampled indices are indices into the population
+    @fact all([in(index, popindices) for index in sampled]) => true
+
+    mini, maxi = minimum(sampled), maximum(sampled)
+    if (maxi - mini) > max(numSamples+2, sampler_radius)
+      @fact mini + psize <= maxi + sampler_radius => true
+    end
+  end
+end
 
 context("rand_bound_from_target!") do
   context("does nothing if within bounds") do
@@ -31,12 +78,6 @@ context("rand_bound_from_target!") do
     @fact 95.0 <= res[1] <= 96.0 => true
   end
 end
-
-DE = de_rand_1_bin(
-  reshape([1.0:10.0], 10, 1),
-  [(0.0, 10.0)],
-  {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
-)
 
 context("de_crossover_binomial") do
   context("always copies from donor if length is 1") do

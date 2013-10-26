@@ -1,15 +1,18 @@
 using GlobalOptim
 using GlobalOptim.Problems
 
-function de_fitness_for(problem, numDimensions, populationSize, numSteps)
+function fitness_for_opt(problem, numDimensions, populationSize, numSteps, 
+  optFunc = de_rand_1_bin_radiuslimited)
   problem = GlobalOptim.Problems.set_numdims!(numDimensions, problem)
-  println("\n$(problem.name), n = $(numdims(problem))")
 
   ss = search_space(problem)
-  pop = rand_population(populationSize, ss)
-  de = de_rand_1_bin(pop, ss)
 
-  best, fitness = optimize(problem, de, numSteps)
+  pop = rand_population(populationSize, ss)
+  opt = optFunc(pop, ss)
+
+  println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(opt.name)")
+
+  best, fitness = optimize(problem, opt, numSteps)
   fitness
 end
 
@@ -18,26 +21,32 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
   for(problem in simple_problems)
     context(problem) do
       p = GlobalOptim.Problems.examples[problem]
-      @fact de_fitness_for(p, 5, 20,  10e3) < 0.01 => true
-      @fact de_fitness_for(p, 10, 20, 5e4) < 0.01 => true
-      @fact de_fitness_for(p, 30, 25, 1e5) < 0.01 => true
+
+      @fact fitness_for_opt(p, 5, 20,  10e3, de_rand_1_bin) < 0.01 => true
+      @fact fitness_for_opt(p, 5, 20,  10e3, de_rand_1_bin_radiuslimited) < 0.01 => true
+
+      @fact fitness_for_opt(p, 10, 20, 5e4, de_rand_1_bin) < 0.01 => true
+      @fact fitness_for_opt(p, 10, 20, 5e4, de_rand_1_bin_radiuslimited) < 0.01 => true
+
+      @fact fitness_for_opt(p, 30, 25, 1e5, de_rand_1_bin) < 0.01 => true
+      @fact fitness_for_opt(p, 30, 25, 1e5, de_rand_1_bin_radiuslimited) < 0.01 => true
     end
   end
 
   context("Schwefel1.2") do
     problem = "Schwefel1.2"
     p = GlobalOptim.Problems.examples[problem]
-    @fact de_fitness_for(p, 5, 20,  5e3) < 0.01 => true
-    @fact de_fitness_for(p, 10, 50, 1e5) < 10.0 => true
-    # Have to investigate why DE so bad for this one:
-    #@fact de_fitness_for(p, 30, 100, 3e5) < 100.0 => true
+    @fact fitness_for_opt(p, 5, 20,  5e3) < 0.01 => true
+    @fact fitness_for_opt(p, 10, 50, 1e5) < 10.0 => true
+    # Why so bad for Schwefel1.2??
+    #@fact fitness_for_opt(p, 30, 100, 2e5) < 100.0 => true
   end
 
   context("Rosenbrock") do
     problem = "Rosenbrock"
     p = GlobalOptim.Problems.examples[problem]
-    @fact de_fitness_for(p, 5, 20,   1e4) < 100.0 => true
-    @fact de_fitness_for(p, 10, 20,  5e4) < 100.0 => true
-    @fact de_fitness_for(p, 30, 40, 1e5) < 100.0 => true
+    @fact fitness_for_opt(p, 5, 20,   1e4) < 100.0 => true
+    @fact fitness_for_opt(p, 10, 20,  5e4) < 100.0 => true
+    @fact fitness_for_opt(p, 30, 40, 1e5) < 100.0 => true
   end
 end

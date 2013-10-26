@@ -3,10 +3,11 @@ module GlobalOptim
 export  OptimizationProblem,
         Optimizer, PopulationOptimizer, 
         optimize,
-        DEOpt, de_rand_1_bin,
+        DEOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
         Problems,
         search_space, rand_population,
         hat_compare, isbetter, isworse, samefitness,
+        popsize,
         FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
         FloatVectorPopulation
 

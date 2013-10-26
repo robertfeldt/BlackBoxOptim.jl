@@ -1,6 +1,35 @@
 GlobalOptim.jl
 ==============
 
-GlobalOptim is a (experimental, work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems. The focus is on meta-heuristic algorithms (DE, PSO, CMA-ES etc) but currently only Differential Evolution (DE) is implemented. 
+GlobalOptim is a (experimental, work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, PSO, CMA-ES etc) rather than more traditional, deterministic algorithms (as available in the Optim.jl library).
 
-Eventually we hope to provide a JuMP interface to these global optimizers but since it is not clear if JuMP supports multiple objectives it's not clear if it makes sense.
+Eventually we hope to provide a JuMP interface but since it is not clear if JuMP supports multiple objectives this is to be decided.
+
+Usage
+=====
+
+TBD
+
+State of the Library
+====================
+
+Existing Optimizers
+-------------------
+
+* Differential Evolution optimizers:
+  - DE/rand/1/bin: de_rand_1_bin()
+  - DE/rand/1/bin with radius limited sampling (a type of trivial geography): de_rand_1_bin_radiuslimited()
+
+Planned Optimizers
+------------------
+
+* Particle Swarm, PSO
+* CMA-ES
+* Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
+
+Guide to selecting an optimizer
+===============================
+
+In our experiments the de_rand_1_bin_radiuslimited DE performs better than the classic de_rand_1_bin DE in almost all cases. For now it is our recommended "goto" optimizer. 
+
+Once we have Amalgam implemented we beleive that Amalgam(PSO, CMA-ES, DE/rand/1/bin/radiuslimited) will be a very powerful default choice. This remains to be evaluated though.

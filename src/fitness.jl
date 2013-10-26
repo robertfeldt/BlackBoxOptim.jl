@@ -1,9 +1,13 @@
-# A FitnessScheme defines what constitutes a fitness, 
-# how they are aggregated, and compared/ranked.
+
+# A FitnessScheme is a specific way in which fitness vectors/values are
+# aggregated, compared and presented. A fitness is always an array of
+# floating point values, each representing the score of one and the same
+# individual. A scheme is a specific way in which these values are considered
+# in a coherent way.
 abstract FitnessScheme
 
-# A FloatVectorFitness scheme has individual fitness scores (at least 1) in 
-# an array.
+# All FloatVectorFitness scheme has individual fitness scores (at least 1) in 
+# an array. This is the vast majority of FitnessSchemes.
 type FloatVectorFitness <: FitnessScheme
   # Function mapping a fitness array to a single numerical value. Might be used
   # for comparisons (or not, depending on setup). Always used when printing

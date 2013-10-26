@@ -1,6 +1,15 @@
 using Distributions
 
+DE_DefaultOptions = {
+  "f" => 0.65,
+  "cr" => 0.4,
+  "NumParents" => 3,
+  "SamplerRadius" => 8,
+}
+
 type DiffEvoOpt <: PopulationOptimizer
+  name::ASCIIString
+
   # A population is a matrix of floats.
   population::Array{Float64, 2}
 
@@ -17,7 +26,13 @@ type DiffEvoOpt <: PopulationOptimizer
   mutate::Function
   crossover::Function
   bound::Function
+
+  function DiffEvoOpt(name, pop, ss, options, sample, mutate, crossover, bound)
+    new(name, pop, ss, merge(DE_DefaultOptions, options), sample, mutate, crossover, bound)
+  end
 end
+
+popsize(opt::DiffEvoOpt) = Base.size(opt.population,1)
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
@@ -50,7 +65,31 @@ function ask(de::DiffEvoOpt)
 end
 
 function random_sampler(de::DiffEvoOpt, numSamples)
-  sample(1:size(de.population,1), numSamples; replace = false)
+  sample(1:popsize(de), numSamples; replace = false)
+end
+
+# This implements a "trivial geography" similar to Spector and Kline (2006) 
+# by first sampling an individual randomly and then selecting additional
+# individuals for the same tournament within a certain deme of limited size
+# for the sub-sequent individuals in the population. The version we implement
+# here is from:
+#  I. Harvey, "The Microbial Genetic Algorithm", in Advances in Artificial Life
+#  Darwin Meets von Neumann, Springer, 2011.
+function radius_limited_sampler(de::DiffEvoOpt, numSamples)
+  # The radius must be at least as big as the number of samples + 2 so that
+  # there is something to sample from.
+  radius = max(de.options["SamplerRadius"], numSamples+2)
+  psize = popsize(de)
+  deme_start = rand(1:psize)
+  indices = sample(deme_start:(deme_start+radius-1), numSamples; replace = false)
+  # Ensure they are not out of bounds by wrapping over at the end.
+  map(indices) do index
+    if index > psize
+      mod(index, psize) + 1 # We have to increase by 1 since Julia arrays start indices at 1
+    else
+      index
+    end
+  end
 end
 
 # DE/rand/1 mutation strategy
@@ -119,18 +158,12 @@ function tell!(de::DiffEvoOpt,
   num_better
 end
 
-DE_DefaultOptions = {
-  "f" => 0.65,
-  "cr" => 0.4,
-  "NumParents" => 3,
-}
-
 # Now we can create specific DE optimizers that are commonly used in the
 # literature.
 
 # The most used DE/rand/1/bin.
 function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
-  DiffEvoOpt(population, searchSpace, options, 
+  DiffEvoOpt("DE/rand/1/bin", population, searchSpace, options, 
     random_sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 
@@ -138,9 +171,9 @@ function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
 end
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
-  DiffEvoOpt(population, searchSpace, options, 
-    random_sampler, 
+function de_rand_1_bin_radiuslimited(population, searchSpace, options = DE_DefaultOptions)
+  DiffEvoOpt("DE/rand/1/bin/radiuslimited", population, searchSpace, options, 
+    radius_limited_sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 
     rand_bound_from_target!)
