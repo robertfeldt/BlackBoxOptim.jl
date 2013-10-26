@@ -7,7 +7,9 @@ function fitness_for_opt(problem, numDimensions, populationSize, numSteps,
 
   ss = search_space(problem)
 
-  pop = rand_population(populationSize, ss)
+  #pop = rand_population(populationSize, ss)
+  pop = latin_hypercube_sampling(populationSize, ss)
+
   opt = optFunc(pop, ss)
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(opt.name)")
@@ -22,14 +24,14 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
     context(problem) do
       p = GlobalOptim.Problems.examples[problem]
 
-      @fact fitness_for_opt(p, 5, 20,  10e3, de_rand_1_bin) < 0.01 => true
-      @fact fitness_for_opt(p, 5, 20,  10e3, de_rand_1_bin_radiuslimited) < 0.01 => true
+      @fact fitness_for_opt(p, 5, 20,  5e3, de_rand_1_bin) < 0.01 => true
+      @fact fitness_for_opt(p, 5, 20,  5e3, de_rand_1_bin_radiuslimited) < 0.01 => true
 
-      @fact fitness_for_opt(p, 10, 20, 5e4, de_rand_1_bin) < 0.01 => true
-      @fact fitness_for_opt(p, 10, 20, 5e4, de_rand_1_bin_radiuslimited) < 0.01 => true
+      @fact fitness_for_opt(p, 10, 20, 1e4, de_rand_1_bin) < 0.01 => true
+      @fact fitness_for_opt(p, 10, 20, 1e4, de_rand_1_bin_radiuslimited) < 0.01 => true
 
-      @fact fitness_for_opt(p, 30, 25, 1e5, de_rand_1_bin) < 0.01 => true
-      @fact fitness_for_opt(p, 30, 25, 1e5, de_rand_1_bin_radiuslimited) < 0.01 => true
+      @fact fitness_for_opt(p, 30, 25, 3e4, de_rand_1_bin) < 0.01 => true
+      @fact fitness_for_opt(p, 30, 25, 3e4, de_rand_1_bin_radiuslimited) < 0.01 => true
     end
   end
 
@@ -37,9 +39,11 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
     problem = "Schwefel1.2"
     p = GlobalOptim.Problems.examples[problem]
     @fact fitness_for_opt(p, 5, 20,  5e3) < 0.01 => true
-    @fact fitness_for_opt(p, 10, 50, 1e5) < 10.0 => true
-    # Why so bad for Schwefel1.2??
-    #@fact fitness_for_opt(p, 30, 100, 2e5) < 100.0 => true
+    @fact fitness_for_opt(p, 10, 50, 5e4) < 0.01 => true
+
+    #DE/rand/1/bin seems to have troubles...
+    #@fact fitness_for_opt(p, 30, 50, 2e5, de_rand_1_bin) < 100.0 => true
+    @fact fitness_for_opt(p, 30, 50, 2e5, de_rand_1_bin_radiuslimited) < 10.0 => true
   end
 
   context("Rosenbrock") do

@@ -1,8 +1,8 @@
 using Distributions
 
 DE_DefaultOptions = {
-  "f" => 0.65,
-  "cr" => 0.4,
+  "f" => 0.6,
+  "cr" => 0.7,
   "NumParents" => 3,
   "SamplerRadius" => 8,
 }
