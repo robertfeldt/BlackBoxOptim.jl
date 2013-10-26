@@ -87,3 +87,19 @@ facts("Schwefel2.21") do
   @fact numdims(p) => 2 # Default is 2 if not specified
   @fact search_space(p) => [(-100.0, 100.0), (-100.0, 100.0)]
 end
+
+facts("Rosenbrock") do
+  p = GlobalOptim.Problems.examples["Rosenbrock"]
+  rosenbrock = p.funcs[1]
+
+  @fact rosenbrock([1, 2]) => 100
+
+  @fact rosenbrock([1, 2, 3]) => 201
+
+  @fact rosenbrock([-1, 2, -3]) => 5005
+
+  @fact_throws rosenbrock([])
+
+  @fact numdims(p) => 2 # Default is 2 if not specified
+  @fact search_space(p) => [(-30.0, 30.0), (-30.0, 30.0)]
+end

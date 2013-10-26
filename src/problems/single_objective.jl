@@ -45,3 +45,14 @@ end
 examples["Schwefel2.21"] = any_dimensional_problem("Schwefel2.21",
                             [schwefel2_21],
                             (-100.0, 100.0))
+
+# Rosenbrock function as stated in table II of the JADE paper:
+#  http://150.214.190.154/EAMHCO/pdf/JADE.pdf
+function rosenbrock(x)
+  n = length(x)
+  return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
+end
+
+examples["Rosenbrock"] = any_dimensional_problem("Rosenbrock",
+                            [rosenbrock],
+                            (-30.0, 30.0))

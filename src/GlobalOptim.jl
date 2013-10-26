@@ -69,25 +69,39 @@ function rank_by_fitness(candidates, problem)
 end
 
 function optimize(problem::Problems.OptimizationProblem, opt::Optimizer, numSteps = 1e4)
+  num_better = 0
+  println("----------------------------------------------------------------------")
+  println("!!! Starting optimization !!!!")
+
   tic()
   for(step in 1:numSteps)
-    print(".")
+    if(mod(step, 2.5e4) == 0)
+      println("Step $(step): Improvements/step = $(num_better/step)")
+    end
     candidates = ask(opt)
 
     ranked_candidates = rank_by_fitness(candidates, problem)
 
-    tell!(opt, ranked_candidates)
+    num_better += tell!(opt, ranked_candidates)
   end
 
-  #show(opt)
-
-  best, index, fitness = find_best_individual(problem, opt)
-  print("\nBest candidate found: "); show(best)
-  print("\nFitness: "); show(fitness)
-  print("\n")
   t = toc()
   println("Steps per second = $(numSteps/t)")
 
+  if(mod(numSteps, 2.5e4) != 0)
+    println("Step $(numSteps): Improvements/step = $(num_better/numSteps)")
+  end
+
+  println("\nMean value (in population) per position:")
+  show(mean(opt.population,1))
+  println("\n\nStd dev (in population) per position:")
+  show(std(opt.population,1))
+
+  best, index, fitness = find_best_individual(problem, opt)
+  print("\n\nBest candidate found: "); show(best)
+  print("\n\nFitness: "); show(fitness)
+  println("\n----------------------------------------------------------------------")
+  
   return best, fitness
 end
 

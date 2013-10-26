@@ -98,28 +98,30 @@ function rand_bound_from_target!(individual, target, searchSpace)
   individual
 end
 
-# Tell the optimizer about the ranking of candidates.
+# Tell the optimizer about the ranking of candidates. Returns the number of
+# better candidates that were inserted into the population.
 function tell!(de::DEOpt, 
   # archive::Archive, # Skip for now
   rankedCandidates)
   num_candidates = length(rankedCandidates)
+  num_better = 0
   for i in 1:div(num_candidates, 2)
     candidate, index = rankedCandidates[i]
     if candidate != de.population[index, :]
+      num_better += 1
       #print("candidate = "); show(candidate); println("")
       #print("index = "); show(index); println("")
       #print("target = "); show(de.population[index,:]); println("")
       old = de.population[index,:]
       de.population[index,:] = candidate
-      #println("\n!!! Better candidates found !!!"); show(candidate); println(" > "); show(old)
-      print("+")
     end
   end
+  num_better
 end
 
 DE_DefaultOptions = {
-  "f" => 0.4,
-  "cr" => 0.9,
+  "f" => 0.5,
+  "cr" => 0.5,
   "NumParents" => 3,
 }
 
