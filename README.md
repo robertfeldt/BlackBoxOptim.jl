@@ -27,6 +27,10 @@ Planned Optimizers
 * CMA-ES
 * Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
 
+Utilities
+---------
+* Latin hypercube sampling for creating initial populations
+
 Guide to selecting an optimizer
 ===============================
 
