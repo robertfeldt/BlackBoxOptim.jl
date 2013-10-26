@@ -1,7 +1,7 @@
 using GlobalOptim.Problems
 
 facts("Sphere") do
-  sphere = GlobalOptim.SingleObjectiveProblems.examples["Sphere"].f
+  sphere = GlobalOptim.Problems.examples["Sphere"].funcs[1]
 
   @fact sphere([0]) => 0
 
@@ -17,7 +17,7 @@ facts("Sphere") do
 end
 
 facts("Schwefel2_22") do
-  schwefel2_22 = GlobalOptim.SingleObjectiveProblems.examples["Schwefel2.22"].f
+  schwefel2_22 = GlobalOptim.Problems.examples["Schwefel2.22"].funcs[1]
 
   @fact schwefel2_22([0]) => 0
 
@@ -33,7 +33,7 @@ facts("Schwefel2_22") do
 end
 
 facts("Schwefel1_2") do
-  schwefel1_2 = GlobalOptim.SingleObjectiveProblems.examples["Schwefel1.2"].f
+  schwefel1_2 = GlobalOptim.Problems.examples["Schwefel1.2"].funcs[1]
 
   @fact schwefel1_2([0]) => 0
 
@@ -49,7 +49,7 @@ facts("Schwefel1_2") do
 end
 
 facts("Schwefel2_21") do
-  schwefel2_21 = GlobalOptim.SingleObjectiveProblems.examples["Schwefel2.21"].f
+  schwefel2_21 = GlobalOptim.Problems.examples["Schwefel2.21"].funcs[1]
 
   @fact schwefel2_21([0]) => 1
 
