@@ -1,6 +1,8 @@
 using GlobalOptim.Problems
 
-facts("Sphere") do
+facts("Single objective functions") do
+
+context("Sphere") do
   p = GlobalOptim.Problems.examples["Sphere"]
   sphere = p.funcs[1]
 
@@ -24,7 +26,7 @@ facts("Sphere") do
   @fact search_space(p2) => [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
-facts("Schwefel2.22") do
+context("Schwefel2.22") do
   p = GlobalOptim.Problems.examples["Schwefel2.22"]
   schwefel2_22 = p.funcs[1]
 
@@ -48,7 +50,7 @@ facts("Schwefel2.22") do
   @fact search_space(p2) => [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
-facts("Schwefel1.2") do
+context("Schwefel1.2") do
   p = GlobalOptim.Problems.examples["Schwefel1.2"]
   schwefel1_2 = p.funcs[1]
 
@@ -68,7 +70,7 @@ facts("Schwefel1.2") do
   @fact search_space(p) => [(-100.0, 100.0), (-100.0, 100.0)]
 end
 
-facts("Schwefel2.21") do
+context("Schwefel2.21") do
   p = GlobalOptim.Problems.examples["Schwefel2.21"]
   schwefel2_21 = p.funcs[1]
 
@@ -88,7 +90,7 @@ facts("Schwefel2.21") do
   @fact search_space(p) => [(-100.0, 100.0), (-100.0, 100.0)]
 end
 
-facts("Rosenbrock") do
+context("Rosenbrock") do
   p = GlobalOptim.Problems.examples["Rosenbrock"]
   rosenbrock = p.funcs[1]
 
@@ -102,4 +104,6 @@ facts("Rosenbrock") do
 
   @fact numdims(p) => 2 # Default is 2 if not specified
   @fact search_space(p) => [(-30.0, 30.0), (-30.0, 30.0)]
+end
+
 end

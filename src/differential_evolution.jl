@@ -1,6 +1,6 @@
 using Distributions
 
-type DEOpt <: PopulationOptimizer
+type DiffEvoOpt <: PopulationOptimizer
   # A population is a matrix of floats.
   population::Array{Float64, 2}
 
@@ -22,7 +22,7 @@ end
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.
-function ask(de::DEOpt)
+function ask(de::DiffEvoOpt)
   # Sample parents and target
   numparents = de.options["NumParents"]
   indices = de.sample(de, 1 + numparents)
@@ -49,19 +49,19 @@ function ask(de::DEOpt)
   return [(trial, target_index), (target, target_index)]
 end
 
-function random_sampler(de::DEOpt, numSamples)
+function random_sampler(de::DiffEvoOpt, numSamples)
   sample(1:size(de.population,1), numSamples; replace = false)
 end
 
 # DE/rand/1 mutation strategy
-function de_mutation_rand_1(de::DEOpt, parentIndices)
+function de_mutation_rand_1(de::DiffEvoOpt, parentIndices)
   f = de.options["f"]
   p = de.population[parentIndices,:]
   return p[3,:] + (f * (p[1,:] - p[2,:]))
 end
 
 # Binomial crossover for DE, i.e. DE/*/*/bin.
-function de_crossover_binomial(de::DEOpt, target, donor)
+function de_crossover_binomial(de::DiffEvoOpt, target, donor)
   trial = copy(target)
 
   # Always ensure at least one value from donor is copied to trial vector
@@ -100,7 +100,7 @@ end
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
 # better candidates that were inserted into the population.
-function tell!(de::DEOpt, 
+function tell!(de::DiffEvoOpt, 
   # archive::Archive, # Skip for now
   rankedCandidates)
   num_candidates = length(rankedCandidates)
@@ -120,15 +120,19 @@ function tell!(de::DEOpt,
 end
 
 DE_DefaultOptions = {
-  "f" => 0.5,
-  "cr" => 0.5,
+  "f" => 0.65,
+  "cr" => 0.4,
   "NumParents" => 3,
 }
 
-# Now setup good defaults. DE/rand/1/bin is the default.
-DEOpt(population, searchSpace, options) = 
-  DEOpt(population, searchSpace, options, 
+# Now we can create specific DE optimizers that are commonly used in the
+# literature.
+
+# The most used DE/rand/1/bin.
+function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
+  DiffEvoOpt(population, searchSpace, options, 
     random_sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 
     rand_bound_from_target!)
+end

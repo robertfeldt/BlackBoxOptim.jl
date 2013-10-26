@@ -7,10 +7,7 @@ function de_fitness_for(problem, numDimensions, populationSize, numSteps)
 
   ss = search_space(problem)
   pop = rand_population(populationSize, ss)
-  de = DEOpt(
-    pop, ss,
-    {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
-  )
+  de = de_rand_1_bin(pop, ss)
 
   best, fitness = optimize(problem, de, numSteps)
   fitness
@@ -41,6 +38,6 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
     p = GlobalOptim.Problems.examples[problem]
     @fact de_fitness_for(p, 5, 20,   1e4) < 100.0 => true
     @fact de_fitness_for(p, 10, 20,  5e4) < 100.0 => true
-    @fact de_fitness_for(p, 30, 100, 1e5) < 100.0 => true
+    @fact de_fitness_for(p, 30, 40, 1e5) < 100.0 => true
   end
 end

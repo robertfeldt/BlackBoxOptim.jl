@@ -2,9 +2,10 @@ module GlobalOptim
 
 export  OptimizationProblem,
         Optimizer, PopulationOptimizer, 
-        DEOpt,
+        optimize,
+        DEOpt, de_rand_1_bin,
         Problems,
-        search_space, rand_population, optimize
+        search_space, rand_population
 
 abstract Optimizer
 abstract PopulationOptimizer <: Optimizer
@@ -101,7 +102,7 @@ function optimize(problem::Problems.OptimizationProblem, opt::Optimizer, numStep
   print("\n\nBest candidate found: "); show(best)
   print("\n\nFitness: "); show(fitness)
   println("\n----------------------------------------------------------------------")
-  
+
   return best, fitness
 end
 
