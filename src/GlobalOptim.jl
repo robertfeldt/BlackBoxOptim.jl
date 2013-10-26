@@ -57,7 +57,7 @@ function rand_population(populationSize, searchSpace::Array{(Float64, Float64)})
   broadcast(+, mins', broadcast(*, deltas', rand(populationSize, dims)))
 end
 
-function optimize(problem::SingleObjectiveProblems.OptimizationProblem, opt::Optimizer, numSteps = 1e4)
+function optimize(problem::Problems.OptimizationProblem, opt::Optimizer, numSteps = 1e4)
   for(step in 1:numSteps)
     candidates = ask(de)
     fitness = [(problem.f(c[1]), c[1], c[2]) for c=candidates]

@@ -45,5 +45,3 @@ end
 examples["Schwefel2.21"] = OptimizationProblem("Schwefel2.21",
                             [schwefel2_21],
                             (-100.0, 100.0))
-
-end # module SingleObjectiveProblems
