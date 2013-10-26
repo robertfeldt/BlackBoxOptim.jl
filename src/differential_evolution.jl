@@ -136,3 +136,12 @@ function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
     de_crossover_binomial, 
     rand_bound_from_target!)
 end
+
+# The most used DE/rand/1/bin.
+function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
+  DiffEvoOpt(population, searchSpace, options, 
+    random_sampler, 
+    de_mutation_rand_1, 
+    de_crossover_binomial, 
+    rand_bound_from_target!)
+end

@@ -5,9 +5,15 @@ export  OptimizationProblem,
         optimize,
         DEOpt, de_rand_1_bin,
         Problems,
-        search_space, rand_population
+        search_space, rand_population,
+        hat_compare, isbetter, isworse, samefitness,
+        FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max
 
 abstract Optimizer
+
+include("fitness.jl")
+include("population.jl")
+
 abstract PopulationOptimizer <: Optimizer
 
 # Our design is inspired by the object-oriented, ask-and-tell "optimizer API 
