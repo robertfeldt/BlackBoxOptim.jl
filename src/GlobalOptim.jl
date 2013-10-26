@@ -2,7 +2,8 @@ module GlobalOptim
 
 export  SingleObjectiveProblems, OptimizationProblem,
         Optimizer, PopulationOptimizer, 
-        DEOpt
+        DEOpt,
+        numdims
 
 abstract Optimizer
 abstract PopulationOptimizer <: Optimizer

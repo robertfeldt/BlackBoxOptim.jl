@@ -5,7 +5,7 @@ function sphere(x)
   sum(x.^2)
 end
 
-examples["Sphere"] = OptimizationProblem("Sphere",
+examples["Sphere"] = any_dimensional_problem("Sphere",
                       [sphere],
                       (-100.0, 100.0))
 
@@ -16,7 +16,7 @@ function schwefel2_22(x)
   sum(ax) + prod(ax)
 end
 
-examples["Schwefel2.22"] = OptimizationProblem("Schwefel2.22",
+examples["Schwefel2.22"] = any_dimensional_problem("Schwefel2.22",
                             [schwefel2_22],
                             (-10.0, 10.0))
 
@@ -31,7 +31,7 @@ function schwefel1_2(x)
   s
 end
 
-examples["Schwefel1.2"] = OptimizationProblem("Schwefel1.2",
+examples["Schwefel1.2"] = any_dimensional_problem("Schwefel1.2",
                             [schwefel1_2],
                             (-100.0, 100.0))
 
@@ -42,6 +42,6 @@ function schwefel2_21(x)
   indmax(abs(x))
 end
 
-examples["Schwefel2.21"] = OptimizationProblem("Schwefel2.21",
+examples["Schwefel2.21"] = any_dimensional_problem("Schwefel2.21",
                             [schwefel2_21],
                             (-100.0, 100.0))
