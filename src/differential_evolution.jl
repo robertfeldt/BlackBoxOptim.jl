@@ -1,5 +1,7 @@
 using Distributions
 
+include("bimodal_cauchy_distribution.jl")
+
 DE_DefaultOptions = {
   "f" => 0.6,
   "cr" => 0.7,

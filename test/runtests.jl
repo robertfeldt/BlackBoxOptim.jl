@@ -4,6 +4,7 @@ using FactCheck
 my_tests = [
   "test_fitness.jl",
   "test_population.jl",
+  "test_bimodal_cauchy_distribution.jl",
   "problems/test_single_objective.jl",
   "test_differential_evolution.jl"
 ]
