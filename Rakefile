@@ -8,6 +8,10 @@ end
 
 task :runalltest => [:runtest, :runslowtest]
 
+task :compare_optimizers do
+  sh "julia -L src/GlobalOptim.jl test/compare_optimizers.jl"
+end
+
 task :t => :runtest
 task :at => :runalltest
 task :st => :runslowtest

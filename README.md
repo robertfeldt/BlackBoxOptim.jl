@@ -30,6 +30,6 @@ Planned Optimizers
 Guide to selecting an optimizer
 ===============================
 
-In our experiments the de_rand_1_bin_radiuslimited DE performs somehwat better than the classic de_rand_1_bin DE in almost all cases. For now it is our recommended "goto" optimizer. However, the difference between them is slight.
+In our experiments the de_rand_1_bin_radiuslimited DE performs somehwat better than the classic de_rand_1_bin DE in almost all cases. For now it is our recommended "goto" optimizer. However, the difference between them is slight (and they both seem to have a problem with the high-dimensional Schwefel1.2 test function).
 
-Once we have Amalgam implemented we beleive that Amalgam(PSO, CMA-ES, DE/rand/1/bin/radiuslimited) will be a very powerful default choice. This remains to be evaluated though.
+Once we have Amalgam implemented we believe that Amalgam(PSO, CMA-ES, DE/rand/1/bin/radiuslimited) will be a very powerful default choice. This remains to be evaluated though.
