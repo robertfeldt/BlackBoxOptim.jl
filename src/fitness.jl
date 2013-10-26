@@ -10,8 +10,8 @@ type FloatVectorFitness <: FitnessScheme
   # fitness vectors though.
   aggregate::Function
 
-  # Default is to use sum of objective values => minimization.
-  FloatVectorFitness(aggregator = sum) = new(aggregator)
+  # Worst aggregate fitness value.
+  worst_fitness::FloatingPoint
 end
 
 hat_compare(a1::FloatingPoint, a2::FloatingPoint) = (a1 < a2) ? -1 : ((a1 > a2) ? 1 : 0)
@@ -31,11 +31,10 @@ samefitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 
 # For minimization we just pass the aggregator on.
 function float_vector_scheme_min(aggregator = sum)
-  FloatVectorFitness(aggregator)
+  FloatVectorFitness(aggregator, Inf)
 end
 
 # For maximization we need to set a different aggregator.
-function float_vector_scheme_max(aggregator = sum)
-  agg = (fs) -> -1 * aggregator(fs)
-  FloatVectorFitness(agg)
+function float_vector_scheme_max(agg = ((fs) -> -1 * sum(fs)))
+  FloatVectorFitness(agg, -Inf)
 end

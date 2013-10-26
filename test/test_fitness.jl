@@ -124,4 +124,9 @@ facts("Fitness") do
     @fact samefitness([0.0], [0.0], scheme) => true
   end
 
+  context("worst_fitness") do
+    @fact float_vector_scheme_max().worst_fitness => -Inf
+    @fact float_vector_scheme_min().worst_fitness => Inf
+  end
+
 end

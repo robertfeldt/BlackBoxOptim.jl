@@ -7,7 +7,8 @@ export  OptimizationProblem,
         Problems,
         search_space, rand_population,
         hat_compare, isbetter, isworse, samefitness,
-        FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max
+        FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
+        FloatVectorPopulation
 
 abstract Optimizer
 
