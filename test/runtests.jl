@@ -6,10 +6,9 @@ my_tests = [
   "differential_evolution.jl"
 ]
 
-println("Running tests:")
-
-for my_test in my_tests
-  #println(" * $(my_test)")
-  FactCheck.TestSuite(my_test, my_test)
-  include(my_test)
+facts() do
+  for my_test in my_tests
+    FactCheck.TestSuite(my_test, my_test)
+    include(my_test)
+  end
 end

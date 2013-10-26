@@ -37,17 +37,18 @@ abstract PopulationOptimizer <: Optimizer
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
 
+# Different optimization algorithms
 include("differential_evolution.jl")
 
 # Problems for testing
-include(joinpath("problems", "single_objective.jl"))
+include(joinpath("problems", "all_problems.jl"))
 
 # Duplicate a tuple to indicate a whole search space, i.e. symmetrically.
-function symmetric_search_space(dims, dimRange)
+function symmetric_search_space(dims, dimRange::(Float64, Float64))
   [dimRange for i=1:dims]
 end
 
-function rand_population(populationSize, searchSpace)
+function rand_population(populationSize, searchSpace::Array{(Float64, Float64)})
   dims = length(searchSpace)
   mins = [s[1] for s=searchSpace]
   maxs = [s[2] for s=searchSpace]

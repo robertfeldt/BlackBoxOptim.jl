@@ -1,15 +1,3 @@
-module SingleObjectiveProblems
-
-export examples
-
-immutable OptimizationProblem
-  name::ASCIIString
-  f::Function
-  initial_range::(Float64, Float64)
-end
-
-examples = Dict{ASCIIString, OptimizationProblem}()
-
 # Sphere function as stated in table II of the JADE paper:
 #  http://150.214.190.154/EAMHCO/pdf/JADE.pdf
 # Initial range: [-100, 100]^d
@@ -18,7 +6,7 @@ function sphere(x)
 end
 
 examples["Sphere"] = OptimizationProblem("Sphere",
-                      sphere,
+                      [sphere],
                       (-100.0, 100.0))
 
 # Schwefel 2.22 function as stated in table II of the JADE paper:
@@ -29,7 +17,7 @@ function schwefel2_22(x)
 end
 
 examples["Schwefel2.22"] = OptimizationProblem("Schwefel2.22",
-                            schwefel2_22,
+                            [schwefel2_22],
                             (-10.0, 10.0))
 
 # Schwefel 1.2 function as stated in table II of the JADE paper:
@@ -44,7 +32,7 @@ function schwefel1_2(x)
 end
 
 examples["Schwefel1.2"] = OptimizationProblem("Schwefel1.2",
-                            schwefel1_2,
+                            [schwefel1_2],
                             (-100.0, 100.0))
 
 # Schwefel 2.21 function as stated in table II of the JADE paper:
@@ -55,7 +43,7 @@ function schwefel2_21(x)
 end
 
 examples["Schwefel2.21"] = OptimizationProblem("Schwefel2.21",
-                            schwefel2_21,
+                            [schwefel2_21],
                             (-100.0, 100.0))
 
 end # module SingleObjectiveProblems
