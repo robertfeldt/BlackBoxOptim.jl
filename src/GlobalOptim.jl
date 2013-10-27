@@ -1,10 +1,16 @@
 module GlobalOptim
 
 export  OptimizationProblem,
+
         Optimizer, PopulationOptimizer, 
         optimize,
-        DEOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
+
+        DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
+
+        AdaptConstantsDiffEvoOpt, adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
+
         Problems,
+
         search_space, rand_population, latin_hypercube_sampling,
         hat_compare, isbetter, isworse, samefitness,
         popsize,
@@ -50,6 +56,7 @@ abstract PopulationOptimizer <: Optimizer
 
 # Different optimization algorithms
 include("differential_evolution.jl")
+include("adaptive_differential_evolution.jl")
 
 # Problems for testing
 include(joinpath("problems", "all_problems.jl"))

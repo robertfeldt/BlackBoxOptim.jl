@@ -19,6 +19,8 @@ Existing Optimizers
 * Differential Evolution optimizers:
   - DE/rand/1/bin: de_rand_1_bin()
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): de_rand_1_bin_radiuslimited()
+  - AdaptiveDE/rand/1/bin: de_rand_1_bin()
+  - AdaptiveDE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
 
 Planned Optimizers
 ------------------
@@ -34,6 +36,6 @@ Utilities
 Guide to selecting an optimizer
 ===============================
 
-In our experiments the de_rand_1_bin_radiuslimited DE performs somehwat better than the classic de_rand_1_bin DE in almost all cases. For now it is our recommended "goto" optimizer. However, the difference between them is slight (and they both seem to have a problem with the high-dimensional Schwefel1.2 test function).
+In our experiments the radius limited DE's perform better than the classic de_rand_1_bin DE in almost all cases. And combining it with adaptive setting of the weights makes it even better. So for now adaptive_de_rand_1_bin_radiuslimited() is our recommended "goto" optimizer. However, the difference between the top performing DE's is slight.
 
 Once we have Amalgam implemented we believe that Amalgam(PSO, CMA-ES, DE/rand/1/bin/radiuslimited) will be a very powerful default choice. This remains to be evaluated though.

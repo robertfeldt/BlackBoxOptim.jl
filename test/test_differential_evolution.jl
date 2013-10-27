@@ -6,6 +6,11 @@ DE = de_rand_1_bin(
   {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
 )
 
+function isWithinBounds(ind, de)
+  ss = de.search_space
+  all([(ss[i][1] <= ind[i] <= ss[i][2]) for i=1:length(ind)])
+end
+
 facts("Differential evolution optimizer") do
 
 context("random_sampler") do
@@ -81,16 +86,16 @@ end
 
 context("de_crossover_binomial") do
   context("always copies from donor if length is 1") do
-    @fact GlobalOptim.de_crossover_binomial(DE, [0.0], [1.0]) => [1.0]
+    @fact GlobalOptim.de_crossover_binomial(DE, [0.0], 1, [1.0]) => [1.0]
 
-    @fact GlobalOptim.de_crossover_binomial(DE, [-10.0], [42.42]) => [42.42]
+    @fact GlobalOptim.de_crossover_binomial(DE, [-10.0], 1, [42.42]) => [42.42]
   end
 
   context("always copies at least one element from donor") do
     for(i in 1:NumTestRepetitions)
       len = rand(1:100)
       target, donor = rand(1, len), rand(1, len)
-      res = GlobalOptim.de_crossover_binomial(DE, target, donor)
+      res = GlobalOptim.de_crossover_binomial(DE, target, 1, donor)
       @fact any([ in(x, donor) for x = res ]) => true
     end
   end
@@ -99,20 +104,20 @@ context("de_crossover_binomial") do
     for(i in 1:NumTestRepetitions)
       len = 50
       target, donor = rand(1, len), rand(1, len)
-      res = GlobalOptim.de_crossover_binomial(DE, target, donor)
+      res = GlobalOptim.de_crossover_binomial(DE, target, 1, donor)
       @fact any([ in(x, target) for x = res ]) => true
     end
   end
 end
 
 context("de_mutation_rand_1") do
-  @fact ndims(GlobalOptim.de_mutation_rand_1(DE, [4,9,8])) => 2
+  @fact ndims(GlobalOptim.de_mutation_rand_1(DE, 1, [4,9,8])) => 2
 
-  @fact GlobalOptim.de_mutation_rand_1(DE, [1, 2, 3])[1] => (3.0 + (0.4 * (1.0 - 2.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, [2, 3, 1])[1] => (1.0 + (0.4 * (2.0 - 3.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, [3, 2, 1])[1] => (1.0 + (0.4 * (3.0 - 2.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, [1, 3, 5])[1] => (5.0 + (0.4 * (1.0 - 3.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, [4, 9, 8])[1] => (8.0 + (0.4 * (4.0 - 9.0)))
+  @fact GlobalOptim.de_mutation_rand_1(DE, 1, [1, 2, 3])[1] => (3.0 + (0.4 * (1.0 - 2.0)))
+  @fact GlobalOptim.de_mutation_rand_1(DE, 2, [2, 3, 1])[1] => (1.0 + (0.4 * (2.0 - 3.0)))
+  @fact GlobalOptim.de_mutation_rand_1(DE, 3, [3, 2, 1])[1] => (1.0 + (0.4 * (3.0 - 2.0)))
+  @fact GlobalOptim.de_mutation_rand_1(DE, 4, [1, 3, 5])[1] => (5.0 + (0.4 * (1.0 - 3.0)))
+  @fact GlobalOptim.de_mutation_rand_1(DE, 5, [4, 9, 8])[1] => (8.0 + (0.4 * (4.0 - 9.0)))
 
   de2 = de_rand_1_bin(
     reshape([1.0:8.0], 4, 2),
@@ -120,19 +125,14 @@ context("de_mutation_rand_1") do
     {"f" => 0.6, "cr" => 0.5, "NumParents" => 3}
   )
 
-  res = GlobalOptim.de_mutation_rand_1(de2, [1,2,3])
+  res = GlobalOptim.de_mutation_rand_1(de2, 10, [1,2,3])
   @fact ndims(res) => 2
   @fact res[1] => (3.0 + (0.6 * (1.0 - 2.0)))
   @fact res[2] => (7.0 + (0.6 * (5.0 - 6.0)))
 
-  res2 = GlobalOptim.de_mutation_rand_1(de2, [1,2,4])
+  res2 = GlobalOptim.de_mutation_rand_1(de2, 2, [1,2,4])
   @fact res2[1] => (4.0 + (0.6 * (1.0 - 2.0)))
   @fact res2[2] => (8.0 + (0.6 * (5.0 - 6.0)))
-end
-
-function isWithinBounds(ind, de)
-  ss = de.search_space
-  all([(ss[i][1] <= ind[i] <= ss[i][2]) for i=1:length(ind)])
 end
 
 context("ask") do

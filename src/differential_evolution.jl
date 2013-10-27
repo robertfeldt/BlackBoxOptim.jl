@@ -1,6 +1,6 @@
 using Distributions
 
-include("bimodal_cauchy_distribution.jl")
+abstract DifferentialEvolutionOpt <: PopulationOptimizer
 
 DE_DefaultOptions = {
   "f" => 0.6,
@@ -9,7 +9,7 @@ DE_DefaultOptions = {
   "SamplerRadius" => 8,
 }
 
-type DiffEvoOpt <: PopulationOptimizer
+type DiffEvoOpt <: DifferentialEvolutionOpt
   name::ASCIIString
 
   # A population is a matrix of floats.
@@ -34,12 +34,14 @@ type DiffEvoOpt <: PopulationOptimizer
   end
 end
 
-popsize(opt::DiffEvoOpt) = Base.size(opt.population,1)
+popsize(opt::DifferentialEvolutionOpt) = Base.size(opt.population,1)
+fconst(de::DifferentialEvolutionOpt, i) = de.options["f"]
+crconst(de::DifferentialEvolutionOpt, i) = de.options["cr"]
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.
-function ask(de::DiffEvoOpt)
+function ask(de::DifferentialEvolutionOpt)
   # Sample parents and target
   numparents = de.options["NumParents"]
   indices = de.sample(de, 1 + numparents)
@@ -51,12 +53,11 @@ function ask(de::DiffEvoOpt)
   target = de.population[target_index,:]
   #print("target = "); show(target); println("")
 
-  # DE/rand/1 mutation strategy
-  donor = de.mutate(de, parent_indices)
+  donor = de.mutate(de, target_index, parent_indices)
   #print("donor = "); show(donor); println("")
 
   # Crossover donor and target
-  trial = de.crossover(de, target, donor)
+  trial = de.crossover(de, target, target_index, donor)
 
   # Bound the trial vector according to search space bounds
   trial = de.bound(trial, target, de.search_space)
@@ -66,7 +67,7 @@ function ask(de::DiffEvoOpt)
   return [(trial, target_index), (target, target_index)]
 end
 
-function random_sampler(de::DiffEvoOpt, numSamples)
+function random_sampler(de::DifferentialEvolutionOpt, numSamples)
   sample(1:popsize(de), numSamples; replace = false)
 end
 
@@ -77,7 +78,7 @@ end
 # here is from:
 #  I. Harvey, "The Microbial Genetic Algorithm", in Advances in Artificial Life
 #  Darwin Meets von Neumann, Springer, 2011.
-function radius_limited_sampler(de::DiffEvoOpt, numSamples)
+function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
   # The radius must be at least as big as the number of samples + 2 so that
   # there is something to sample from.
   radius = max(de.options["SamplerRadius"], numSamples+2)
@@ -95,14 +96,14 @@ function radius_limited_sampler(de::DiffEvoOpt, numSamples)
 end
 
 # DE/rand/1 mutation strategy
-function de_mutation_rand_1(de::DiffEvoOpt, parentIndices)
-  f = de.options["f"]
+function de_mutation_rand_1(de::DifferentialEvolutionOpt, targetIndex, parentIndices)
+  f = fconst(de, targetIndex)
   p = de.population[parentIndices,:]
   return p[3,:] + (f * (p[1,:] - p[2,:]))
 end
 
 # Binomial crossover for DE, i.e. DE/*/*/bin.
-function de_crossover_binomial(de::DiffEvoOpt, target, donor)
+function de_crossover_binomial(de::DifferentialEvolutionOpt, target, targetIndex, donor)
   trial = copy(target)
 
   # Always ensure at least one value from donor is copied to trial vector
@@ -110,7 +111,7 @@ function de_crossover_binomial(de::DiffEvoOpt, target, donor)
   trial[jrand] = donor[jrand]
 
   # Now crossover randomly for the rest of the indices
-  switch = rand(length(trial)) .<= de.options["cr"]
+  switch = rand(length(trial)) .<= crconst(de, targetIndex)
   #print("switch = "); show(switch); println("")
   #print("trial = "); show(trial); println("")
   #print("donor = "); show(donor); println("")
