@@ -1,5 +1,3 @@
-NumTestRepetitions = 100
-
 DE = de_rand_1_bin(
   reshape([1.0:10.0], 10, 1),
   [(0.0, 10.0)],

@@ -11,7 +11,14 @@ export  OptimizationProblem,
 
         Problems,
 
-        search_space, rand_population, latin_hypercube_sampling,
+        # Search spaces
+        SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace, 
+        RangePerDimSearchSpace, symmetric_search_space,
+        ndims, mins, maxs, deltas, ranges, range_for_dim,
+        rand_individual, rand_individuals, isinspace,
+
+        latin_hypercube_sampling,
+
         hat_compare, isbetter, isworse, samefitness,
         popsize,
         FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
@@ -54,21 +61,14 @@ abstract PopulationOptimizer <: Optimizer
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
 
+include("search_space.jl")
+
 # Different optimization algorithms
 include("differential_evolution.jl")
 include("adaptive_differential_evolution.jl")
 
 # Problems for testing
 include(joinpath("problems", "all_problems.jl"))
-
-function rand_population(populationSize, searchSpace::Array{(Float64, Float64)})
-  dims = length(searchSpace)
-  mins = [s[1] for s=searchSpace]
-  maxs = [s[2] for s=searchSpace]
-  deltas = maxs - mins
-  # Basically min + delta * rand(), but broadcast over the columns...
-  broadcast(+, mins', broadcast(*, deltas', rand(populationSize, dims)))
-end
 
 function find_best_individual(problem::Problems.OptimizationProblem, opt::PopulationOptimizer)
   pop = opt.population
