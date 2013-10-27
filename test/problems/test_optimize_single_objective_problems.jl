@@ -57,5 +57,7 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
 
     @fact fitness_for_opt(p, 30, 40, 1e5, adaptive_de_rand_1_bin) < 100.0 => true
     @fact fitness_for_opt(p, 30, 40, 1e5, adaptive_de_rand_1_bin_radiuslimited) < 100.0 => true
+
+    @fact fitness_for_opt(p, 50, 40, 2e5, adaptive_de_rand_1_bin_radiuslimited) < 100.0 => true
   end
 end
