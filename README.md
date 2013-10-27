@@ -16,22 +16,48 @@ State of the Library
 Existing Optimizers
 -------------------
 
-* Differential Evolution optimizers:
+* Differential Evolution optimizers, 4 different:
   - DE/rand/1/bin: de_rand_1_bin()
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): de_rand_1_bin_radiuslimited()
-  - AdaptiveDE/rand/1/bin: de_rand_1_bin()
-  - AdaptiveDE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
+  - Adaptive DE/rand/1/bin: de_rand_1_bin()
+  - Adaptive DE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
 
 Planned Optimizers
 ------------------
 
-* Particle Swarm, PSO
+* RandomSearch (to compare to)
+* HillClimber (to compare to)
 * CMA-ES
 * Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
 
 Utilities
 ---------
 * Latin hypercube sampling for creating initial populations
+
+Planned Utilities
+-----------------
+* Running BBOB/COCO comparisons of optimizers
+
+Problems
+--------
+
+* Sphere
+* Schwefel2.21
+* Schwefel2.22
+* Schwefel1.2
+* Rosenbrock
+
+Planned Problems
+----------------
+* BBOB/COCO (Black-Box Optimization Benchmark / COmparing Continuous Optimizers) problems:
+  - Separable (Unimodal):
+    1. Sphere
+  - Low or moderate condition (Unimodal):
+    8. Rosenbrock, original
+  - High condition (Unimodal):
+    10. Ellipsoid with monotone x-transformation, condition 1e6
+  - Multi-modal:
+    15. Rastrigin with both x-transformations, condition 10
 
 Guide to selecting an optimizer
 ===============================
