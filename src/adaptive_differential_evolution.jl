@@ -15,10 +15,7 @@ type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
   # A population is a matrix of floats.
   population::Array{Float64, 2}
 
-  # A search space is defined by the min and max values (in tuples) for each
-  # of its dimenions. The dimension is the length of an individual, i.e. the
-  # number of Float64 values in it.
-  search_space::Array{(Float64,Float64),1}
+  search_space::SearchSpace
 
   # Options
   options::Dict{Any,Any}
@@ -73,7 +70,8 @@ function tell!(de::AdaptConstantsDiffEvoOpt,
   num_better
 end
 
-function adaptive_de_rand_1_bin(population = rand(100,1), searchSpace = [(0.0, 1.0)], options = ADE_DefaultOptions)
+function adaptive_de_rand_1_bin(population = rand(100,1), 
+  searchSpace = RangePerDimSearchSpace([(0.0, 1.0)]), options = ADE_DefaultOptions)
   AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin", population, searchSpace, options, 
     random_sampler, 
     de_mutation_rand_1, 
@@ -81,7 +79,8 @@ function adaptive_de_rand_1_bin(population = rand(100,1), searchSpace = [(0.0, 1
     rand_bound_from_target!)
 end
 
-function adaptive_de_rand_1_bin_radiuslimited(population = rand(100,1), searchSpace = [(0.0, 1.0)], options = ADE_DefaultOptions)
+function adaptive_de_rand_1_bin_radiuslimited(population = rand(100,1), 
+  searchSpace = RangePerDimSearchSpace([(0.0, 1.0)]), options = ADE_DefaultOptions)
   AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin/radiuslimited", population, searchSpace, options, 
     radius_limited_sampler, 
     de_mutation_rand_1, 

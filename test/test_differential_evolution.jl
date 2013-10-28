@@ -1,13 +1,8 @@
 DE = de_rand_1_bin(
   reshape([1.0:10.0], 10, 1),
-  [(0.0, 10.0)],
+  symmetric_search_space(1, (0.0, 10.0)),
   {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
 )
-
-function isWithinBounds(ind, de)
-  ss = de.search_space
-  all([(ss[i][1] <= ind[i] <= ss[i][2]) for i=1:length(ind)])
-end
 
 facts("Differential evolution optimizer") do
 
@@ -28,7 +23,7 @@ end
 context("radius_limited_sampler") do
   DE = de_rand_1_bin(
     rand(100,1),
-    [(0.0, 10.0)],
+    symmetric_search_space(1, (0.0, 10.0)),
     {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
   )
 
@@ -56,7 +51,8 @@ context("rand_bound_from_target!") do
   context("does nothing if within bounds") do
     @fact GlobalOptim.rand_bound_from_target!([0.0], [0.0], [(0.0, 1.0)]) => [0.0]
 
-    @fact GlobalOptim.rand_bound_from_target!([0.0, 11.4], [0.1, 12.3], [(0.0, 1.0), (10.0, 15.0)]) => [0.0, 11.4]
+    @fact GlobalOptim.rand_bound_from_target!([0.0, 11.4], [0.1, 12.3], 
+      RangePerDimSearchSpace([(0.0, 1.0), (10.0, 15.0)])) => [0.0, 11.4]
   end
 
   context("bounds if lower than min bound") do
@@ -119,7 +115,7 @@ context("de_mutation_rand_1") do
 
   de2 = de_rand_1_bin(
     reshape([1.0:8.0], 4, 2),
-    [(0.0, 10.0), (0.0, 10.0)],
+    symmetric_search_space(2, (0.0, 10.0)),
     {"f" => 0.6, "cr" => 0.5, "NumParents" => 3}
   )
 
@@ -143,11 +139,11 @@ context("ask") do
 
     @fact ndims(trial) => 2
     @fact 1 <= trialIndex <= length(DE.population) => true
-    @fact isWithinBounds(trial, DE) => true
+    @fact isinspace(trial, DE.search_space) => true
 
     @fact ndims(target) => 2
     @fact 1 <= targetIndex <= length(DE.population) => true
-    @fact isWithinBounds(target, DE) => true
+    @fact isinspace(target, DE.search_space) => true
 
     @fact trialIndex == targetIndex => true
   end

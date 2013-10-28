@@ -14,10 +14,8 @@ export  OptimizationProblem,
         # Search spaces
         SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace, 
         RangePerDimSearchSpace, symmetric_search_space,
-        ndims, mins, maxs, deltas, ranges, range_for_dim,
-        rand_individual, rand_individuals, isinspace,
-
-        latin_hypercube_sampling,
+        numdims, mins, maxs, deltas, ranges, range_for_dim,
+        rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
 
         hat_compare, isbetter, isworse, samefitness,
         popsize,
@@ -26,6 +24,7 @@ export  OptimizationProblem,
 
 abstract Optimizer
 
+include("utils.jl")
 include("fitness.jl")
 include("population.jl")
 

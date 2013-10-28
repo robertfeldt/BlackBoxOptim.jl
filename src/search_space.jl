@@ -10,17 +10,22 @@ abstract FixedDimensionSearchSpace <: SearchSpace
 # valid values.
 abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
 
-ndims(css::ContinuousSearchSpace) = css.numdims
-ranges(css::ContinuousSearchSpace) = [range_for_dim(css, i) for i in 1:ndims(css)]
+numdims(css::ContinuousSearchSpace) = css.numdims
+ranges(css::ContinuousSearchSpace) = [range_for_dim(css, i) for i in 1:numdims(css)]
 
 # Access individual range for a dim.
 range_for_dim(css::ContinuousSearchSpace, i::Int) = (mins(css)[i], maxs(css)[i])
 
-# Generate a number of individuals given the min and max. Random sampling
-# within the space.
+# Generate a number of individuals by random sampling in the search space.
 function rand_individuals(css::ContinuousSearchSpace, numIndividuals)
   # Basically min + delta * rand(), but broadcast over the columns...
-  broadcast(+, mins(css)', broadcast(*, deltas(css)', rand(numIndividuals, ndims(css))))
+  broadcast(+, mins(css), broadcast(*, deltas(css), rand(numIndividuals, numdims(css))))
+end
+
+# Generate a number of individuals via latin hypercube sampling. This should
+# be the default when creating the initial population.
+function rand_individuals_lhs(css::ContinuousSearchSpace, numIndividuals)
+  GlobalOptim.Utils.latin_hypercube_sampling(mins(css), maxs(css), numIndividuals)
 end
 
 # Generate one random candidate.
@@ -51,6 +56,9 @@ end
 mins(rss::RangePerDimSearchSpace) = rss.mins
 maxs(rss::RangePerDimSearchSpace) = rss.maxs
 deltas(rss::RangePerDimSearchSpace) = rss.deltas
+
+#convert(::Type{ContinuousSearchSpace}, ranges::Array{(Float64,Float64),1}) =
+#  RangePerDimSearchSpace(ranges)
 
 # Convenience function to create symmetric search spaces.
 symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace([range for i in 1:numdims])

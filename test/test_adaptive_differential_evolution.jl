@@ -20,11 +20,11 @@ context("ask") do
 
     @fact ndims(trial) => 2
     @fact 1 <= trialIndex <= length(ade.population) => true
-    @fact isWithinBounds(trial, ade) => true
+    @fact isinspace(trial, ade.search_space) => true
 
     @fact ndims(target) => 2
     @fact 1 <= targetIndex <= length(ade.population) => true
-    @fact isWithinBounds(target, ade) => true
+    @fact isinspace(target, ade.search_space) => true
 
     @fact trialIndex == targetIndex => true
   end

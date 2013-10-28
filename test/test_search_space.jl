@@ -1,7 +1,7 @@
 facts("Search space") do
   context("isinspace") do
     for(i in 1:NumTestRepetitions)
-      reps = rand(1:100)
+      reps = rand(1:10)
       ss1 = symmetric_search_space(reps, (0.0, 1.0))
       ind = rand_individual(ss1)
       for(j in 1:reps)
@@ -12,7 +12,7 @@ facts("Search space") do
 
   context("Symmetric search space with default range") do
     ss1 = symmetric_search_space(1)
-    @fact ndims(ss1) => 1
+    @fact numdims(ss1) => 1
     @fact ranges(ss1) => [(0.0, 1.0)]
     @fact range_for_dim(ss1,1) => (0.0, 1.0)
 
@@ -23,7 +23,7 @@ facts("Search space") do
     end
 
     ss3 = symmetric_search_space(3)
-    @fact ndims(ss3) => 3
+    @fact numdims(ss3) => 3
     @fact ranges(ss3) => [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
     @fact range_for_dim(ss3,1) => (0.0, 1.0)
     @fact range_for_dim(ss3,2) => (0.0, 1.0)
@@ -38,7 +38,7 @@ facts("Search space") do
 
   context("SymmetricSearchSpace with given range") do  
     ss1 = symmetric_search_space(1, (-1.0, 1.0))
-    @fact ndims(ss1) => 1
+    @fact numdims(ss1) => 1
     @fact ranges(ss1) => [(-1.0, 1.0)]
     @fact range_for_dim(ss1,1) => (-1.0, 1.0)
 
@@ -46,7 +46,7 @@ facts("Search space") do
       reps = rand(1:100)
       range = (rand(), rand())
       ss = symmetric_search_space(reps, range)
-      @fact ndims(ss) => reps
+      @fact numdims(ss) => reps
       @fact all([(dr == range) for dr in ranges(ss)]) => true
     end
   end
@@ -58,12 +58,55 @@ facts("Search space") do
       range = (mm[1], mm[2])
       ss = symmetric_search_space(reps, range)
       ind = rand_individual(ss)
-      @fact length(ind) => ndims(ss)
-      if !isinspace(ind, ss)
-        show(ind)
-        show(ss)
-      end
+      @fact length(ind) => numdims(ss)
       @fact isinspace(ind, ss) => true
     end
   end
+
+  context("rand_individuals creates many individuals and all are within the search space") do
+    for(i in 1:NumTestRepetitions)
+      reps = rand(1:10)
+      mm = sort(rand(2,1), 1)
+      range = (mm[1], mm[2])
+      ss = symmetric_search_space(reps, range)
+      numinds = rand(1:10)
+      inds = rand_individuals(ss, numinds)
+      @fact size(inds,1) => numinds
+      @fact size(inds,2) => numdims(ss)
+      for(j in 1:numinds)
+        @fact isinspace(inds[j], ss) => true
+      end
+    end
+  end
+
+  context("RangePerDimSearchSpace") do
+    ss = RangePerDimSearchSpace([(0.0, 1.0)])
+    @fact mins(ss) => hcat([0.0])
+    @fact maxs(ss) => hcat([1.0])
+    @fact deltas(ss) => hcat([1.0])
+
+    ss = RangePerDimSearchSpace([(0.0, 1.0), (0.5, 10.0)])
+    @fact mins(ss) => [0.0 0.5]
+    @fact maxs(ss) => [1.0 10.0]
+    @fact deltas(ss) => [1.0 9.5]
+  end
+
+  context("rand_individuals_lhs samples in LHS intervals") do
+    ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+
+    inds = rand_individuals_lhs(ss, 2)
+    @fact size(inds, 1) => 2
+    @fact size(inds, 2) => 3
+
+    sorted = sort(inds, 1) # Sort per column => in their ordered intervals
+    @fact 0.0 <= sorted[1,1] <= 0.5 => true
+    @fact 0.5 <= sorted[2,1] <= 1.0 => true
+
+    @fact 2.0 <= sorted[1,2] <= 2.5 => true
+    @fact 2.5 <= sorted[2,2] <= 3.0 => true
+
+    @fact 4.0 <= sorted[1,3] <= 4.5 => true
+    @fact 4.5 <= sorted[2,3] <= 5.0 => true
+  end
+
 end

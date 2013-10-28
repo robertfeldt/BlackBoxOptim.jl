@@ -40,15 +40,3 @@ function update_toplist!(candidate, candidateFitness, population::PopulationWith
     population.top_fitness = vcat(population.top_fitness[1:i,:], candidateFitness, population.top_fitness[i:end-1,:])
   end
 end
-
-# Latin hypercube sampling of numIndividuals in a given search space.
-function latin_hypercube_sampling(numSamples, searchSpace::Vector{(Float64, Float64)})
-  numdims = length(searchSpace)
-  result = zeros(numSamples, numdims)
-  for(i in 1:numdims)
-    min, max = searchSpace[i]
-    samples_for_dim = linspace(min, max, numSamples)
-    result[:,i] = samples_for_dim[shuffle([1:numSamples])]
-  end
-  result
-end

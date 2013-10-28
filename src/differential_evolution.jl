@@ -18,7 +18,7 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
   # A search space is defined by the min and max values (in tuples) for each
   # of its dimenions. The dimension is the length of an individual, i.e. the
   # number of Float64 values in it.
-  search_space::Array{(Float64,Float64),1}
+  search_space::SearchSpace
 
   # Options
   options::Dict{Any,Any}
@@ -123,21 +123,22 @@ end
 
 # If we come out-of-bounds we randomly sample between the target value
 # and the bound.
-function rand_bound_from_target!(individual, target, searchSpace)
+function rand_bound_from_target!(individual, target, searchSpace::SearchSpace)
+  ssmins, ssmaxs = mins(searchSpace), maxs(searchSpace)
   for i in 1:length(individual)
-    min, max = searchSpace[i]
-    #print("min = "); show(min); println("")
-    #print("max = "); show(max); println("")
-    #print("i = "); show(i); println("")
-    #print("ind[i,1] = "); show(individual[i,1]); println("")
+    min, max = ssmins[i], ssmaxs[i]
 
     if individual[i] < min
       individual[i] = min + rand() * (target[i] - min)
-    elseif individual[i] > max
+    elseif individual[i] > ssmaxs[i]
       individual[i] = target[i] + rand() * (max - target[i])
     end
   end
   individual
+end
+
+function rand_bound_from_target!(individual, target, searchSpace::Array{(Float64,Float64),1})
+  rand_bound_from_target!(individual, target, RangePerDimSearchSpace(searchSpace))
 end
 
 # Tell the optimizer about the ranking of candidates. Returns the number of

@@ -2,6 +2,8 @@ include("helper.jl")
 
 my_tests = [
 
+  "test_utils.jl",
+
   "test_fitness.jl",
   "test_population.jl",
   "test_bimodal_cauchy_distribution.jl",

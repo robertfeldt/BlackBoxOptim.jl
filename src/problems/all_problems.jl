@@ -1,5 +1,8 @@
 module Problems
 
+import GlobalOptim.numdims, # Since we will add to it
+        GlobalOptim.SearchSpace, GlobalOptim.symmetric_search_space
+
 export  OptimizationProblem,
         numdims, search_space, set_numdims!
 
@@ -19,7 +22,7 @@ type OptimizationProblem
   dimensions::Union(Nothing,Int)
 
   # Search space
-  search_space::Union(Nothing,Array{(Float64, Float64)})
+  search_space::Union(Nothing,SearchSpace)
 end
 
 # Number of dimensions is by default 2, unless already specified.
@@ -28,14 +31,14 @@ numdims(p::OptimizationProblem) = (p.dimensions == nothing) ? 2 : p.dimensions
 function set_numdims!(ndims, p::OptimizationProblem)
   p.dimensions = ndims
   if (p.any_dimensional)
-    p.search_space = [p.range_per_dimension for i in 1:numdims(p)]
+    p.search_space = symmetric_search_space(numdims(p), p.range_per_dimension)
   end
   p
 end
 
 function search_space(p::OptimizationProblem)
   if (p.search_space == nothing)
-    [p.range_per_dimension for i in 1:numdims(p)]
+    symmetric_search_space(numdims(p), p.range_per_dimension)
   else
     p.search_space
   end
