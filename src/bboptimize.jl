@@ -91,8 +91,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   numSteps = 1e4, shw = true, save = false)
 
   num_better = 0
-  tr("----------------------------------------------------------------------", shw, save)
-  tr("!!! Starting optimization !!!!", shw, save)
+  tr("Starting optimization", shw, save)
 
   step = 1
   tic()
@@ -126,7 +125,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   show(best)
   tr("\n\nFitness: ", true, save)
   show(fitness)
-  tr("\n----------------------------------------------------------------------", shw, save)
+  tr("\n", true, false)
 
   return best, fitness
 end
