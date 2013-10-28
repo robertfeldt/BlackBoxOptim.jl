@@ -9,13 +9,27 @@ Eventually we hope to provide a JuMP interface but since it is not clear if JuMP
 
 Just install from the github by calling:
 
-      Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
+    Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
 
 from a Julia repl.
 
 # Usage
 
-TBD
+To show how the BlackBoxOptim package can be used, let's implement the Rosenbrock function, a classic problem in numerical optimization. We'll assume that you have already installed BlackBoxOptim as described above.
+
+First, we'll load BlackBoxOptim and define the Rosenbrock function (in 2 dimensions):
+
+    using BlackBoxOptim
+
+    function rosenbrock2d(x::Vector)
+      return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+    end
+
+We can now call the bboptim function, specifying the function to be optimized (here: rosenbrock2d) and the range of values allowed for each of the dimensions of the input:
+
+    bboptim(rosenbrock2d, (-5.0, 5.0); dimensions = 2)
+
+BlackBoxOptim will default to using an adaptive differential evolution optimizer in this case and a solution where both elements can be Floats in the range -5.0:5.0.
 
 # State of the Library
 
