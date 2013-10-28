@@ -5,16 +5,21 @@ BlackBoxOptim is a (experimental, work-in-progress) global optimization framewor
 
 Eventually we hope to provide a JuMP interface but since it is not clear if JuMP supports multiple objectives this is to be decided.
 
-Usage
-=====
+# Installation
+
+Just install from the github by calling:
+
+      Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
+
+from a Julia repl.
+
+# Usage
 
 TBD
 
-State of the Library
-====================
+# State of the Library
 
-Existing Optimizers
--------------------
+## Existing Optimizers
 
 * Differential Evolution optimizers, 4 different:
   - DE/rand/1/bin: de_rand_1_bin()
@@ -22,24 +27,20 @@ Existing Optimizers
   - Adaptive DE/rand/1/bin: de_rand_1_bin()
   - Adaptive DE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
 
-Planned Optimizers
-------------------
+## Planned Optimizers
 
 * RandomSearch (to compare to)
 * HillClimber (to compare to)
 * CMA-ES
 * Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
 
-Utilities
----------
+## Utilities
 * Latin hypercube sampling for creating initial populations
 
-Planned Utilities
------------------
+## Planned Utilities
 * Running BBOB/COCO comparisons of optimizers
 
-Problems
---------
+## Problems
 
 * Sphere
 * Schwefel2.21
@@ -47,8 +48,7 @@ Problems
 * Schwefel1.2
 * Rosenbrock
 
-Planned Problems
-----------------
+## Planned Problems
 * BBOB/COCO (Black-Box Optimization Benchmark / COmparing Continuous Optimizers) problems:
   - Separable (Unimodal):
     1. Sphere
@@ -59,8 +59,7 @@ Planned Problems
   - Multi-modal:
     15. Rastrigin with both x-transformations, condition 10
 
-Guide to selecting an optimizer
-===============================
+# Guide to selecting an optimizer
 
 In our experiments the radius limited DE's perform better than the classic de_rand_1_bin DE in almost all cases. And combining it with adaptive setting of the weights makes it even better. So for now adaptive_de_rand_1_bin_radiuslimited() is our recommended "goto" optimizer. However, the difference between the top performing DE's is slight.
 
