@@ -6,13 +6,13 @@ ade = adaptive_de_rand_1_bin()
 
 context("sample_f") do
   for(i in 1:NumTestRepetitions)
-    @fact 0.0 <= GlobalOptim.sample_f(ade) <= 1.0 => true
+    @fact 0.0 <= BlackBoxOptim.sample_f(ade) <= 1.0 => true
   end
 end
 
 context("ask") do
   for(i in 1:NumTestRepetitions)
-    res = GlobalOptim.ask(ade)
+    res = BlackBoxOptim.ask(ade)
 
     @fact length(res) => 2
     trial, trialIndex = res[1]

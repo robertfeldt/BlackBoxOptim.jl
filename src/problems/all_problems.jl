@@ -1,7 +1,7 @@
 module Problems
 
-import GlobalOptim.numdims, # Since we will add to it
-        GlobalOptim.SearchSpace, GlobalOptim.symmetric_search_space
+import BlackBoxOptim.numdims, # Since we will add to it
+        BlackBoxOptim.SearchSpace, BlackBoxOptim.symmetric_search_space
 
 export  OptimizationProblem,
         numdims, search_space, set_numdims!

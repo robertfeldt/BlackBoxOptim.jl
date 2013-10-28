@@ -1,13 +1,13 @@
-using GlobalOptim
-using GlobalOptim.Problems
+using BlackBoxOptim
+using BlackBoxOptim.Problems
 
 function fitness_for_opt(problem, numDimensions, populationSize, numSteps, 
   optFunc = de_rand_1_bin_radiuslimited)
-  problem = GlobalOptim.Problems.set_numdims!(numDimensions, problem)
+  problem = BlackBoxOptim.Problems.set_numdims!(numDimensions, problem)
 
   ss = search_space(problem)
 
-  pop = GlobalOptim.rand_individuals_lhs(ss, populationSize)
+  pop = BlackBoxOptim.rand_individuals_lhs(ss, populationSize)
 
   opt = optFunc(pop, ss)
 
@@ -21,7 +21,7 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
   simple_problems = ["Sphere", "Schwefel2.22", "Schwefel2.22"]
   for(problem in simple_problems)
     context(problem) do
-      p = GlobalOptim.Problems.examples[problem]
+      p = BlackBoxOptim.Problems.examples[problem]
 
       @fact fitness_for_opt(p, 5, 20,  5e3, de_rand_1_bin) < 0.01 => true
       @fact fitness_for_opt(p, 5, 20,  5e3, de_rand_1_bin_radiuslimited) < 0.01 => true
@@ -36,7 +36,7 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
 
   context("Schwefel1.2") do
     problem = "Schwefel1.2"
-    p = GlobalOptim.Problems.examples[problem]
+    p = BlackBoxOptim.Problems.examples[problem]
     @fact fitness_for_opt(p, 5, 20,  5e3) < 0.01 => true
     @fact fitness_for_opt(p, 10, 50, 5e4) < 0.01 => true
 
@@ -49,7 +49,7 @@ facts("Optimize single objective problems in 5, 10, and 30 dimensions with DE") 
 
   context("Rosenbrock") do
     problem = "Rosenbrock"
-    p = GlobalOptim.Problems.examples[problem]
+    p = BlackBoxOptim.Problems.examples[problem]
     @fact fitness_for_opt(p, 5, 20,   1e4) < 100.0 => true
     @fact fitness_for_opt(p, 10, 20,  5e4) < 100.0 => true
     @fact fitness_for_opt(p, 30, 40, 2e5) < 100.0 => true

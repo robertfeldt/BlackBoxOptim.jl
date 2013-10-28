@@ -9,7 +9,7 @@ context("ask") do
 
     opt = random_searcher(ss)
 
-    res = GlobalOptim.ask(opt)
+    res = BlackBoxOptim.ask(opt)
 
     @fact length(res) => 1
     trial, trialIndex = res[1]

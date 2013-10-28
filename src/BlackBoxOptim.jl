@@ -1,4 +1,4 @@
-module GlobalOptim
+module BlackBoxOptim
 
 export  OptimizationProblem,
 
@@ -120,4 +120,4 @@ function optimize(problem::Problems.OptimizationProblem, opt::Optimizer, numStep
   return best, fitness
 end
 
-end # module GlobalOptim
+end # module BlackBoxOptim

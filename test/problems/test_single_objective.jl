@@ -1,9 +1,9 @@
-using GlobalOptim.Problems
+using BlackBoxOptim.Problems
 
 facts("Single objective functions") do
 
 context("Sphere") do
-  p = GlobalOptim.Problems.examples["Sphere"]
+  p = BlackBoxOptim.Problems.examples["Sphere"]
   sphere = p.funcs[1]
 
   @fact sphere([0]) => 0
@@ -21,13 +21,13 @@ context("Sphere") do
   @fact numdims(p) => 2 # Default is 2 if not specified
   @fact ranges(search_space(p)) => [(-100.0, 100.0), (-100.0, 100.0)]
 
-  p2 = GlobalOptim.Problems.set_numdims!(3, p)
+  p2 = BlackBoxOptim.Problems.set_numdims!(3, p)
   @fact numdims(p2) => 3
   @fact ranges(search_space(p2)) => [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
 context("Schwefel2.22") do
-  p = GlobalOptim.Problems.examples["Schwefel2.22"]
+  p = BlackBoxOptim.Problems.examples["Schwefel2.22"]
   schwefel2_22 = p.funcs[1]
 
   @fact schwefel2_22([0]) => 0
@@ -45,13 +45,13 @@ context("Schwefel2.22") do
   @fact numdims(p) => 2 # Default is 2 if not specified
   @fact ranges(search_space(p)) => [(-10.0, 10.0), (-10.0, 10.0)]
 
-  p2 = GlobalOptim.Problems.set_numdims!(4, p)
+  p2 = BlackBoxOptim.Problems.set_numdims!(4, p)
   @fact numdims(p2) => 4
   @fact ranges(search_space(p2)) => [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
 context("Schwefel1.2") do
-  p = GlobalOptim.Problems.examples["Schwefel1.2"]
+  p = BlackBoxOptim.Problems.examples["Schwefel1.2"]
   schwefel1_2 = p.funcs[1]
 
   @fact schwefel1_2([0]) => 0
@@ -71,7 +71,7 @@ context("Schwefel1.2") do
 end
 
 context("Schwefel2.21") do
-  p = GlobalOptim.Problems.examples["Schwefel2.21"]
+  p = BlackBoxOptim.Problems.examples["Schwefel2.21"]
   schwefel2_21 = p.funcs[1]
 
   @fact schwefel2_21([0]) => 1
@@ -91,7 +91,7 @@ context("Schwefel2.21") do
 end
 
 context("Rosenbrock") do
-  p = GlobalOptim.Problems.examples["Rosenbrock"]
+  p = BlackBoxOptim.Problems.examples["Rosenbrock"]
   rosenbrock = p.funcs[1]
 
   @fact rosenbrock([1, 2]) => 100

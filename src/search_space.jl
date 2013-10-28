@@ -25,7 +25,7 @@ end
 # Generate a number of individuals via latin hypercube sampling. This should
 # be the default when creating the initial population.
 function rand_individuals_lhs(css::ContinuousSearchSpace, numIndividuals)
-  GlobalOptim.Utils.latin_hypercube_sampling(mins(css), maxs(css), numIndividuals)
+  BlackBoxOptim.Utils.latin_hypercube_sampling(mins(css), maxs(css), numIndividuals)
 end
 
 # Generate one random candidate.

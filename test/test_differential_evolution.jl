@@ -9,7 +9,7 @@ facts("Differential evolution optimizer") do
 context("random_sampler") do
   for(i in 1:NumTestRepetitions)
     numSamples = rand(1:8)
-    sampled = GlobalOptim.random_sampler(DE, numSamples)
+    sampled = BlackBoxOptim.random_sampler(DE, numSamples)
 
     @fact length(sampled) => numSamples
 
@@ -33,7 +33,7 @@ context("radius_limited_sampler") do
 
   for(i in 1:NumTestRepetitions)
     numSamples = rand(1:sampler_radius)
-    sampled = GlobalOptim.radius_limited_sampler(DE, numSamples)
+    sampled = BlackBoxOptim.radius_limited_sampler(DE, numSamples)
 
     @fact length(sampled) => numSamples
 
@@ -49,47 +49,47 @@ end
 
 context("rand_bound_from_target!") do
   context("does nothing if within bounds") do
-    @fact GlobalOptim.rand_bound_from_target!([0.0], [0.0], [(0.0, 1.0)]) => [0.0]
+    @fact BlackBoxOptim.rand_bound_from_target!([0.0], [0.0], [(0.0, 1.0)]) => [0.0]
 
-    @fact GlobalOptim.rand_bound_from_target!([0.0, 11.4], [0.1, 12.3], 
+    @fact BlackBoxOptim.rand_bound_from_target!([0.0, 11.4], [0.1, 12.3], 
       RangePerDimSearchSpace([(0.0, 1.0), (10.0, 15.0)])) => [0.0, 11.4]
   end
 
   context("bounds if lower than min bound") do
-    @fact GlobalOptim.rand_bound_from_target!([-0.1], [0.0], [(0.0, 1.0)]) => [0.0]
+    @fact BlackBoxOptim.rand_bound_from_target!([-0.1], [0.0], [(0.0, 1.0)]) => [0.0]
 
-    res = GlobalOptim.rand_bound_from_target!([-0.1], [0.5], [(0.0, 1.0)])
+    res = BlackBoxOptim.rand_bound_from_target!([-0.1], [0.5], [(0.0, 1.0)])
     @fact 0.5 >= res[1] >= 0.0 => true
 
-    res = GlobalOptim.rand_bound_from_target!([-11.1, 0.5], [-10.8, 0.5], [(-11.0, 1.0), (0.0, 1.0)])
+    res = BlackBoxOptim.rand_bound_from_target!([-11.1, 0.5], [-10.8, 0.5], [(-11.0, 1.0), (0.0, 1.0)])
     @fact -10.8 >= res[1] >= -11.0 => true
     @fact res[2] => 0.5
 
-    res = GlobalOptim.rand_bound_from_target!([50.4, -103.1], [49.6, -101.4], [(30.0, 60.0), (-102.0, -1.0)])
+    res = BlackBoxOptim.rand_bound_from_target!([50.4, -103.1], [49.6, -101.4], [(30.0, 60.0), (-102.0, -1.0)])
     @fact res[1] => 50.4
     @fact -101.4 >= res[2] >= -102.0 => true
   end
 
   context("bounds if higher than max bound") do
-    @fact GlobalOptim.rand_bound_from_target!([1.1], [1.0], [(0.0, 1.0)]) => [1.0]
+    @fact BlackBoxOptim.rand_bound_from_target!([1.1], [1.0], [(0.0, 1.0)]) => [1.0]
 
-    res = GlobalOptim.rand_bound_from_target!([97.0], [95.0], [(-10.0, 96.0)])
+    res = BlackBoxOptim.rand_bound_from_target!([97.0], [95.0], [(-10.0, 96.0)])
     @fact 95.0 <= res[1] <= 96.0 => true
   end
 end
 
 context("de_crossover_binomial") do
   context("always copies from donor if length is 1") do
-    @fact GlobalOptim.de_crossover_binomial(DE, [0.0], 1, [1.0]) => [1.0]
+    @fact BlackBoxOptim.de_crossover_binomial(DE, [0.0], 1, [1.0]) => [1.0]
 
-    @fact GlobalOptim.de_crossover_binomial(DE, [-10.0], 1, [42.42]) => [42.42]
+    @fact BlackBoxOptim.de_crossover_binomial(DE, [-10.0], 1, [42.42]) => [42.42]
   end
 
   context("always copies at least one element from donor") do
     for(i in 1:NumTestRepetitions)
       len = rand(1:100)
       target, donor = rand(1, len), rand(1, len)
-      res = GlobalOptim.de_crossover_binomial(DE, target, 1, donor)
+      res = BlackBoxOptim.de_crossover_binomial(DE, target, 1, donor)
       @fact any([ in(x, donor) for x = res ]) => true
     end
   end
@@ -98,20 +98,20 @@ context("de_crossover_binomial") do
     for(i in 1:NumTestRepetitions)
       len = 50
       target, donor = rand(1, len), rand(1, len)
-      res = GlobalOptim.de_crossover_binomial(DE, target, 1, donor)
+      res = BlackBoxOptim.de_crossover_binomial(DE, target, 1, donor)
       @fact any([ in(x, target) for x = res ]) => true
     end
   end
 end
 
 context("de_mutation_rand_1") do
-  @fact ndims(GlobalOptim.de_mutation_rand_1(DE, 1, [4,9,8])) => 2
+  @fact ndims(BlackBoxOptim.de_mutation_rand_1(DE, 1, [4,9,8])) => 2
 
-  @fact GlobalOptim.de_mutation_rand_1(DE, 1, [1, 2, 3])[1] => (3.0 + (0.4 * (1.0 - 2.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, 2, [2, 3, 1])[1] => (1.0 + (0.4 * (2.0 - 3.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, 3, [3, 2, 1])[1] => (1.0 + (0.4 * (3.0 - 2.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, 4, [1, 3, 5])[1] => (5.0 + (0.4 * (1.0 - 3.0)))
-  @fact GlobalOptim.de_mutation_rand_1(DE, 5, [4, 9, 8])[1] => (8.0 + (0.4 * (4.0 - 9.0)))
+  @fact BlackBoxOptim.de_mutation_rand_1(DE, 1, [1, 2, 3])[1] => (3.0 + (0.4 * (1.0 - 2.0)))
+  @fact BlackBoxOptim.de_mutation_rand_1(DE, 2, [2, 3, 1])[1] => (1.0 + (0.4 * (2.0 - 3.0)))
+  @fact BlackBoxOptim.de_mutation_rand_1(DE, 3, [3, 2, 1])[1] => (1.0 + (0.4 * (3.0 - 2.0)))
+  @fact BlackBoxOptim.de_mutation_rand_1(DE, 4, [1, 3, 5])[1] => (5.0 + (0.4 * (1.0 - 3.0)))
+  @fact BlackBoxOptim.de_mutation_rand_1(DE, 5, [4, 9, 8])[1] => (8.0 + (0.4 * (4.0 - 9.0)))
 
   de2 = de_rand_1_bin(
     reshape([1.0:8.0], 4, 2),
@@ -119,19 +119,19 @@ context("de_mutation_rand_1") do
     {"f" => 0.6, "cr" => 0.5, "NumParents" => 3}
   )
 
-  res = GlobalOptim.de_mutation_rand_1(de2, 10, [1,2,3])
+  res = BlackBoxOptim.de_mutation_rand_1(de2, 10, [1,2,3])
   @fact ndims(res) => 2
   @fact res[1] => (3.0 + (0.6 * (1.0 - 2.0)))
   @fact res[2] => (7.0 + (0.6 * (5.0 - 6.0)))
 
-  res2 = GlobalOptim.de_mutation_rand_1(de2, 2, [1,2,4])
+  res2 = BlackBoxOptim.de_mutation_rand_1(de2, 2, [1,2,4])
   @fact res2[1] => (4.0 + (0.6 * (1.0 - 2.0)))
   @fact res2[2] => (8.0 + (0.6 * (5.0 - 6.0)))
 end
 
 context("ask") do
   for(i in 1:NumTestRepetitions)
-    res = GlobalOptim.ask(DE)
+    res = BlackBoxOptim.ask(DE)
 
     @fact length(res) => 2
     trial, trialIndex = res[1]
