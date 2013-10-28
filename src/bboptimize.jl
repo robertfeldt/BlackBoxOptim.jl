@@ -14,7 +14,7 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
     end
     search_space = symmetric_search_space(dimensions, searchRange)
   elseif typeof(searchRange) == typeof( [(0.0, 1.0)] )
-    if dimensions == :NotSpecified
+    if dimensions != :NotSpecified
       throw(ArgumentError("You CANNOT specify the number of dimensions in a solution when first stating the search space ranges $(searchRange)"))
     end
     search_space = RangePerDimSearchSpace(searchRange)

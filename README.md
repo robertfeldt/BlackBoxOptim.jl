@@ -31,7 +31,7 @@ We can now call the `bboptimize` function, specifying the function to be optimiz
 
 BlackBoxOptim will default to using an adaptive differential evolution optimizer in this case and use it to try to locate a solution where both elements can be Floats in the range -5.0:5.0. If you wanted a different range of allowed values for the second dimension of the solution you can specify that with a range of allowed values. In this case you do not need to specify the number of dimensions since that is implicit from the number of ranges supplied:
 
-    bboptimize(rosenbrock2d, [(-5.0, 5.0), (0.0, 1.0)])
+    bboptimize(rosenbrock2d, [(-5.0, 5.0), (-2.0, 2.0)])
 
 If you want to use a different optimizer that can be specified with the `method` keyword. For example, using the standard differential evolution optimizer DE/rand/1/bin:
 
