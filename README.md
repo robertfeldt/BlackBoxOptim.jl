@@ -21,7 +21,7 @@ First, we'll load BlackBoxOptim and define the Rosenbrock function (in 2 dimensi
 
     using BlackBoxOptim
 
-    function rosenbrock2d(x::Vector)
+    function rosenbrock2d(x)
       return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
     end
 
