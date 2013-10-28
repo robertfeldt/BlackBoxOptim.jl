@@ -4,7 +4,7 @@ function bboptimize(func::Function, searchRange, method::Symbol = :adaptive_de_r
   show_trace::Bool = true,
   save_trace::Bool = false,
   population_size::Integer = 50,
-  method_options::Dict{ASCIIString,Any} = {})
+  method_options = {})
 
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
