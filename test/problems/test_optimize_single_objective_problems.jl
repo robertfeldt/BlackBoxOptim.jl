@@ -13,7 +13,7 @@ function fitness_for_opt(problem, numDimensions, populationSize, numSteps,
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(opt.name)")
 
-  best, fitness = optimize(problem, opt, numSteps)
+  best, fitness = BlackBoxOptim.run_optimizer_on_problem(opt, problem, numSteps)
   fitness
 end
 

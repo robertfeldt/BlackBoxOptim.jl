@@ -72,55 +72,7 @@ include("adaptive_differential_evolution.jl")
 # Problems for testing
 include(joinpath("problems", "all_problems.jl"))
 
-function find_best_individual(problem::Problems.OptimizationProblem, opt::PopulationOptimizer)
-  pop = opt.population
-  candidates = [(pop[i,:], i) for i in 1:size(pop,1)]
-  rank_by_fitness(candidates, problem)[1]
-end
-
-function rank_by_fitness(candidates, problem)
-  func = problem.funcs[1]
-  # Note that we re-evaluate all candidates here. This might be wasteful and
-  # we should cache if evaluations are costly.
-  fitness = [(c[1], c[2], func(c[1])) for c=candidates]
-  sort(fitness; by = (t) -> t[3])
-end
-
-function optimize(problem::Problems.OptimizationProblem, opt::Optimizer, numSteps = 1e4)
-  num_better = 0
-  println("----------------------------------------------------------------------")
-  println("!!! Starting optimization !!!!")
-
-  tic()
-  for(step in 1:numSteps)
-    if(mod(step, 2.5e4) == 0)
-      println("Step $(step): Improvements/step = $(num_better/step)")
-    end
-    candidates = ask(opt)
-
-    ranked_candidates = rank_by_fitness(candidates, problem)
-
-    num_better += tell!(opt, ranked_candidates)
-  end
-
-  t = toc()
-  println("Steps per second = $(numSteps/t)")
-
-  if(mod(numSteps, 2.5e4) != 0)
-    println("Step $(numSteps): Improvements/step = $(num_better/numSteps)")
-  end
-
-  println("\nMean value (in population) per position:")
-  show(mean(opt.population,1))
-  println("\n\nStd dev (in population) per position:")
-  show(std(opt.population,1))
-
-  best, index, fitness = find_best_individual(problem, opt)
-  print("\n\nBest candidate found: "); show(best)
-  print("\n\nFitness: "); show(fitness)
-  println("\n----------------------------------------------------------------------")
-
-  return best, fitness
-end
+# End-user/interface functions
+include("bboptimize.jl")
 
 end # module BlackBoxOptim
