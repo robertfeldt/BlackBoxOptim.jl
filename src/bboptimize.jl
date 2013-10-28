@@ -1,5 +1,5 @@
-function bboptimize(func::Function, searchRange, method::Symbol = :adaptive_de_rand_1_bin_radiuslimited;
-  iterations::Integer = 20000,
+function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
+  iterations::Integer = 10000,
   dimensions = :NotSpecified,
   show_trace::Bool = true,
   save_trace::Bool = false,
@@ -9,7 +9,7 @@ function bboptimize(func::Function, searchRange, method::Symbol = :adaptive_de_r
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
   if typeof(searchRange) == typeof( (0.0, 1.0) )
-    if dimensions < 1
+    if dimensions == :NotSpecified
       throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
     end
     search_space = symmetric_search_space(dimensions, searchRange)
@@ -42,12 +42,19 @@ function bboptimize(func::Function, searchRange, method::Symbol = :adaptive_de_r
   end
 
   # Check that a valid method has been specified and then set up the optimizer
-  valid_methods = [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :ade_rand_1_bin, :ade_rand_1_bin_radiuslimited]
-  if !any([(method == vm) for vm in valid_methods])
+  valid_methods = [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, 
+    :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited
+  ]
+  if (typeof(method) != Symbol) || !any([(method == vm) for vm in valid_methods])
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(valid_methods)")) 
   end
   pop = BlackBoxOptim.rand_individuals_lhs(search_space, population_size)
-  optimizer_func = eval("$(method)")
+  optimizer_func = {
+    :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
+    :adaptive_de_rand_1_bin => BlackBoxOptim.adaptive_de_rand_1_bin,
+    :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
+    :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
+  }[method]
   optimizer = optimizer_func(pop, search_space)
 
   # Now create an optimization problem with the given information. We currently reuse the type
@@ -87,9 +94,9 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   tr("----------------------------------------------------------------------", shw, save)
   tr("!!! Starting optimization !!!!", shw, save)
 
-  step = 0
+  step = 1
   tic()
-  while(step < numSteps)
+  while(step <= numSteps)
     if(mod(step, 2.5e4) == 0)
       tr("Step $(step): Improvements/step = $(num_better/step)", shw, save)
     end
@@ -102,7 +109,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   end
   t = toq()
 
-  tr("\nOptimization stopped after $(step) steps and $(t) seconds", true, save)
+  tr("\nOptimization stopped after $(step-1) steps and $(t) seconds", true, save)
   tr("Steps per second = $(numSteps/t)", true, save)
 
   if(mod(numSteps, 2.5e4) != 0)
