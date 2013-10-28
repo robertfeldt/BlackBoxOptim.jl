@@ -24,7 +24,10 @@ export  OptimizationProblem,
 
 abstract Optimizer
 
-include("utils.jl")
+module Utils
+  include("utilities/latin_hypercube_sampling.jl")
+end
+
 include("fitness.jl")
 include("population.jl")
 

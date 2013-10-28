@@ -1,5 +1,3 @@
-module Utils
-
 # Latin hypercube sampling of values from given mins and maxs, per column.
 function latin_hypercube_sampling(mins, maxs, numSamples)
   dims = length(mins)
@@ -11,6 +9,4 @@ function latin_hypercube_sampling(mins, maxs, numSamples)
     result[:,i] = samples_for_dim[shuffle([1:numSamples])]
   end
   result
-end
-
 end

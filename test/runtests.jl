@@ -2,7 +2,7 @@ include("helper.jl")
 
 my_tests = [
 
-  "test_utils.jl",
+  "utilities/test_latin_hypercube_sampling.jl",
 
   "test_fitness.jl",
   "test_population.jl",
