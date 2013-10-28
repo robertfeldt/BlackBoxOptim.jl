@@ -3,7 +3,7 @@ module BlackBoxOptim
 export  OptimizationProblem,
 
         Optimizer, PopulationOptimizer, 
-        optimize,
+        bboptimize,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
 
