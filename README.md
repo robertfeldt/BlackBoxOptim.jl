@@ -51,6 +51,8 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
   
   bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :adaptive_de_rand_1_bin_radiuslimited)
 
+A random search seldom finds solutions with a value below 5e4 while the adaptive DE often finds solutions with values below 1.
+
 # Configurable Options
 
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
