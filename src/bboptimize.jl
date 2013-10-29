@@ -26,11 +26,43 @@ function compare_optimizers(func::Function, searchRange; methods = keys(ValidMet
 
   sorted = sort( results, by = (t) -> t[3] )
 
-  for(i in 1:length(sorted))
-    println("$(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
+  if show_trace
+    for(i in 1:length(sorted))
+      println("$(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
+    end
   end
 
   return sorted
+end
+
+function compare_optimizers(funcsAndRanges; methods = collect(keys(ValidMethods)),
+  iterations = 10000,
+  dimensions = :NotSpecified,
+  show_trace::Bool = true,
+  save_trace::Bool = false,
+  population_size::Integer = 50,
+  method_options = {})
+  
+  # Lets create an array where we will save how the methods ranks per problem.
+  ranks = zeros(length(methods), length(funcsAndRanges))
+
+  for(i in 1:length(funcsAndRanges))
+    res = compare_optimizers(funcsAndRanges[i][1], funcsAndRanges[i][2]; methods = methods, iterations = iterations,
+      dimensions = dimensions, show_trace = show_trace, save_trace = save_trace, 
+      population_size = population_size, method_options = method_options)
+    for(j in 1:length(res))
+      method, best, fitness, time = res[j]
+      index = findfirst(methods, method)
+      ranks[index, i] = j
+    end
+  end
+
+  avg_ranks = mean(ranks, 2)
+  for(i in 1:length(methods))
+    println("$(methods[i]), average rank = $(avg_ranks[i]), ranks = $(ranks[i,:])")
+  end
+
+  return ranks
 end
 
 function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,

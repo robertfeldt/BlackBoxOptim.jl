@@ -6,6 +6,10 @@ function rosenbrock(x)
   return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
 end
 
+function sphere(x)
+  sum(x.^2)
+end
+
 facts("bboptimize") do
   context("example 1 from README") do
     best, fitness = bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, show_trace = false)
@@ -29,6 +33,10 @@ facts("bboptimize") do
 
   context("example 5 from README") do
     BlackBoxOptim.compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 1e5)
+  end
+
+  context("comparing optimizers on more than one problem") do
+    BlackBoxOptim.compare_optimizers([(rosenbrock, (-5.0, 5.0)), (sphere, (-5.0, 5.0))]; dimensions = 10)
   end
 
   context("run one longer example in case there is problem with the reporting in long runs") do
