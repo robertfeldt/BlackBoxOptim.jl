@@ -1,4 +1,4 @@
-Compose is licensed under the MIT License:
+BlackBoxOptim.jl is licensed under the MIT License:
 
 > Copyright (c) 2013: Robert Feldt (robert.feldt@gmail.com)
 >
