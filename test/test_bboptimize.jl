@@ -28,8 +28,7 @@ facts("bboptimize") do
   end
 
   context("example 5 from README") do
-    bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :random_search)
-    bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :adaptive_de_rand_1_bin_radiuslimited)
+    BlackBoxOptim.compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 1e5)
   end
 
   context("run one longer example in case there is problem with the reporting in long runs") do

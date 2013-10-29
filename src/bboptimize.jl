@@ -6,6 +6,32 @@ ValidMethods = {
   :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
 }
 
+function compare_optimizers(func::Function, searchRange; methods = keys(ValidMethods),
+  iterations = 10000,
+  dimensions = :NotSpecified,
+  show_trace::Bool = true,
+  save_trace::Bool = false,
+  population_size::Integer = 50,
+  method_options = {})
+
+  results = Any[]
+  for(m in methods)
+    tic()
+    best, fitness = bboptimize(func, searchRange; method = m, iterations = iterations,
+      dimensions = dimensions, show_trace = show_trace, save_trace = save_trace, 
+      population_size = population_size, method_options = method_options)
+    push!( results,  (m, best, fitness, toq()) )
+  end
+
+  sorted = sort( results, by = (t) -> t[3] )
+
+  for(i in 1:length(sorted))
+    println("$(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
+  end
+
+  return sorted
+end
+
 function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
   iterations = 10000,
   dimensions = :NotSpecified,
@@ -100,7 +126,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
 
   num_better = 0
   num_better_since_last = 0
-  tr("Starting optimization", shw, save)
+  tr("Starting optimization with optimizer $(opt.name)", shw, save)
 
   step = 1
   tic()
