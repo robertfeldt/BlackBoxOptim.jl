@@ -1,3 +1,8 @@
+ValidMethods = [
+  :de_rand_1_bin, :de_rand_1_bin_radiuslimited, 
+  :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited
+]
+
 function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
   iterations::Integer = 10000,
   dimensions = :NotSpecified,
@@ -43,11 +48,8 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
   end
 
   # Check that a valid method has been specified and then set up the optimizer
-  valid_methods = [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, 
-    :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited
-  ]
-  if (typeof(method) != Symbol) || !any([(method == vm) for vm in valid_methods])
-    throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(valid_methods)")) 
+  if (typeof(method) != Symbol) || !any([(method == vm) for vm in ValidMethods])
+    throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(ValidMethods)")) 
   end
   pop = BlackBoxOptim.rand_individuals_lhs(search_space, population_size)
   optimizer_func = {
