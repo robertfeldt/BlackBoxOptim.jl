@@ -17,6 +17,7 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
     if dimensions != :NotSpecified
       throw(ArgumentError("You CANNOT specify the number of dimensions in a solution when first stating the search space ranges $(searchRange)"))
     end
+    dimensions = length(searchRange)
     search_space = RangePerDimSearchSpace(searchRange)
   else
     throw(ArgumentError("Invalid search range specification. Either give only a range (ex: (0.0, 1.0)) AND the number of dimensions (ex: 2) or give an array of ranges (ex: [(0.0, 1.0), (10.0, 12.5)])."))
