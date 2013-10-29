@@ -75,16 +75,16 @@ Most optimizers have specific options that can be specified in the `method_optio
 ## Existing Optimizers
 
 * Differential Evolution optimizers, 5 different:
-  - DE/rand/1/bin: de_rand_1_bin()
-  - DE/rand/1/bin with radius limited sampling (a type of trivial geography): de_rand_1_bin_radiuslimited()
-  - DE/rand/2/bin: de_rand_2_bin()
-  - Adaptive DE/rand/1/bin: de_rand_1_bin()
-  - Adaptive DE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
-* RandomSearch (to compare to)
+  - DE/rand/1/bin: `de_rand_1_bin()`
+  - DE/rand/1/bin with radius limited sampling (a type of trivial geography): `de_rand_1_bin_radiuslimited()`
+  - DE/rand/2/bin: `de_rand_2_bin()`
+  - Adaptive DE/rand/1/bin: `de_rand_1_bin()`
+  - Adaptive DE/rand/1/bin with radius limited sampling: `adaptive_de_rand_1_bin_radiuslimited()`
+* RandomSearch (to compare to): `random_search()`
 
 ## Planned Optimizers
 
-* HillClimber (to compare to)
+* HillClimbing
 * CMA-ES
 * Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
 
