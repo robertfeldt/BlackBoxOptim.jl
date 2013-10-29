@@ -18,6 +18,11 @@ facts("bboptimize") do
     @fact fitness < 0.001 => true
   end
 
+  context("example 4 from README") do
+    best, fitness = bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, show_trace = false)
+    @fact fitness < 0.2 => true
+  end
+
   context("run one longer example in case there is problem with the reporting in long runs") do
     best, fitness = bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :de_rand_1_bin, show_trace = false, iterations = 25001)
     @fact fitness < 0.001 => true
@@ -27,7 +32,9 @@ facts("bboptimize") do
     for(m in keys(BlackBoxOptim.ValidMethods))
       b, f = bboptimize(rosenbrock2d, [(-5.0, 5.0), (-2.0, 2.0)]; show_trace = false, 
         method = m, iterations = 200, population_size = 20)
-      @fact f < 1.0 => true
+      if m != :random_search
+        @fact f < 1.0 => true
+      end
     end
   end
 end

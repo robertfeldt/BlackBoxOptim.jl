@@ -37,6 +37,10 @@ If you want to use a different optimizer that can be specified with the `method`
 
     bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :de_rand_1_bin)
 
+Note that the rosenbrock2d function is quite easy to optimize. Even a random search will come close if we give it many iterations:
+
+    bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, iterations = 3e4)
+
 # Configurable Options
 
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
