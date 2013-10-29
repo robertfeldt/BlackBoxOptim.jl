@@ -7,7 +7,7 @@ ValidMethods = {
 }
 
 function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
-  iterations::Integer = 10000,
+  iterations = 10000,
   dimensions = :NotSpecified,
   show_trace::Bool = true,
   save_trace::Bool = false,

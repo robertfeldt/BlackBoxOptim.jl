@@ -2,6 +2,10 @@ function rosenbrock2d(x)
   return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 end
 
+function rosenbrock(x)
+  return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
+end
+
 facts("bboptimize") do
   context("example 1 from README") do
     best, fitness = bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, show_trace = false)
@@ -21,6 +25,11 @@ facts("bboptimize") do
   context("example 4 from README") do
     best, fitness = bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, show_trace = false)
     @fact fitness < 0.2 => true
+  end
+
+  context("example 5 from README") do
+    bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :random_search)
+    bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :adaptive_de_rand_1_bin_radiuslimited)
   end
 
   context("run one longer example in case there is problem with the reporting in long runs") do

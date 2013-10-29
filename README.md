@@ -41,6 +41,16 @@ Note that the rosenbrock2d function is quite easy to optimize. Even a random sea
 
     bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, iterations = 3e4)
 
+But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while an adaptive DE can find a good solution if we give it some time:
+
+  function rosenbrock(x)
+    return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
+  end
+
+  bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :random_search)
+  
+  bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :adaptive_de_rand_1_bin_radiuslimited)
+
 # Configurable Options
 
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:

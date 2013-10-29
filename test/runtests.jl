@@ -12,7 +12,6 @@ my_tests = [
 #  "test_random_search.jl",
   "test_differential_evolution.jl",
   "test_adaptive_differential_evolution.jl",
-  "test_bboptimize.jl",
 
   "problems/test_single_objective.jl",
 ]
