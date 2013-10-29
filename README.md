@@ -43,15 +43,13 @@ Note that the rosenbrock2d function is quite easy to optimize. Even a random sea
 
 But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while an adaptive DE can find a good solution if we give it some time:
 
-  function rosenbrock(x)
-    return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
-  end
+    function rosenbrock(x)
+      return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
+    end
 
-  bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :random_search)
+    bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :random_search)
   
-  bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :adaptive_de_rand_1_bin_radiuslimited)
-
-A random search seldom finds solutions with a value below 5e4 while the adaptive DE often finds solutions with values below 1.
+    bboptimize(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 3e5, method = :adaptive_de_rand_1_bin_radiuslimited)
 
 # Configurable Options
 
