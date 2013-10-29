@@ -65,9 +65,12 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
   run_optimizer_on_problem(optimizer, problem, iterations, show_trace, save_trace)
 end
 
-function tr(msg, showTrace, saveTrace)
+function tr(msg, showTrace, saveTrace, obj = None)
   if showTrace
     println(msg)
+    if obj != None
+      show(obj)
+    end
   end
   if saveTrace
     # No saving for now
@@ -92,41 +95,38 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   numSteps = 1e4, shw = true, save = false)
 
   num_better = 0
+  num_better_since_last = 0
   tr("Starting optimization", shw, save)
 
   step = 1
   tic()
   while(step <= numSteps)
     if(mod(step, 2.5e4) == 0)
-      tr("Step $(step): Improvements/step = $(num_better/step)", shw, save)
+      num_better += num_better_since_last
+      tr("Step $(step), Improvements/step: overall = $(num_better/step), last interval = $(num_better_since_last/step)", shw, save)
+      num_better_since_last = 0
     end
     candidates = ask(opt)
 
     ranked_candidates = rank_by_fitness(candidates, problem)
 
-    num_better += tell!(opt, ranked_candidates)
+    num_better_since_last += tell!(opt, ranked_candidates)
     step += 1
   end
   t = toq()
 
-  tr("\nOptimization stopped after $(step-1) steps and $(t) seconds", true, save)
-  tr("Steps per second = $(numSteps/t)", true, save)
+  step -= 1 # Since it is one too high after while loop above
 
-  if(mod(numSteps, 2.5e4) != 0)
-    tr("Step $(numSteps): Improvements/step = $(num_better/numSteps)", shw, save)
-  end
-
-  tr("\nMean value (in population) per position:", true, save)
-  show(mean(opt.population,1))
-  tr("\n\nStd dev (in population) per position:", true, save)
-  show(std(opt.population,1))
+  tr("\nOptimization stopped after $(step) steps and $(t) seconds", shw, save)
+  tr("Steps per second = $(numSteps/t)", shw, save)
+  tr("Improvements/step = $((num_better+num_better_since_last)/numSteps)", shw, save)
+  tr("\nMean value (in population) per position:", shw, save, mean(opt.population,1))
+  tr("\n\nStd dev (in population) per position:", shw, save, std(opt.population,1))
 
   best, index, fitness = find_best_individual(problem, opt)
-  tr("\n\nBest candidate found: ", true, save)
-  show(best)
-  tr("\n\nFitness: ", true, save)
-  show(fitness)
-  tr("\n", true, false)
+  tr("\n\nBest candidate found: ", shw, save, best)
+  tr("\n\nFitness: ", shw, save, fitness)
+  tr("\n", shw, false)
 
   return best, fitness
 end
