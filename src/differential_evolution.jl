@@ -166,7 +166,8 @@ end
 # literature.
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
+function de_rand_1_bin(searchSpace; 
+  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
   DiffEvoOpt("DE/rand/1/bin", population, searchSpace, options, 
     random_sampler, 
     de_mutation_rand_1, 
@@ -175,7 +176,8 @@ function de_rand_1_bin(population, searchSpace, options = DE_DefaultOptions)
 end
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin_radiuslimited(population, searchSpace, options = DE_DefaultOptions)
+function de_rand_1_bin_radiuslimited(searchSpace; 
+  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
   DiffEvoOpt("DE/rand/1/bin/radiuslimited", population, searchSpace, options, 
     radius_limited_sampler, 
     de_mutation_rand_1, 

@@ -2,22 +2,34 @@ facts("Random search") do
 
 context("ask") do
   for(i in 1:NumTestRepetitions)
+    dims = rand(1:20)
+    min = rand(1:123)
+    range = (min * rand(), min + rand() * min)
 
-    dims = rand(1:100)
-    range_per_dim = (0.0, 1.0)
-    ss = [range_per_dim for i in 1:dims]
+    ss = BlackBoxOptim.symmetric_search_space(dims, range)
+    opt = BlackBoxOptim.random_search(ss)
 
-    opt = random_searcher(ss)
+    res1 = BlackBoxOptim.ask(opt)
 
-    res = BlackBoxOptim.ask(opt)
+    @fact length(res1) => 1
+    candidate, index = res1[1]
+    @fact size(candidate,2) => dims
+    @fact isinspace(candidate, ss) => true
 
-    @fact length(res) => 1
-    trial, trialIndex = res[1]
+    # Fake fitness
+    better = BlackBoxOptim.tell(opt, [(candidate, index, 1.0)])
 
-    @fact ndims(trial) => dims
-    @fact trialIndex => Nothing
-    @fact is_within_bounds(trial, ss) => true
+    @fact better => 1
+    @fact opt.best => candidate
+    @fact opt.best_fitness => 1.0
 
+    # Get one more and fake that it has better fitness.
+    res2 = BlackBoxOptim.ask(opt)
+    @fact length(res2) => 1
+    candidate2, index2 = res2[1]
+    @fact size(candidate2,2) => dims
+    @fact isinspace(candidate2, ss) => true
+    better2 = BlackBoxOptim.tell(opt, [(candidate, index, 0.5)])
   end
 end
 

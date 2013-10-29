@@ -66,6 +66,7 @@ abstract PopulationOptimizer <: Optimizer
 include("search_space.jl")
 
 # Different optimization algorithms
+include("random_search.jl")
 include("differential_evolution.jl")
 include("adaptive_differential_evolution.jl")
 

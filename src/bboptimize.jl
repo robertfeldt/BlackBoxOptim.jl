@@ -1,7 +1,10 @@
-ValidMethods = [
-  :de_rand_1_bin, :de_rand_1_bin_radiuslimited, 
-  :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited
-]
+ValidMethods = {
+  :random_search => BlackBoxOptim.random_search,
+  :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
+  :adaptive_de_rand_1_bin => BlackBoxOptim.adaptive_de_rand_1_bin,
+  :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
+  :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
+}
 
 function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
   iterations::Integer = 10000,
@@ -48,17 +51,12 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
   end
 
   # Check that a valid method has been specified and then set up the optimizer
-  if (typeof(method) != Symbol) || !any([(method == vm) for vm in ValidMethods])
+  if (typeof(method) != Symbol) || !any([(method == vm) for vm in keys(ValidMethods)])
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(ValidMethods)")) 
   end
   pop = BlackBoxOptim.rand_individuals_lhs(search_space, population_size)
-  optimizer_func = {
-    :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
-    :adaptive_de_rand_1_bin => BlackBoxOptim.adaptive_de_rand_1_bin,
-    :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
-    :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
-  }[method]
-  optimizer = optimizer_func(pop, search_space)
+  optimizer_func = ValidMethods[method]
+  optimizer = optimizer_func(search_space; population = pop)
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
@@ -83,6 +81,10 @@ function find_best_individual(problem::Problems.OptimizationProblem, opt::Popula
   pop = opt.population
   candidates = [(pop[i,:], i) for i in 1:size(pop,1)]
   rank_by_fitness(candidates, problem)[1]
+end
+
+function find_best_individual(problem::Problems.OptimizationProblem, opt::Optimizer)
+  (opt.best, 1, opt.best_fitness)
 end
 
 function rank_by_fitness(candidates, problem)
@@ -122,9 +124,10 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   tr("\nOptimization stopped after $(step) steps and $(t) seconds", shw, save)
   tr("Steps per second = $(numSteps/t)", shw, save)
   tr("Improvements/step = $((num_better+num_better_since_last)/numSteps)", shw, save)
-  tr("\nMean value (in population) per position:", shw, save, mean(opt.population,1))
-  tr("\n\nStd dev (in population) per position:", shw, save, std(opt.population,1))
-
+  if typeof(opt) <: PopulationOptimizer
+    tr("\nMean value (in population) per position:", shw, save, mean(opt.population,1))
+    tr("\n\nStd dev (in population) per position:", shw, save, std(opt.population,1))
+  end
   best, index, fitness = find_best_individual(problem, opt)
   tr("\n\nBest candidate found: ", shw, save, best)
   tr("\n\nFitness: ", shw, save, fitness)

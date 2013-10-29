@@ -70,8 +70,8 @@ function tell!(de::AdaptConstantsDiffEvoOpt,
   num_better
 end
 
-function adaptive_de_rand_1_bin(population = rand(100,1), 
-  searchSpace = RangePerDimSearchSpace([(0.0, 1.0)]), options = ADE_DefaultOptions)
+function adaptive_de_rand_1_bin(searchSpace = BlackBoxOptim.symmetric_search_space(1); 
+  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = ADE_DefaultOptions)
   AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin", population, searchSpace, options, 
     random_sampler, 
     de_mutation_rand_1, 
@@ -79,8 +79,8 @@ function adaptive_de_rand_1_bin(population = rand(100,1),
     rand_bound_from_target!)
 end
 
-function adaptive_de_rand_1_bin_radiuslimited(population = rand(100,1), 
-  searchSpace = RangePerDimSearchSpace([(0.0, 1.0)]), options = ADE_DefaultOptions)
+function adaptive_de_rand_1_bin_radiuslimited(searchSpace = BlackBoxOptim.symmetric_search_space(1); 
+  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = ADE_DefaultOptions)
   AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin/radiuslimited", population, searchSpace, options, 
     radius_limited_sampler, 
     de_mutation_rand_1, 

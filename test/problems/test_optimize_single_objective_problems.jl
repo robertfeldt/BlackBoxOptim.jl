@@ -9,7 +9,7 @@ function fitness_for_opt(problem, numDimensions, populationSize, numSteps,
 
   pop = BlackBoxOptim.rand_individuals_lhs(ss, populationSize)
 
-  opt = optFunc(pop, ss)
+  opt = optFunc(ss; population = pop)
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(opt.name)")
 

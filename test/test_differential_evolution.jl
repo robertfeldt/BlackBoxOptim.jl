@@ -1,7 +1,7 @@
 DE = de_rand_1_bin(
-  reshape([1.0:10.0], 10, 1),
-  symmetric_search_space(1, (0.0, 10.0)),
-  {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
+  symmetric_search_space(1, (0.0, 10.0));
+  population = reshape([1.0:10.0], 10, 1),
+  options = {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
 )
 
 facts("Differential evolution optimizer") do
@@ -22,9 +22,9 @@ end
 
 context("radius_limited_sampler") do
   DE = de_rand_1_bin(
-    rand(100,1),
-    symmetric_search_space(1, (0.0, 10.0)),
-    {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
+    symmetric_search_space(1, (0.0, 10.0));
+    population = rand(100,1),
+    options = {"f" => 0.4, "cr" => 0.5, "NumParents" => 3}
   )
 
   psize = popsize(DE)
@@ -114,9 +114,9 @@ context("de_mutation_rand_1") do
   @fact BlackBoxOptim.de_mutation_rand_1(DE, 5, [4, 9, 8])[1] => (8.0 + (0.4 * (4.0 - 9.0)))
 
   de2 = de_rand_1_bin(
-    reshape([1.0:8.0], 4, 2),
-    symmetric_search_space(2, (0.0, 10.0)),
-    {"f" => 0.6, "cr" => 0.5, "NumParents" => 3}
+    symmetric_search_space(2, (0.0, 10.0));
+    population = reshape([1.0:8.0], 4, 2),
+    options = {"f" => 0.6, "cr" => 0.5, "NumParents" => 3}
   )
 
   res = BlackBoxOptim.de_mutation_rand_1(de2, 10, [1,2,3])

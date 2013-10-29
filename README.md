@@ -45,6 +45,7 @@ The section above described the basic API for the BlackBoxOptim package. We empl
 * `de_rand_1_bin_radiuslimited`
 * `adaptive_de_rand_1_bin`
 * `adaptive_de_rand_1_bin_radiuslimited`
+* `random_search`
 
 In addition to the `method` keyword, you can alter the behavior of the Optim package by using other keywords:
 
@@ -65,10 +66,10 @@ Most optimizers have specific options that can be specified in the `method_optio
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): de_rand_1_bin_radiuslimited()
   - Adaptive DE/rand/1/bin: de_rand_1_bin()
   - Adaptive DE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
+* RandomSearch (to compare to)
 
 ## Planned Optimizers
 
-* RandomSearch (to compare to)
 * HillClimber (to compare to)
 * CMA-ES
 * Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
