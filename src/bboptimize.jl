@@ -1,6 +1,7 @@
 ValidMethods = {
   :random_search => BlackBoxOptim.random_search,
   :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
+  :de_rand_2_bin => BlackBoxOptim.de_rand_2_bin,
   :adaptive_de_rand_1_bin => BlackBoxOptim.adaptive_de_rand_1_bin,
   :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
   :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,

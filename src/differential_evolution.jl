@@ -102,6 +102,13 @@ function de_mutation_rand_1(de::DifferentialEvolutionOpt, targetIndex, parentInd
   return p[3,:] + (f * (p[1,:] - p[2,:]))
 end
 
+# DE/rand/2 mutation strategy
+function de_mutation_rand_2(de::DifferentialEvolutionOpt, targetIndex, parentIndices)
+  f = fconst(de, targetIndex)
+  p = de.population[parentIndices,:]
+  return p[3,:] + (f * (p[1,:] - p[2,:])) + (f * (p[4,:] - p[5,:]))
+end
+
 # Binomial crossover for DE, i.e. DE/*/*/bin.
 function de_crossover_binomial(de::DifferentialEvolutionOpt, target, targetIndex, donor)
   trial = copy(target)
@@ -168,6 +175,8 @@ end
 # The most used DE/rand/1/bin.
 function de_rand_1_bin(searchSpace; 
   population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
+  # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
+  options["NumParents"] = 3
   DiffEvoOpt("DE/rand/1/bin", population, searchSpace, options, 
     random_sampler, 
     de_mutation_rand_1, 
@@ -175,9 +184,22 @@ function de_rand_1_bin(searchSpace;
     rand_bound_from_target!)
 end
 
-# The most used DE/rand/1/bin.
+function de_rand_2_bin(searchSpace; 
+  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
+  # Ensure NumParents is 5 since de_mutation_rand_2 requires it.
+  options["NumParents"] = 5
+  DiffEvoOpt("DE/rand/1/bin", population, searchSpace, options, 
+    random_sampler, 
+    de_mutation_rand_2, 
+    de_crossover_binomial, 
+    rand_bound_from_target!)
+end
+
+# The most used DE/rand/1/bin with "local geography" via radius limited sampling.
 function de_rand_1_bin_radiuslimited(searchSpace; 
   population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
+  # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
+  options["NumParents"] = 3
   DiffEvoOpt("DE/rand/1/bin/radiuslimited", population, searchSpace, options, 
     radius_limited_sampler, 
     de_mutation_rand_1, 

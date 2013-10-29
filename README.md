@@ -54,6 +54,7 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
 
 * `de_rand_1_bin`
+* `de_rand_2_bin`
 * `de_rand_1_bin_radiuslimited`
 * `adaptive_de_rand_1_bin`
 * `adaptive_de_rand_1_bin_radiuslimited`
@@ -73,9 +74,10 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 ## Existing Optimizers
 
-* Differential Evolution optimizers, 4 different:
+* Differential Evolution optimizers, 5 different:
   - DE/rand/1/bin: de_rand_1_bin()
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): de_rand_1_bin_radiuslimited()
+  - DE/rand/2/bin: de_rand_2_bin()
   - Adaptive DE/rand/1/bin: de_rand_1_bin()
   - Adaptive DE/rand/1/bin with radius limited sampling: adaptive_de_rand_1_bin_radiuslimited()
 * RandomSearch (to compare to)
