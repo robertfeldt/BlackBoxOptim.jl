@@ -48,7 +48,7 @@ facts("bboptimize") do
     for(m in keys(BlackBoxOptim.ValidMethods))
       b, f = bboptimize(rosenbrock2d, [(-5.0, 5.0), (-2.0, 2.0)]; show_trace = false, 
         method = m, iterations = 200, population_size = 20)
-      if m != :random_search
+      if m != :random_search & m != :de_rand_2_bin
         @fact f < 1.0 => true
       end
     end
