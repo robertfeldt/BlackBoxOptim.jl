@@ -63,10 +63,12 @@ y1 = m1(x1)
 # a min value of -5.0 and a max value of 5.0, and the search is for 4 
 # coefficients, one intercept and three for each of the values of x):
 using BlackBoxOptim
-ols_bestfit, ols_error = bboptimize((betas) -> ols_regression_objective(betas', x1, y1), (-10.0, 10.0); dimensions = 4, iterations = 2e4)
+ols_bestfit, ols_error = bboptimize((betas) -> ols_regression_objective(betas', x1, y1), 
+  (-10.0, 10.0); dimensions = 4, iterations = 2e4)
 
 # But the really nice thing is that we can easily consider other objectives such as the LAD:
-lad_bestfit, lad_error = bboptimize((betas) -> lad_regression_objective(betas', x1, y1), (-10.0, 10.0); dimensions = 4, iterations = 2e4)
+lad_bestfit, lad_error = bboptimize((betas) -> lad_regression_objective(betas', x1, y1), 
+  (-10.0, 10.0); dimensions = 4, iterations = 2e4)
 
 # For regularized regression we can optimize for different values of lambda so
 # create a wrapper function that handles this:
@@ -83,6 +85,7 @@ ridge_bestfit1, ridge_error1 = regularized_opt(1, ridge_regression_objective, x1
 ridge_bestfit2, ridge_error2 = regularized_opt(2, ridge_regression_objective, x1, y1, 4)
 ridge_bestfit3, ridge_error3 = regularized_opt(3, ridge_regression_objective, x1, y1, 4)
 
+# Now lets create some support functions for printing models nicely.
 linear_terms(num) = [@sprintf(" * X%d", i) for i in 1:num]
 squared_terms(num) = [@sprintf(" * X%d^2", i) for i in 1:num]
 linsq_terms(num) = vcat(linear_terms(num), squared_terms(num))
@@ -127,7 +130,7 @@ x2 = rand(3, 100)
 y2 = m2(x2)
 
 # Before we regress we need to encode our beliefs about the general 
-# structure of the model. Let's say we beleive there are squared terms but we
+# structure of the model. Let's say we believe there are squared terms but we
 # do not know which ones. So we add one squared term per independent variable:
 x2m = zeros(3+3, 100)
 x2m[1:3,:] = x2
@@ -147,6 +150,8 @@ m2_ridge_bestfit1, m2_ridge_error1 = regularized_opt(1, ridge_regression_objecti
 m2_ridge_bestfit2, m2_ridge_error2 = regularized_opt(2, ridge_regression_objective, x2m, y2, 7, 5e4)
 m2_ridge_bestfit3, m2_ridge_error3 = regularized_opt(3, ridge_regression_objective, x2m, y2, 7, 5e4)
 
+# And now lets print our models nicely so user can see the results...
+
 println("Model1 = 1.000 * X1 + 2.000 * X2 - 1.000 * X3")
 println("OLS best fit: ", sprint_predicted_model(ols_bestfit))
 println("LAD best fit: ", sprint_predicted_model(lad_bestfit))
@@ -158,6 +163,7 @@ println("Ridge best fit, lambda = 2: ", sprint_predicted_model(ridge_bestfit2))
 println("Ridge best fit, lambda = 3: ", sprint_predicted_model(ridge_bestfit3))
 
 terms = linsq_terms(3)
+println("")
 println("Model2 = 1.000 * X1 - 3.140 * X3 + 4.130 * X2^2 ")
 println("OLS best fit: ", sprint_predicted_model(m2_ols_bestfit, terms))
 println("LAD best fit: ", sprint_predicted_model(m2_lad_bestfit, terms))
