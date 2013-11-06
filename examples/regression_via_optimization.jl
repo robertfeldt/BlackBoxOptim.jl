@@ -1,5 +1,9 @@
 # Lets use black-box optimization to do regression!
 #
+# To run this, just do:
+#   julia regression_via_optimization.jl
+# from a command line after having installed BlackBoxOptim.
+#
 # The basic idea is that a regression problem is a problem of deciding
 # which set of coefficients (betas) minimize an objective function
 # that compares the dependent variable y to a model based on the betas and the 
