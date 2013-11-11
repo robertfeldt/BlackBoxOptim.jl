@@ -69,6 +69,7 @@ include("search_space.jl")
 include("random_search.jl")
 include("differential_evolution.jl")
 include("adaptive_differential_evolution.jl")
+include("natural_evolution_strategies.jl")
 
 # Problems for testing
 include(joinpath("problems", "all_problems.jl"))
