@@ -18,7 +18,7 @@ end
 
 desc "Run only the latest changed test file"
 task :t do
-  latest_changed_test_file = filter_latest_changed_files Dir["test/test*.jl"]
+  latest_changed_test_file = filter_latest_changed_files Dir["test/**/test*.jl"]
   sh "julia -L src/BlackBoxOptim.jl -L test/helper.jl #{latest_changed_test_file.first}"
 end
 
