@@ -3,6 +3,16 @@ using FactCheck
 
 facts("sNES") do
 
+context("mix_with_indices") do
+  cs = randn(2,3)
+  r = BlackBoxOptim.mix_with_indices(cs)
+  @fact length(r) => 2
+  @fact r[1][2] => 1
+  @fact r[2][2] => 2
+  @fact r[1][1] => cs[1,:]
+  @fact r[2][1] => cs[2,:]
+end
+
 context("calc_utilities") do
 
   context("when indices are already ordered") do
@@ -50,20 +60,5 @@ context("calc_utilities") do
     @fact u[3] => 0.0
   end
 end
-
-#context("ask") do
-#  p = BlackBoxOptim.Problems.examples["Sphere"]
-#
-#  problem = BlackBoxOptim.Problems.set_numdims!(2, p)
-#
-#  ss = search_space(problem)
-#
-#  opt = BlackBoxOptim.separable_nes(ss; population = false)
-#
-#  println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(opt.name)")
-#
-#  best, fitness = BlackBoxOptim.run_optimizer_on_problem(opt, problem, 10)
-#  fitness
-#end
 
 end
