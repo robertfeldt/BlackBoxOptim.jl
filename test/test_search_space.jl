@@ -31,7 +31,7 @@ facts("Search space") do
 
     for(i in 1:NumTestRepetitions)
       ind = rand_individual(ss3)
-      @fact size(ind) => (1, 3)
+      @fact size(ind) => (3, 1)
       @fact isinspace(ind, ss3) => true
     end
   end
@@ -71,8 +71,8 @@ facts("Search space") do
       ss = symmetric_search_space(reps, range)
       numinds = rand(1:10)
       inds = rand_individuals(ss, numinds)
-      @fact size(inds,1) => numinds
-      @fact size(inds,2) => numdims(ss)
+      @fact size(inds,1) => numdims(ss)
+      @fact size(inds,2) => numinds
       for(j in 1:numinds)
         @fact isinspace(inds[j], ss) => true
       end
@@ -86,9 +86,9 @@ facts("Search space") do
     @fact deltas(ss) => hcat([1.0])
 
     ss = RangePerDimSearchSpace([(0.0, 1.0), (0.5, 10.0)])
-    @fact mins(ss) => [0.0 0.5]
-    @fact maxs(ss) => [1.0 10.0]
-    @fact deltas(ss) => [1.0 9.5]
+    @fact mins(ss) => [0.0, 0.5]''
+    @fact maxs(ss) => [1.0, 10.0]''
+    @fact deltas(ss) => [1.0, 9.5]''
   end
 
   context("rand_individuals_lhs samples in LHS intervals") do
