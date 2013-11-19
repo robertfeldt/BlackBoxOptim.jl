@@ -2,6 +2,8 @@ using Distributions
 
 abstract DifferentialEvolutionOpt <: PopulationOptimizer
 
+name(de::DifferentialEvolutionOpt) = de.name
+
 DE_DefaultOptions = {
   "f" => 0.6,
   "cr" => 0.7,

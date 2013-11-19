@@ -160,7 +160,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
 
   num_better = 0
   num_better_since_last = 0
-  tr("Starting optimization with optimizer $(opt.name)", shw, save)
+  tr("Starting optimization with optimizer $(name(opt))", shw, save)
 
   step = 1
   tic()

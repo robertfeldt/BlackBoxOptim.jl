@@ -26,6 +26,17 @@ export  OptimizationProblem,
 
 abstract Optimizer
 
+# The standard name function converts the type of the optimizer to a string
+# and strips off trailing "Opt".
+function name(o::Optimizer)
+  s = string(typeof(o))
+  if s[end-2:end] == "Opt"
+    return s[1:end-3]
+  else
+    return s
+  end
+end
+
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
 end

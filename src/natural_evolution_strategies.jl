@@ -4,8 +4,6 @@ using Distributions
 abstract NaturalEvolutionStrategyOpt <: PopulationOptimizer
 
 type SeparableNESOpt <: NaturalEvolutionStrategyOpt
-  name::ASCIIString
-
   d::Integer                      # Number of dimensions
   lambda::Integer                 # Number of samples to take per iteration
   mu::Array{Float64,2}            # Average position for sampling each position
@@ -28,12 +26,13 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
     lambda = lambda || convert(Int64, 4 + ceil(log(3*numDimensions)))
     sigma_learnrate = sigma_learnrate || calc_sigma_learnrate_for_snes(numDimensions)
 
-    new("SeparableNES", numDimensions, lambda, mu, sigma, distr, 
+    new(numDimensions, lambda, mu, sigma, distr, 
       mu_learnrate, sigma_learnrate,
       eye(numDimensions), eye(numDimensions))
 
   end
 end
+
 
 # We use a different ordering of the dimensions than other optimizers, so transpose.
 population(o::NaturalEvolutionStrategyOpt) = o.population'
