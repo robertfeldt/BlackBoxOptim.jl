@@ -62,3 +62,9 @@ deltas(rss::RangePerDimSearchSpace) = rss.deltas
 
 # Convenience function to create symmetric search spaces.
 symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace([range for i in 1:numdims])
+
+# Create a feasible point (i.e. within the search space) given one which is
+# outside.
+function feasible(v, ss::RangePerDimSearchSpace)
+  minimum(hcat(maxs(ss)', maximum(hcat(mins(ss)', v), 2)), 2)
+end
