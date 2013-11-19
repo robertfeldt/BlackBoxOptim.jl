@@ -9,6 +9,8 @@ export  OptimizationProblem,
 
         AdaptConstantsDiffEvoOpt, adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
 
+        SeparableNESOpt, separable_nes,
+
         Problems,
 
         # Search spaces
@@ -32,6 +34,8 @@ include("fitness.jl")
 include("population.jl")
 
 abstract PopulationOptimizer <: Optimizer
+
+population(o::PopulationOptimizer) = o.population # Fallback method if sub-types have not implemented it.
 
 # Our design is inspired by the object-oriented, ask-and-tell "optimizer API 
 # format" as proposed in:

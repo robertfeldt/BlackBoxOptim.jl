@@ -34,7 +34,7 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
   end
 end
 
-popsize(opt::DifferentialEvolutionOpt) = Base.size(opt.population,1)
+popsize(opt::DifferentialEvolutionOpt) = Base.size(population(opt),1)
 fconst(de::DifferentialEvolutionOpt, i) = de.options["f"]
 crconst(de::DifferentialEvolutionOpt, i) = de.options["cr"]
 

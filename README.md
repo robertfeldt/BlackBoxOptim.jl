@@ -1,7 +1,7 @@
 BlackBoxOptim.jl
 ==============
 
-BlackBoxOptim is a (experimental, work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, PSO, CMA-ES etc) rather than more traditional, deterministic algorithms (that are often based on gradients/differentiability).
+BlackBoxOptim is a (experimental, work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES, CMA-ES etc) rather than more traditional, deterministic algorithms (that are often based on gradients/differentiability).
 
 Eventually we hope to provide a JuMP interface but since it is not clear if JuMP supports multiple objectives this is to be decided.
 
@@ -53,6 +53,7 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
 
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
 
+* `separable_nes`
 * `de_rand_1_bin`
 * `de_rand_2_bin`
 * `de_rand_1_bin_radiuslimited`
@@ -74,6 +75,8 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 ## Existing Optimizers
 
+* Natural Evolution Strategies:
+  - Separable NES: `separable_nes()`
 * Differential Evolution optimizers, 5 different:
   - DE/rand/1/bin: `de_rand_1_bin()`
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): `de_rand_1_bin_radiuslimited()`

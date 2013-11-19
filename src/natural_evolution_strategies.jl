@@ -35,6 +35,9 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   end
 end
 
+# We use a different ordering of the dimensions than other optimizers, so transpose.
+population(o::NaturalEvolutionStrategyOpt) = o.population'
+
 NES_DefaultOptions = {
   "lambda" => false,          # If false it will be set based on the number of dimensions
   "mu_learnrate" => 1.0,
@@ -70,6 +73,9 @@ function ask(snes::SeparableNESOpt)
 end
 
 function mix_with_indices(candidates, indices = false)
+  if indices == false
+    indices = 1:size(candidates,1)
+  end
   ary = Any[]
   for i in indices
     push!(ary, (candidates[i,:], i))
@@ -82,13 +88,16 @@ function tell!(snes::SeparableNESOpt, rankedCandidates)
   u = calc_utilities(rankedCandidates)'
 
   # Calc gradient
-  gradient_mu = snes.last_s * u
+  gradient_mu = snes.last_s * u'
   sq_s_minus1 = snes.last_s.^2 - 1
-  gradient_sigma = sq_s_minus1 * u
+  gradient_sigma = sq_s_minus1 * u'
 
   # Update the mean and sigma vectors based on the gradient
   snes.mu = snes.mu + snes.mu_learnrate * (snes.sigma .* gradient_mu)
   snes.sigma = snes.sigma .* exp(snes.sigma_learnrate / 2 * gradient_sigma)
+
+  # There is no notion of how many was better in NES so return 0
+  0
 end
 
 function calc_utilities(rankedCandidates)
@@ -110,15 +119,10 @@ function calc_utilities(rankedCandidates)
   # rankedCandidates!!! Or we must reorder the utilities accordingly. The latter
   # is the preferred method and we can use the indices in rankedCandidates to 
   # accomplish it.
-  u_ordered = zeros(num_candidates)
+  u_ordered = zeros(num_candidates, 1)
   for(i in 1:num_candidates)
     u_ordered[rankedCandidates[i][2]] = u[i]
   end
 
   u_ordered
 end
-
-#using BlackBoxOptim.Problems
-#problem = "Sphere"
-#p = BlackBoxOptim.Problems.examples[problem]
-#fitness_for_opt(p, 2, 10, 10, separable_nes)

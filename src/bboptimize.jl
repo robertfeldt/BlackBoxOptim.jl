@@ -5,6 +5,7 @@ ValidMethods = {
   :adaptive_de_rand_1_bin => BlackBoxOptim.adaptive_de_rand_1_bin,
   :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
   :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
+  :separable_nes => BlackBoxOptim.separable_nes,
 }
 
 function compare_optimizers(func::Function, searchRange; methods = keys(ValidMethods),
@@ -137,7 +138,7 @@ function tr(msg, showTrace, saveTrace, obj = None)
 end
 
 function find_best_individual(problem::Problems.OptimizationProblem, opt::PopulationOptimizer)
-  pop = opt.population
+  pop = population(opt)
   candidates = [(pop[i,:], i) for i in 1:size(pop,1)]
   rank_by_fitness(candidates, problem)[1]
 end
@@ -166,8 +167,12 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   while(step <= numSteps)
     if(mod(step, 2.5e4) == 0)
       num_better += num_better_since_last
-      tr("Step $(step), Improvements/step: overall = $(num_better/step), last interval = $(num_better_since_last/step)", shw, save)
-      num_better_since_last = 0
+      # Only print if this optimizer reports on number of better. They return 0
+      # if they do not.
+      if num_better_since_last > 0
+        tr("Step $(step), Improvements/step: overall = $(num_better/step), last interval = $(num_better_since_last/step)", shw, save)
+        num_better_since_last = 0
+      end
     end
     candidates = ask(opt)
 
@@ -184,8 +189,8 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   tr("Steps per second = $(numSteps/t)", shw, save)
   tr("Improvements/step = $((num_better+num_better_since_last)/numSteps)", shw, save)
   if typeof(opt) <: PopulationOptimizer
-    tr("\nMean value (in population) per position:", shw, save, mean(opt.population,1))
-    tr("\n\nStd dev (in population) per position:", shw, save, std(opt.population,1))
+    tr("\nMean value (in population) per position:", shw, save, mean(population(opt),1))
+    tr("\n\nStd dev (in population) per position:", shw, save, std(population(opt),1))
   end
   best, index, fitness = find_best_individual(problem, opt)
   tr("\n\nBest candidate found: ", shw, save, best)
