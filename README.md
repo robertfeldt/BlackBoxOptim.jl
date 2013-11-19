@@ -41,13 +41,13 @@ Note that the rosenbrock2d function is quite easy to optimize. Even a random sea
 
     bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, iterations = 3e4)
 
-But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while an DE can find a good solution if we give it some time. We can compare optimizers using the `compare_optimizers` function:
+But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give it some time. We can compare optimizers using the `compare_optimizers` function:
 
     function rosenbrock(x)
       return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
     end
 
-    compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 2.5e5)
+    res = compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 4e4);
 
 # Configurable Options
 
