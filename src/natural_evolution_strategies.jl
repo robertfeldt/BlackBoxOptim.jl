@@ -85,12 +85,12 @@ end
 
 # Tell the sNES the ranking of a set of candidates.
 function tell!(snes::SeparableNESOpt, rankedCandidates)
-  u = calc_utilities(rankedCandidates)'
+  u = calc_utilities(rankedCandidates)
 
   # Calc gradient
-  gradient_mu = snes.last_s * u'
+  gradient_mu = snes.last_s * u
   sq_s_minus1 = snes.last_s.^2 - 1
-  gradient_sigma = sq_s_minus1 * u'
+  gradient_sigma = sq_s_minus1 * u
 
   # Update the mean and sigma vectors based on the gradient
   snes.mu = snes.mu + snes.mu_learnrate * (snes.sigma .* gradient_mu)
