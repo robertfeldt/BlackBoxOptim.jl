@@ -54,6 +54,7 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
 
 * `separable_nes`
+* `xnes`
 * `de_rand_1_bin`
 * `de_rand_2_bin`
 * `de_rand_1_bin_radiuslimited`
