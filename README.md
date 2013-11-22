@@ -77,6 +77,7 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 * Natural Evolution Strategies:
   - Separable NES: `separable_nes()`
+  - Exponential NES: `xnes()`
 * Differential Evolution optimizers, 5 different:
   - DE/rand/1/bin: `de_rand_1_bin()`
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): `de_rand_1_bin_radiuslimited()`
@@ -89,12 +90,14 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 * HillClimbing
 * CMA-ES
+* Accelerated Coordinate Descent
 * Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
 
 ## Utilities
 * Latin hypercube sampling for creating initial populations
 
 ## Planned Utilities
+* Comparison of optimizers based on (Moré's') "data/performance profiles".
 * Running BBOB/COCO comparisons of optimizers
 
 ## Problems
@@ -120,6 +123,6 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 In our experiments the radius limited DE's perform better than the classic de_rand_1_bin DE in almost all cases. And combining it with adaptive setting of the weights makes it even better. So for now adaptive_de_rand_1_bin_radiuslimited() is our recommended "goto" optimizer. However, the difference between the top performing DE's is slight.
 
-The separable NES often beats all of the DE optimizers in the tests we have done. But it is about 2-3 times slower per iteration so not really a fair comparison. It seems it can still hold up even if we normalize for time rather than number of executions but since it is not as good for non-separable problems it is not our default for now.
+The separable NES often beats all of the DE optimizers in the tests we have done. But it is about 2-3 times slower per iteration so not really a fair comparison. It seems it can still hold up even if we normalize for time rather than number of executions but since it is not as good for non-separable problems it is not our default for now. XNES can sometimes beat sNES but scales very badly so is not a good default choice.
 
 Once we have Amalgam implemented we believe that Amalgam(PSO, CMA-ES, DE/rand/1/bin/radiuslimited) will be a very powerful default choice. This remains to be evaluated though.
