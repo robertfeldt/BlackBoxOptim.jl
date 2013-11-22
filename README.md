@@ -37,17 +37,17 @@ If you want to use a different optimizer that can be specified with the `method`
 
     bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :de_rand_1_bin)
 
-Note that the rosenbrock2d function is quite easy to optimize. Even a random search will come close if we give it many iterations:
+Note that the rosenbrock2d function is quite easy to optimize. Even a random search will come close if we give it more time:
 
-    bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, iterations = 3e4)
+    bboptimize(rosenbrock2d, (-5.0, 5.0); dimensions = 2, method = :random_search, max_time = 10.0)
 
-But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give it some time. We can compare optimizers using the `compare_optimizers` function:
+But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give them some time. We can compare optimizers using the `compare_optimizers` function:
 
     function rosenbrock(x)
       return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
     end
 
-    res = compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 4e4);
+    res = compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, max_time = 5.0);
 
 # Configurable Options
 

@@ -11,6 +11,7 @@ ValidMethods = {
 
 function compare_optimizers(func::Function, searchRange; methods = keys(ValidMethods),
   iterations = 10000,
+  max_time = 3.0,
   dimensions = :NotSpecified,
   show_trace::Bool = true,
   save_trace::Bool = false,
@@ -21,7 +22,8 @@ function compare_optimizers(func::Function, searchRange; methods = keys(ValidMet
   for(m in methods)
     tic()
     best, fitness = bboptimize(func, searchRange; method = m, iterations = iterations,
-      dimensions = dimensions, show_trace = show_trace, save_trace = save_trace, 
+      max_time = max_time, dimensions = dimensions, 
+      show_trace = show_trace, save_trace = save_trace, 
       population_size = population_size, method_options = method_options)
     push!( results,  (m, best, fitness, toq()) )
   end
@@ -39,6 +41,7 @@ end
 
 function compare_optimizers(funcsAndRanges; methods = collect(keys(ValidMethods)),
   iterations = 10000,
+  max_time = 2.0,
   dimensions = :NotSpecified,
   show_trace::Bool = true,
   save_trace::Bool = false,
@@ -68,6 +71,7 @@ function compare_optimizers(funcsAndRanges; methods = collect(keys(ValidMethods)
 end
 
 function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
+  max_time = false,
   iterations = 10000,
   dimensions = :NotSpecified,
   show_trace::Bool = true,
@@ -99,6 +103,15 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
     throw(ArgumentError("The supplied function does NOT return a number when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 
+  # Check that max_time is larger than zero if it has been specified.
+  if max_time != false
+    if max_time <= 0.0
+      throw(ArgumentError("The max_time must be a positive number"))
+    else
+      max_time = convert(Float64, max_time)
+    end
+  end
+
   # Check that a valid number of iterations has been specified. Print warning if higher than 1e8.
   if iterations < 1
     throw(ArgumentError("The number of iterations MUST be a positive number"))
@@ -123,12 +136,13 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
   # from our pre-defined problems so some of the data for the constructor is dummy.
   problem = BlackBoxOptim.Problems.OptimizationProblem("interactive", [func], false, (0.0, 0.0), dimensions, search_space)
 
-  run_optimizer_on_problem(optimizer, problem, iterations, show_trace, save_trace)
+  run_optimizer_on_problem(optimizer, problem;
+   numSteps = iterations, shw = show_trace, save = save_trace, max_time = max_time)
 end
 
 function tr(msg, showTrace, saveTrace, obj = None)
   if showTrace
-    println(msg)
+    print(msg)
     if obj != None
       show(obj)
     end
@@ -156,39 +170,66 @@ function rank_by_fitness(candidates, problem)
   sort(fitness; by = (t) -> t[3])
 end
 
-function run_optimizer_on_problem(opt::Optimizer, problem::Problems.OptimizationProblem, 
-  numSteps = 1e4, shw = true, save = false)
+function run_optimizer_on_problem(opt::Optimizer, problem::Problems.OptimizationProblem;
+  numSteps = 1e4, 
+  shw = true, 
+  save = false, 
+  max_time = false)
+
+  # No max time if unspecified. If max time specified it takes precedence over
+  # numSteps.
+  if max_time == false
+    max_time = Inf
+  else
+    numSteps = Inf
+  end
 
   num_better = 0
   num_better_since_last = 0
-  tr("Starting optimization with optimizer $(name(opt))", shw, save)
+  tr("Starting optimization with optimizer $(name(opt))\n", shw, save)
 
   step = 1
-  tic()
-  while(step <= numSteps)
-    if(mod(step, 2.5e4) == 0)
+  num_fevals = 0
+  t = last_report_time = start_time = time()
+  elapsed_time = 0.0
+
+  while( (elapsed_time < max_time) && (step <= numSteps) )
+
+    # Report every 0.5 seconds
+    if (t - last_report_time) > 0.5
+      last_report_time = t
       num_better += num_better_since_last
+
+      # Always print step number, num fevals and elapsed time
+      tr(@sprintf("%.3f secs, %d evals , %d steps", 
+        elapsed_time, num_fevals, step), shw, save) 
+
       # Only print if this optimizer reports on number of better. They return 0
       # if they do not.
       if num_better_since_last > 0
-        tr("Step $(step), Improvements/step: overall = $(num_better/step), last interval = $(num_better_since_last/step)", shw, save)
+        tr(@sprintf(", Improvements/step: %.4f (last = %.4f)", 
+          num_better/step, num_better_since_last/step), shw, save)
         num_better_since_last = 0
       end
+      tr("\n", shw, save)
     end
-    candidates = ask(opt)
 
+    candidates = ask(opt)
     ranked_candidates = rank_by_fitness(candidates, problem)
 
+    num_fevals += length(candidates) # For now, we assume they are all evaluated.
     num_better_since_last += tell!(opt, ranked_candidates)
     step += 1
+    t = time()
+    elapsed_time = t - start_time
   end
-  t = toq()
 
   step -= 1 # Since it is one too high after while loop above
 
-  tr("\nOptimization stopped after $(step) steps and $(t) seconds", shw, save)
-  tr("Steps per second = $(numSteps/t)", shw, save)
-  tr("Improvements/step = $((num_better+num_better_since_last)/numSteps)", shw, save)
+  tr("\nOptimization stopped after $(step) steps and $(elapsed_time) seconds\n", shw, save)
+  tr("Steps per second = $(step/elapsed_time)\n", shw, save)
+  tr("Function evals per second = $(num_fevals/elapsed_time)\n", shw, save)
+  tr("Improvements/step = $((num_better+num_better_since_last)/numSteps)\n", shw, save)
   if typeof(opt) <: PopulationOptimizer
     tr("\nMean value (in population) per position:", shw, save, mean(population(opt),1))
     tr("\n\nStd dev (in population) per position:", shw, save, std(population(opt),1))
@@ -196,7 +237,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
   best, index, fitness = find_best_individual(problem, opt)
   tr("\n\nBest candidate found: ", shw, save, best)
   tr("\n\nFitness: ", shw, save, fitness)
-  tr("\n", shw, false)
+  tr("\n\n", shw, false)
 
   return best, fitness
 end
