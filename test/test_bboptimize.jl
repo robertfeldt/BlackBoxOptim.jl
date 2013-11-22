@@ -32,6 +32,9 @@ facts("bboptimize") do
   end
 
   context("example 5 from README") do
+    # dimension 30 is too much for xnes, really, need to change to comparison
+    # for same time used or number of fitness evaluations... XNES currently has
+    # a huge advantage in using more time and more fitness evals.
     BlackBoxOptim.compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, iterations = 1e5)
   end
 

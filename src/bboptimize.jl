@@ -6,6 +6,7 @@ ValidMethods = {
   :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
   :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
   :separable_nes => BlackBoxOptim.separable_nes,
+  :xnes => BlackBoxOptim.xnes,
 }
 
 function compare_optimizers(func::Function, searchRange; methods = keys(ValidMethods),

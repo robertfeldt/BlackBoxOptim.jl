@@ -13,6 +13,7 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   sigma_learnrate::Float64
   last_s::Array{Float64,2}        # The s values sampled in the last call to ask
   population::Array{Float64,2}    # The last sampled values, now being evaluated
+  utilities::Array{Float64,2}     # The fitness shaping utility vector
 
   SeparableNESOpt(searchSpace; lambda = false, mu_learnrate = 1.0, 
     sigma_learnrate = false) = begin
@@ -28,8 +29,9 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
 
     new(numDimensions, lambda, mu, sigma, distr, 
       mu_learnrate, sigma_learnrate,
-      eye(numDimensions), eye(numDimensions))
-
+      eye(numDimensions), eye(numDimensions), 
+      # Most modern NES papers use log rather than linear fitness shaping.
+      fitness_shaping_utilities_log(lambda))
   end
 end
 
@@ -64,8 +66,6 @@ function ask(snes::SeparableNESOpt)
   # Quicker version as dimensions increase:
   snes.population = sampled_solutions = broadcast(+, snes.mu, broadcast(*, snes.sigma, s))
 
-  # TODO!!! We must ensure all candidates are within the bounding box of the search space.
-
   # The rest of BlackBoxOptim still uses row-major order so transpose the 
   # individuals before returning them.
   mix_with_indices( sampled_solutions', 1:snes.lambda )
@@ -84,7 +84,7 @@ end
 
 # Tell the sNES the ranking of a set of candidates.
 function tell!(snes::SeparableNESOpt, rankedCandidates)
-  u = calc_utilities(rankedCandidates)
+  u = assign_weights(rankedCandidates, snes.utilities)
 
   # Calc gradient
   gradient_mu = snes.last_s * u
@@ -99,12 +99,84 @@ function tell!(snes::SeparableNESOpt, rankedCandidates)
   0
 end
 
-function calc_utilities(rankedCandidates)
-  num_candidates = length(rankedCandidates)
+function assign_weights(rankedCandidates, u)
+  n = length(rankedCandidates)
+  # We must reorder the samples according to the order of the fitness in
+  # rankedCandidates!!! Or we must reorder the utilities accordingly. The latter
+  # is the preferred method and we can use the indices in rankedCandidates to 
+  # accomplish it.
+  u_ordered = zeros(n, 1)
+  for(i in 1:n)
+    u_ordered[rankedCandidates[i][2]] = u[i]
+  end
 
+  u_ordered
+end
+
+# xNES is nice but scales badly with increasing dimension.
+type XNESOpt <: NaturalEvolutionStrategyOpt
+  d::Integer                      # Number of dimensions
+  lambda::Integer                 # Number of samples to take per iteration
+  utilities::Array{Float64,2}     # Fitness utility to give to each rank
+  x_learnrate::Float64
+  a_learnrate::Float64
+  A::Array{Float64,2}
+  expA::Array{Float64,2}
+  population::Array{Float64,2}    # The last sampled values, now being evaluated
+  x::Array{Float64,2}             # The current incumbent (aka most likely value, mu etc)
+  Z::Array{Float64,2}
+
+  XNESOpt(searchSpace; lambda = false) = begin
+    d = numdims(searchSpace)
+    lambda = lambda || convert(Int64, 4 + 3*floor(log(d)))
+    x_learnrate = 1
+    a_learnrate = 0.5 * minimum([1.0 / d, 0.25])
+    x = rand_individual(searchSpace)
+
+    new(d, lambda, fitness_shaping_utilities_log(lambda), 
+      x_learnrate, a_learnrate, 
+      zeros(d, d), zeros(d, d), zeros(d, lambda), x, zeros(d, d))
+  end
+end
+
+function xnes(searchSpace; options = NES_DefaultOptions, population = false)
+  XNESOpt(searchSpace; lambda = options["lambda"])
+end
+
+function ask(xnes::XNESOpt)
+  xnes.expA = expm(xnes.A)
+  xnes.Z = randn(xnes.d, xnes.lambda)
+  xnes.population = broadcast(+, xnes.x, (xnes.expA * xnes.Z))
+
+  # The rest of BlackBoxOptim still uses row-major order so transpose the 
+  # individuals before returning them.
+  mix_with_indices( xnes.population', 1:xnes.lambda )
+end
+
+function tell!(xnes::XNESOpt, rankedCandidates)
+  u = assign_weights(rankedCandidates, xnes.utilities)
+
+  G = (repmat(u', xnes.d, 1) .* xnes.Z) * xnes.Z' - eye(xnes.d)
+  dx = xnes.x_learnrate * xnes.expA * (xnes.Z*u)
+  dA = xnes.a_learnrate * G
+  
+  xnes.x += dx
+  xnes.A += dA
+
+  0
+end
+
+# Calculate the fitness shaping utilities vector using the log method.
+function fitness_shaping_utilities_log(n)
+  u = maximum(hcat(zeros(n, 1), log(n / 2 + 1.0) - log(1:n)), 2)
+  u / sum(u)
+end
+
+# Calculate the fitness shaping utilities vector using the steps method.
+function fitness_shaping_utilities_linear(n)
   # Second half has zero utility.
-  treshold = convert(Int64, floor(num_candidates/2))
-  second_half = zeros(num_candidates - treshold, 1)
+  treshold = convert(Int64, floor(n/2))
+  second_half = zeros(n - treshold, 1)
 
   # While first half's utility decreases in linear steps 
   step_size = 1 / treshold
@@ -112,16 +184,5 @@ function calc_utilities(rankedCandidates)
 
   # But the utilities should sum to 1 so we normalize, then return
   u = vcat(first_half, second_half)
-  u = u ./ sum(u)
-
-  # We must reorder the samples according to the order of the fitness in
-  # rankedCandidates!!! Or we must reorder the utilities accordingly. The latter
-  # is the preferred method and we can use the indices in rankedCandidates to 
-  # accomplish it.
-  u_ordered = zeros(num_candidates, 1)
-  for(i in 1:num_candidates)
-    u_ordered[rankedCandidates[i][2]] = u[i]
-  end
-
-  u_ordered
+  u / sum(u)  
 end

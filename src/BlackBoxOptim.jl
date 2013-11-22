@@ -10,6 +10,7 @@ export  OptimizationProblem,
         AdaptConstantsDiffEvoOpt, adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
 
         SeparableNESOpt, separable_nes,
+        XNESOpt, xnes,
 
         Problems,
 
@@ -22,7 +23,9 @@ export  OptimizationProblem,
         hat_compare, isbetter, isworse, samefitness,
         popsize,
         FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
-        FloatVectorPopulation
+        FloatVectorPopulation,
+
+        name
 
 abstract Optimizer
 
