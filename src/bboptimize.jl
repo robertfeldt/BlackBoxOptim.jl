@@ -201,13 +201,13 @@ function run_optimizer_on_problem(opt::Optimizer, problem::Problems.Optimization
       num_better += num_better_since_last
 
       # Always print step number, num fevals and elapsed time
-      tr(@sprintf("%.3f secs, %d evals , %d steps", 
+      tr(@sprintf("%.2f secs, %d evals , %d steps", 
         elapsed_time, num_fevals, step), shw, save) 
 
       # Only print if this optimizer reports on number of better. They return 0
       # if they do not.
       if num_better_since_last > 0
-        tr(@sprintf(", Improvements/step: %.4f (last = %.4f)", 
+        tr(@sprintf(", improv/step: %.3f (last = %.4f)", 
           num_better/step, num_better_since_last/step), shw, save)
         num_better_since_last = 0
       end
