@@ -65,6 +65,7 @@ The section above described the basic API for the BlackBoxOptim package. We empl
 In addition to the `method` keyword, you can alter the behavior of the Optim package by using other keywords:
 
 * `iterations`: How many iterations (function evaluations) will be run before the algorithm gives up? Defaults to `10_000`.
+* `max_time`: For how long can the optimization run? Defaults to false which means that number of iterations is the given budget, rather than time.
 * `store_trace`: Should a trace of the optimization be stored? Defaults to `false`.
 * `show_trace`: Should a trace of the optimization be shown on `STDOUT`? Defaults to `false`.
 * `population_size`: How large is the initial population for population-based optimizers? Defaults to `50`.
