@@ -1,7 +1,7 @@
 BlackBoxOptim.jl
 ==============
 
-BlackBoxOptim is a (experimental, work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES, CMA-ES etc) rather than more traditional, deterministic algorithms (that are often based on gradients/differentiability).
+BlackBoxOptim is a (work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES, CMA-ES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability.
 
 Eventually we hope to provide a JuMP interface but since it is not clear if JuMP supports multiple objectives this is to be decided.
 
@@ -97,6 +97,7 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 ## Utilities
 * Latin hypercube sampling for creating initial populations
+* Frequency Adaptation (of methods/strategies/coordinates)
 
 ## Planned Utilities
 * Comparison of optimizers based on (Moré's') "data/performance profiles".
