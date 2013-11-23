@@ -46,6 +46,7 @@ end
 
 include("fitness.jl")
 include("population.jl")
+include("frequency_adaptation.jl")
 
 abstract PopulationOptimizer <: Optimizer
 
