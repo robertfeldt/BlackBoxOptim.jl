@@ -233,4 +233,4 @@ function rosenbrock(x)
   return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
 end
 
-cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = SparseCholeskyCovarSampler) 
+#cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = SparseCholeskyCovarSampler) 

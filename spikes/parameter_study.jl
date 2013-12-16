@@ -5,13 +5,13 @@ require("covar_matrix_self_adaptation_es.jl")
 @everywhere cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = CholeskyCovarSampler, trace = false) 
 
 # Parameter study
-num_runs = 10
-ns = [2, 4, 8, 16, 32, 64]
+num_runs = 25
+ns = [4, 8, 16, 32, 64]
 max_evals = [1000, 10000, 100000, 1000000]
 samplers = [EigenCovarSampler, CholeskyCovarSampler]
 utils = [linear_utilities, log_utilities]
 mus = [0.05, 0.10, 0.20, 0.30]
-lambdas = [8, (n) -> int(4 + 3*floor(log(n))), (n) -> 4*n, (n) -> 4*n*n]
+lambdas = [(n) -> int(4 + 3*floor(log(n))), (n) -> 4*n, (n) -> 4*n*n]
 
 # Now create parameter combinations
 Params = Any[]
