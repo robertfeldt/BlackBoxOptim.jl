@@ -72,12 +72,13 @@ function cmsa_es(n, func;
   if lambda == false
     # In the paper they try population sizes 8, 4n and 4*n*n, lets try
     # in between:
-    lambda = int(8 + (4*n*n - 8) * rand())
+    #lambda = int(8 + (4*n*n - 8) * rand())
+    lambda = 4*n
     # We should probably use an IPOP scheme for restarts...
   end
 
   if mu == false
-    mu = max(int(sqrt(lambda)), 2)
+    mu = max(int(log(lambda)), 2)
   end
 
   tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008 
@@ -101,7 +102,7 @@ function cmsa_es(n, func;
     sigmas = sigma * exp( tau * randn(1, lambda) )  # 1*lambda
     s = multivariate_normal_sample(C, n, lambda)
     z = broadcast(*, sigmas, s)                     # n*lambda
-    xs = broadcast(+, xmean, z)                       # n*lambda
+    xs = repmat(xmean, 1, lambda) + z               # n*lambda
 
     # Evaluate fitness
     fitnesses = eval_fitnesses(func, xs, lambda)
@@ -114,8 +115,7 @@ function cmsa_es(n, func;
     xmean += (z * weights)
 
     if trace
-      # Print some info
-      print("$(step): Best fitness = $(func(xmean)) for\n  x = $(xmean')")
+      print("$(num_fevals): Best fitness = $(func(xmean))\n")
     end
 
     # Update the covariance matrix
@@ -191,6 +191,28 @@ function multivariate_normal_sample(cms::CholeskyCovarSampler, n, m)
   cms.sqrtC * randn(n, m)
 end
 
+# This is not a general solution but it works for specifically my use case and
+# when the operator is *
+function Base.broadcast{Tv,Ti}(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti})
+  I, J = findn(A)
+  V = zeros(nnz(A))
+  vn, vm = size(v)
+  if vn >= 1 && vm == 1
+    for(l in 1:nnz(A))
+      row = I[l]
+      V[l] = op(v[row], A.nzval[l])
+    end
+  elseif vn == 1 && vm >= 1
+    for(l in 1:nnz(A))
+      col = J[l]
+      V[l] = op(v[col], A.nzval[l])
+    end
+  else
+    throw(ArgumentError("invalid dimensions"))
+  end
+  sparse(I, J, V)
+end
+
 type SparseCholeskyCovarSampler <: CovarianceMatrixSampler
   C::SparseMatrixCSC{Float64,Int64}
   sqrtC::SparseMatrixCSC{Float64,Int64}
@@ -200,24 +222,40 @@ type SparseCholeskyCovarSampler <: CovarianceMatrixSampler
   end
 end
 
+function update_covariance_matrix!(cms::SparseCholeskyCovarSampler, delta, a)
+  C = a * cms.C + (1 - a) * delta
+  cms.C = C # triu(C) + triu(C,1)' # Ensure C is symmetric. Should not be needed, investigate...
+end
+
 function decompose!(cms::SparseCholeskyCovarSampler)
-  try 
-    cms.sqrtC = sparse(cholfact(cms.C))'
+  try
+    #println("droptol!(C)")
+    #cms.C = Base.droptol!(cms.C, 1e-4)
+    #println("nnz(C) = $(nnz(cms.C)), min = $(minimum(cms.C.nzval)), max = $(maximum(cms.C.nzval))")
+    #println("cholfact(C)")
+    t = cholfact(cms.C)
+    #println("sparse(t)")
+    s = sparse(t)
+    #println("s'")
+    sqrtC = s'
+    #println("droptol!(sqrtC)")
+    #cms.sqrtC = Base.droptol!(sqrtC, 1e-4)
+    #show(cms.sqrtC)
   catch error
     # We don't update if there is some problem
+    println("ERROR: ", error)
   end
 end
 
 function multivariate_normal_sample(cms::SparseCholeskyCovarSampler, n, m)
-  if n*m > 100
-    # We select a random density in [0.05, 0.75]
-    density = 0.05 + 0.80 * rand()
-  else
-    density = 0.95
-  end
-  cms.sqrtC * sprandn(n, m, density)
+  #if n*m > 100
+    # We select a random density in [0.10, 0.60]
+  #  density = 0.10 + 0.60 * rand()
+  #else
+  #  density = 0.90
+  #end
+  cms.sqrtC * randn(n, m)
 end
-
 
 function assign_weights(n, fitnesses, utilities; minimize = true)
   us_ordered = zeros(n, 1)
@@ -228,9 +266,19 @@ function assign_weights(n, fitnesses, utilities; minimize = true)
   us_ordered
 end
 
-function rosenbrock(x)
-  n = length(x)
-  return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
-end
-
-#cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = SparseCholeskyCovarSampler) 
+#function rosenbrock(x)
+#  n = length(x)
+#  sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 )
+#end
+#
+#function sphere(x)
+#  sum(x .^ 2)
+#end
+#
+#dim = 64
+#tic()
+#x, f, fevals = cmsa_es(dim, rosenbrock; max_fevals = max_fevals, covarMatrixSampler = SparseCholeskyCovarSampler, trace = true)
+#x, f, fevals = cmsa_es(dim, rosenbrock; max_fevals = int(1e7), covarMatrixSampler = CholeskyCovarSampler, lambda = 4*dim*dim, trace = true)
+#t = toq()
+#println("fitness = $(f)")
+#println("time = $(t)")
