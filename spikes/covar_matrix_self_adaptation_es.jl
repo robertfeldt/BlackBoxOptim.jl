@@ -42,16 +42,33 @@
 #  o.s = randn(o.n, o.n) * o.sqrtC
 #end
 
+function normalize_utilities(utilities)
+  utilities / sum(utilities)
+end
+
+function linear_utilities(mu, lambda)
+  normalize_utilities(hcat(ones(1, mu), zeros(1, lambda-mu)))
+end
+
+function log_utilities(mu, lambda)
+  normalize_utilities(hcat((log(mu+1) - log(1:mu))', zeros(1, lambda-mu)))
+end
 
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES.
-function cmsa_es(n, func; mu = false, lambda = false, num_reps = 5e2)
+function cmsa_es(n, func; 
+  mu = false, lambda = false, num_reps = 5e2,
+  covarMatrixSampler = EigenCovarSampler,
+  utilitiesFunc = linear_utilities)
 
   if lambda == false
-    lambda = 4*n*n
+    # In the paper they try population sizes 8, 4n and 4*n*n, lets try
+    # in between:
+    lambda = int(8 + (4*n*n - 8) * rand())
+    # We should probably use an IPOP scheme for restarts...
   end
 
   if mu == false
-    mu = int(0.35 * lambda)
+    mu = max(int(sqrt(lambda)), 2)
   end
 
   tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008 
@@ -59,70 +76,58 @@ function cmsa_es(n, func; mu = false, lambda = false, num_reps = 5e2)
   b = 1 / tau_c
   a = 1 - b
 
-  sigma = 1.0                   # Mutation strength, sigma (self-adapted) 
-  sigmas = sigma * ones(1, n)
-  C = eye(n, n)                 # Covariance matrix
+  xmean = randn(n,1)            # Current best mean value, should be sampled from search space...
 
-  y = zeros(n,1)                # Current best mean value, should be sampled from search space...
+  sigma = 1.0                   # Mutation strength, sigma (self-adapted) 
+
+  C = covarMatrixSampler(n)
 
   # Calc utilities for the mu best individuals.
-  # Linear utilities:
-  utilities = hcat(ones(1, mu), zeros(1, lambda-mu))
-  # Log utilities:
-  # utilities = hcat((log(mu+1) - log(1:mu))', zeros(1, lambda-mu))
-
-  # Normalize utilities
-  utilities = utilities / sum(utilities)
+  utilities = utilitiesFunc(mu, lambda)
 
   # Now lets optimize!
   for(step in 1:num_reps)
     #################################################################
     # Decompose the covar matrix for this round
     #################################################################
-    C = triu(C) + triu(C, 1)'
-
-    # D1. Cholesky decomposition
-    #sqrtC = chol(C) # Simpler and faster variant!?
-
-    # D2. Spectral decomposition with eigen vectors
-    EV, Bo = eig(C)
-    diagD = sqrt(EV)
+    decompose!(C)
 
     # Generate new population
     sigmas = sigma * exp( tau * randn(1, lambda) )  # 1*lambda
-    # D1. Cholesky decomposition
-    #s = sqrtC * randn(n, lambda)                    # n*lambda
-    # D2. Spectral decomposition
-    s = Bo * (diagD .* randn(n, lambda))            
+    s = multivariate_normal_sample(C, n, lambda)
     z = broadcast(*, sigmas, s)                     # n*lambda
-    ynew = broadcast(+, y, z)                       # n*lambda
+    xs = broadcast(+, xmean, z)                       # n*lambda
 
     # Evaluate fitness
-    fitness = zeros(lambda)
-    for(i in 1:lambda)
-      fitness[i] = func(ynew[:,i])
-    end    
+    fitnesses = eval_fitnesses(func, xs, lambda)
 
     # Assign weights to the best individuals according to the utilities vector.
-    weights = assign_weights(lambda, fitness, utilities)
+    weights = assign_weights(lambda, fitnesses, utilities)
 
     # Calculate new mean value based on weighted version of steps in population.
-    y = y + z * weights
+    xmean += (z * weights)
 
     # Print some info
-    print("$(step): Mean point fitness = $(func(y)) for\n  x = $(y')")
+    print("$(step): Mean point fitness = $(func(xmean)) for\n  x = $(xmean')")
 
     # Update the covariance matrix
     ws = broadcast(*, weights', s)
-    C = a * C + b * (ws * ws')
+    update_covariance_matrix!(C, (ws * ws'), a)
 
     # Adapt sigma for next round
     sigma = sigmas * weights
   end
 
-  return y, C, func(y)
+  return xmean, func(xmean)
 end
 
+function eval_fitnesses(func, xs, lambda = size(xs, 2))
+  fitnesses = zeros(lambda)
+  for(i in 1:lambda)
+    fitnesses[i] = func(xs[:,i])
+  end
+  fitnesses
+end
 
 # We create different types of Covariance matrix samplers based on different
 # decompositions.
@@ -131,10 +136,10 @@ abstract CovarianceMatrixSampler
 type EigenCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   B::Array{Float64,2}
-  diagD::Array{Float64,2}
+  diagD::Array{Float64,1}
 
   EigenCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n), ones(n,1))
+    new(eye(n,n), eye(n,n), ones(n))
   end
 end
 
@@ -144,7 +149,8 @@ function update_covariance_matrix!(cms::CovarianceMatrixSampler, delta, a)
 end
 
 function decompose!(cms::EigenCovarSampler)
-  EV, cms.B = eig(cms.C)
+  EV, B = eig(cms.C)
+  cms.B = B
   cms.diagD = sqrt(EV)
 end
 
@@ -184,4 +190,5 @@ function rosenbrock(x)
   return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
 end
 
-cmsa_es(2, rosenbrock; num_reps = 500)
+x, f = cmsa_es(3, rosenbrock; num_reps = 1000)
+println("Fitness = $(f),\n  x = $(x')")
