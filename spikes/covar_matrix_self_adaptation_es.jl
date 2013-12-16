@@ -54,11 +54,20 @@ function log_utilities(mu, lambda)
   normalize_utilities(hcat((log(mu+1) - log(1:mu))', zeros(1, lambda-mu)))
 end
 
+# This weights both positive and negative ones
+function active_linear_utilities(mu, lambda)
+  pos = ones(1, mu) / mu
+  rest = lambda-mu
+  neg = (-1) * ones(1, rest) / (2*rest)
+  2 * hcat(pos, neg)'
+end
+
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES.
 function cmsa_es(n, func; 
-  mu = false, lambda = false, num_reps = 5e2,
+  mu = false, lambda = false, max_fevals = 2000,
   covarMatrixSampler = EigenCovarSampler,
-  utilitiesFunc = linear_utilities)
+  utilitiesFunc = linear_utilities,
+  trace = true)
 
   if lambda == false
     # In the paper they try population sizes 8, 4n and 4*n*n, lets try
@@ -73,20 +82,16 @@ function cmsa_es(n, func;
 
   tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008 
   tau_c = 1 + n * (n + 1) / 2   # Equation (2) on page 5 in Beyer2008
-  b = 1 / tau_c
-  a = 1 - b
-
+  a = 1 - 1 / tau_c
   xmean = randn(n,1)            # Current best mean value, should be sampled from search space...
-
   sigma = 1.0                   # Mutation strength, sigma (self-adapted) 
-
   C = covarMatrixSampler(n)
-
-  # Calc utilities for the mu best individuals.
   utilities = utilitiesFunc(mu, lambda)
 
-  # Now lets optimize!
-  for(step in 1:num_reps)
+  num_fevals = 0
+
+  # Now lets optimize! Ensure we run at least one iteration.
+  while(num_fevals < max_fevals)
     #################################################################
     # Decompose the covar matrix for this round
     #################################################################
@@ -100,6 +105,7 @@ function cmsa_es(n, func;
 
     # Evaluate fitness
     fitnesses = eval_fitnesses(func, xs, lambda)
+    num_fevals += lambda
 
     # Assign weights to the best individuals according to the utilities vector.
     weights = assign_weights(lambda, fitnesses, utilities)
@@ -107,8 +113,10 @@ function cmsa_es(n, func;
     # Calculate new mean value based on weighted version of steps in population.
     xmean += (z * weights)
 
-    # Print some info
-    print("$(step): Mean point fitness = $(func(xmean)) for\n  x = $(xmean')")
+    if trace
+      # Print some info
+      print("$(step): Best fitness = $(func(xmean)) for\n  x = $(xmean')")
+    end
 
     # Update the covariance matrix
     ws = broadcast(*, weights', s)
@@ -118,7 +126,7 @@ function cmsa_es(n, func;
     sigma = sigmas * weights
   end
 
-  return xmean, func(xmean)
+  return xmean, func(xmean), num_fevals
 end
 
 function eval_fitnesses(func, xs, lambda = size(xs, 2))
@@ -149,9 +157,13 @@ function update_covariance_matrix!(cms::CovarianceMatrixSampler, delta, a)
 end
 
 function decompose!(cms::EigenCovarSampler)
-  EV, B = eig(cms.C)
-  cms.B = B
-  cms.diagD = sqrt(EV)
+  try
+    EV, B = eig(cms.C)
+    cms.B = B
+    cms.diagD = sqrt(EV)
+  catch
+    # We don't update if there is some problem
+  end
 end
 
 function multivariate_normal_sample(cms::CovarianceMatrixSampler, n, m)
@@ -168,11 +180,42 @@ type CholeskyCovarSampler <: CovarianceMatrixSampler
 end
 
 function decompose!(cms::CholeskyCovarSampler)
-  cms.sqrtC = chol(cms.C)'
+  try 
+    cms.sqrtC = chol(cms.C)'
+  catch error
+    # We don't update if there is some problem
+  end
 end
 
 function multivariate_normal_sample(cms::CholeskyCovarSampler, n, m)
   cms.sqrtC * randn(n, m)
+end
+
+type SparseCholeskyCovarSampler <: CovarianceMatrixSampler
+  C::SparseMatrixCSC{Float64,Int64}
+  sqrtC::SparseMatrixCSC{Float64,Int64}
+
+  SparseCholeskyCovarSampler(n) = begin
+    new(speye(n,n), speye(n,n))
+  end
+end
+
+function decompose!(cms::SparseCholeskyCovarSampler)
+  try 
+    cms.sqrtC = sparse(cholfact(cms.C))'
+  catch error
+    # We don't update if there is some problem
+  end
+end
+
+function multivariate_normal_sample(cms::SparseCholeskyCovarSampler, n, m)
+  if n*m > 100
+    # We select a random density in [0.05, 0.75]
+    density = 0.05 + 0.80 * rand()
+  else
+    density = 0.95
+  end
+  cms.sqrtC * sprandn(n, m, density)
 end
 
 
@@ -190,5 +233,4 @@ function rosenbrock(x)
   return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
 end
 
-x, f = cmsa_es(3, rosenbrock; num_reps = 1000)
-println("Fitness = $(f),\n  x = $(x')")
+cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = SparseCholeskyCovarSampler) 
