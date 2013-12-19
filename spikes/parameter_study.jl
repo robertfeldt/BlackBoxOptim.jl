@@ -22,7 +22,7 @@ problems = [rosenbrock, sphere, cigar, cigtab]
 
 @everywhere machine1 = "macbook_pro_retina_cth"
 @everywhere machine2 = "macbook_pro_ssd_bth"
-@everywhere machine = machine2
+@everywhere machine = machine1
 
 # Now create parameter combinations
 Params = Any[]
