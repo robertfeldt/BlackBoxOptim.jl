@@ -1,0 +1,60 @@
+of = rastrigin
+@time ts, fbs, fes = compare_params([
+  (of, 2, true, false), 
+  (of, 2, false, false),
+  (of, 5, true, false), 
+  (of, 5, false, false),
+  (of, 10, true, false), 
+  (of, 10, false, false),
+  (of, 20, true, false), 
+  (of, 20, false, false)
+  ],
+  ((f, n, fao, ro) -> 
+    restart_gss(xtransform(n, f), n; 
+      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
+  25
+);
+
+Results per parameter config
+----------------------------
+1. (rastrigin,2,true,false)
+Fitness: median = 0.000000, mean = 0.000000 +/- 0.000000
+Time: median = 1.18 ms, mean = 2.06 ms +/- 2.99 ms
+Num. evals: median = 206.00, mean = 313.60 +/- 316.83
+
+2. (rastrigin,2,false,false)
+Fitness: median = 0.000000, mean = 0.000000 +/- 0.000000
+Time: median = 0.91 ms, mean = 1.01 ms +/- 0.58 ms
+Num. evals: median = 230.00, mean = 256.28 +/- 157.09
+
+3. (rastrigin,5,true,false)
+Fitness: median = 0.000000, mean = 0.000000 +/- 0.000000
+Time: median = 9.68 ms, mean = 28.89 ms +/- 66.25 ms
+Num. evals: median = 1708.00, mean = 2732.96 +/- 3190.78
+
+4. (rastrigin,5,false,false)
+Fitness: median = 0.000000, mean = 0.000000 +/- 0.000000
+Time: median = 14.11 ms, mean = 27.59 ms +/- 48.71 ms
+Num. evals: median = 2017.00, mean = 3378.24 +/- 2861.06
+
+5. (rastrigin,10,true,false)
+Fitness: median = 0.000000, mean = 0.000000 +/- 0.000000
+Time: median = 336.94 ms, mean = 1.00 s +/- 1.25 s
+Num. evals: median = 27495.00, mean = 40305.16 +/- 49190.57
+
+6. (rastrigin,10,false,false)
+Fitness: median = 0.000000, mean = 0.000000 +/- 0.000000
+Time: median = 0.69 s, mean = 1.12 s +/- 1.37 s
+Num. evals: median = 50776.00, mean = 65505.08 +/- 73941.00
+
+7. (rastrigin,20,true,false)
+Fitness: median = 0.994959, mean = 0.756169 +/- 0.659981
+Time: median = 40.00 s, mean = 30.19 s +/- 14.89 s
+Num. evals: median = 898903.00, mean = 871652.04 +/- 502905.65
+
+8. (rastrigin,20,false,false)
+Fitness: median = 0.994959, mean = 1.074556 +/- 0.490802
+Time: median = 40.04 s, mean = 37.01 s +/- 10.63 s
+Num. evals: median = 1535945.00, mean = 1781353.48 +/- 1001905.92
+
+elapsed time: 1734.439417369 seconds (224586830468 bytes allocated)
