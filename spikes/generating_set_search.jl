@@ -160,26 +160,18 @@ end
 
 # A GSS variant with an initial Levy flight search step to investigate if this
 # can speed up convergence on multi-modal fitness functions.
-function gss_levy()
-end
-
-@time generating_set_search(sphere, 100; known_fmin = 0.0, random_order = true)
-@time generating_set_search(rosenbrock, 16; known_fmin = 0.0)
-@time restart_gss(rosenbrock, 32; known_fmin = 0.0, random_order = false)
-
-@time restart_gss(rosenbrock, 16; known_fmin = 0.0)
-@time restart_gss(xtransform(16, rosenbrock), 16; known_fmin = 0.0)
-
-@time restart_gss(cigar, 32; known_fmin = 0.0)
+#function gss_levy()
+#end
 
 function sumstats(v, f = (x) -> @sprintf("%.2f", x))
-  "median = $(f(median(v))), mean = $(f(mean(v))) +/- $(f(std(v)))"
+  v = convert(Array{Float64,1}, v)
+  "median = $(f(median(v))), mean = $(f(mean(v))) +/- $(f(std(v))), range = [$(f(minimum(v))), $(f(maximum(v)))]"
 end
 
 function format_time(t)
   if t < 5e-1
     @sprintf("%.2f ms", t*1e3)
-  elseif t < 30.0
+  elseif t < 60.0
     @sprintf("%.2f s", t)
   elseif t < 30*60
     @sprintf("%.2f min", t/60.0)
@@ -200,7 +192,7 @@ function repeated_runs(searchf, n = 16, num_runs = 10)
     push!(xs, x)
   end
 
-  println("\nFitness: ", sumstats(fbests))
+  println("\nFitness: ", sumstats(fbests, (x) -> @sprintf("%.6f", x)))
   println("Time: ", sumstats(times, format_time))
   println("Num. evals: ", sumstats(fevals, int))
   println("")
@@ -228,8 +220,8 @@ function compare_params(params, searchf, num_runs = 10)
   println("----------------------------")
   for(i in 1:num_configs)
     print(i, ". "); show(params[i]); println("")
-    println("Fitness: ", sumstats(fbests[:,i]))
-    println("Time: ", sumstats(times[:,i]))
+    println("Fitness: ", sumstats(fbests[:,i], (x) -> @sprintf("%.6f", x)))
+    println("Time: ", sumstats(times[:,i], format_time))
     println("Num. evals: ", sumstats(fevals[:,i]))
     println("")
   end
@@ -237,62 +229,94 @@ function compare_params(params, searchf, num_runs = 10)
   return times, fbests, fevals
 end
 
-of = rosenbrock
-@time ts, fbs, fes = compare_params([
-  (of, 10, true, false), 
-  (of, 10, false, true), 
-  (of, 10, false, false),
-  (of, 30, true, false), 
-  (of, 30, false, true), 
-  (of, 30, false, false)
-  ],
-  ((f, n, fao, ro) -> 
-    restart_gss(xtransform(n, f), n; 
-      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
-  3
-)
+function rastrigin(x)
+  d = length(x)
+  10*d + sum( x.^2 - 10 * cos( 2 * π * x ) )
+end
 
-f = schwefel2_21
-n = 16
+# Run parameter study with given parameters.
+function run_with_params(of, n)
+  start_time = time()
+  xb, fb, fes, tr = restart_gss(of, n; known_fmin = 0.0, random_order = false)
+  end_time = time()
+  elapsed = end_time - start_time
 
-of = deceptive_cuccu2011(30, 2)
-of = rastrigin
-n = 5
-@time fbs, fes = repeated_runs(
-  ((n) -> restart_gss(of, n; known_fmin = 0.0, random_order = false)),
-  n);
+  prefix_header = "StartTime,ElapsedTime,Function,N,FitnessBest,TotalFuncEvals,TerminationReason"
+  println(join([prefix_header, map((i) -> "x$(i)", 1:length(xb))], ","))
+  println(join([strftime("%Y%m%d-%H%M%S", start_time), elapsed, of, n, fb, fes, tr, xb], ","))
+end
 
+#of = rastrigin
+#n = 5
+#@time fbs, fes = repeated_runs(
+#  ((n) -> restart_gss(of, n; known_fmin = 0.0, random_order = false)),
+#  n);
 
-# Comparing to Cuccu2011
-of = deceptive_cuccu2011(15, 2)
-of = rastrigin
-@time ts, fbs, fes = compare_params([
-  (of, 2, true, false), 
-  (of, 2, false, true), 
-  (of, 2, false, false),
-  (of, 5, true, false), 
-  (of, 5, false, true), 
-  (of, 5, false, false),
-  (of, 10, true, false), 
-  (of, 10, false, true), 
-  (of, 10, false, false),
-  (of, 20, true, false), 
-  (of, 20, false, true), 
-  (of, 20, false, false)
-  ],
-  ((f, n, fao, ro) -> 
-    restart_gss(xtransform(n, f), n; 
-      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
-  25
-);
-
-# Cuccu tells the median number of generations but not clear how many func evals
-# this corresponds to. Lets assume he uses the standard 4+3*log(d) rule to set
-# population size => for d=20 we should multiply by 12.
-# Table IV on page 5 of Cuccu2011 should thus read:
-#   d=2,  2112
-#   d=5,  1872
-#   d=10, 633
-#   d=20, 16488
+#@time generating_set_search(sphere, 100; known_fmin = 0.0, random_order = true)
+#@time generating_set_search(rosenbrock, 16; known_fmin = 0.0)
+#@time restart_gss(rosenbrock, 32; known_fmin = 0.0, random_order = false)
 #
-# These results for 
+#@time restart_gss(rosenbrock, 16; known_fmin = 0.0)
+#@time restart_gss(xtransform(16, rosenbrock), 16; known_fmin = 0.0)
+#
+#@time restart_gss(cigar, 32; known_fmin = 0.0)
+
+#of = rosenbrock
+#@time ts, fbs, fes = compare_params([
+#  (of, 10, true, false), 
+#  #(of, 10, false, true), 
+#  #(of, 10, false, false),
+#  #(of, 30, true, false), 
+#  #(of, 30, false, true), 
+#  (of, 30, false, false)
+#  ],
+#  ((f, n, fao, ro) -> 
+#    restart_gss(xtransform(n, f), n; 
+#      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
+#  2
+#)
+#
+#f = schwefel2_21
+#n = 16
+#
+#of = deceptive_cuccu2011(30, 2)
+#of = rastrigin
+#n = 5
+#@time fbs, fes = repeated_runs(
+#  ((n) -> restart_gss(of, n; known_fmin = 0.0, random_order = false)),
+#  n);
+#
+#
+## Comparing to Cuccu2011
+#of = deceptive_cuccu2011(15, 2)
+#of = rastrigin
+#@time ts, fbs, fes = compare_params([
+#  (of, 2, true, false), 
+#  #(of, 2, false, true), 
+#  (of, 2, false, false),
+#  (of, 5, true, false), 
+#  #(of, 5, false, true), 
+#  (of, 5, false, false),
+#  (of, 10, true, false), 
+#  #(of, 10, false, true), 
+#  (of, 10, false, false),
+#  (of, 20, true, false), 
+#  #(of, 20, false, true), 
+#  (of, 20, false, false)
+#  ],
+#  ((f, n, fao, ro) -> 
+#    restart_gss(xtransform(n, f), n; 
+#      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
+#  25
+#);
+#
+## Cuccu tells the median number of generations but not clear how many func evals
+## this corresponds to. Lets assume he uses the standard 4+3*log(d) rule to set
+## population size => for d=20 we should multiply by 12.
+## Table IV on page 5 of Cuccu2011 should thus read:
+##   d=2,  2112
+##   d=5,  1872
+##   d=10, 633
+##   d=20, 16488
+##
+## These results for d=20 are impressive.
