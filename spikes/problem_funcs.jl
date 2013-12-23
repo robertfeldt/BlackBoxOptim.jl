@@ -89,8 +89,6 @@ function rastrigin(x)
   10*d + sum( x.^2 - 10 * cos( 2 * π * x ) )
 end
 
-
-
 function xtransform(n, f)
   move = randn(n, 1)
   transformed_f(x) = f(x .- move)
