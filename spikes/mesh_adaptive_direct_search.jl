@@ -40,10 +40,10 @@ end
 
 # From box on page 203 in Audet2006:
 type LTMADSDirectionGenerator
-  cache::Dict{Int64, Array{Vector{Int64}, 1}}  # Cache of previous directions used
+  cache::Dict{Int64, Array{Int64, 1}}  # Cache of previous directions used
 
   LTMADSDirectionGenerator() = begin
-    new(Dict{Int64, Array{Vector{Int64}, 1}}())
+    new(Dict{Int64, Array{Int64, 1}}())
   end
 end
 

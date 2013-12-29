@@ -113,9 +113,33 @@ function generating_set_search(f, n; max_seconds = 2*n, delta_tol = 1e-13,
   return x, fbest, num_fevals, termination_reason
 end
 
+function min_distance(point, points)
+  dist = norm(point - points[:,1])
+  for(i in 2:size(points, 2))
+    dist = minimum([dist, norm(point - points[:, i])])
+  end
+  dist
+end
+
+function maximize_min_distance(n, points, num_samples = 100, 
+  sampler = () -> randn(n,1))
+  xbest = xnew = sampler()
+  dist = min_distance(xnew, points)
+  for(i in 1:num_samples)
+    xnew = sampler()
+    newdist = min_distance(xnew, points)
+    if newdist > dist
+      xbest = xnew
+      dist = newdist
+    end
+  end
+  xbest
+end
+
 function restart_gss(f, n; max_seconds = 2*n, delta_tol = 1e-7, 
-  step_size = 1.0, x = false, random_order = false,
-  freq_adapt_order = false,
+  step_size = 1.0, 
+  x = false, diverse_starting_points = false, diameter = 1.0,
+  random_order = false, freq_adapt_order = false,
   known_fmin = :unknown, ftol = 1e-8,
   direction_gen = compass_search_directions(n))
 
@@ -124,16 +148,27 @@ function restart_gss(f, n; max_seconds = 2*n, delta_tol = 1e-7,
   xb = total_fevals = termination_reason = 0
   num_runs = 0
 
+  sampler_func = () -> diameter * randn(n, 1)
+
+  if x == false
+    # Generate the first starting point.
+    starting_points = sampler_func()
+  else
+    starting_points = x
+  end
+
   while(now < start_time + max_seconds)
     time_left = max_seconds - (now - start_time)
+
+    num_runs += 1
 
     x, fbest, num_fevals, termination_reason = generating_set_search(f, n; 
       max_seconds = time_left, delta_tol = delta_tol, random_order = random_order,
       freq_adapt_order = freq_adapt_order,
-      step_size = step_size, x = false, known_fmin = known_fmin, ftol = ftol,
+      step_size = step_size, x = starting_points[:,num_runs], 
+      known_fmin = known_fmin, ftol = ftol,
       direction_gen = direction_gen)
 
-    num_runs += 1
     step_size = step_size * 2
     #delta_tol /= 10
 
@@ -147,6 +182,13 @@ function restart_gss(f, n; max_seconds = 2*n, delta_tol = 1e-7,
         break
       end
     end
+
+    if diverse_starting_points
+      xnew = maximize_min_distance(n, starting_points, 1000, sampler_func)
+    else
+      xnew = sampler_func()
+    end
+    starting_points = hcat(starting_points, xnew)
 
     now = time()
   end
@@ -163,71 +205,7 @@ end
 #function gss_levy()
 #end
 
-function sumstats(v, f = (x) -> @sprintf("%.2f", x))
-  v = convert(Array{Float64,1}, v)
-  "median = $(f(median(v))), mean = $(f(mean(v))) +/- $(f(std(v))), range = [$(f(minimum(v))), $(f(maximum(v)))]"
-end
 
-function format_time(t)
-  if t < 5e-1
-    @sprintf("%.2f ms", t*1e3)
-  elseif t < 60.0
-    @sprintf("%.2f s", t)
-  elseif t < 30*60
-    @sprintf("%.2f min", t/60.0)
-  else
-    @sprintf("%.2f hours", t/3600.0)
-  end
-end
-
-function repeated_runs(searchf, n = 16, num_runs = 10)
-  fevals = zeros(num_runs)
-  fbests = zeros(num_runs)
-  times = zeros(num_runs)
-  xs = Any[]
-  for(i in 1:num_runs)
-    tic()
-    x, fbests[i], fevals[i], termination_reason = searchf(n)
-    times[i] = toq()
-    push!(xs, x)
-  end
-
-  println("\nFitness: ", sumstats(fbests, (x) -> @sprintf("%.6f", x)))
-  println("Time: ", sumstats(times, format_time))
-  println("Num. evals: ", sumstats(fevals, int))
-  println("")
-
-  return fbests, fevals
-end
-
-function compare_params(params, searchf, num_runs = 10)
-  num_configs = length(params)
-  times = zeros(num_runs, num_configs)
-  fbests = zeros(num_runs, num_configs)
-  fevals = zeros(num_runs, num_configs)
-
-  for(r in 1:num_runs)
-    for(i in 1:num_configs)
-      tic()
-      xb, fb, fe, reason = searchf(params[i]...)
-      times[r,i] = toq()
-      fbests[r, i] = fb
-      fevals[r, i] = float(fe)
-    end
-  end
-
-  println("\n\nResults per parameter config")
-  println("----------------------------")
-  for(i in 1:num_configs)
-    print(i, ". "); show(params[i]); println("")
-    println("Fitness: ", sumstats(fbests[:,i], (x) -> @sprintf("%.6f", x)))
-    println("Time: ", sumstats(times[:,i], format_time))
-    println("Num. evals: ", sumstats(fevals[:,i]))
-    println("")
-  end
-
-  return times, fbests, fevals
-end
 
 function rastrigin(x)
   d = length(x)
@@ -260,6 +238,28 @@ end
 #@time restart_gss(xtransform(16, rosenbrock), 16; known_fmin = 0.0)
 #
 #@time restart_gss(cigar, 32; known_fmin = 0.0)
+
+of = rosenbrock
+@time ts, fbs, fes = compare_params([
+  (of, 2, false, false, false, 1.0), 
+  (of, 2, false, false, false, 2.0), 
+  (of, 2, false, false, true, 1.0), 
+  (of, 2, false, false, true, 2.0)
+  ],
+  ((f, n, fao, ro, div, diam) -> 
+    restart_gss(xtransform(n, f), n; 
+      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro,
+      diverse_starting_points = div, diameter = diam)),
+  5
+);
+
+
+of = griewank
+n = 2
+@time fbs, fes = repeated_runs(
+  ((n) -> restart_gss(of, n; known_fmin = 0.0, random_order = false)),
+  n);
+
 
 #of = rosenbrock
 #@time ts, fbs, fes = compare_params([

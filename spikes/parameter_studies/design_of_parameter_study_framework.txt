@@ -1,0 +1,23 @@
+1. A parameters study (PS) studies a set of np parameters.
+
+2. Each PS has a unique name which is a string describing its purpose.
+
+3. Each PS has a specification script which defines the PS by specifying:
+  a, Number of parameters being studied = NP
+  b, Type for each parameter = Type[np] which is one of {Real, Int, Discrete, Binary}
+  c, Range for values of each parameter = Rv[np]
+  d, Range for design values of each parameter = Rd[np], this is implicitly defined through PFs:
+  e, Parameter functions = PFs = one function per param mapping design values to param values, identity function unless specified
+  Together, all of this implicitly determines:
+    f, DS = Design space = product of Rv ranges, i.e. the space of feasible design points, Rd[1] * ... * Rd[np]
+    g, VS = Value space = product of Rd ranges, i.e. the space of feasible parameter points, Rv[1] * ... * Rv[np]
+
+4. When the specification script is executed it creates a unique directory name in a dropbox folder, creates subdirs named "in", "work" and "out", and then generates one file per job into the "in" subdir.
+
+5. Workers go to the dropbox folder, finds one unprocessed job in the "in" subdir, moves it to "work" subdir and then executes the job locally. Once the job finished it moves the file to the "out" dir. Results from the job is saved 
+
+6. A summarizer goes to the dropbox folder, finds any output in the "out" dir and summarizes it into a single csv file. There can only be one summarizer per PS. They typically run in batch mode or have a web front-end that dynamically shows results from incoming jobs.
+
+7. Optionally, workers can also send info about ongoing or finished work to the web-based front-ends.
+
+8. Optionally, scp can be used for output delivery. But start with only dropbox since its so simple.

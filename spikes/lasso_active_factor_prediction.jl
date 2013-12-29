@@ -108,3 +108,63 @@ N = 10000
 K = 3
 @time eval_if_lasso_finds_active_factors(N, K, int(5*K*log10(N)), 10)
 @time eval_if_lasso_finds_active_factors(N, K, int(5*K*log10(N)), 10; beta_intercept = 0.0)
+
+# To make this even more systematic we need to be able to generate new objective functions
+# involving a variety of factors, interactions and so forth.
+type RandObjectiveFunction
+  factors
+  betas
+
+  # Constructor creates a random function where we can control number of factors
+  # per order, max order, total num vars as well as if effect heritage is active:
+  #  N     = total number of variables
+  #  maxOrder = maximum number of interaction terms in one factor (a product) of the sum that is the objective func
+  #  sparsitiesPerOrder = array that gives the number of factors for that order.
+  #  effect_heritage = true iff the factors of higher order can only involve vars used for order 1 (main effects)
+  RandObjectiveFunction(N, maxOrder = 1, factorsPerOrder = [2]; 
+    effect_heritage = true) = begin
+    all_vars = 1:N
+
+    # One factor is represented by the indices of vars that should be multiplied to create it.
+
+    # Create main vars first since we might need them for heritance.
+    main_vars = shuffle(collect(all_vars))[1:factorsPerOrder[1]]
+    factors = map((v) -> [v], main_vars)
+
+    # Add factors for higher orders
+    for(order in 2:length(factorsPerOrder))
+      for(i in 1:factorsPerOrder[order])
+        factor = []
+        for(j in 1:order)
+          if effect_heritage
+            vars_to_sample = main_vars
+          else
+            vars_to_sample = all_vars
+          end
+          push!(factor, shuffle(vars_to_sample)[1])
+        end
+        push!(factors, factor)
+      end
+    end
+
+    # Create random betas for each factor, i.e. their weight.
+    betas = randn(length(factors), 1)
+
+    new(factors, betas)
+  end
+end
+
+# Apply function f to an array a.
+function eval(f::RandObjectiveFunction, a)
+  sum = 0.0
+  index = 1
+  for(factor in f.factors)
+    sum += f.betas[index] * a
+    index += 1
+  end
+  s = size(xs, 2)
+  y = zeros(s)
+  for(i in 1:s)
+    y[i] = 
+  end
+end

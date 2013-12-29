@@ -1,0 +1,1 @@
+julia -L lib/testjob1/generating_set_search.jl -e 'run_with_params(rastrigin, 2)'

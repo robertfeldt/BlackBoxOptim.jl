@@ -18,7 +18,7 @@ def spool_process(jobpath)
 
   # Now run the job from the "results" dir
   Dir.cd(resultdir)
-  system(workpath + " > " + workname ".log")
+  system(workpath + " > " + workname + ".log")
 
   # Finished! We move the job to the out dir.
   end_time = Time.now
@@ -29,22 +29,20 @@ def spool_process(jobpath)
   puts "Job #{jobname} finished! elapsed = #{end_time-start_time}, started = #{start_time}"
 end
 
-if ARGV.length < 1
-  puts "No spool directory specified!"
-  exit(-1)
-end
-
 SpoolDir = ARGV[1] || "/Users/feldt/Dropbox/job_processor"
-WorkdDir = File.join(SpoolDir, "work")
+WorkDir = File.join(SpoolDir, "work")
 
 while(true)
   jobs = Dir.glob(WorkDir + "/*")
-  begin
-    job = jobs[rand(jobs.length)]
-    spool_process(job)
-    sleep(1.0 + 9.0 * rand())
-  rescue => exception
-    puts "Exception when processing job #{job}!"
-    puts exception.backtrace
+  if jobs.length < 1
+    sleep(1.0 + 5.0 * rand())
+  else
+    begin
+      job = jobs[rand(jobs.length)]
+      spool_process(job)
+    rescue => exception
+      puts "Exception when processing job #{job}!"
+      puts exception.backtrace
+    end
   end
 end
