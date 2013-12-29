@@ -134,7 +134,7 @@ function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bi
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
-  problem = BlackBoxOptim.Problems.OptimizationProblem("interactive", [func], false, (0.0, 0.0), dimensions, search_space)
+  problem = BlackBoxOptim.FixedDimProblem("interactive", [func], search_space)
 
   run_optimizer_on_problem(optimizer, problem;
    numSteps = iterations, shw = show_trace, save = save_trace, max_time = max_time)
@@ -152,13 +152,13 @@ function tr(msg, showTrace, saveTrace, obj = None)
   end
 end
 
-function find_best_individual(problem::Problems.OptimizationProblem, opt::PopulationOptimizer)
+function find_best_individual(problem::OptimizationProblem, opt::PopulationOptimizer)
   pop = population(opt)
   candidates = [(pop[i,:], i) for i in 1:size(pop,1)]
   rank_by_fitness(candidates, problem)[1]
 end
 
-function find_best_individual(problem::Problems.OptimizationProblem, opt::Optimizer)
+function find_best_individual(problem::OptimizationProblem, opt::Optimizer)
   (opt.best, 1, opt.best_fitness)
 end
 
@@ -170,7 +170,7 @@ function rank_by_fitness(candidates, problem)
   sort(fitness; by = (t) -> t[3])
 end
 
-function run_optimizer_on_problem(opt::Optimizer, problem::Problems.OptimizationProblem;
+function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   numSteps = 1e4, 
   shw = true, 
   save = false, 

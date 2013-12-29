@@ -1,8 +1,6 @@
 module BlackBoxOptim
 
-export  OptimizationProblem,
-
-        Optimizer, PopulationOptimizer, 
+export  Optimizer, PopulationOptimizer, 
         bboptimize, compare_optimizers,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
@@ -20,7 +18,7 @@ export  OptimizationProblem,
         numdims, mins, maxs, deltas, ranges, range_for_dim,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
 
-        hat_compare, isbetter, isworse, samefitness,
+        hat_compare, is_better, is_worse, same_fitness,
         popsize,
         FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
         FloatVectorPopulation,
@@ -28,6 +26,15 @@ export  OptimizationProblem,
         name
 
 abstract Optimizer
+abstract Evaluator
+
+function setup(o::Optimizer, evaluator::Evaluator)
+  # Do nothing, override if you need to setup prior to the optimization loop
+end
+
+function finalize(o::Optimizer, evaluator::Evaluator)
+  # Do nothing, override if you need to finalize something after the optimization loop
+end
 
 # The standard name function converts the type of the optimizer to a string
 # and strips off trailing "Opt".

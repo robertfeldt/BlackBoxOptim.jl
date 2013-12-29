@@ -5,8 +5,6 @@
 # focus is on large-scale optimization but these problems also can be used
 # in lower dimensions.
 
-S1 = Dict{ASCIIString, OptimizationProblem}()
-
 #####################################################################
 # Base functions.
 #####################################################################
@@ -23,7 +21,7 @@ end
 
 function rastrigin(x)
   D = length(x)
-  10 * (D - cos( 2 * π * x )) + sum( x.^2 )
+  sum( x.^2 - 10 * cos( 2 * π * x ) + 10 )
 end
 
 function ackley(x)
@@ -68,6 +66,14 @@ end
 function schwefel2_26(x)
   D = length(x)
   sum(-x .* sin(sqrt(abs(x)))) + D * 418.98288727243369
+end
+
+function cigar(x)
+  x[1]^2 + 1e6 * sum(x[2:end].^2)
+end
+
+function cigtab(x)
+  x[1]^2 + 1e8 * x[end]^2 + 1e4 * sum(x[2:(end-1)].^2)
 end
 
 
@@ -134,6 +140,7 @@ end
 
 s1_rosenbrock = rosenbrock
 
+
 #####################################################################
 # S1 Transformations
 #####################################################################
@@ -175,3 +182,38 @@ function t_irreg(f)
 
    g
 end
+
+function xshifted(n, f)
+  move = 10.0 * randn(n, 1)
+  transformed_f(x) = f(x .- move)
+end
+
+
+#####################################################################
+# Misc other interesting optimization functions and families.
+#####################################################################
+
+# This is a generator for the family of deceptive functions from the 
+# Cuccu2011 paper on novelty-based restarts. We have vectorized it to allow
+# more than 1D versions. The Cuccu2011 paper uses the following values for
+# (l, w) = [(5, 0),  (15, 0),  (30, 0), 
+#           (5, 2),  (15, 2),  (30, 2), 
+#           (5, 10), (15, 10), (30, 10)]
+# and notes that (15, 2) and (30, 2) are the most difficult instances.
+function deceptive_cuccu2011(l, w)
+  (x) -> begin
+    absx = abs(x)
+    sumabsx = sum(absx)
+    if sumabsx <= 1
+      return sum(x.^2)
+    elseif sumabsx >= l+1
+      return sum((absx - l).^2)
+    else
+      return (1 - 0.5 * sum(sin( (π * w * (absx - 1)) / l ).^2))
+    end
+  end
+end
+
+# Deceptive/hardest instances:
+deceptive_cuccu2011_15_2 = deceptive_cuccu2011(15, 2)
+deceptive_cuccu2011_30_2 = deceptive_cuccu2011(30, 2)
