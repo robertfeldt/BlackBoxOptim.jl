@@ -51,16 +51,20 @@ type FloatVectorFitness <: RatioFitnessScheme
   # for comparisons (or not, depending on setup). Always used when printing
   # fitness vectors though.
   aggregate::Function
+
+  worst_fitness::Float64
 end
+
+worst_fitness(f::FloatVectorFitness) = f.worst_fitness
 
 aggregate(fitness, fs::FloatVectorFitness) = fs.aggregate(fitness)
 
 # For minimization we just pass the aggregator on.
 function float_vector_scheme_min(aggregator = sum)
-  FloatVectorFitness(aggregator)
+  FloatVectorFitness(aggregator, Inf)
 end
 
 # For maximization we need to set a different aggregator.
 function float_vector_scheme_max(agg = ((fs) -> -1 * sum(fs)))
-  FloatVectorFitness(agg)
+  FloatVectorFitness(agg, -Inf)
 end

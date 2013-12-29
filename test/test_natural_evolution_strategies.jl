@@ -1,4 +1,3 @@
-using BlackBoxOptim.Problems
 using FactCheck
 
 facts("sNES") do

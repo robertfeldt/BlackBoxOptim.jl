@@ -1,9 +1,7 @@
-using BlackBoxOptim.Problems
-
 facts("Single objective functions") do
 
 context("Sphere") do
-  p = BlackBoxOptim.Problems.examples["Sphere"]
+  p = BlackBoxOptim.example_problems["Sphere"]
   sphere = p.funcs[1]
 
   @fact sphere([0]) => 0
@@ -18,16 +16,13 @@ context("Sphere") do
 
   @fact_throws sphere([])
 
-  @fact numdims(p) => 2 # Default is 2 if not specified
-  @fact ranges(search_space(p)) => [(-100.0, 100.0), (-100.0, 100.0)]
-
-  p2 = BlackBoxOptim.Problems.set_numdims!(3, p)
+  p2 = BlackBoxOptim.as_fixed_dim_problem(p, 3)
   @fact numdims(p2) => 3
   @fact ranges(search_space(p2)) => [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
 context("Schwefel2.22") do
-  p = BlackBoxOptim.Problems.examples["Schwefel2.22"]
+  p = BlackBoxOptim.example_problems["Schwefel2.22"]
   schwefel2_22 = p.funcs[1]
 
   @fact schwefel2_22([0]) => 0
@@ -42,16 +37,13 @@ context("Schwefel2.22") do
 
   @fact_throws schwefel2_22([])
 
-  @fact numdims(p) => 2 # Default is 2 if not specified
-  @fact ranges(search_space(p)) => [(-10.0, 10.0), (-10.0, 10.0)]
-
-  p2 = BlackBoxOptim.Problems.set_numdims!(4, p)
+  p2 = BlackBoxOptim.as_fixed_dim_problem(p, 4)
   @fact numdims(p2) => 4
   @fact ranges(search_space(p2)) => [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
 context("Schwefel1.2") do
-  p = BlackBoxOptim.Problems.examples["Schwefel1.2"]
+  p = BlackBoxOptim.example_problems["Schwefel1.2"]
   schwefel1_2 = p.funcs[1]
 
   @fact schwefel1_2([0]) => 0
@@ -65,13 +57,10 @@ context("Schwefel1.2") do
   @fact schwefel1_2([-1, 2, -3]) => 1+1+4
 
   @fact schwefel1_2([]) => 0
-
-  @fact numdims(p) => 2 # Default is 2 if not specified
-  @fact ranges(search_space(p)) => [(-100.0, 100.0), (-100.0, 100.0)]
 end
 
 context("Schwefel2.21") do
-  p = BlackBoxOptim.Problems.examples["Schwefel2.21"]
+  p = BlackBoxOptim.example_problems["Schwefel2.21"]
   schwefel2_21 = p.funcs[1]
 
   @fact schwefel2_21([0]) => 1
@@ -85,13 +74,10 @@ context("Schwefel2.21") do
   @fact schwefel2_21([-1, 2, -3]) => 3
 
   @fact_throws schwefel2_21([])
-
-  @fact numdims(p) => 2 # Default is 2 if not specified
-  @fact ranges(search_space(p)) => [(-100.0, 100.0), (-100.0, 100.0)]
 end
 
 context("Rosenbrock") do
-  p = BlackBoxOptim.Problems.examples["Rosenbrock"]
+  p = BlackBoxOptim.example_problems["Rosenbrock"]
   rosenbrock = p.funcs[1]
 
   @fact rosenbrock([1, 2]) => 100
@@ -101,9 +87,6 @@ context("Rosenbrock") do
   @fact rosenbrock([-1, 2, -3]) => 5005
 
   @fact_throws rosenbrock([])
-
-  @fact numdims(p) => 2 # Default is 2 if not specified
-  @fact ranges(search_space(p)) => [(-30.0, 30.0), (-30.0, 30.0)]
 end
 
 end

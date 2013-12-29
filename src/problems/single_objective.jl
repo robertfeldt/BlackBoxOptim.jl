@@ -111,6 +111,14 @@ JadeFunctionSet = {
   11  => anydim_problem("Griewank",      griewank,      (-600.0, 600.0))
 }
 
+# For compatibility with old default function set... (Temporary)
+example_problems = {
+  "Sphere" => JadeFunctionSet[1],
+  "Rosenbrock" => JadeFunctionSet[5],
+  "Schwefel2.22" => JadeFunctionSet[2],
+  "Schwefel1.2" => JadeFunctionSet[3],
+  "Schwefel2.21" => JadeFunctionSet[4]
+}
 
 #####################################################################
 # S1 Base functions. Typically slightly transformed to break symmetry
