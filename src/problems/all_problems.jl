@@ -6,53 +6,52 @@ import BlackBoxOptim.numdims, # Since we will add to it
 export  OptimizationProblem,
         numdims, search_space, set_numdims!
 
-type OptimizationProblem
+abstract OptimizationProblem
+
+type FixedDimProblem <: OptimizationProblem
   name::ASCIIString
-
-  # Objective functions
-  funcs::Vector{Function}
-
-  # True iff the problem can be instantiated in any number fo dimensions
-  any_dimensional::Bool
-
-  # Range per dimension
-  range_per_dimension::(Float64, Float64)
-
-  # Number of dimensions of the problem, if set.
-  dimensions::Union(Nothing,Int)
-
-  # Search space
-  search_space::Union(Nothing,SearchSpace)
+  funcs::Vector{Function}                 # Objective functions
+  ss::SearchSpace  
 end
 
-# Number of dimensions is by default 2, unless already specified.
-numdims(p::OptimizationProblem) = (p.dimensions == nothing) ? 2 : p.dimensions
+is_fixed_dimensional(p::OptimizationProblem) = false
+is_fixed_dimensional(p::FixedDimProblem) = true
 
-function set_numdims!(ndims, p::OptimizationProblem)
-  p.dimensions = ndims
-  if (p.any_dimensional)
-    p.search_space = symmetric_search_space(numdims(p), p.range_per_dimension)
+is_any_dimensional(p::OptimizationProblem) = not(is_fixed_dimensional(p))
+
+is_single_objective_problem(p::OptimizationProblem) = length(p.funcs) == 1
+
+is_multi_objective_problem(p::OptimizationProblem) = not(is_single_objective_problem(p))
+
+numdims(p::OptimizationProblem) = nothing
+numdims(p::FixedDimProblem) = numdims(p.ss)
+
+search_space(p::OptimizationProblem) = nothing
+search_space(p::FixedDimProblem) = p.ss
+
+type AnyDimProblem <: OptimizationProblem
+  name::ASCIIString
+  funcs::Vector{Function}                 # Objective functions
+  range_per_dimension::(Float64, Float64) # Default range per dimension 
+end
+
+anydim_problem(name, f::Function, range) = AnyDimensionalProblem(name, [f], range)
+
+function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
+  ss = symmetric_search_space(dim, p.range_per_dimension)
+  FixedDimProblem(p.name, p.funcs, ss)
+end
+
+# A function set is specified through a duct mapping its function number
+# to an optimization problem. We can create a fixed dimensional variant of
+# an any dimensional function set with:
+function as_fixed_dim_problem_set(ps::Dict{Any, AnyDimProblem}, dim::Int64)
+  result = Dict{Any, FixedDimProblem}()
+  for(key in keys(ps))
+    result[key] = as_fixed_dim_problem(ps[key], dim)
   end
-  p
+  result
 end
-
-function search_space(p::OptimizationProblem)
-  if (p.search_space == nothing)
-    symmetric_search_space(numdims(p), p.range_per_dimension)
-  else
-    p.search_space
-  end
-end
-
-function any_dimensional_problem(name, funcs, range_per_dimension)
-  OptimizationProblem(name, funcs, true, range_per_dimension, nothing, nothing)
-end
-
-function one_dimensional_problem(name, funcs, range)
-  OptimizationProblem(name, funcs, false, range, 1, [range])
-end
-
-examples = Dict{ASCIIString, OptimizationProblem}()
 
 include("single_objective.jl")
 
