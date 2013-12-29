@@ -76,57 +76,52 @@ facts("Fitness") do
     @fact hat_compare([-0.65, 1.0], [1.0, -34.2], scheme) => -1
   end
 
-  context("isbetter/isworse/samefitness in a minimizing FitnessScheme") do
+  context("is_better/is_worse/same_fitness in a minimizing FitnessScheme") do
     scheme = float_vector_scheme_min()
 
-    @fact isbetter([-1.0, 0.0], [1.0, 0.0], scheme) => true
-    @fact isbetter([0.0, 0.0], [1.0, 0.0], scheme) => true
+    @fact is_better([-1.0, 0.0], [1.0, 0.0], scheme) => true
+    @fact is_better([0.0, 0.0], [1.0, 0.0], scheme) => true
 
-    @fact isbetter([1.0, 0.0], [-1.0, 0.0], scheme) => false
-    @fact isbetter([1.0, 0.0], [0.0, 0.0], scheme) => false
+    @fact is_better([1.0, 0.0], [-1.0, 0.0], scheme) => false
+    @fact is_better([1.0, 0.0], [0.0, 0.0], scheme) => false
 
-    @fact isworse([-1.0, 0.0], [1.0, 0.0], scheme) => false
-    @fact isworse([0.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact is_worse([-1.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact is_worse([0.0, 0.0], [1.0, 0.0], scheme) => false
 
-    @fact isworse([1.0, 0.0], [-1.0, 0.0], scheme) => true
-    @fact isworse([1.0, 0.0], [0.0, 0.0], scheme) => true
+    @fact is_worse([1.0, 0.0], [-1.0, 0.0], scheme) => true
+    @fact is_worse([1.0, 0.0], [0.0, 0.0], scheme) => true
 
-    @fact samefitness([-1.0, 0.0], [1.0, 0.0], scheme) => false
-    @fact samefitness([0.0, 0.0], [1.0, 0.0], scheme) => false
-    @fact samefitness([0.0], [1.0], scheme) => false
+    @fact same_fitness([-1.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact same_fitness([0.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact same_fitness([0.0], [1.0], scheme) => false
 
-    @fact samefitness([-1.0, 0.0], [-1.0, 0.0], scheme) => true
-    @fact samefitness([0.0, 0.0], [0.0, 0.0], scheme) => true
-    @fact samefitness([0.0], [0.0], scheme) => true
+    @fact same_fitness([-1.0, 0.0], [-1.0, 0.0], scheme) => true
+    @fact same_fitness([0.0, 0.0], [0.0, 0.0], scheme) => true
+    @fact same_fitness([0.0], [0.0], scheme) => true
   end
 
-  context("isbetter/isworse/samefitness in a maximizing FitnessScheme") do
+  context("is_better/is_worse/same_fitness in a maximizing FitnessScheme") do
     scheme = float_vector_scheme_max()
 
-    @fact isbetter([-1.0, 0.0], [1.0, 0.0], scheme) => false
-    @fact isbetter([0.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact is_better([-1.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact is_better([0.0, 0.0], [1.0, 0.0], scheme) => false
 
-    @fact isbetter([1.0, 0.0], [-1.0, 0.0], scheme) => true
-    @fact isbetter([1.0, 0.0], [0.0, 0.0], scheme) => true
+    @fact is_better([1.0, 0.0], [-1.0, 0.0], scheme) => true
+    @fact is_better([1.0, 0.0], [0.0, 0.0], scheme) => true
 
-    @fact isworse([-1.0, 0.0], [1.0, 0.0], scheme) => true
-    @fact isworse([0.0, 0.0], [1.0, 0.0], scheme) => true
+    @fact is_worse([-1.0, 0.0], [1.0, 0.0], scheme) => true
+    @fact is_worse([0.0, 0.0], [1.0, 0.0], scheme) => true
 
-    @fact isworse([1.0, 0.0], [-1.0, 0.0], scheme) => false
-    @fact isworse([1.0, 0.0], [0.0, 0.0], scheme) => false
+    @fact is_worse([1.0, 0.0], [-1.0, 0.0], scheme) => false
+    @fact is_worse([1.0, 0.0], [0.0, 0.0], scheme) => false
 
-    @fact samefitness([-1.0, 0.0], [1.0, 0.0], scheme) => false
-    @fact samefitness([0.0, 0.0], [1.0, 0.0], scheme) => false
-    @fact samefitness([0.0], [1.0], scheme) => false
+    @fact same_fitness([-1.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact same_fitness([0.0, 0.0], [1.0, 0.0], scheme) => false
+    @fact same_fitness([0.0], [1.0], scheme) => false
 
-    @fact samefitness([-1.0, 0.0], [-1.0, 0.0], scheme) => true
-    @fact samefitness([0.0, 0.0], [0.0, 0.0], scheme) => true
-    @fact samefitness([0.0], [0.0], scheme) => true
-  end
-
-  context("worst_fitness") do
-    @fact float_vector_scheme_max().worst_fitness => -Inf
-    @fact float_vector_scheme_min().worst_fitness => Inf
+    @fact same_fitness([-1.0, 0.0], [-1.0, 0.0], scheme) => true
+    @fact same_fitness([0.0, 0.0], [0.0, 0.0], scheme) => true
+    @fact same_fitness([0.0], [0.0], scheme) => true
   end
 
 end
