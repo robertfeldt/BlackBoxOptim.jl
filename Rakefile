@@ -1,11 +1,14 @@
+desc "Run normal (fast) tests"
 task :runtest do
   sh "julia -L src/BlackBoxOptim.jl test/runtests.jl"
 end
 
+desc "Run slow tests"
 task :runslowtest do
   sh "julia -L src/BlackBoxOptim.jl test/runslowtests.jl"
 end
 
+desc "Run all tests"
 task :runalltest => [:runtest, :runslowtest]
 
 task :compare_optimizers do
