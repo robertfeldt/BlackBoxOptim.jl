@@ -10,9 +10,15 @@ export  Optimizer, PopulationOptimizer,
         SeparableNESOpt, separable_nes,
         XNESOpt, xnes,
 
+        # Problems
         Problems, is_fixed_dimensional, is_any_dimensional, 
         is_single_objective_problem, is_multi_objective_problem,
         search_space, eval1, evalall, anydim_problem, as_fixed_dim_problem,
+
+        # Archive
+        TopListArchive, best_fitness, add_candidate!, best_candidate, 
+        last_top_fitness,
+        width_of_confidence_interval, fitness_improvement_potential,
 
         # Search spaces
         SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace, 
@@ -56,6 +62,8 @@ end
 include("fitness.jl")
 include("population.jl")
 include("frequency_adaptation.jl")
+include("search_space.jl")
+include("archive.jl")
 
 abstract PopulationOptimizer <: Optimizer
 
@@ -90,8 +98,6 @@ population(o::PopulationOptimizer) = o.population # Fallback method if sub-types
 # is no single optimum. Instead there are many pareto optimal solutions.
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
-
-include("search_space.jl")
 
 # Different optimization algorithms
 include("random_search.jl")
