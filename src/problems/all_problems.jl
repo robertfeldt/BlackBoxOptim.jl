@@ -12,7 +12,8 @@ is_fixed_dimensional(p::FixedDimProblem) = true
 
 is_any_dimensional(p::OptimizationProblem) = !is_fixed_dimensional(p)
 
-is_single_objective_problem(p::OptimizationProblem) = length(p.funcs) == 1
+numfuncs(p::OptimizationProblem) = length(p.funcs)
+is_single_objective_problem(p::OptimizationProblem) = numfuncs(p) == 1
 
 is_multi_objective_problem(p::OptimizationProblem) = !is_single_objective_problem(p)
 
@@ -22,15 +23,21 @@ numdims(p::FixedDimProblem) = numdims(p.ss)
 search_space(p::OptimizationProblem) = nothing
 search_space(p::FixedDimProblem) = p.ss
 
+fmins(p::OptimizationProblem) = p.fmins
+
+ofunc(p::OptimizationProblem, index::Int64) = p.funcs[index]
+
+evalfunc(x, i::Int64, p::OptimizationProblem) = ofunc(p, i)(x)
+
 # Evaluate fitness of a candidate solution on the 1st objective function of a problem.
-eval1(x, p::OptimizationProblem) = p.funcs[1](x)
+eval1(x, p::OptimizationProblem) = evalfunc(x, 1, p)
 
 # Evaluate fitness of a candidate solution on all objective functions of a problem.
 evalall(x, p::OptimizationProblem) = begin
   n = length(p.funcs)
   results = zeros(n)
   for(i in 1:n)
-    results[i] = p.funcs[i](x)
+    results[i] = evalfunc(x, i, p)
   end
   results
 end

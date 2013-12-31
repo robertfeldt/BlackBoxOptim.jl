@@ -1,6 +1,9 @@
 # We have different sources for problem functions:
 #  S1 = CEC 2013 competition on large-scale optimization
 #  S2 = JADE paper http://150.214.190.154/EAMHCO/pdf/JADE.pdf
+#  S3 = "Test Suite for the Special Issue of Soft Computing on Scalability of 
+#        Evolutionary Algorithms and other Metaheuristics for Large Scale 
+#        Continuous Optimization Problems", http://sci2s.ugr.es/eamhco/functions1-19.pdf
 # Our primary focus is to implement all the problems from S1 since our
 # focus is on large-scale optimization but these problems also can be used
 # in lower dimensions.
@@ -21,7 +24,7 @@ end
 
 function rastrigin(x)
   D = length(x)
-  sum( x.^2 - 10 * cos( 2 * π * x ) + 10 )
+  10 * D + sum( x.^2 ) - 10 * sum( cos( 2 * π * x ) )
 end
 
 function ackley(x)
@@ -63,9 +66,11 @@ function schwefel2_21(x)
   maximum(abs(x))
 end
 
+# I'm unsure about this one since it does not return the expected minima at
+# [1.0, 1.0].
 function schwefel2_26(x)
   D = length(x)
-  sum(-x .* sin(sqrt(abs(x)))) + D * 418.98288727243369
+  418.98288727243369 * D - sum(x .* sin(sqrt(abs(x))))
 end
 
 function cigar(x)
@@ -96,19 +101,20 @@ function s2_step(x)
 end
 
 # We skip (for now) f12 and f13 in the JADE paper since they are penalized 
-# functions which are quite nonstandard.
+# functions which are quite nonstandard. We also skip f8 since we are unsure
+# about its proper implementation.
 JadeFunctionSet = {
-  1   => anydim_problem("Sphere",        sphere,        (-100.0, 100.0)),
-  2   => anydim_problem("Schwefel2.22",  schwefel2_22,  ( -10.0,  10.0)),
-  3   => anydim_problem("Schwefel1.2",   schwefel1_2,   (-100.0, 100.0)),
-  4   => anydim_problem("Schwefel2.21",  schwefel2_21,  (-100.0, 100.0)),
-  5   => anydim_problem("Rosenbrock",    rosenbrock,    ( -30.0,  30.0)),
-  6   => anydim_problem("Step",          s2_step,       (-100.0, 100.0)),
+  1   => anydim_problem("Sphere",        sphere,        (-100.0, 100.0), 0.0),
+  2   => anydim_problem("Schwefel2.22",  schwefel2_22,  ( -10.0,  10.0), 0.0),
+  3   => anydim_problem("Schwefel1.2",   schwefel1_2,   (-100.0, 100.0), 0.0),
+  4   => anydim_problem("Schwefel2.21",  schwefel2_21,  (-100.0, 100.0), 0.0),
+  5   => anydim_problem("Rosenbrock",    rosenbrock,    ( -30.0,  30.0), 0.0),
+  6   => anydim_problem("Step",          s2_step,       (-100.0, 100.0), 0.0),
   7   => anydim_problem("Noisy quartic", noisy_quartic, ( -30.0,  30.0)),
-  8   => anydim_problem("Schwefel2.26",  schwefel2_26,  (-500.0, 500.0)),
-  9   => anydim_problem("Rastrigin",     rastrigin,     ( -5.12,  5.12)),
-  10  => anydim_problem("Ackley",        ackley,        ( -32.0,  32.0)),
-  11  => anydim_problem("Griewank",      griewank,      (-600.0, 600.0))
+#  8   => anydim_problem("Schwefel2.26",  schwefel2_26,  (-500.0, 500.0)),
+  9   => anydim_problem("Rastrigin",     rastrigin,     ( -5.12,  5.12), 0.0),
+  10  => anydim_problem("Ackley",        ackley,        ( -32.0,  32.0), 0.0),
+  11  => anydim_problem("Griewank",      griewank,      (-600.0, 600.0), 0.0)
 }
 
 # For compatibility with old default function set... (Temporary)
@@ -119,6 +125,47 @@ example_problems = {
   "Schwefel1.2" => JadeFunctionSet[3],
   "Schwefel2.21" => JadeFunctionSet[4]
 }
+
+
+#####################################################################
+# S3 Base functions.
+#####################################################################
+
+
+#####################################################################
+# S3 Transformations
+#####################################################################
+
+# A TransformedProblem just makes a few changes in a sub-problem but refers
+# most func calls to it. Concrete types must implement a sub_problem func.
+abstract TransformedProblem <: OptimizationProblem
+search_space(tp::TransformedProblem) = search_space(sub_problem(tp))
+is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(tp))
+numfuncs(tp::TransformedProblem) = numfuncs(sub_problem(tp))
+numdims(tp::TransformedProblem) = numdims(sub_problem(tp))
+
+# A ShiftedAndBiasedProblem shifts the minimum value and biases the returned 
+# function values.
+type ShiftedAndBiasedProblem <: TransformedProblem
+  xshift::Array{Float64, 1}
+  funcshift::Float64
+  subp::OptimizationProblem
+
+  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem; 
+    xshift = false, funcshift = 0.0) = begin
+    xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
+    new(xshift[:], funcshift, sub_problem)
+  end
+end
+
+sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
+
+# Evaluate by first shifting x and then biasing the returned function value.
+evalfunc(x, i::Int64, sp::ShiftedAndBiasedProblem) = begin
+  ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
+end
+
+shifted(p::OptimizationProblem) = ShiftedAndBiasedProblem(p)
 
 #####################################################################
 # S1 Base functions. Typically slightly transformed to break symmetry

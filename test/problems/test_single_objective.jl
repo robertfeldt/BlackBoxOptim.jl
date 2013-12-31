@@ -63,15 +63,15 @@ context("Schwefel2.21") do
   p = BlackBoxOptim.example_problems["Schwefel2.21"]
   schwefel2_21 = p.funcs[1]
 
-  @fact schwefel2_21([0]) => 1
+  @fact schwefel2_21([0]) => 0
 
   @fact schwefel2_21([1]) => 1
 
-  @fact schwefel2_21([1, 2]) => 2
+  @fact schwefel2_21([1, 2]) => 1
 
-  @fact schwefel2_21([1, 2, 3]) => 3
+  @fact schwefel2_21([1, 2, 3]) => 1
 
-  @fact schwefel2_21([-1, 2, -3]) => 3
+  @fact schwefel2_21([-1, 2, -3]) => 1
 
   @fact_throws schwefel2_21([])
 end
