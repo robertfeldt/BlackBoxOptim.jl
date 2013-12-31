@@ -33,7 +33,7 @@ function add_candidate!(a::TopListArchive, fitness::Float64, candidate::Array{Fl
   if a.count < a.size
 
     if a.count == 0 || fitness < best_fitness(a)
-      push!(a.best_fitness_history, fitness)
+      push_to_fitness_history!(a, fitness)
     end
 
     push_then_sort_by_fitness!(fitness, candidate, a)
@@ -42,7 +42,7 @@ function add_candidate!(a::TopListArchive, fitness::Float64, candidate::Array{Fl
   elseif should_enter_toplist(fitness, a)
 
     if fitness < best_fitness(a)
-      push!(a.best_fitness_history, fitness)
+      push_to_fitness_history!(a, fitness)
     end
 
     push_then_sort_by_fitness!(fitness, candidate, a)
@@ -52,6 +52,10 @@ function add_candidate!(a::TopListArchive, fitness::Float64, candidate::Array{Fl
     a.candidates = a.candidates[1:a.size]
 
   end
+end
+
+function push_to_fitness_history!(a::Archive, fitness)
+  push!(a.best_fitness_history, fitness)
 end
 
 function push_then_sort_by_fitness!(fitness::Float64, candidate::Array{Float64, 1}, a::Archive)
