@@ -8,7 +8,7 @@ jfs = BlackBoxOptim.JadeFunctionSet
 #  5 => jfs[5], 6 => jfs[6]}
 myfs = jfs
 
-n = 10
+n = 30
 ps = BlackBoxOptim.as_fixed_dim_problem_set(myfs, n)
 
 sf(n, f) = begin
@@ -19,7 +19,7 @@ sf(n, f) = begin
   cmsa_es(n, tf, mu = mu, lambda = lambda, max_fevals = max_fevals)
 end
 
-@time repeated_runs(sf, ps, 5)
+@time repeated_runs(sf, ps, 30; experiment = "cmsa_es_initial")
 
 #f = sphere
 #f = deceptive_cuccu2011(15, 2)
