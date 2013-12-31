@@ -165,7 +165,8 @@ evalfunc(x, i::Int64, sp::ShiftedAndBiasedProblem) = begin
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
 end
 
-shifted(p::OptimizationProblem) = ShiftedAndBiasedProblem(p)
+shifted(p::OptimizationProblem; funcshift = 0.0) = ShiftedAndBiasedProblem(p; 
+  funcshift = funcshift)
 
 #####################################################################
 # S1 Base functions. Typically slightly transformed to break symmetry

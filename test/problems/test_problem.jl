@@ -97,4 +97,21 @@ facts("ShiftedAndBiasedProblem") do
     @fact eval1(xs + [1.2], sp)                 => 1.2
     @fact eval1(xs + [-1.9], sp)                => 1.9
   end
+
+  context("Shifted and biased 2-dim") do
+    ss = symmetric_search_space(2)
+    subp = BlackBoxOptim.FixedDimProblem("sumabs", [fsabs], ss, [0.0])
+    sp = BlackBoxOptim.shifted(subp; funcshift = 1.3)
+
+    @fact is_fixed_dimensional(sp)         => true
+    @fact is_any_dimensional(sp)           => false
+    @fact is_single_objective_problem(sp)  => true
+    @fact is_multi_objective_problem(sp)   => false
+    @fact numdims(sp)                      => 2
+
+    xs = sp.xshift
+    @fact eval1(xs + [0.0, 1.0], sp)       => 1.0 + 1.3
+    @fact eval1(xs + [1.2, -1.3], sp)      => 2.5 + 1.3
+    @fact eval1(xs + [-1.9, 0.0], sp)      => 1.9 + 1.3
+  end
 end
