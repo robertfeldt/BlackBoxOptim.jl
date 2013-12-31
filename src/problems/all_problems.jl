@@ -3,17 +3,18 @@ abstract OptimizationProblem
 type FixedDimProblem <: OptimizationProblem
   name::ASCIIString
   funcs::Vector{Function}  # Objective functions
-  ss::SearchSpace  
+  ss::SearchSpace
+  fmins::Union(Nothing, Vector{Float64})
 end
 
 is_fixed_dimensional(p::OptimizationProblem) = false
 is_fixed_dimensional(p::FixedDimProblem) = true
 
-is_any_dimensional(p::OptimizationProblem) = not(is_fixed_dimensional(p))
+is_any_dimensional(p::OptimizationProblem) = !is_fixed_dimensional(p)
 
 is_single_objective_problem(p::OptimizationProblem) = length(p.funcs) == 1
 
-is_multi_objective_problem(p::OptimizationProblem) = not(is_single_objective_problem(p))
+is_multi_objective_problem(p::OptimizationProblem) = !is_single_objective_problem(p)
 
 numdims(p::OptimizationProblem) = nothing
 numdims(p::FixedDimProblem) = numdims(p.ss)
@@ -24,17 +25,29 @@ search_space(p::FixedDimProblem) = p.ss
 # Evaluate fitness of a candidate solution on the 1st objective function of a problem.
 eval1(x, p::OptimizationProblem) = p.funcs[1](x)
 
+# Evaluate fitness of a candidate solution on all objective functions of a problem.
+evalall(x, p::OptimizationProblem) = begin
+  n = length(p.funcs)
+  results = zeros(n)
+  for(i in 1:n)
+    results[i] = p.funcs[i](x)
+  end
+  results
+end
+
 type AnyDimProblem <: OptimizationProblem
   name::ASCIIString
   funcs::Vector{Function}                 # Objective functions
-  range_per_dimension::(Float64, Float64) # Default range per dimension 
+  range_per_dimension::(Float64, Float64) # Default range per dimension
+  fmins::Union(Nothing, Vector{Float64})
 end
 
-anydim_problem(name, f::Function, range) = AnyDimProblem(name, [f], range)
+anydim_problem(name, f::Function, range, fmin::Float64) = AnyDimProblem(name, [f], range, [fmin])
+anydim_problem(name, f::Function, range) = AnyDimProblem(name, [f], range, nothing)
 
 function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
   ss = symmetric_search_space(dim, p.range_per_dimension)
-  FixedDimProblem(p.name, p.funcs, ss)
+  FixedDimProblem(p.name, p.funcs, ss, p.fmins)
 end
 
 # A function set is specified through a duct mapping its function number

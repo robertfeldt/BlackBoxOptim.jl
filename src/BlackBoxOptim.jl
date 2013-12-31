@@ -10,7 +10,9 @@ export  Optimizer, PopulationOptimizer,
         SeparableNESOpt, separable_nes,
         XNESOpt, xnes,
 
-        Problems,
+        Problems, is_fixed_dimensional, is_any_dimensional, 
+        is_single_objective_problem, is_multi_objective_problem,
+        search_space, eval1, evalall, anydim_problem, as_fixed_dim_problem,
 
         # Search spaces
         SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace, 
