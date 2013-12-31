@@ -56,6 +56,8 @@ maxs(rss::RangePerDimSearchSpace) = rss.maxs
 deltas(rss::RangePerDimSearchSpace) = rss.deltas
 numdims(rss::RangePerDimSearchSpace) = size(mins(rss), 1)
 
+diameters(rss::RangePerDimSearchSpace) = deltas(rss)
+
 # Convenience function to create symmetric search spaces.
 symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace([range for i in 1:numdims])
 

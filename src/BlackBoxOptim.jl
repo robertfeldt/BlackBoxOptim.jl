@@ -23,7 +23,7 @@ export  Optimizer, PopulationOptimizer,
         # Search spaces
         SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace, 
         RangePerDimSearchSpace, symmetric_search_space,
-        numdims, mins, maxs, deltas, ranges, range_for_dim,
+        numdims, mins, maxs, deltas, ranges, range_for_dim, diameters,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
 
         hat_compare, is_better, is_worse, same_fitness,

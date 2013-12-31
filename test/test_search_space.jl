@@ -137,4 +137,12 @@ facts("Search space") do
     @fact BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0]'' => true
   end
 
+  context("diameters") do
+    ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+    diams = diameters(ss)
+
+    @fact length(diams) => 3
+    @fact diams[:] => [1.0, 1.0, 1.0]
+  end
+
 end
