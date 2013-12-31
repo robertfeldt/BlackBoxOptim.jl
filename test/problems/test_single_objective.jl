@@ -67,11 +67,11 @@ context("Schwefel2.21") do
 
   @fact schwefel2_21([1]) => 1
 
-  @fact schwefel2_21([1, 2]) => 1
+  @fact schwefel2_21([1, 2]) => 2
 
-  @fact schwefel2_21([1, 2, 3]) => 1
+  @fact schwefel2_21([1, 2, 3]) => 3
 
-  @fact schwefel2_21([-1, 2, -3]) => 1
+  @fact schwefel2_21([-1, 2, -3]) => 3
 
   @fact_throws schwefel2_21([])
 end

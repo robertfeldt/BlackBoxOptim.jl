@@ -168,6 +168,7 @@ end
 shifted(p::OptimizationProblem; funcshift = 0.0) = ShiftedAndBiasedProblem(p; 
   funcshift = funcshift)
 
+
 #####################################################################
 # S1 Base functions. Typically slightly transformed to break symmetry
 #   and introduce irregularities.
