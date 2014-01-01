@@ -55,4 +55,46 @@ facts("TopListArchive") do
     @fact fitness_improvement_potential(a, 0.05) => (expected / 0.40)
   end
 
+  context("magnitude_class for positive fitness values") do
+
+    @fact BlackBoxOptim.magnitude_class(1.0)      => (1.0, 0.0)
+    @fact BlackBoxOptim.magnitude_class(10.0)     => (1.0, 1.0)
+    @fact BlackBoxOptim.magnitude_class(1e2)      => (1.0, 2.0)
+    @fact BlackBoxOptim.magnitude_class(1e102)    => (1.0, 102.0)
+    @fact BlackBoxOptim.magnitude_class(1e-1)     => (1.0, -1.0)
+    @fact BlackBoxOptim.magnitude_class(1e-2)     => (1.0, -2.0)
+    @fact BlackBoxOptim.magnitude_class(1e-9)     => (1.0, -9.0)
+    @fact BlackBoxOptim.magnitude_class(1e-12)    => (1.0, -12.0)
+
+    @fact BlackBoxOptim.magnitude_class(2.0)      => (1.0, 0.3)
+    @fact BlackBoxOptim.magnitude_class(20.0)     => (1.0, 1.3)
+    @fact BlackBoxOptim.magnitude_class(200.0)    => (1.0, 2.3)
+
+    @fact BlackBoxOptim.magnitude_class(5.0)      => (1.0, 0.6)
+    @fact BlackBoxOptim.magnitude_class(50.0)     => (1.0, 1.6)
+    @fact BlackBoxOptim.magnitude_class(500.0)    => (1.0, 2.6)
+
+  end
+
+  context("magnitude_class for negative fitness values") do
+
+    @fact BlackBoxOptim.magnitude_class(-1.0)      => (-1.0, 0.0)
+    @fact BlackBoxOptim.magnitude_class(-10.0)     => (-1.0, 1.0)
+    @fact BlackBoxOptim.magnitude_class(-1e2)      => (-1.0, 2.0)
+    @fact BlackBoxOptim.magnitude_class(-1e102)    => (-1.0, 102.0)
+    @fact BlackBoxOptim.magnitude_class(-1e-1)     => (-1.0, -1.0)
+    @fact BlackBoxOptim.magnitude_class(-1e-2)     => (-1.0, -2.0)
+    @fact BlackBoxOptim.magnitude_class(-1e-9)     => (-1.0, -9.0)
+    @fact BlackBoxOptim.magnitude_class(-1e-12)    => (-1.0, -12.0)
+
+    @fact BlackBoxOptim.magnitude_class(-2.0)      => (-1.0, 0.3)
+    @fact BlackBoxOptim.magnitude_class(-20.0)     => (-1.0, 1.3)
+    @fact BlackBoxOptim.magnitude_class(-200.0)    => (-1.0, 2.3)
+
+    @fact BlackBoxOptim.magnitude_class(-5.0)      => (-1.0, 0.6)
+    @fact BlackBoxOptim.magnitude_class(-50.0)     => (-1.0, 1.6)
+    @fact BlackBoxOptim.magnitude_class(-500.0)    => (-1.0, 2.6)
+
+  end
+
 end
