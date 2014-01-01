@@ -44,12 +44,8 @@ end
 
 # Within ftol of a certain fmin
 function fitness_is_within_ftol(p::OptimizationProblem, ftol, fitness; index = 1)
-  fmins = p.fmins
-  if fmins == nothing
-    return false
-  else
-    abs(fmins[index] - fitness) < ftol
-  end
+  fmins = BlackBoxOptim.fmins(p)
+  (fmins == nothing) ? false : (abs(fmins[index] - fitness) < ftol)
 end
 
 type AnyDimProblem <: OptimizationProblem
