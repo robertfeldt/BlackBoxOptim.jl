@@ -114,4 +114,12 @@ facts("ShiftedAndBiasedProblem") do
     @fact eval1(xs + [1.2, -1.3], sp)      => 2.5 + 1.3
     @fact eval1(xs + [-1.9, 0.0], sp)      => 1.9 + 1.3
   end
+
+  context("Within ftol") do
+    ss = symmetric_search_space(2)
+    subp = BlackBoxOptim.FixedDimProblem("sumabs", [fsabs], ss, [0.0])
+
+    @fact fitness_is_within_ftol(subp, 0.1, 0.2)    => false
+    @fact fitness_is_within_ftol(subp, 0.1, 0.09)   => true
+  end
 end

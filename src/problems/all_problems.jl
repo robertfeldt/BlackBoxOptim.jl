@@ -42,6 +42,16 @@ evalall(x, p::OptimizationProblem) = begin
   results
 end
 
+# Within ftol of a certain fmin
+function fitness_is_within_ftol(p::OptimizationProblem, ftol, fitness; index = 1)
+  fmins = p.fmins
+  if fmins == nothing
+    return false
+  else
+    abs(fmins[index] - fitness) < ftol
+  end
+end
+
 type AnyDimProblem <: OptimizationProblem
   name::ASCIIString
   funcs::Vector{Function}                 # Objective functions

@@ -14,6 +14,7 @@ export  Optimizer, PopulationOptimizer,
         Problems, is_fixed_dimensional, is_any_dimensional, 
         is_single_objective_problem, is_multi_objective_problem,
         search_space, eval1, evalall, anydim_problem, as_fixed_dim_problem,
+        fitness_is_within_ftol,
 
         # Archive
         TopListArchive, best_fitness, add_candidate!, best_candidate, 
