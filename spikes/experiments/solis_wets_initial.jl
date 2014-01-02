@@ -8,23 +8,10 @@ gaussianrng = (sigma) -> Normal(0, sigma)
 levyrng = (sigma) -> Levy(0, sigma)
 cauchyrng = (sigma) -> Cauchy(0, sigma)
 
-#p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Rosenbrock"], 2^3)
-#problem = BlackBoxOptim.shifted(p)
-#tic()
-#xb, fb, nf, r, a = solis_wets(problem; max_fail_steps = 3, 
-#  max_evals_per_dim = 1e5, rnggen = cauchyrng, ftol = 1e-7)
-#t = toq()
-
-#println("Best solution: $(xb)")
-#println("\nTime taken: $(t)")
-#println("fevals = $(nf), reason = $(r), fitness = $(fb)")
-
-p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Rosenbrock"], 2^5)
-problem = BlackBoxOptim.shifted(p)
-ps = {1 => problem}
+ps = BlackBoxOptim.as_fixed_dim_problem_set(BlackBoxOptim.example_problems, 2^5)
 
 sf(p) = begin
-  solis_wets(p; max_fail_steps = 3, rnggen = cauchyrng)
+  solis_wets(p; max_fail_steps = 3, rnggen = gaussianrng)
 end
 
-@time repeated_runs(sf, ps, 8; experiment = "solis_wets_initial")
+@time repeated_runs(sf, ps, 25; experiment = "solis_wets_2")
