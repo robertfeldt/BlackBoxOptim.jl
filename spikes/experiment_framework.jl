@@ -81,6 +81,7 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
   for(i in 1:num_problems)
     p = problems[i][2]
     println("\nProblem: ", name(p))
+    println("Dimensions: ", numdims(p))
     println("Fitness: ", sumstats(fbests[:,i], (x) -> @sprintf("%.2e", x)))
     println("Time: ", sumstats(times[:,i], format_time))
     println("Num. evals: ", sumstats(fevals[:,i]))
