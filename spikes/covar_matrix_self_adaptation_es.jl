@@ -190,11 +190,6 @@ function cmsa_es(problem;
     sigma = sigmas * weights
   end
 
-  # Save fitness history to a csv file
-  csvfile = strftime("cmsa_es_%Y%m%d_%H%M%S.csv", start_time)
-  save_fitness_history_to_csv_file(archive, csvfile)
-  println("Saved fitness history to file: $(csvfile)")
-
   return xbest, fbest, num_fevals, termination_reason, archive
 end
 

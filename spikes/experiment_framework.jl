@@ -55,6 +55,11 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       times[i,pi] = toq()
       reason_counts[pi][reason] = get(reason_counts[pi], reason, 0) + 1
 
+      # Save fitness history to a csv file
+      csvfile = strftime("$(experiment)_$(name(prob))_run$(i)_%Y%m%d_%H%M%S.csv", start_time)
+      save_fitness_history_to_csv_file(archive, csvfile)
+      println("Saved fitness history to file: $(csvfile)")
+
       # Print to csv file
       println(csvfh, join([experiment, strftime("%Y%m%d", start_time),
         strftime("%H:%M.%S", start_time), i, name(prob), dims, reason,

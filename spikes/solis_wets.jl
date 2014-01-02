@@ -84,11 +84,6 @@ function solis_wets(problem;
 
   end
 
-  # Save fitness history to a csv file
-  csvfile = strftime("solis_wets_%Y%m%d_%H%M%S.csv", start_time)
-  save_fitness_history_to_csv_file(a, csvfile)
-  println("Saved fitness history to file: $(csvfile)")
-
   return xbest, best_fitness(a), num_fevals, termination_reason, a
 end
 
