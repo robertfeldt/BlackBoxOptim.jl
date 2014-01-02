@@ -22,7 +22,7 @@ function unique_filename(prefix = "result", suffix = ".txt")
   join([prefix, strftime("_%Y%m%d_%H%M%S_$(rand(1:int(1e6)))", time()), suffix])
 end
 
-function csvfile(header; fileprefix = "experiment", 
+function csvfile(header; fileprefix = "experiment",
   filepath = unique_filename(fileprefix, ".csv"), sep = ",")
   fh = open(filepath, "w")
   println(fh, join(header, sep))
@@ -39,8 +39,15 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
   times = zeros(num_runs, num_problems)
   reason_counts = [Dict{ASCIIString, Int64}() for i in 1:num_problems]
 
-  csvfh = csvfile(["Experiment", "Date", "Time", "RunId", 
-    "Problem", "Dimensions", "TerminationReason", "FuncEvals", "ElapsedTime", "Fitness"]; fileprefix = experiment)
+  file_prefix = strftime("$(experiment)_%Y%m%d_%H%M%S", time())
+
+  summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId", 
+    "Problem", "Dimensions", "ElapsedTime", "FuncEvals", "TerminationReason", 
+    "Fitness"]; filepath = join([file_prefix, "_summary.csv"]))
+
+  run_csvfile = join([file_prefix, "_runs.csv"])
+
+  include_run_csv_header = true # Only the first time...
 
   for(i in 1:num_runs)
     # Random order of running each problem
@@ -56,15 +63,18 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       reason_counts[pi][reason] = get(reason_counts[pi], reason, 0) + 1
 
       # Save fitness history to a csv file
-      csvfile = strftime("$(experiment)_$(name(prob))_run$(i)_%Y%m%d_%H%M%S.csv", start_time)
-      save_fitness_history_to_csv_file(archive, csvfile)
-      println("Saved fitness history to file: $(csvfile)")
+      save_fitness_history_to_csv_file(archive, run_csvfile; 
+        header_prefix = "Problem,Dimensions,RunId", 
+        line_prefix = "\"$(name(prob))\",$(dims),$(i)",
+        include_header = include_run_csv_header)
+      include_run_csv_header = false # Only the first round...
+      println("Saved fitness history to file: $(run_csvfile)")
 
-      # Print to csv file
-      println(csvfh, join([experiment, strftime("%Y%m%d", start_time),
-        strftime("%H:%M.%S", start_time), i, name(prob), dims, reason,
-        fevals[i,pi], times[i,pi], fbests[i,pi]], ","))
-      flush(csvfh)
+      # Print to summary csv file
+      println(summary_csvfh, join([experiment, strftime("%Y-%m-%d", start_time),
+        strftime("%T", start_time), i, "\"$(name(prob))\"", dims, 
+        times[i,pi], fevals[i,pi], "\"$(reason)\"", fbests[i,pi]], ","))
+      flush(summary_csvfh)
     end
   end
 
@@ -79,7 +89,7 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
     println("")
   end
 
-  close(csvfh)
+  close(summary_csvfh)
 
   return fbests, fevals, times
 end
