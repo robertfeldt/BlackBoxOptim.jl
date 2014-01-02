@@ -68,17 +68,17 @@ end
 # A function set is specified through a duct mapping its function number
 # to an optimization problem. We can create a fixed dimensional variant of
 # an any dimensional function set with:
-function as_fixed_dim_problem_set(ps::Dict{Any, OptimizationProblem}, dim::Int64)
+function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dim::Int64)
   as_fixed_dim_problem_set(ps, [dim])
 end
 
 # Create a fixed dim version of each problem in ps for each dim in dims.
-function as_fixed_dim_problem_set(ps::Dict{Any, OptimizationProblem}, dims::Array{Int64,1})
+function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dims::Array{Int64,1})
   next_free_index = 1
   result = Dict{Any, FixedDimProblem}()
   for(d in dims)
     for(p in values(ps))
-      result[next_free_index] = as_fixed_dim_problem_set(ps, d)
+      result[next_free_index] = as_fixed_dim_problem(p, d)
       next_free_index += 1
     end
   end
