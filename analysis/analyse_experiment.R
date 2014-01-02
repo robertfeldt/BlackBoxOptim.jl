@@ -1,11 +1,16 @@
 library(optparse, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE)
+library(plyr, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE)
 
 option_list <- list(
   make_option(c("-e", "--experimentname"), type="character", default="exp",
     help="Name of experiment to be analysed, possibly with path"),
 
   make_option(c("-s", "--inputseparator"), type="character", default=",",
-    help="Separator to use when reading in data")
+    help="Separator to use when reading in data"),
+
+  make_option(c("-t", "--ftol"), type="double", default=1e-7,
+    help="Fitness tolerance used as target in optimizations")
+
 
 )
 
@@ -30,7 +35,7 @@ num_problems <- length(problems)
 cat("Number of problems in experiment: ", num_problems, "\n")
 cat("Problems: ", paste(problems), "\n")
 
-dims <- unique(dsummary$Dimensions)
+dims <- unique(dsummary$Dimension)
 num_dims <- length(dims)
 cat("Number of dimensions in experiment: ", num_dims, "\n")
 cat("Dimensions: ", paste(dims), "\n")
@@ -42,3 +47,29 @@ time_read <- system.time( dhist <- read.csv(histfile, header = TRUE,
   sep=args$inputseparator) );
 cat(" (", time_read[3], " seconds)\n", sep = "");
 cat("Number of entries in history =", nrow(dhist), "\n")
+
+
+#####################################################################
+# Aggregate median, mean, std, min and max fitness as well as
+# success rate and execution time per problem and dim.
+#####################################################################
+
+ratio_fitness_below_ftol <- function(fitnesses, ftol = args$ftol) {
+  sum(fitnesses < ftol) / length(fitnesses)
+}
+
+summary_by_problem_and_dim <- ddply(dsummary, c("Problem", "Dimension"), summarise,
+               SuccessRate   = 100.0*ratio_fitness_below_ftol(Fitness),
+               MedianFitness = median(Fitness),
+               MeanFitness   = mean(Fitness),
+               StdDevFitness = sd(Fitness),
+               MinFitness    = min(Fitness),
+               MaxFitness    = max(Fitness),
+               MedianFevals  = median(FuncEvals),
+               MeanFevals    = mean(FuncEvals),
+               StdDevFevals  = sd(FuncEvals),
+               MinFevals     = min(FuncEvals),
+               MaxFevals     = max(FuncEvals),
+               NumReps       = length(Fitness))
+
+print.data.frame(summary_by_problem_and_dim)
