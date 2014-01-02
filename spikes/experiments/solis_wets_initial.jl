@@ -1,7 +1,7 @@
 using Distributions
 using BlackBoxOptim
 
-require("../solis_wets_raw.jl")
+require("../solis_wets.jl")
 require("../experiment_framework.jl")
 
 gaussianrng = (sigma) -> Normal(0, sigma)
@@ -27,4 +27,4 @@ sf(p) = begin
   solis_wets(p; max_fail_steps = 3, rnggen = cauchyrng)
 end
 
-@time repeated_runs(sf, ps, 2; experiment = "solis_wets_initial")
+@time repeated_runs(sf, ps, 8; experiment = "solis_wets_initial")

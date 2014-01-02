@@ -63,21 +63,26 @@ function active_linear_utilities(mu, lambda)
 end
 
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES.
-function cmsa_es(n, func; 
-  mu = false, lambda = false, max_seconds = 2*n,
-  max_fevals = false,
-  known_fmin = :unknown, ftol = 1e-8,
+function cmsa_es(problem; 
+  max_seconds = 2*numdims(problem), max_evals_per_dim = 1e5,
+  ftol = 1e-7,
   max_rounds_without_improvement = 1000,
+  mu = false, lambda = false, 
   covarMatrixSampler = EigenCovarSampler,
   utilitiesFunc = linear_utilities,
+
   trace = true)
+
+  n = numdims(problem)
+  ss = search_space(problem)
+
+  max_evals = max_evals_per_dim * n
 
   if lambda == false
     # In the paper they try population sizes 8, 4n and 4*n*n, lets try
     # in between:
     #lambda = int(8 + (4*n*n - 8) * rand())
     lambda = 4*n
-    # We should probably use an IPOP scheme for restarts...
   end
 
   if mu == false
@@ -87,14 +92,19 @@ function cmsa_es(n, func;
   tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008 
   tau_c = 1 + n * (n + 1) / 2   # Equation (2) on page 5 in Beyer2008
   a = 1 - 1 / tau_c
-  xbest = xmean = randn(n,1)            # Current best mean value, should be sampled from search space...
-  fbest = func(xbest)
+
   sigma = 1.0                   # Mutation strength, sigma (self-adapted) 
   C = covarMatrixSampler(n)
   utilities = utilitiesFunc(mu, lambda)
 
-  fevals_last_best = 0
+  xbest = xmean = rand_individual(ss)   # Current best mean value.
+  fbest = eval1(xbest, problem)
   num_fevals = 1
+
+  archive = BlackBoxOptim.TopListArchive(n, 10)
+  add_candidate!(archive, fbest, xbest[:], num_fevals)
+
+  fevals_last_best = 0
   next_print_covar = 100
   termination_reason = "?"
 
@@ -108,7 +118,7 @@ function cmsa_es(n, func;
       break
     end    
 
-    if num_fevals > max_fevals
+    if num_fevals > max_evals
       termination_reason = "Exceeded function eval budget"
       break
     end    
@@ -125,18 +135,20 @@ function cmsa_es(n, func;
     xs = repmat(xmean, 1, lambda) + z               # n*lambda
 
     # Evaluate fitness
-    fitnesses = eval_fitnesses(func, xs, lambda)
+    fitnesses = eval_fitnesses(problem, xs, lambda)
     num_fevals += lambda
 
     # Check if best new fitness is best ever and print some info if tracing.
     indbest = indmin(fitnesses)
     fbest_new = fitnesses[indbest]
+    add_candidate!(archive, fbest_new, xs[:, indbest], num_fevals)
+
     if fbest_new < fbest
       xbest = xs[:, indbest]
       fbest = fbest_new
       fevals_last_best = num_fevals
 
-      if known_fmin != :unknown && abs(fbest - known_fmin) < ftol
+      if fitness_is_within_ftol(problem, ftol, fbest)
         termination_reason = "Within ftol"
         break
       end
@@ -178,13 +190,18 @@ function cmsa_es(n, func;
     sigma = sigmas * weights
   end
 
-  return xbest, fbest, num_fevals, termination_reason
+  # Save fitness history to a csv file
+  csvfile = strftime("cmsa_es_%Y%m%d_%H%M%S.csv", start_time)
+  save_fitness_history_to_csv_file(archive, csvfile)
+  println("Saved fitness history to file: $(csvfile)")
+
+  return xbest, fbest, num_fevals, termination_reason, archive
 end
 
-function eval_fitnesses(func, xs, lambda = size(xs, 2))
+function eval_fitnesses(problem, xs, lambda = size(xs, 2))
   fitnesses = zeros(lambda)
   for(i in 1:lambda)
-    fitnesses[i] = func(xs[:,i])
+    fitnesses[i] = eval1(xs[:,i], problem)
   end
   fitnesses
 end

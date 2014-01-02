@@ -23,7 +23,7 @@ sf(p) = begin
   cmsa_es(p, mu = mu, lambda = lambda)
 end
 
-@time repeated_runs(sf, ps, 2; experiment = "cmsa_es_initial")
+@time repeated_runs(sf, ps, 8; experiment = "cmsa_es_initial")
 
 #f = sphere
 #f = deceptive_cuccu2011(15, 2)

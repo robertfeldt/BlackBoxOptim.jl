@@ -22,10 +22,11 @@ using BlackBoxOptim
 
 # Generating set search as described on page 21 (405) in Kolda2003 but extended
 # with random ordering or frequency adapted ordering of directions.
-function generating_set_search(f, n; max_seconds = 2*n, delta_tol = 1e-13, 
+function generating_set_search(problem; 
+  max_seconds = 2*n, delta_tol = 1e-13, 
   step_size = 1.0, x = false, random_order = false,
   freq_adapt_order = false,
-  known_fmin = :unknown, ftol = 1e-8,
+  ftol = 1e-7,
   direction_gen = compass_search_directions(n))
 
   @assert delta_tol > 0

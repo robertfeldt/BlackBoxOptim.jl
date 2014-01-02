@@ -47,18 +47,17 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
     problem_indices = shuffle(collect(1:num_problems))
     for(pi in problem_indices)
       num, prob = problems[pi]
-      optfunc = (x) -> BlackBoxOptim.eval1(x, prob)
       dims = BlackBoxOptim.numdims(prob)
-      println("Run $(i) of problem $(prob.name)")
+      println("Run $(i) of problem $(name(prob))")
       start_time = time()
       tic()
-      x, fbests[i,pi], fevals[i,pi], reason = searchf(dims, optfunc)
+      x, fbests[i,pi], fevals[i,pi], reason, archive = searchf(prob)
       times[i,pi] = toq()
       reason_counts[pi][reason] = get(reason_counts[pi], reason, 0) + 1
 
       # Print to csv file
       println(csvfh, join([experiment, strftime("%Y%m%d", start_time),
-        strftime("%H:%M.%S", start_time), i, prob.name, dims, reason,
+        strftime("%H:%M.%S", start_time), i, name(prob), dims, reason,
         fevals[i,pi], times[i,pi], fbests[i,pi]], ","))
       flush(csvfh)
     end
@@ -66,11 +65,11 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
 
   for(i in 1:num_problems)
     p = problems[i][2]
-    println("\nProblem: ", p.name)
+    println("\nProblem: ", name(p))
     println("Fitness: ", sumstats(fbests[:,i], (x) -> @sprintf("%.2e", x)))
     println("Time: ", sumstats(times[:,i], format_time))
     println("Num. evals: ", sumstats(fevals[:,i]))
-    println("Evals / dim: ", sumstats(fevals[:,i] / BlackBoxOptim.numdims(p), int))
+    println("Evals / dim: ", sumstats(fevals[:,i] / BlackBoxOptim.numdims(p), round))
     print("Reasons: "); show(reason_counts[i])
     println("")
   end
