@@ -87,12 +87,19 @@ function push_to_fitness_history!(a::Archive, fitness::Float64, num_fevals::Int6
   end
 end
 
-function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_history.csv")
-  fh = open(filename, "w")
-  println(fh, "Date,Time,ElapsedTime,Magnitude,NumFuncEvals,ConfIntervalWidth0_01,Fitness")
+function fitness_history_csv_header(a::Archive)
+  "Date,Time,ElapsedTime,Magnitude,NumFuncEvals,ConfIntervalWidth0_01,Fitness"
+end
+
+function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_history.csv";
+  header_prefix = "", line_prefix = "", include_header = true)
+  fh = open(filename, "a+")
+  if include_header
+    println(fh, join([header_prefix, fitness_history_csv_header(a)], ","))
+  end
   for(event in a.fitness_history)
     mc, t, nf, f, w = event
-    println(fh, join([strftime("%Y%m%d,%H:%M.%S", t), t-a.start_time,
+    println(fh, join([line_prefix, strftime("%Y-%m-%d,%T", t), t-a.start_time,
       mc[2], nf, w, f], ","))
   end
   close(fh)
