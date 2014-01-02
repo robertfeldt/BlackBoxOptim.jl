@@ -39,13 +39,14 @@ last_top_fitness(a::Archive) = a.fitnesses[a.count]
 should_enter_toplist(fitness::Float64, a::Archive) = fitness < last_top_fitness(a)
 
 # Add a candidate with a fitness to the archive (if it is good enough).
-function add_candidate!(a::TopListArchive, fitness::Float64, candidate::Array{Float64, 1})
+function add_candidate!(a::TopListArchive, fitness::Float64, 
+  candidate::Array{Float64, 1}, num_fevals::Int64 = -1)
   a.num_fitnesses += 1
 
   if a.count < a.size
 
     if a.count == 0 || fitness < best_fitness(a)
-      push_to_fitness_history!(a, fitness)
+      push_to_fitness_history!(a, fitness, num_fevals)
     end
 
     push_then_sort_by_fitness!(fitness, candidate, a)
@@ -54,7 +55,7 @@ function add_candidate!(a::TopListArchive, fitness::Float64, candidate::Array{Fl
   elseif should_enter_toplist(fitness, a)
 
     if fitness < best_fitness(a)
-      push_to_fitness_history!(a, fitness)
+      push_to_fitness_history!(a, fitness, num_fevals)
     end
 
     push_then_sort_by_fitness!(fitness, candidate, a)
@@ -76,11 +77,12 @@ end
 # Save fitness history so we can reconstruct the most important events later.
 # We do this by only saving the first fitness event in its magnitude class, see
 # above.
-function push_to_fitness_history!(a::Archive, fitness)
+function push_to_fitness_history!(a::Archive, fitness::Float64, num_fevals::Int64 = -1)
   mc = magnitude_class(fitness)
   if mc != a.last_magnitude_class
     a.last_magnitude_class = mc
-    event = (mc, time(), a.num_fitnesses, fitness, width_of_confidence_interval(a, 0.01))
+    nf = num_fevals == -1 ? a.num_fitnesses : num_fevals
+    event = (mc, time(), nf, fitness, width_of_confidence_interval(a, 0.01))
     push!(a.fitness_history, event)
   end
 end

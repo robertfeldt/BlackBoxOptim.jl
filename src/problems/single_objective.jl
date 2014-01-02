@@ -144,6 +144,7 @@ is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(
 numfuncs(tp::TransformedProblem) = numfuncs(sub_problem(tp))
 numdims(tp::TransformedProblem) = numdims(sub_problem(tp))
 fmins(tp::TransformedProblem) = fmins(sub_problem(tp))
+name(tp::TransformedProblem) = name(sub_problem(tp))
 
 # A ShiftedAndBiasedProblem shifts the minimum value and biases the returned 
 # function values.

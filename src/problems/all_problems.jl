@@ -7,6 +7,8 @@ type FixedDimProblem <: OptimizationProblem
   fmins::Union(Nothing, Vector{Float64})
 end
 
+name(p::OptimizationProblem) = p.name
+
 is_fixed_dimensional(p::OptimizationProblem) = false
 is_fixed_dimensional(p::FixedDimProblem) = true
 
