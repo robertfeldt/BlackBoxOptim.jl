@@ -41,15 +41,15 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
 
   file_prefix = strftime("$(experiment)_%Y%m%d_%H%M%S", time())
 
-  summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId", 
-    "Problem", "Dimensions", "ElapsedTime", "FuncEvals", "TerminationReason", 
-    "Fitness"]; filepath = join([file_prefix, "_summary.csv"]))
-
   run_csvfile = join([file_prefix, "_runs.csv"])
 
+  summary_csvfh = 1 # Dummy value just so it exists...
   include_run_csv_header = true # Only the first time...
+  add_summary_csv_header = true # Only the first time...
 
-  for(i in 1:num_runs)
+  # We add one run per problem (with runid 0) to ensure everything has been
+  # compiled. It is not saved in the data though.
+  for(i in 0:num_runs)
     # Random order of running each problem
     problem_indices = shuffle(collect(1:num_problems))
     for(pi in problem_indices)
@@ -58,21 +58,37 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       println("Run $(i) of problem $(name(prob))")
       start_time = time()
       tic()
-      x, fbests[i,pi], fevals[i,pi], reason, archive = searchf(prob)
-      times[i,pi] = toq()
+      params, paramheader, x, fb, nf, reason, archive = searchf(prob)
+      t = toq()
+      if i == 0
+        break
+      end
+      times[i, pi] = t
+      fbests[i, pi] = fb
+      fevals[i, pi] = nf
       reason_counts[pi][reason] = get(reason_counts[pi], reason, 0) + 1
 
       # Save fitness history to a csv file
       save_fitness_history_to_csv_file(archive, run_csvfile; 
-        header_prefix = "Problem,Dimensions,RunId", 
-        line_prefix = "\"$(name(prob))\",$(dims),$(i)",
+        header_prefix = join(["Problem,Dimensions,RunId", paramheader], ","), 
+        line_prefix = join(["\"$(name(prob))\",$(dims),$(i)", params], ","),
         include_header = include_run_csv_header)
       include_run_csv_header = false # Only the first round...
       println("Saved fitness history to file: $(run_csvfile)")
 
+      # Create the summary_csv file on the first loop through since we now
+      # know the number of parameters
+      if add_summary_csv_header
+        summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId", 
+          "Problem", "Dimension", paramheader,
+          "ElapsedTime", "FuncEvals", "TerminationReason", 
+          "Fitness"]; filepath = join([file_prefix, "_summary.csv"]))
+        add_summary_csv_header = false
+      end
+
       # Print to summary csv file
       println(summary_csvfh, join([experiment, strftime("%Y-%m-%d", start_time),
-        strftime("%T", start_time), i, "\"$(name(prob))\"", dims, 
+        strftime("%T", start_time), i, "\"$(name(prob))\"", dims, params,
         times[i,pi], fevals[i,pi], "\"$(reason)\"", fbests[i,pi]], ","))
       flush(summary_csvfh)
     end
@@ -91,6 +107,8 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
   end
 
   close(summary_csvfh)
+
+  println("Finished with experiment $(experiment).")
 
   return fbests, fevals, times
 end
