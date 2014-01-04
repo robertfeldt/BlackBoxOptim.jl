@@ -20,8 +20,8 @@ cmsa_es_exp1 = ParameterExperiment(
    "covar_learning_rate", "sigma"],
   [((ds, ps) -> 4 * [2, n, n*n][int(ceil(ds[1]))]),
    ((ds, ps) -> int(ps[1] / [2, 4, 8][int(ceil(ds[2]))])),
-   ((ds, ps) -> ["EigenCovarSampler", "CholeskyCovarSampler"][int(ceil(ds[3]))]),
-   ((ds, ps) -> ["log_utilities", "linear_utilities"][int(ceil(ds[4]))]),
+   ((ds, ps) -> [EigenCovarSampler, CholeskyCovarSampler][int(ceil(ds[3]))]),
+   ((ds, ps) -> [log_utilities, linear_utilities][int(ceil(ds[4]))]),
    ((ds, ps) -> ds[5]),
    ((ds, ps) -> diameter * 10^ds[6])
   ],
@@ -106,26 +106,20 @@ function run_based_on_design_matrix_while_saving_to_csvfile(pe::ParameterExperim
   for(i in 1:size(design,1))
     ds = design[i,:]
     ps = Any[]
-    param_string = ""
+    param_dict = Dict{Any,Any}()
 
     # Calc the parameter values from the desing values.
     for(j in 1:numparams(pe))
-      push!(ps, pe.mappers[j](ds, ps))
+      param_dict[pe.parameters[j]] = pv = pe.mappers[j](ds, ps)
+      push!(ps, pv)
     end
 
-    # Create param string
-    param_string = join(
-      map( (i) -> "$(pe.parameters[i]) = $(ps[i])", 1:numparams(pe) ),
-      ", "
-    )
-
-    # Assemble and parse the call to be made to run the experiment.
-    s = "xb, fb, nf, r, a = cmsa_es(p; max_evals_per_dim = 1e7, " * param_string * ")"
-    ex = parse(s)
+    # Add other arguments.
+    param_dict[:max_evals_per_dim] = 1e7
 
     # Now run it while timing.
     tic()
-    eval(ex)
+    xb, fb, nf, r, a = cmsa_es(p; collect(param_dict)...)
     t = toq()
 
     # Save info to the csv file
