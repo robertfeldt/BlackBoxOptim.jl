@@ -12,8 +12,8 @@ library(optparse, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE)
 #####################################################################
 num_tgp_runs <- 4                 # Number of runs when building tgp models
 improvedlhs_num_repeats <- 10     # Number of points to consider for each added design point with improvedLHS
-lhs_sample_size <- 200            # Number of candidate points sampled when selecting design points
-num_selected_design_points <- 30  # Number of selected design points for prediction
+lhs_sample_size <- 500            # Number of candidate points sampled when selecting design points
+num_selected_design_points <- 50  # Number of selected design points for prediction
 
 sample_param_space <- function(num_params, num_samples, repeats = improvedlhs_num_repeats) {
   #delta <- ranges[,2] - ranges[,1]
@@ -25,6 +25,12 @@ sample_param_space <- function(num_params, num_samples, repeats = improvedlhs_nu
 save_matrix_to_json_file <- function(matrix, filepath) {
   fileConn<-file(filepath)
   writeLines(toJSON(matrix), fileConn)
+  close(fileConn)
+}
+
+save_list_to_json_file <- function(list, filepath) {
+  fileConn<-file(filepath)
+  writeLines(toJSON(list), fileConn)
   close(fileConn)
 }
 
@@ -136,17 +142,26 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
 #####################################################################
 if(csv_exists && nrow(runs) > 0) {
 
-  # Build model for selecting new points
-  cat("Building model for selecting points\n")
-  model <- btgp(X=X, Z=Z, pred.n=FALSE, basemax = basemax, R=num_tgp_runs)
-  #model2 <- btgpllm(X=X, Z=Z, pred.n=FALSE, basemax = basemax, R=num_tgp_runs)
-
-  # And select the best points from a LHS sample.
+  # Create a LHS sample of points to select from
   cat("Sampling many points to select from\n")
   Xcandidates = sample_param_space(num_params, lhs_sample_size);
-  cat("Select a subset of points with most design value\n")
-  num_points <- max(num_selected_design_points, num_new_runs);
-  XX <- tgp.design(num_points, Xcandidates, model);
+
+  if(selection_scheme == "min") {
+
+    XX <- Xcandidates;
+
+  } else {
+
+    # Build model for selecting new points
+    cat("Building model for selecting points\n")
+    model <- btgp(X=X, Z=Z, pred.n=FALSE, basemax = basemax, R=num_tgp_runs)
+    #model2 <- btgpllm(X=X, Z=Z, pred.n=FALSE, basemax = basemax, R=num_tgp_runs)
+
+    cat("Select a subset of points with most design value\n")
+    num_points <- max(num_selected_design_points, num_new_runs);
+    XX <- tgp.design(num_points, Xcandidates, model);
+
+  }
 
   # Now predict in those points
   pmodel <- btgp(X=X, Z=Z, XX=XX, basemax = basemax, corr="exp", improv=TRUE,
@@ -208,4 +223,28 @@ if(csv_exists && nrow(runs) > 0) {
 
 }
 
-save_matrix_to_json_file(XXsel, outfile);
+result <- list(num_rows = num_new_runs, num_cols = num_params, 
+  design01 = XXsel)
+
+# Print some stats for some subsets of the top list predicted
+num_min = 5
+mins = sort(ZZ)
+while(num_min <= 50) {
+  index = which(ZZ %in% mins[1:num_min]);
+  dvs <- XX[index,1:num_params];
+  means <- colMeans(dvs);
+  sds <- apply(dvs, 2, sd);
+  cat("Top ", num_min, ": y = ", mean(ZZ[index]), "ds = ", means, "ds sd = ", sds, "\n");
+
+  if(num_min == 5) {
+    result$top5_mean <- means;
+    result$top5_sd <- sds;
+    result$top5_min <- apply(dvs, 2, min);
+    result$top5_max <- apply(dvs, 2, max);
+  }
+
+  num_min <- num_min + 5;
+}
+
+#save_matrix_to_json_file(XXsel, outfile);
+save_list_to_json_file(result, outfile);
