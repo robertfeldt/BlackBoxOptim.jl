@@ -43,7 +43,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Example 
 # args <- c("6", "1", "15", "4", "cmsa_es_exp2.csv", "new_runs.json", "sa")
-# args <- c("4", "1", "10", "4", "cmsa_es_exp3.csv", "new_runs.json", "sa")
+# args <- c("4", "1", "-11", "4", "cmsa_es_exp5.csv", "new_runs.json", "sa", "min")
 # setwd("/Users/feldt/dev/BlackBoxOptim.jl/spikes/experiments")
 
 num_params <- as.integer(args[1]);
@@ -73,6 +73,9 @@ if(length(args) >= 8) {
 } else {
   selection_scheme <- "ei"
 }
+
+# Create a result list where we will save results
+result = list(analysis_date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
 
 
 #####################################################################
@@ -121,9 +124,10 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
   #mode[(basemax+1):num_params] <- 0.5
 
   cat("Performing sensitivity analysis\n")
-  s <- suppressWarnings(sens(X=X, Z=Z, nn.lhs=100, model=btgp, 
+  Ngrid <- 100
+  s <- suppressWarnings(sens(X=X, Z=Z, nn.lhs=300, model=btgp, 
 #    shape = shape, rect = rect,
-    ngrid=100, span=0.3, BTE=c(5000,10000,10)))
+    ngrid=Ngrid, span=0.3, BTE=c(5000,10000,10)))
 
   #png('main_effects_per_var.png', width = 1600, height = 1200)
   pdf('main_effects_per_var.pdf')
@@ -134,6 +138,28 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
   pdf('sensitivity_per_var.pdf')
   plot(s, layout="sens", maineff=FALSE)
   dev.off()
+
+  # Save sensitivity indices stats in result
+  result$sa_mean_1st_order_sens_indices = colMeans(s$sens$S)
+  result$sa_mean_total_sens_indices = colMeans(s$sens$T)
+  result$sa_sd_1st_order_sens_indices = apply(s$sens$S, 2, sd)
+  result$sa_sd_total_sens_indices = apply(s$sens$T, 2, sd)
+
+  # Find the values for the 5% best quantiles for each param
+  quantile <- 0.05
+  if(invert_response == TRUE) {
+    cutoffprob <- quantile;
+  } else {
+   cutoffprob <- 1.0 - quantile;
+  }
+  num_in_5 <- round(quantile*Ngrid);
+  best_sa <- matrix(rep.int(0, num_in_5*num_params), nrow=num_in_5)
+  for(pindex in 1:num_params) {
+    q <- as.double(quantile(s$sens$ZZ.mean[,pindex], probs=c(cutoffprob)))
+    # Bug below: Only saves first value instead of all of them...
+    best_sa[,pindex] <- s$sens$Xgrid[which(s$sens$ZZ.mean[,pindex] <= q),pindex]
+  }
+  result$best_sa <- best_sa
 }
 
 #####################################################################
@@ -201,7 +227,6 @@ if(csv_exists && nrow(runs) > 0) {
 
     cat("Selection scheme: Active Learning Cohn")
 
-
   } else {
 
     # Default scheme is "EI", i.e. minimization according to expected improvement
@@ -217,34 +242,36 @@ if(csv_exists && nrow(runs) > 0) {
   cat("XXsel = ", XXsel, "\n");
   cat("Predicted values for XXsel, ZZ = ", ZZ[index], "\n");
 
+  # Print some stats for some subsets of the top list predicted
+  num_min = 5
+  mins = sort(ZZ)
+  while(num_min <= 50) {
+    index = which(ZZ %in% mins[1:num_min]);
+    dvs <- XX[index,1:num_params];
+    means <- colMeans(dvs);
+    sds <- apply(dvs, 2, sd);
+    cat("Top ", num_min, ": y = ", mean(ZZ[index]), ", ds = ", means, ", sd = ", sds, "\n");
+
+    if(num_min == 5) {
+      result$top5_response <- mean(ZZ[index]);
+      result$top5_mean <- means;
+      result$top5_sd <- sds;
+      result$top5_min <- apply(dvs, 2, min);
+      result$top5_max <- apply(dvs, 2, max);
+    }
+
+    num_min <- num_min + 5;
+  }
+
 } else {
 
   XXsel = sample_param_space(num_params, num_params+1);
 
 }
 
-result <- list(num_rows = num_new_runs, num_cols = num_params, 
-  design01 = XXsel)
-
-# Print some stats for some subsets of the top list predicted
-num_min = 5
-mins = sort(ZZ)
-while(num_min <= 50) {
-  index = which(ZZ %in% mins[1:num_min]);
-  dvs <- XX[index,1:num_params];
-  means <- colMeans(dvs);
-  sds <- apply(dvs, 2, sd);
-  cat("Top ", num_min, ": y = ", mean(ZZ[index]), "ds = ", means, "ds sd = ", sds, "\n");
-
-  if(num_min == 5) {
-    result$top5_mean <- means;
-    result$top5_sd <- sds;
-    result$top5_min <- apply(dvs, 2, min);
-    result$top5_max <- apply(dvs, 2, max);
-  }
-
-  num_min <- num_min + 5;
-}
+result$num_rows = num_new_runs;
+result$num_cols = num_params;
+result$best = XXsel;
 
 #save_matrix_to_json_file(XXsel, outfile);
 save_list_to_json_file(result, outfile);
