@@ -1,14 +1,8 @@
 using BlackBoxOptim
-using JSON
 
 require("../covar_matrix_self_adaptation_es.jl")
 require("../experiment_framework.jl")
-
-type ParameterExperiment
-  parameters::Array{ASCIIString, 1}             # Parameter names
-  mappers::Array{Function, 1}                   # One function per param mapping a design value to a param value
-  design_ranges::Array{(Float64, Float64), 1}   # Design range per parameter
-end
+require("../../src/experiments/parameter_experiment.jl")
 
 n = 8
 p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Rosenbrock"], n)
@@ -34,132 +28,6 @@ pe = cmsa_es_exp2 = ParameterExperiment(
    ( 0.0, 1.0)
   ]
 )
-
-# Return true iff a param with a given index is fixed, i.e. if its range
-# has same min as max.
-function is_fixed_param(pe::ParameterExperiment, index::Int64)
-  pe.design_ranges[index][1] == pe.design_ranges[index][2]
-end
-
-numparams(pe::ParameterExperiment) = length(pe.parameters)
-num_varying_params(pe::ParameterExperiment) = length(index_to_varying_params(pe))
-num_fixed_params(pe::ParameterExperiment) = numparams(pe) - num_varying_params(pe)
-index_to_varying_params(pe::ParameterExperiment) = filter( (i) -> !is_fixed_param(pe, i), 1:numparams(pe) )
-value_for_fixed_param(pe::ParameterExperiment, i) = pe.design_ranges[i][1]
-
-#function design_ranges_to_R_array(pe::ParameterExperiment)
-#  ary = Float64[]
-#  for(i in 1:numparams(pe))
-#    if !is_fixed_param(pe, i)
-#      push!(ary, float(pe.design_ranges[i][1]))
-#      push!(ary, float(pe.design_ranges[i][2]))
-#    end
-#  end
-#  array_to_R_string(ary)
-#end
-#
-#function array_to_R_string(a)
-#  join(["c(", join(a, ","), ")"])
-#end
-
-function write_csv_header_to_file(pe::ParameterExperiment, filepath)
-  header = join([
-    map((i) -> "d$(i)", 1:numparams(pe)), 
-    pe.parameters,
-    ["MedianFitness", "MedianNumFuncEvals", "SuccessRate"]],
-    ",")
-  fh = open(filepath, "w")
-  println(fh, header)
-  close(fh)
-end
-
-# Now we want to invoke an R script like so:
-# Rscript top_of_bbo_path/R/parameter_experiment.R 6 7 13 in.csv out.json
-# with parameters indicating: 6 = num params, ranges, num runs, response col, in.csv, out.json
-# where in.csv has the values used so far and out.json has the 7*6 new design values.
-
-function read_matrix_from_file(filename, nrows, ncols)
-  fh = open(filename, "r")
-  fromR = JSON.parse(readall(fh))
-  close(fh)
-  reshape(fromR, nrows, ncols)
-end
-
-function map01_range_to_design_range(value01, design_min, design_max)
-  design_min + value01 * (design_max - design_min)
-end
-
-function create_design_matrix_from_file_and_fixed_params(pe::ParameterExperiment, filename, num_rows)
-  design01 = read_matrix_from_file(filename, num_rows, num_varying_params(pe))
-
-  ds = zeros(num_rows, numparams(pe))
-  next_design_col = 1
-
-  for(i in 1:numparams(pe))
-    if is_fixed_param(pe, i)
-      ds[:, i] = value_for_fixed_param(pe, i) * ones(num_rows)
-    else
-      dmin, dmax = pe.design_ranges[i]
-      ds[:, i] = map01_range_to_design_range(design01[:,next_design_col], dmin, dmax)
-      next_design_col += 1
-    end
-  end
-
-  return design01, ds
-end
-
-function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(pe::ParameterExperiment, outfilepath, num_rows; 
-  designfile = "new_runs.json", num_repeats = 10, 
-  fixed_params = {:max_evals_per_dim => 1e7, 
-    :covarMatrixSampler => CholeskyCovarSampler,
-    :utilitiesFunc => log_utilities})
-
-  if !isfile(outfilepath)
-    write_csv_header_to_file(pe, outfilepath)
-  end
-
-  design01, design = create_design_matrix_from_file_and_fixed_params(pe, designfile, num_rows)
-
-  for(i in 1:size(design,1))
-    ds = design[i,:]
-    ps = Any[]
-    param_dict = Dict{Any,Any}()
-
-    # Calc the parameter values from the desing values.
-    for(j in 1:numparams(pe))
-      param_dict[symbol(pe.parameters[j])] = pv = pe.mappers[j](ds, ps)
-      push!(ps, pv)
-    end
-
-    # Add other arguments.
-    param_dict = merge(param_dict, fixed_params)
-    print("params: "); show(param_dict); println("")
-
-    # Set up for saving results
-    fbs = zeros(num_repeats)
-    nfs = zeros(num_repeats)
-    num_within_ftol = 0
-
-    # Now run it while timing.
-    for(r in 1:num_repeats)
-      tic()
-      xb, fbs[r], nfs[r], r, a = cmsa_es(p; collect(param_dict)...)
-      et = toq()
-      if r == "Within ftol"
-        num_within_ftol += 1
-      end
-    end
-
-    # Save info to the csv file
-    fh = open(outfilepath, "a+")
-    print(fh, join(map( (dv) -> "$(dv)", design01[i,:]), ","))
-    print(fh, ",")
-    print(fh, join(map( (pv) -> "$(pv)", ps), ","))
-    println(fh, ",", median(fbs), ",", median(nfs), ",", num_within_ftol/num_repeats)
-    close(fh)
-  end
-
-end
 
 # It seems clear that (in order of sensitivity)
 #  1. covar_learning_rate needs to be high (highest sensitivity)
@@ -261,3 +129,208 @@ pe5 = ParameterExperiment(
 
 outfile = "cmsa_es_exp5.csv"
 write_csv_header_to_file(pe5, outfile)
+
+# /usr/bin/Rscript ../../R/parameter_experiment.R 4 5 -11 4 cmsa_es_exp5.csv new_runs.json
+
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(pe5, outfile, 5; num_repeats = 5)
+
+# Meta-strategy: Not good to run 5 initial runs and then do 25 ones based on EI =>
+# only 10% or so for n=32 had high success rate. This is in line with common sense, i.e.
+# when doing adaptive sampling one should do it in very small batches (1 run at a time)
+# to learn as much as possible about the response before each run).
+
+# For Rosenbrock 32 we saw good performance but for somewhat different values than
+# for 8 and 16:
+# After 35 runs:
+# best: {:covar_learning_rate=>0.9851933684393066,:lambda=>331,:sigma=>0.937811910301762,:mu=>15}
+# top5_max: {:covar_learning_rate=>0.9860690669022734,:lambda=>501,:sigma=>2.650768642586489,:mu=>22}
+# top5_mean: {:covar_learning_rate=>0.9822724531856971,:lambda=>344,:sigma=>1.4712605685842668,:mu=>18}
+# top5_min: {:covar_learning_rate=>0.9780927470649825,:lambda=>168,:sigma=>0.8147138415085076,:mu=>12}
+#
+#   1. best performance for lambda around 5*n to 15*n but better with lower (highest sens)
+#   2. covar learning rate should be from around 0.97-0.98 (high sens)
+#   3. best performance for low mu all the way down to divisor 20 (lower sens)
+#   4. fairly insensitive to sigma as long as its around 0.02-0.07 of diameter (lowest sens)
+
+# Before addressing Rosenbrock 64-D we added stopping if no progress in 1000*lambda
+# func evals (for cmsa_es). I also fixed a bug in the cmsa_es code so that the sigma
+# does not increase indefinetely to compensate for bad scaling of the covar matrix update.
+# Because of this we also changed back to the tau equations of Beyer et al.
+# And added a probability for decomposing the covar, to save time. But it might affect quality.
+# So I guess I might need to have to rerun all experiments... ;)
+
+n = 64
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Rosenbrock"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe6 = ParameterExperiment(
+  ["tau", "lambda", "mu", "tau_c", "sigma", "decompose_covar_prob" 
+  ],
+  [((ds, ps) -> (2*n)^ds[1]),
+   ((ds, ps) -> n*int(round(ds[2]))),
+   ((ds, ps) -> int(max(1.0, ceil(ps[2] / ds[3])))),
+   ((ds, ps) -> 1 + n * (n+1) / (ds[4]*ps[3])),
+   ((ds, ps) -> diameter * 10^ds[5]),
+   ((ds, ps) -> ds[6])
+  ],
+  [(-2.0, 0.0),
+   ( 1.0, float(n)),
+   ( 4.0, 20.0),
+   (0.01, 3.0),
+   (-3.0, 0.0),
+   (0.01, 1.0)
+  ]
+)
+
+# First we minimize the magnitude class with ei => 14
+outfile = "cmsa_es_exp6.csv"
+write_csv_header_to_file(pe6, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 1)
+for(i in 1:33)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa min`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 2)
+end  
+# Then we maximize the success rate and select the quickest among the top 10.
+for(i in 1:10)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa minquick`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 2)
+end  
+
+# Conclusions for finding good solutions (in sensitivity order):
+#  1. lambda should be a fairly low multiple of n, 1-8
+#  2. values of tau seem influential but lots of variation in its effect so hard to give guidance => fix to theoretic value!?
+#  3. tau_c fairly influential and should probably be a divisor of 3*mu rather than 2*mu => fix to 2*mu?
+#  4. mu somewhat influential and should rather be a high than a low divisor, maybe in range 8-20 rather than 4-8 of lambda.
+#  5. decompose_covar_prob not so influential on its own but interacts with the others higher values seems generally somewhat better, but not strongly and affects time behavior.
+#  6. sigma not so important but rather higher (1*diameter) than lower (0.001*diameter)
+
+# Lets do a final Rosenbrock 128-D before going on to other problems.
+
+n = 128
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Rosenbrock"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe7 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob" 
+  ],
+  [((ds, ps) -> int(round(n*ds[1]))),
+   ((ds, ps) -> int(max(1.0, ceil(ps[1] / ds[2])))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4])
+  ],
+  [( 0.5, float(n)),
+   ( 4.0, 20.0),
+   (-2.0, 0.0),
+   (0.01, 1.0)
+  ]
+)
+
+outfile = "cmsa_es_exp7.csv"
+write_csv_header_to_file(pe7, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 5 10 4 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe7, outfile; num_repeats = 1)
+
+# It seems that covergence is slow. I posit that this may be because of mu being too high =>
+# increase size of max divisor in experiments.
+# We also try to reduce the decompose_covar_prob max value since the cost of
+# decomposing the covar matrix is high for high-dimensional problems.
+
+pe8 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob" 
+  ],
+  [((ds, ps) -> int(round(n*ds[1]))),
+   ((ds, ps) -> int(max(1.0, ceil(ps[1] / ds[2])))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4])
+  ],
+  [( 0.1, float(n)),
+   ( 6.0, float(n)),
+   (-2.0, 0.0),
+   (0.01, 0.50)
+  ]
+)
+
+outfile = "cmsa_es_exp8.csv"
+write_csv_header_to_file(pe8, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 5 10 4 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe8, outfile; num_repeats = 1)
+# Since many runs end up in the 2.0 magnitude class we optimize on fitness rather than magnitude => higher resolution.
+# First we minimize the magnitude class with ei => 2*4+1
+for(i in 1:20)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 1 9 4 $(outfile) new_runs.json sa ei`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe8, outfile; num_repeats = 1)
+end  
+
+# It seems hard to make progress on this one and it seems that very low values for lambda
+# and mu are needed. So lets expand the search ranges and add back the old tau_c and tau
+# covariates and lets see what we find.
+
+pe9 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", "tau", "tau_c" 
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> (2*n)^ds[5]),
+   ((ds, ps) -> 1 + n * (n+1) / (ds[6]*ps[2]))
+  ],
+  [( log10(4.0 + log(n)), log10(n*n)),
+   ( 0.0, 1/4),
+   (-3.0, 0.0),
+   (0.01, 0.50),
+   (-2.0, 0.0),
+   (1.0,  6.0)
+  ]
+)
+outfile = "cmsa_es_exp9.csv"
+write_csv_header_to_file(pe9, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
+for(i in 1:23)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa ei`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
+end
+# Then we maximize the success rate and select the quickest among the top 10.
+for(i in 1:3)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 15 6 $(outfile) new_runs.json sa min`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
+end
+
+pe10 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+   "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> int(ds[5])),
+   ((ds, ps) -> int(ds[6])),
+   ((ds, ps) -> int(ds[7]))
+  ],
+  [( log10(4.0 + log(n)), log10(4*n)),
+   ( 0.0, 1/7),
+   (-2.0, 0.0),
+   (0.01, 0.40),
+   (2.0, 10.0),
+   (2.0, 10.0),
+   (20.0, 1000.0)
+  ]
+)
+outfile = "cmsa_es_exp10.csv"
+write_csv_header_to_file(pe10, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 16 7 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
+for(i in 1:13)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa ei`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
+end
+# Then we maximize the success rate and select the quickest among the top 10.
+for(i in 1:5)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa minquick`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
+end
