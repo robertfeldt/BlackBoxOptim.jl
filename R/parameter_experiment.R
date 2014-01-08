@@ -10,9 +10,10 @@ library(optparse, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE)
 #####################################################################
 # 0. Define constants and functions
 #####################################################################
-num_tgp_runs <- 4                 # Number of runs when building tgp models
-improvedlhs_num_repeats <- 10     # Number of points to consider for each added design point with improvedLHS
+num_tgp_runs <- 3                 # Number of runs when building tgp models
+improvedlhs_num_repeats <- 25     # Number of points to consider for each added design point with improvedLHS
 lhs_sample_size <- 500            # Number of candidate points sampled when selecting design points
+oversampling_factor_for_minquick <- 10 # Number of times more candidate points to include when minimizing, from which the quickest is then selected
 num_selected_design_points <- 50  # Number of selected design points for prediction
 
 sample_param_space <- function(num_params, num_samples, repeats = improvedlhs_num_repeats) {
@@ -43,7 +44,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Example 
 # args <- c("6", "1", "15", "4", "cmsa_es_exp2.csv", "new_runs.json", "sa")
-# args <- c("4", "1", "-11", "4", "cmsa_es_exp5.csv", "new_runs.json", "sa", "min")
+# args <- c("6", "1", "-17", "6", "cmsa_es_exp9.csv", "new_runs.json", "sa", "min")
+# args <- c("6", "1", "-17", "6", "cmsa_es_exp6.csv", "new_runs.json", "sa", "minquick")
 # setwd("/Users/feldt/dev/BlackBoxOptim.jl/spikes/experiments")
 
 num_params <- as.integer(args[1]);
@@ -74,6 +76,23 @@ if(length(args) >= 8) {
   selection_scheme <- "ei"
 }
 
+if(length(args) >= 9) {
+  response_time_column <- tolower(args[9])
+} else {
+  response_time_column <- 2*num_params+5-1
+}
+
+if(selection_scheme == "ei") {
+  improv_flag = TRUE;
+  alc_flag = FALSE;
+} else if(selection_scheme == "alc") {
+  alc_flag = TRUE;
+  improv_flag = FALSE;
+} else {
+  alc_flag = FALSE;
+  improv_flag = FALSE;  
+}
+
 # Create a result list where we will save results
 result = list(analysis_date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
 
@@ -91,6 +110,7 @@ if(csv_exists) {
   # Extract the X design matrix. Its columns must be the first num_params
   # columns of the runs data frame.
   X = as.matrix(runs[,1:num_params])
+  colnames(X) <- names(runs)[(num_params+1):(2*num_params)]
 
   # Extract the Z response vector.
   Z = as.matrix(runs[,response_column])
@@ -125,16 +145,14 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
 
   cat("Performing sensitivity analysis\n")
   Ngrid <- 100
-  s <- suppressWarnings(sens(X=X, Z=Z, nn.lhs=300, model=btgp, 
+  s <- suppressWarnings(sens(X=X, Z=Z, nn.lhs=(100*num_params), model=btgp, 
 #    shape = shape, rect = rect,
     ngrid=Ngrid, span=0.3, BTE=c(5000,10000,10)))
 
-  #png('main_effects_per_var.png', width = 1600, height = 1200)
   pdf('main_effects_per_var.pdf')
   plot(s, layout="sens", main="", maineff=t(1:num_params))
   dev.off()
 
-  #png('sensitivty_per_var.png', width = 1600, height = 1200)
   pdf('sensitivity_per_var.pdf')
   plot(s, layout="sens", maineff=FALSE)
   dev.off()
@@ -144,22 +162,25 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
   result$sa_mean_total_sens_indices = colMeans(s$sens$T)
   result$sa_sd_1st_order_sens_indices = apply(s$sens$S, 2, sd)
   result$sa_sd_total_sens_indices = apply(s$sens$T, 2, sd)
+  result$sa_var_order_1st <- (1:num_params)[order(result$sa_mean_1st_order_sens_indices, decreasing = TRUE)]
+  result$sa_var_order_total <- (1:num_params)[order(result$sa_mean_total_sens_indices, decreasing = TRUE)]
 
-  # Find the values for the 5% best quantiles for each param
-  quantile <- 0.05
-  if(invert_response == TRUE) {
-    cutoffprob <- quantile;
-  } else {
-   cutoffprob <- 1.0 - quantile;
-  }
-  num_in_5 <- round(quantile*Ngrid);
-  best_sa <- matrix(rep.int(0, num_in_5*num_params), nrow=num_in_5)
-  for(pindex in 1:num_params) {
-    q <- as.double(quantile(s$sens$ZZ.mean[,pindex], probs=c(cutoffprob)))
-    # Bug below: Only saves first value instead of all of them...
-    best_sa[,pindex] <- s$sens$Xgrid[which(s$sens$ZZ.mean[,pindex] <= q),pindex]
-  }
-  result$best_sa <- best_sa
+  # Find the values for the 5% best quantiles for each param and save in results.
+  #quantile <- 0.05
+  #if(invert_response == TRUE) {
+  #  cutoffprob <- quantile;
+  #} else {
+  # cutoffprob <- 1.0 - quantile;
+  #}
+  #num_in_5 <- round(quantile*Ngrid);
+  #best_sa <- matrix(rep.int(0, num_in_5*num_params), nrow=num_in_5)
+  #for(pindex in 1:num_params) {
+  #  q <- as.double(quantile(s$sens$ZZ.mean[,pindex], probs=c(cutoffprob)))
+  #  best_sa[,pindex] <- s$sens$Xgrid[which(s$sens$ZZ.mean[,pindex] <= q),pindex]
+  #}
+  #result$best_sa <- best_sa
+  #result$best_sa_num_rows <- num_in_5
+  #result$best_sa_num_cols <- num_params
 }
 
 #####################################################################
@@ -172,7 +193,7 @@ if(csv_exists && nrow(runs) > 0) {
   cat("Sampling many points to select from\n")
   Xcandidates = sample_param_space(num_params, lhs_sample_size);
 
-  if(selection_scheme == "min") {
+  if(selection_scheme == "min" || selection_scheme == "minquick") {
 
     XX <- Xcandidates;
 
@@ -181,7 +202,6 @@ if(csv_exists && nrow(runs) > 0) {
     # Build model for selecting new points
     cat("Building model for selecting points\n")
     model <- btgp(X=X, Z=Z, pred.n=FALSE, basemax = basemax, R=num_tgp_runs)
-    #model2 <- btgpllm(X=X, Z=Z, pred.n=FALSE, basemax = basemax, R=num_tgp_runs)
 
     cat("Select a subset of points with most design value\n")
     num_points <- max(num_selected_design_points, num_new_runs);
@@ -190,27 +210,38 @@ if(csv_exists && nrow(runs) > 0) {
   }
 
   # Now predict in those points
-  pmodel <- btgp(X=X, Z=Z, XX=XX, basemax = basemax, corr="exp", improv=TRUE,
-    R=num_tgp_runs, krige = FALSE)
-  #pmodel2 <- btgpllm(X=X, Z=Z, XX=XX, basemax = basemax, corr="exp", improv=TRUE,
-  #  Ds2x=TRUE, R=num_tgp_runs, krige = FALSE)
+  pmodel <- btgp(X=X, Z=Z, XX=XX, basemax = basemax, corr="exp", 
+    improv = improv_flag, Ds2x = alc_flag, R=num_tgp_runs, krige = FALSE)
 
   # Write the tgp tree to file
   pdf('tgp_tree.pdf')
   tgp.trees(pmodel)
   dev.off()
 
-  # Write the posterior predictive surface per parameter to disk.
-  for(i in 1:num_params) {
-    name <- names(runs)[i+num_params]
-    pdf(paste('posterior_', i, '_', name, '.pdf', sep=""))
-    plot(pmodel, main=name, proj=c(i))
-    dev.off()
+  # Write the posterior predictive surface for the main effect to 2nd and from
+  # main effect to 3rd, if we performed a sensitivity analysis above.
+  if("sa_var_order_1st" %in% names(result)) {
+    if(num_params >= 2) {
+      v1 <- result$sa_var_order_1st[1]
+      v2 <- result$sa_var_order_1st[2]
+      namev1 <- names(runs)[v1+num_params]
+      namev2 <- names(runs)[v2+num_params]
+      pdf(paste('posterior_1_', namev1, '_2_', namev2, '.pdf', sep=""))
+      plot(pmodel, main=paste(namev1, " vs. ", namev2, sep=""), proj=c(v1, v2))
+      dev.off()
+
+      if(num_params >= 3) {
+        v3 <- result$sa_var_order_1st[3]
+        namev3 <- names(runs)[v3+num_params]
+        pdf(paste('posterior_1_', namev1, '_3_', namev3, '.pdf', sep=""))
+        plot(pmodel, main=paste(namev1, " vs. ", namev3, sep=""), proj=c(v1, v3))
+        dev.off()
+      }
+    }
   }
 
   # Predicted values
   ZZ = pmodel$ZZ.mean
-  #ZZ2 = pmodel2$ZZ.mean
 
   if(selection_scheme == "min") {
 
@@ -219,13 +250,44 @@ if(csv_exists && nrow(runs) > 0) {
     # Find the num_new_points points with minimum values and select those points.
     mins = sort(ZZ)
     index = which(ZZ %in% mins[1:num_new_runs])
-    #mins2 = sort(ZZ2)
-    #indmins2 = which(ZZ2 %in% mins2[1:num_new_runs])
+    XXsel <- XX[index,]
+
+  } else if(selection_scheme == "minquick") {
+
+    cat("Selection scheme: quickest candidate when minimizing response\n")
+
+    # Find the num_new_points*oversampling_factor_for_minquick points with 
+    # minimum values and select those points.
+    mins = sort(ZZ)
+    index_min = which(ZZ %in% mins[1:(num_new_runs*oversampling_factor_for_minquick)])
+
+    # Extract the response time column
+    Ztime = as.matrix(runs[,response_time_column])
+
+    # Now build a model for the median response time and then predict the response
+    # time for the selected candidate set.
+    cat("Building model of response time\n")
+    tmodel <- btgp(X=X, Z=Ztime, XX=XX, basemax = basemax, corr="exp", 
+      improv = FALSE, Ds2x = FALSE, R=num_tgp_runs, krige = FALSE)
+
+    # Get the predicted times
+    pred.times = tmodel$ZZ.mean
+
+    cat("Oversampled set:\n"); print.table(XX[index_min,]);
+    cat("Predicted response times for oversampled set: ", pred.times[index_min], "\n")
+
+    # Find the point(s) among them with minimum predicted time
+    min_times = sort(pred.times[index_min])
+    index = which(pred.times %in% min_times[1:num_new_runs])
+    result$predicted_times <- min_times[1:num_new_runs]
     XXsel <- XX[index,]
 
   } else if(selection_scheme == "alc") {
 
     cat("Selection scheme: Active Learning Cohn")
+
+    index <- which(pmodel$Ds2x$rank <= num_new_runs)
+    XXsel <- XX[index[1:num_new_runs], ]
 
   } else {
 
@@ -241,6 +303,10 @@ if(csv_exists && nrow(runs) > 0) {
   # Print some info
   cat("XXsel = ", XXsel, "\n");
   cat("Predicted values for XXsel, ZZ = ", ZZ[index], "\n");
+  result$predicted_responses <- ZZ[index]
+  if(selection_scheme == "minquick") {
+    cat("Predicted time XXsel, pred.times = ", pred.times[index], "\n");
+  }
 
   # Print some stats for some subsets of the top list predicted
   num_min = 5
