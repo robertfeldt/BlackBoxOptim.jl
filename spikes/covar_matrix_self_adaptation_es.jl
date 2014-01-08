@@ -63,50 +63,48 @@ function active_linear_utilities(mu, lambda)
 end
 
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES.
-function cmsa_es(problem; 
-  max_seconds = 2*numdims(problem), max_evals_per_dim = 1e5,
-  ftol = 1e-7,
-  max_rounds_without_improvement = 1000,
-  mu = false, lambda = false, 
-  covarMatrixSampler = EigenCovarSampler,
-  utilitiesFunc = linear_utilities,
+function cmsa_es(p; 
+  trace = true,
 
-  trace = true)
+  # Stopping criteria related
+  max_seconds = 4*numdims(p), max_evals_per_dim = 1e7,
+  ftol = 1e-7, xtol = 1e-10, stol = 1e-10,
+  max_rounds_without_improvement = 500,
 
-  n = numdims(problem)
-  ss = search_space(problem)
+  # Starting points, will be random unless specified
+  xmean = false,
 
-  max_evals = max_evals_per_dim * n
+  # Algorithm specific params:
+  covarMatrixSampler = CholeskyCovarSampler,
+  utilitiesFunc = log_utilities,
+  lambda = 4*numdims(p),
+  mu = int(max(ceil(lambda/rand(4:20)), 1.0)),
+  tau = 1 / sqrt(2*numdims(p)), # Equation (1) on page 5 in Beyer2008
+  tau_c = 1 + numdims(p) * (numdims(p) + 1) / (2 * mu),  # Equation (2) on page 5 in Beyer2008
+  sigma = 0.05*rand(1:8)*minimum(diameters(search_space(p))),
+  decompose_covar_prob = 0.4,
+  max_successes_before_increasing = 3,
+  max_failures_before_decreasing = 3
 
-  if lambda == false
-    # In the paper they try population sizes 8, 4n and 4*n*n, lets try
-    # in between:
-    #lambda = int(8 + (4*n*n - 8) * rand())
-    lambda = 4*n
-  end
+  )
 
-  if mu == false
-    mu = int(maximum([ceil(lambda/2), 2.0]))
-  end
-
-  tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008 
-  tau_c = 1 + n * (n + 1) / 2   # Equation (2) on page 5 in Beyer2008
+  N = numdims(p)
+  ss = search_space(p)
+  max_evals = max_evals_per_dim * N
   a = 1 - 1 / tau_c
-
-  sigma = 1.0                   # Mutation strength, sigma (self-adapted) 
-  C = covarMatrixSampler(n)
+  C = covarMatrixSampler(N)
   utilities = utilitiesFunc(mu, lambda)
-
   xbest = xmean = rand_individual(ss)   # Current best mean value.
-  fbest = eval1(xbest, problem)
+  fbest = eval1(xbest, p)
   num_fevals = 1
-
-  archive = BlackBoxOptim.TopListArchive(n, 10)
+  archive = BlackBoxOptim.TopListArchive(N, 10)
   add_candidate!(archive, fbest, xbest[:], num_fevals)
-
-  fevals_last_best = 0
+  fevals_last_best = num_fevals
   next_print_covar = 100
   termination_reason = "?"
+
+  num_successes = 0
+  num_failures = 0
 
   start_time = time()
 
@@ -123,32 +121,34 @@ function cmsa_es(problem;
       break
     end    
 
-    #################################################################
-    # Decompose the covar matrix for this round
-    #################################################################
-    decompose!(C)
+    # Decompose only with a given probability => saves time
+    if rand() <= decompose_covar_prob
+      decompose!(C)
+    end
 
     # Generate new population
     sigmas = sigma * exp( tau * randn(1, lambda) )  # 1*lambda
-    s = multivariate_normal_sample(C, n, lambda)
+    s = multivariate_normal_sample(C, N, lambda)
     z = broadcast(*, sigmas, s)                     # n*lambda
     xs = repmat(xmean, 1, lambda) + z               # n*lambda
 
     # Evaluate fitness
-    fitnesses = eval_fitnesses(problem, xs, lambda)
+    fitnesses = eval_fitnesses(p, xs, lambda)
     num_fevals += lambda
 
     # Check if best new fitness is best ever and print some info if tracing.
     indbest = indmin(fitnesses)
     fbest_new = fitnesses[indbest]
-    add_candidate!(archive, fbest_new, xs[:, indbest], num_fevals)
 
     if fbest_new < fbest
+      num_successes += 1 # From Solis-Wets
+      num_failures = 0   # From Solis-Wets
       xbest = xs[:, indbest]
       fbest = fbest_new
+      add_candidate!(archive, fbest, xbest, num_fevals)
       fevals_last_best = num_fevals
 
-      if fitness_is_within_ftol(problem, ftol, fbest)
+      if fitness_is_within_ftol(p, ftol, fbest)
         termination_reason = "Within ftol"
         break
       end
@@ -157,11 +157,17 @@ function cmsa_es(problem;
         println("$(num_fevals): Best fitness = $(fbest)")
         if num_fevals > next_print_covar
           next_print_covar = num_fevals + 100
-          #println("covar matrix:")
-          #show(C.C)
-          println("\ncovar summary: ", sumstats(C.C, (x) -> @sprintf("%.2e", x)))
+          println("covar summary: ", sumstats(C.C, (x) -> @sprintf("%.2e", x)))
+          println("sigma: ", sigma)
         end
       end
+    else
+      if (num_fevals - fevals_last_best) > max_rounds_without_improvement * lambda
+        termination_reason = "Max rounds without improvement reached"
+        break
+      end
+      num_failures += 1 # From Solis-Wets
+      num_successes = 0   # From Solis-Wets
     end
 
     # Assign weights to the best individuals according to the utilities vector.
@@ -171,26 +177,110 @@ function cmsa_es(problem;
     xmean += (z * weights)
 
     # Update the covariance matrix
-    ws = broadcast(*, weights', s)
-    update_covariance_matrix!(C, (ws * ws'), a)
-
-    # Terminate if max covar value is very small
-    if maximum(C.C) < 1e-300
-      termination_reason = "Max covar value very small"
-      break
+    uc = zeros(Float64, n, n)
+    for(i in 1:lambda)
+      if weights[i] > 0.0
+        se = s[:,i]
+        uc += weights[i] * (se * se')
+      end
     end
-
-    # Terminate if too long since no improvement
-    if (num_fevals - fevals_last_best) > max_rounds_without_improvement*lambda
-      termination_reason = "Too long since improvement"
-      break
-    end
+    update_covariance_matrix!(C, uc, a)
+    #ws = broadcast(*, weights', s)
+    #update_covariance_matrix!(C, (ws * ws'), covar_learning_rate)
 
     # Adapt sigma for next round
     sigma = sigmas * weights
+
+    # From solis-wets
+    if num_successes >= max_successes_before_increasing
+      println("Doubling!")
+      sigma = sigma * 2
+      num_successes = 0
+    elseif num_failures >= max_failures_before_decreasing
+      println("Halving!")
+      sigma = sigma / 2
+      num_failures = 0
+    end
+
+    # Terminate if sigma very small
+    #println("sigma = $(sigma[1,1])")
+    if sigma[1,1] < stol
+      termination_reason = "Sigma too small"
+      break
+    end
   end
 
   return xbest, fbest, num_fevals, termination_reason, archive
+end
+
+function restart_cmsa_es(p; 
+  trace = true,
+
+  # Stopping criteria related
+  max_seconds = 2*numdims(p), max_evals_per_dim = 1e7,
+  ftol = 1e-7, xtol = 1e-10, stol = 1e-10,
+
+  # Starting points, will be random unless specified
+  xmean = false,
+
+  # Start values for algorithm specific params:
+  lambda = 4*numdims(p),
+  lambda_divisor = 7,
+  covarMatrixSampler = CholeskyCovarSampler,
+  utilitiesFunc = log_utilities,
+  tau = 1 / sqrt(2*numdims(p)), # Equation (1) on page 5 in Beyer2008
+  covar_learning_rate = 0.88, 
+
+  )
+
+  now = start_time = time()
+
+  total_fbest = Inf
+  xb = total_fevals = termination_reason = 0
+  num_runs = 0
+
+  while(now < start_time + max_seconds)
+    time_left = max_seconds - (now - start_time)
+
+    num_runs += 1
+
+    x, fbest, num_fevals, termination_reason, archive = cmsa_es(p; 
+      trace = trace, max_seconds = time_left, 
+      ftol = ftol, xtol = xtol, stol = stol,
+      max_evals_per_dim = max_evals_per_dim,
+      max_rounds_without_improvement = 1000,
+      lambda = lambda, 
+      mu = int(maximum([ceil(lambda/lambda_divisor), 2.0])),
+      covarMatrixSampler = CholeskyCovarSampler, utilitiesFunc = log_utilities,
+      tau = tau, covar_learning_rate = covar_learning_rate
+    );
+
+    lambda += (4*numdims(p))
+    lambda_divisor = 5 + rand(1:15)
+    sigma = 0.10*rand(1:4)*minimum(diameters(search_space(p)))
+    covar_learning_rate = 0.85+0.01*rand(1:4)
+
+    total_fevals += num_fevals
+
+    if fbest < total_fbest
+      total_fbest = fbest
+      xb = x
+      println(num_runs, ": New global best = $(total_fbest)")
+
+      if fitness_is_within_ftol(p, ftol, fbest)
+        termination_reason = "Within ftol"
+        break
+      end
+    end
+
+    now = time()
+  end
+
+  if time() > start_time + max_seconds
+    termination_reason = "Exceeded time budget (elasped = $(time()-start_time))"
+  end
+
+  return xb, total_fbest, total_fevals, termination_reason, archive
 end
 
 function eval_fitnesses(problem, xs, lambda = size(xs, 2))
