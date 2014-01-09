@@ -192,12 +192,10 @@ function cmsa_es(p;
     sigma = sigmas * weights
 
     # From solis-wets
-    if num_successes >= max_successes_before_increasing
-      println("Doubling!")
+    if (max_successes_before_increasing >= 1.0) && (num_successes >= max_successes_before_increasing)
       sigma = sigma * 2
       num_successes = 0
-    elseif num_failures >= max_failures_before_decreasing
-      println("Halving!")
+    elseif (max_failures_before_decreasing >= 1.0) && (num_failures >= max_failures_before_decreasing)
       sigma = sigma / 2
       num_failures = 0
     end
