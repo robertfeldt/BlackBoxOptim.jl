@@ -177,7 +177,7 @@ function cmsa_es(p;
     xmean += (z * weights)
 
     # Update the covariance matrix
-    uc = zeros(Float64, n, n)
+    uc = zeros(Float64, N, N)
     for(i in 1:lambda)
       if weights[i] > 0.0
         se = s[:,i]
