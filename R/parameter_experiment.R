@@ -221,22 +221,14 @@ if(csv_exists && nrow(runs) > 0) {
   # Write the posterior predictive surface for the main effect to 2nd and from
   # main effect to 3rd, if we performed a sensitivity analysis above.
   if("sa_var_order_1st" %in% names(result)) {
-    if(num_params >= 2) {
-      v1 <- result$sa_var_order_1st[1]
-      v2 <- result$sa_var_order_1st[2]
-      namev1 <- names(runs)[v1+num_params]
-      namev2 <- names(runs)[v2+num_params]
-      pdf(paste('posterior_1_', namev1, '_2_', namev2, '.pdf', sep=""))
-      plot(pmodel, main=paste(namev1, " vs. ", namev2, sep=""), proj=c(v1, v2))
+    v1 <- result$sa_var_order_1st[1]
+    namev1 <- names(runs)[v1+num_params]
+    for(i in 2:num_params) {
+      vi <- result$sa_var_order_1st[i]
+      namevi <- names(runs)[vi+num_params]
+      pdf(paste('posterior_1_', i, '.pdf', sep=""))
+      plot(pmodel, main=paste(substr(namev1,1,6), " vs. ", substr(namevi, 1,6), sep=""), proj=c(v1, vi))
       dev.off()
-
-      if(num_params >= 3) {
-        v3 <- result$sa_var_order_1st[3]
-        namev3 <- names(runs)[v3+num_params]
-        pdf(paste('posterior_1_', namev1, '_3_', namev3, '.pdf', sep=""))
-        plot(pmodel, main=paste(namev1, " vs. ", namev3, sep=""), proj=c(v1, v3))
-        dev.off()
-      }
     }
   }
 
@@ -286,8 +278,10 @@ if(csv_exists && nrow(runs) > 0) {
 
     cat("Selection scheme: Active Learning Cohn")
 
-    index <- which(pmodel$Ds2x$rank <= num_new_runs)
-    XXsel <- XX[index[1:num_new_runs], ]
+    alc_sorted <- sort(pmodel$Ds2x, decreasing = FALSE)
+    min_to_include <- alc_sorted[num_new_runs]
+    index <- which(pmodel$Ds2x <= min_to_include)
+    XXsel <- XX[index, ]
 
   } else {
 
@@ -331,7 +325,7 @@ if(csv_exists && nrow(runs) > 0) {
 
 } else {
 
-  XXsel = sample_param_space(num_params, num_params+1);
+  XXsel = sample_param_space(num_params, num_new_runs);
 
 }
 
