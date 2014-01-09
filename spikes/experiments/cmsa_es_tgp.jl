@@ -334,3 +334,248 @@ for(i in 1:5)
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
 end
+
+# Ok, we have solved Rosenbrock from 8-d to 128-d. Lets address something harder. Griewank?
+n = 2
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe11 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+   "max_successes_before_increasing", "max_failures_before_decreasing"
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> int(ds[5])),
+   ((ds, ps) -> int(ds[6]))
+  ],
+  [( log10(4.0 + log(n)), log10(8*n)),
+   ( 1/30, 1/6),
+   (-2.0, 0.0),
+   (0.01, 0.99),
+   (2.0, 1000.0),
+   (2.0, 1000.0)
+  ]
+)
+outfile = "cmsa_es_exp11.csv"
+write_csv_header_to_file(pe11, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe11, outfile; num_repeats = 1)
+for(i in 1:13)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 13 6 $(outfile) new_runs.json sa ei`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe11, outfile; num_repeats = 1)
+end
+
+# Way too easy with 2-d Griewank though. Lets do 4-D and add all 7 params back in since the default value
+# for max rounds without improvement sometimes terminates runs too early if max_failures_before_decreasing
+# is also low.
+n = 4
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe12 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+   "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> int(ds[5])),
+   ((ds, ps) -> int(ds[6])),
+   ((ds, ps) -> int(10^ds[7]))
+  ],
+  [( log10(4.0 + log(n)), log10(4*n*n)),
+   ( 1/50, 1/2),
+   (-2.0, 0.0),
+   (0.01, 0.99),
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (2.0, 5.0)
+  ]
+)
+outfile = "cmsa_es_exp12.csv"
+write_csv_header_to_file(pe12, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
+for(i in 1:5)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
+end
+for(i in 1:10)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa min`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
+end
+for(i in 1:5)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
+end
+
+# The CMSA-ES performs rather badly here. Only one success in many tries, probably just by luck.
+# Will need to try with some other CMA versions to see if they can manage with Griewank.
+
+# Lets try a larger Griewank just to be sure it is generally bad for this.
+n = 16
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe13 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+   "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> int(ds[5])),
+   ((ds, ps) -> int(ds[6])),
+   ((ds, ps) -> int(10^ds[7]))
+  ],
+  [( log10(4.0 + log(n)), log10(4*n*n)),
+   ( 1/50, 1/2),
+   (-3.0, 0.0),
+   (0.01, 0.99),
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (2.0, 5.0)
+  ]
+)
+outfile = "cmsa_es_exp13.csv"
+write_csv_header_to_file(pe13, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
+for(i in 1:12)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
+end
+for(i in 1:10)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 19 7 $(outfile) new_runs.json sa alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
+end
+for(i in 1:10)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
+end
+
+# Strangely enough it works just fine for 16-D. Very strange. What is the problem with low-dim cases now; have
+# I introduced some bias when focusing on the high-dim cases?
+
+# Let's try 8D
+
+n = 8
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe = pe14 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+   "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> int(ds[5])),
+   ((ds, ps) -> int(ds[6])),
+   ((ds, ps) -> int(10^ds[7]))
+  ],
+  [( log10(4.0 + log(n)), log10(4*n*n)),
+   ( 1/50, 1/2),
+   (-3.0, 0.0),
+   (0.01, 0.99),
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (2.0, 5.0)
+  ]
+)
+outfile = "cmsa_es_exp14.csv"
+write_csv_header_to_file(pe14, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
+for(i in 1:12)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
+end
+for(i in 1:5)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
+end
+
+# It worked fine. Strange. lets try 4-d again.
+n = 4
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+outfile = "cmsa_es_exp15.csv"
+write_csv_header_to_file(pe, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
+for(i in 1:12)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
+end
+for(i in 1:5)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
+end
+
+# Now it works at least some of the time. So key was to do more than 1 run per setting... Lets try 2-D
+n = 2
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+outfile = "cmsa_es_exp16.csv"
+write_csv_header_to_file(pe, outfile)
+run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
+run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
+for(i in 1:12)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
+end
+for(i in 1:5)
+  run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
+end
+
+# Looks better. Ok, lets try Sphere 2-D with the new experiment function that
+# does it all. Just the simplest test to make sure everything works.
+
+n = 2
+p = as_fixed_dim_problem(BlackBoxOptim.example_problems["Sphere"], n)
+p = BlackBoxOptim.shifted(p)
+diameter = minimum(diameters(search_space(p)))
+
+pe = pe15 = ParameterExperiment(
+  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+   "max_successes_before_increasing", "max_failures_before_decreasing", 
+   "max_rounds_without_improvement", "tau_c"
+  ],
+  [((ds, ps) -> int(10^ds[1])),
+   ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
+   ((ds, ps) -> diameter * 10^ds[3]),
+   ((ds, ps) -> ds[4]),
+   ((ds, ps) -> int(ds[5])),
+   ((ds, ps) -> int(ds[6])),
+   ((ds, ps) -> int(10^ds[7])),
+   ((ds, ps) -> 1 + n * (n+1) / (ds[8]*ps[2]))
+  ],
+  [( log10(4.0 + log(n)), log10(4*n*n)),
+   ( 1/50, 1/2),
+   (-3.0, 0.0),
+   (0.01, 0.99),
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (-1000.0, 1000.0), # Inactive if less than 1
+   (1.0, 4.0),
+   (0.01, 100.0)
+  ]
+)
+
+# Do when with fewer repeats just to test things...
+explore_parameters(pe15, cmsa_es, p; experiment_prefix = "cmsa_es", num_repeats = 10)
