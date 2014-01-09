@@ -214,9 +214,9 @@ if(csv_exists && nrow(runs) > 0) {
     improv = improv_flag, Ds2x = alc_flag, R=num_tgp_runs, krige = FALSE)
 
   # Write the tgp tree to file
-  pdf('tgp_tree.pdf')
-  tgp.trees(pmodel)
-  dev.off()
+  #pdf('tgp_tree.pdf')
+  #tgp.trees(pmodel)
+  #dev.off()
 
   # Write the posterior predictive surface for the main effect to 2nd and from
   # main effect to 3rd, if we performed a sensitivity analysis above.
