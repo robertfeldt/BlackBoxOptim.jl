@@ -196,9 +196,10 @@ function explore_parameters(pe::ParameterExperiment, searchfunc, problem;
   end
 
   # Now run 10 new points that maximize success rate and select greedily to 
-  # minimize and be quick.
+  # minimize and be quick. I missed the negative sign on the first runs so skip
+  # those runs.
   for(i in 1:10)
-    run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 $(index_success_rate) $(nps) $(outfile) $(designfile) not minquick`)
+    run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 -$(index_success_rate) $(nps) $(outfile) $(designfile) not minquick`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc, 
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
   end
