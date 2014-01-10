@@ -71,7 +71,11 @@ end
 # tuple. This is used for filtering so that we only need to save one history 
 # value per magnitude class instead of saving them all.
 function magnitude_class(f::Float64)
-  (sign(f), floor(10.0*log10(abs(f)))/10.0)
+  if f == 0.0
+    (-1.0, 1e100)
+  else
+    (sign(f), floor(10.0*log10(abs(f)))/10.0)
+  end
 end
 
 # Save fitness history so we can reconstruct the most important events later.
