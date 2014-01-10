@@ -29,7 +29,16 @@ end
 
 function ackley(x)
   D = length(x)
-  20 - 20.*exp(-0.2.*sqrt(sum(x.^2)/D)) - exp(sum(cos(2 * π * x))/D) + e
+  try
+    20 - 20.*exp(-0.2.*sqrt(sum(x.^2)/D)) - exp(sum(cos(2 * π * x))/D) + e
+  catch e
+    # Sometimes we have gotten a DomainError from the cos function so we protect this call
+    println(e)
+    println("For input x = ", x)
+    # Return a very large fitness value to indicate that this is NOT the solution we want.
+    # TODO: Fix better way to handle this!
+    9.99e100
+  end
 end
 
 function schwefel1_2(x)
