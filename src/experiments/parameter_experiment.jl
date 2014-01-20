@@ -140,6 +140,22 @@ function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(runf
 
 end
 
+function run_with_parameters_from_json_file(pe::ParameterExperiment, designfile, searchfunc, problem;
+  experiment_prefix = "exp", num_repeats = 1, path_to_R_dir = "../../R")
+
+  nps = numparams(pe)
+  experiment_name = join([experiment_prefix, name(problem), numdims(problem), 
+    nps, "params", designfile], "_") 
+
+  outfile = join([experiment_name, ".csv"])
+
+  write_csv_header_to_file(pe, outfile)
+  
+  run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc, 
+    problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
+
+end
+
 function explore_parameters(pe::ParameterExperiment, searchfunc, problem; 
   experiment_prefix = "exp", num_repeats = 10,
   path_to_R_dir = "../../R")
