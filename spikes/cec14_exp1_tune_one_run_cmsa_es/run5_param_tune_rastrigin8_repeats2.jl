@@ -8,7 +8,7 @@ using BlackBoxOptim
 for(dim in [8])
 
   n = dim
-  p = BlackBoxOptim.as_fixed_dim_problem(BlackBoxOptim.example_problems["Griewank"], n)
+  p = BlackBoxOptim.as_fixed_dim_problem(BlackBoxOptim.example_problems["Rastrigin"], n)
   p = BlackBoxOptim.shifted(p)
   diameter = minimum(diameters(search_space(p)))
 
