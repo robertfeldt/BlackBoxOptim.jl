@@ -180,7 +180,7 @@ function explore_parameters(pe::ParameterExperiment, searchfunc, problem;
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
   end
 
-  # Now run 10 new points that minimize fitness magnitude and select greedily to minimize.
+  # Now run 10 new points that minimize fitness magnitude and select greedily to minimize execution time.
   for(i in 1:10)
     run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 $(index_magnitude) $(nps) $(outfile) $(designfile) not min`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc, 
