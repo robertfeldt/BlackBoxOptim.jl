@@ -11,7 +11,7 @@ export  Optimizer, PopulationOptimizer,
         XNESOpt, xnes,
 
         # Problems
-        Problems, is_fixed_dimensional, is_any_dimensional, 
+        Problems, FixedDimProblem, is_fixed_dimensional, is_any_dimensional, 
         is_single_objective_problem, is_multi_objective_problem,
         search_space, eval1, evalall, anydim_problem, as_fixed_dim_problem,
         fitness_is_within_ftol, save_fitness_history_to_csv_file,

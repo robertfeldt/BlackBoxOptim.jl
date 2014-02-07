@@ -5,6 +5,9 @@ type FixedDimProblem <: OptimizationProblem
   funcs::Vector{Function}  # Objective functions
   ss::SearchSpace
   fmins::Union(Nothing, Vector{Float64})
+  FixedDimProblem(name, funcs, ss, fmins = Nothing()) = begin
+    new(name, funcs, ss, fmins)
+  end
 end
 
 name(p::OptimizationProblem) = p.name
