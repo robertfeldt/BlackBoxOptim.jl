@@ -1,2 +1,2 @@
 external/*
-spikes/experiments/*.csv
+spikes/**/*.csv
