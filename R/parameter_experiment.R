@@ -5,13 +5,13 @@ library(tgp)
 library(rjson)
 library(lhs)
 library(optparse, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE)
-
+library(fields)
 
 #####################################################################
 # 0. Define constants and functions
 #####################################################################
 num_tgp_runs <- 3                 # Number of runs when building tgp models
-improvedlhs_num_repeats <- 25     # Number of points to consider for each added design point with improvedLHS
+improvedlhs_num_repeats <- 5      # Number of points to consider for each added design point with improvedLHS
 lhs_sample_size <- 500            # Number of candidate points sampled when selecting design points
 oversampling_factor_for_minquick <- 10 # Number of times more candidate points to include when minimizing, from which the quickest is then selected
 num_selected_design_points <- 50  # Number of selected design points for prediction
@@ -45,8 +45,8 @@ args <- commandArgs(trailingOnly = TRUE)
 # Example 
 # args <- c("6", "1", "15", "4", "cmsa_es_exp2.csv", "new_runs.json", "sa")
 # args <- c("6", "1", "-17", "6", "cmsa_es_exp9.csv", "new_runs.json", "sa", "min")
-# args <- c("6", "1", "-17", "6", "cmsa_es_exp6.csv", "new_runs.json", "sa", "minquick")
-# setwd("/Users/feldt/dev/BlackBoxOptim.jl/spikes/experiments")
+# args <- c("8", "1", "17", "8", "cmsa_es_Griewank_32_8_params.csv", "new_runs.json", "sa", "min")
+# setwd("/Users/feldt/feldt/research/projects/optimizing_hyperparameters_via_treed_gaussian_processes/experiments/1_5problems_6_dimensions")
 
 num_params <- as.integer(args[1]);
 #ranges <- matrix(eval(parse(text = args[2])), byrow=TRUE, nrow=num_params);
@@ -149,14 +149,6 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
 #    shape = shape, rect = rect,
     ngrid=Ngrid, span=0.3, BTE=c(5000,10000,10)))
 
-  pdf('main_effects_per_var.pdf')
-  plot(s, layout="sens", main="", maineff=t(1:num_params))
-  dev.off()
-
-  pdf('sensitivity_per_var.pdf')
-  plot(s, layout="sens", maineff=FALSE)
-  dev.off()
-
   # Save sensitivity indices stats in result
   result$sa_mean_1st_order_sens_indices = colMeans(s$sens$S)
   result$sa_mean_total_sens_indices = colMeans(s$sens$T)
@@ -165,22 +157,33 @@ if(csv_exists && (tolower(perform_sa) == "sa" || tolower(perform_sa) == "true"))
   result$sa_var_order_1st <- (1:num_params)[order(result$sa_mean_1st_order_sens_indices, decreasing = TRUE)]
   result$sa_var_order_total <- (1:num_params)[order(result$sa_mean_total_sens_indices, decreasing = TRUE)]
 
-  # Find the values for the 5% best quantiles for each param and save in results.
-  #quantile <- 0.05
-  #if(invert_response == TRUE) {
-  #  cutoffprob <- quantile;
-  #} else {
-  # cutoffprob <- 1.0 - quantile;
-  #}
-  #num_in_5 <- round(quantile*Ngrid);
-  #best_sa <- matrix(rep.int(0, num_in_5*num_params), nrow=num_in_5)
-  #for(pindex in 1:num_params) {
-  #  q <- as.double(quantile(s$sens$ZZ.mean[,pindex], probs=c(cutoffprob)))
-  #  best_sa[,pindex] <- s$sens$Xgrid[which(s$sens$ZZ.mean[,pindex] <= q),pindex]
-  #}
-  #result$best_sa <- best_sa
-  #result$best_sa_num_rows <- num_in_5
-  #result$best_sa_num_cols <- num_params
+  # Save the indices to the 4 most sensitive params (according to main effect)
+  most_sensitive <- result$sa_var_order_1st[1:4]
+
+  pdf('main_effects_per_var.pdf')
+  plot(s, layout="sens", main="", maineff=t(most_sensitive))
+  dev.off()
+
+  pdf('sensitivity_per_var.pdf')
+  plot(s, layout="sens", maineff=FALSE)
+  dev.off()
+
+  # Find the values for the best quantiles for each param and save in results.
+  # Since we have made sure to invert Z values above if we are maximizing we are
+  # always minimizing here and thus should select the bottom quantile.
+  quantile <- 0.05
+  num_in_top <- round(quantile*Ngrid);
+  best_sa <- matrix(rep.int(0, num_in_top*num_params), nrow=num_in_top)
+  for(pindex in 1:num_params) {
+    q <- as.double(quantile(s$sens$ZZ.mean[,pindex], probs=c(quantile)))
+    indices_that_give_best_outcome <- which(s$sens$ZZ.mean[,pindex] <= q)
+    perm <- order(s$sens$ZZ.mean[indices_that_give_best_outcome,pindex])
+    top_indices <- indices_that_give_best_outcome[perm][1:num_in_top]
+    best_sa[,pindex] <- s$sens$Xgrid[top_indices,pindex]
+  }
+  result$best_sa <- best_sa
+  result$best_sa_num_rows <- num_in_top
+  result$best_sa_num_cols <- num_params
 }
 
 #####################################################################
@@ -191,7 +194,7 @@ if(csv_exists && nrow(runs) > 0) {
 
   # Create a LHS sample of points to select from
   cat("Sampling many points to select from\n")
-  Xcandidates = sample_param_space(num_params, lhs_sample_size);
+  Xcandidates = sample_param_space(num_params, lhs_sample_size, improvedlhs_num_repeats);
 
   if(selection_scheme == "min" || selection_scheme == "minquick") {
 
@@ -223,11 +226,31 @@ if(csv_exists && nrow(runs) > 0) {
   if("sa_var_order_1st" %in% names(result)) {
     v1 <- result$sa_var_order_1st[1]
     namev1 <- names(runs)[v1+num_params]
+    best_values <- result$best_sa[1,]
+
     for(i in 2:num_params) {
       vi <- result$sa_var_order_1st[i]
       namevi <- names(runs)[vi+num_params]
-      pdf(paste('posterior_1_', i, '.pdf', sep=""))
+
+      # Plot posterior surface plot
+      pdf(paste('posterior_surface_1_', i, '.pdf', sep=""))
       plot(pmodel, main=paste(substr(namev1,1,6), " vs. ", substr(namevi, 1,6), sep=""), proj=c(v1, vi))
+      dev.off()
+
+      # Plot posterior image 2d plot when fixing the "other" vars at their best values
+      fixed_vars <- setdiff(1:num_params, c(v1, vi))
+      x1 = x2 = seq(0.0, 1.0, length.out=100)
+      grid <- expand.grid(x = x1, y = x2)
+      gridxx = matrix(rep(0.0, num_params*nrow(grid)), nrow=nrow(grid))
+      gridxx[,v1] <- grid$x
+      gridxx[,vi] <- grid$y
+      for(j in 1:length(fixed_vars)) {
+        gridxx[,fixed_vars[j]] <- rep(best_values[fixed_vars[j]], nrow(grid))
+      }
+      o <- predict(pmodel, XX=gridxx, pred.n=FALSE)
+      filename = paste('posterior_image_1_', i, '.pdf', sep="")
+      pdf(filename)
+      image.plot(x1, x2, matrix(o$ZZ.mean, nrow=length(x1)))
       dev.off()
     }
   }
@@ -325,7 +348,7 @@ if(csv_exists && nrow(runs) > 0) {
 
 } else {
 
-  XXsel = sample_param_space(num_params, num_new_runs);
+  XXsel = sample_param_space(num_params, num_new_runs, improvedlhs_num_repeats);
 
 }
 
