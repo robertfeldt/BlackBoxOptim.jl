@@ -110,6 +110,14 @@ Most optimizers have specific options that can be specified in the `method_optio
 * Schwefel2.22
 * Schwefel1.2
 * Rosenbrock
+* Step
+* Rastrigin
+* Ackley
+* Griewank
+* Ellipsoid
+
+and many more, see https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/src/problems/single_objective.jl
+for details.
 
 ## Planned Problems
 * BBOB/COCO (Black-Box Optimization Benchmark / COmparing Continuous Optimizers) problems:
