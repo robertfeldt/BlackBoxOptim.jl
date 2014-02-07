@@ -174,7 +174,8 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   numSteps = 1e4, 
   shw = true, 
   save = false, 
-  max_time = false)
+  max_time = false,
+  fitness_tolerance = 1e-11)
 
   # No max time if unspecified. If max time specified it takes precedence over
   # numSteps.
@@ -188,12 +189,29 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   num_better_since_last = 0
   tr("Starting optimization with optimizer $(name(opt))\n", shw, save)
 
+  archive = BlackBoxOptim.TopListArchive(numdims(problem), 3)
+
   step = 1
   num_fevals = 0
   t = last_report_time = start_time = time()
   elapsed_time = 0.0
 
-  while( (elapsed_time < max_time) && (step <= numSteps) )
+  while( true )
+
+    if elapsed_time > max_time
+      termination_reason = "Exceeded time budget"
+      break
+    end
+
+    if step > numSteps
+      termination_reason = "Exceeded max number of steps"
+      break
+    end
+
+    if delta_fitness(archive) < fitness_tolerance
+      termination_reason = "Delta fitness below tolerance"
+      break
+    end
 
     # Report every 0.5 seconds
     if (t - last_report_time) > 0.5
@@ -216,8 +234,11 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
 
     candidates = ask(opt)
     ranked_candidates = rank_by_fitness(candidates, problem)
-
     num_fevals += length(candidates) # For now, we assume they are all evaluated.
+
+    # Add best among the candidates
+    add_candidate!(archive, ranked_candidates[1][3], ranked_candidates[1][1], num_fevals)
+
     num_better_since_last += tell!(opt, ranked_candidates)
     step += 1
     t = time()

@@ -38,9 +38,19 @@ last_top_fitness(a::Archive) = a.fitnesses[a.count]
 
 should_enter_toplist(fitness::Float64, a::Archive) = fitness < last_top_fitness(a)
 
+# Delta fitness is the difference between the top two candidates found so far.
+# 
+function delta_fitness(a::Archive)
+  if length(a.fitness_history) < 2
+    Inf
+  else
+    abs(a.fitness_history[2][4] - a.fitness_history[1][4])
+  end
+end
+
 # Add a candidate with a fitness to the archive (if it is good enough).
 function add_candidate!(a::TopListArchive, fitness::Float64, 
-  candidate::Array{Float64, 1}, num_fevals::Int64 = -1)
+  candidate, num_fevals::Int64 = -1)
   a.num_fitnesses += 1
 
   if a.count < a.size
@@ -109,7 +119,7 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
   close(fh)
 end
 
-function push_then_sort_by_fitness!(fitness::Float64, candidate::Array{Float64, 1}, a::Archive)
+function push_then_sort_by_fitness!(fitness::Float64, candidate, a::Archive)
   push!(a.fitnesses, fitness)
   push!(a.candidates, candidate)
   order = sortperm(a.fitnesses)
