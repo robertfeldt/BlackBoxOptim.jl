@@ -145,7 +145,8 @@ example_problems = {
   "Rastrigin" => JadeFunctionSet[9],
   "Ackley" => JadeFunctionSet[10],
   "Griewank" => JadeFunctionSet[11],
-  "Ellipsoid" => anydim_problem("Ellipsoid", ellipsoid, (-65.536, 65.536), 0.0)
+  "Ellipsoid" => anydim_problem("Ellipsoid", ellipsoid, (-65.536, 65.536), 0.0),
+  "Cigar" => anydim_problem("Cigar", cigar, (-100.0, 100.0), 0.0)
 }
 
 
