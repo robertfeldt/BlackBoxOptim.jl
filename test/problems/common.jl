@@ -1,9 +1,9 @@
 using BlackBoxOptim
-using BlackBoxOptim.Problems
 
 function fitness_for_opt(problem, numDimensions, populationSize, numSteps, 
   optFunc = de_rand_1_bin_radiuslimited)
-  problem = BlackBoxOptim.Problems.set_numdims!(numDimensions, problem)
+
+  problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
 
   ss = search_space(problem)
 
