@@ -90,8 +90,7 @@ end
 function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(runfunc, 
   problem, pe::ParameterExperiment, outfilepath; 
   designfile = "new_runs.json", d01name = "best", num_repeats = 5, 
-  fixed_params = {:max_evals_per_dim => 1e7, 
-    :covarMatrixSampler => CholeskyCovarSampler,
+  fixed_params = {:max_evals_per_dim => 1e7,
     :utilitiesFunc => log_utilities})
 
   if !isfile(outfilepath)

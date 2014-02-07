@@ -15,6 +15,15 @@ function sphere(x)
   sum(x.^2)
 end
 
+# Schwefel's ellipsoid.
+function ellipsoid(x) 
+  res = 0
+  for(i in 1:length(x))
+    res += sum(x[1:i])^2
+  end
+  res
+end
+
 function elliptic(x)
   D = length(x)
   condition = 1e+6
@@ -136,6 +145,7 @@ example_problems = {
   "Rastrigin" => JadeFunctionSet[9],
   "Ackley" => JadeFunctionSet[10],
   "Griewank" => JadeFunctionSet[11],
+  "Ellipsoid" => anydim_problem("Ellipsoid", ellipsoid, (-65.536, 65.536), 0.0)
 }
 
 
