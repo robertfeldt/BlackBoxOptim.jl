@@ -229,6 +229,10 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
           num_better/step, num_better_since_last/step), shw, save)
         num_better_since_last = 0
       end
+
+      # Always print fitness
+      tr(@sprintf(", %.9f", best_fitness(archive)), shw, save)
+
       tr("\n", shw, save)
     end
 
