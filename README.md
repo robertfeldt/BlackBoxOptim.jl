@@ -49,6 +49,8 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
 
     res = compare_optimizers(rosenbrock, (-5.0, 5.0); dimensions = 30, max_time = 5.0);
 
+You can find more examples of using BlackBoxOptim in [the examples directory](https://github.com/robertfeldt/BlackBoxOptim.jl/tree/master/examples).
+
 # Configurable Options
 
 The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
@@ -118,17 +120,6 @@ Most optimizers have specific options that can be specified in the `method_optio
 
 ...and more, see https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/src/problems/single_objective.jl
 for details.
-
-## Planned Problems
-* BBOB/COCO (Black-Box Optimization Benchmark / COmparing Continuous Optimizers) problems:
-  - Separable (Unimodal):
-    1. Sphere
-  - Low or moderate condition (Unimodal):
-    8. Rosenbrock, original
-  - High condition (Unimodal):
-    10. Ellipsoid with monotone x-transformation, condition 1e6
-  - Multi-modal:
-    15. Rastrigin with both x-transformations, condition 10
 
 # Guide to selecting an optimizer
 
