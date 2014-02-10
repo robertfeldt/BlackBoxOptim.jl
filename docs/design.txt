@@ -1,0 +1,23 @@
+Rough overview of the design
+----------------------------
+
+Types:
+  Problem       = a problem to be optimized
+  SearchSpace   = space of allowed values of all decision variables
+  Optimizer     = optimization algorithm that can search for solutions to a problem
+  Parameters    = parameters that affects the search that an optimizer performs
+  FitnessScheme = a way to compare and rank candidate solutions to a problem
+  Evaluator     = evaluates and ranks candidate solutions to a problem by using a FitnessScheme
+  Archive       = saves a trace of the fitness improvements during optimization and a top list of the best candidates
+
+An Evaluator:
+ - counts the number of function evaluations an Optimizer does while searching
+ - saves a trace of the fitness improvements (in an Archive)
+ - saves a top list of the best candidates (in an Archive)
+
+An Archive:
+ - can dump the optimization trace (fitness improvements) to a csv file
+
+An Optimizer:
+ - might have the ask and tell interface and can thus be stepped in minimal steps (typically for "steady state" stepping)
+ - always has the stepped interface (for generational stepping)
