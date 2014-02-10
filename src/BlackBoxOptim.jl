@@ -10,6 +10,8 @@ export  Optimizer, PopulationOptimizer,
         SeparableNESOpt, separable_nes,
         XNESOpt, xnes,
 
+        Parameters,
+
         # Problems
         Problems, FixedDimProblem, is_fixed_dimensional, is_any_dimensional, 
         is_single_objective_problem, is_multi_objective_problem,
@@ -60,6 +62,7 @@ module Utils
   include("utilities/latin_hypercube_sampling.jl")
 end
 
+include("parameters.jl")
 include("fitness.jl")
 include("population.jl")
 include("frequency_adaptation.jl")
