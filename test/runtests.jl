@@ -4,6 +4,7 @@ my_tests = [
 
   "utilities/test_latin_hypercube_sampling.jl",
 
+  "test_parameters.jl",
   "test_fitness.jl",
   "test_population.jl",
   "test_bimodal_cauchy_distribution.jl",
