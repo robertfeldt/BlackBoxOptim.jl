@@ -63,4 +63,14 @@ facts("Parameters") do
 
   end
 
+  context("Constructing from another parameters object") do
+
+    ps1 = Parameters({:a => 1, "c" => 4}, {:a => 2, :b => 3})
+    ps2 = Parameters({:a => 5}, ps1, {:c => 6})
+
+    @fact ps2[:a] => 5
+    @fact ps2[:c] => 4
+
+  end
+
 end

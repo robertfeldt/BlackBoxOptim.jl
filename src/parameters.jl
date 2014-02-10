@@ -16,11 +16,11 @@ end
 function getindex(p::Parameters, key)
   stringkey = string(key)
   symbolkey = symbol(key)
-  for h in p.dicts
-    if haskey(h, symbolkey)
-      return getindex(h, symbolkey)
-    elseif haskey(h, stringkey)
-      return getindex(h, stringkey)
+  for d in p.dicts
+    if haskey(d, symbolkey)
+      return getindex(d, symbolkey)
+    elseif haskey(d, stringkey)
+      return getindex(d, stringkey)
     end
   end
   return nothing
@@ -28,4 +28,15 @@ end
 
 function setindex!(p::Parameters, value, key)
   setindex!(first(p.dicts), value, key)
+end
+
+import Base.haskey
+
+function haskey(p::Parameters, key)
+  for d in p.dicts
+    if haskey(d, key)
+      return true
+    end
+  end
+  return false
 end
