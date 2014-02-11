@@ -1,4 +1,7 @@
-# Implements the memtic search algorithms RS and RIS.
+# Implements variants of the memetic search algorithms RS and RIS. However,
+# we have modified them since they did not give very good performance when 
+# implemented as described in the papers below. Possibly, the papers are not
+# unambigous and I have misinterpreted something from them...
 #
 # The "Resampling Search" (RS) memetic algorithm is described in:
 #
@@ -69,7 +72,7 @@ function resampling_memetic_searcher(params)
 end
 
 function resampling_inheritance_memetic_searcher(params)
-  ResamplingMemeticSearcher(params[:Evaluator]; parameters = params)
+  ResamplingInheritanceMemeticSearcher(params[:Evaluator]; parameters = params)
 end
 
 # For Resampling Search (RS) the resample is purely random.
@@ -105,10 +108,13 @@ function step(rms::ResamplingMemeticSearcher)
   # the current elite so it has a "head start" compared to new sampled points
   # which have not yet gone through local refinement. Since the evaluator/archive
   # keeps the best candidates anyway there is no risk for us in always overwriting the elite...
-  set_as_elite_if_better(rms, trial, fitness)
+  #set_as_elite_if_better(rms, trial, fitness)
 
   # Then run the local search on the elite one until step length too small.
-  return local_search(rms)
+  trial, fitness = local_search(rms, trial, fitness)
+  set_as_elite_if_better(rms, trial, fitness)
+
+  return trial, fitness
 
 end
 
@@ -126,15 +132,16 @@ function stop_due_to_low_precision(rms::ResamplingMemeticSearcher, precisions)
   norm(precisions ./ rms.diameters) < rms.params[:PrecisionTreshold]
 end
 
-function local_search(rms::ResamplingMemeticSearcher)
+function local_search(rms::ResamplingMemeticSearcher, xt, tfitness)
   ps = copy(rms.precisions)
-  xt = copy(rms.elite)
-  oldfitness = tfitness = copy(rms.elite_fitness)
+  #xt = copy(rms.elite)
+  startfitness = copy(tfitness)
 
   #println("In: ps = $(ps), xt = $(xt), tfitness = $(tfitness)")
 
   while !stop_due_to_low_precision(rms, ps)
 
+    old_tfitness = copy(tfitness)
     xs = copy(xt)
 
     for i in 1:numdims(rms.evaluator)
@@ -145,14 +152,14 @@ function local_search(rms::ResamplingMemeticSearcher)
       #println("xs = $(xs), xt = $(xt), tfitness = $(tfitness)")
 
       if is_better(rms.evaluator, xs, tfitness)
-        #println("xs better 1! $(xt[i]) -> $(xs[i]), $(tfitness) -> $(last_fitness(rms.evaluator))")
+        println("xs better 1! $(xt[i]) -> $(xs[i]), $(tfitness) -> $(last_fitness(rms.evaluator))")
         xt[i] = xs[i]
         tfitness = last_fitness(rms.evaluator)
       else
         xs[i] = xt[i] + ps[i]/2
 
         if is_better(rms.evaluator, xs, tfitness)
-          #println("xs better 2! $(xt[i]) -> $(xs[i]), $(tfitness) -> $(last_fitness(rms.evaluator))")
+          println("xs better 2! $(xt[i]) -> $(xs[i]), $(tfitness) -> $(last_fitness(rms.evaluator))")
           xt[i] = xs[i]
           tfitness = last_fitness(rms.evaluator)
         end
@@ -160,13 +167,14 @@ function local_search(rms::ResamplingMemeticSearcher)
 
     end
 
-    if !set_as_elite_if_better(rms, xt, tfitness)
+    if tfitness >= old_tfitness
+    #if !set_as_elite_if_better(rms, xt, tfitness)
       ps = ps / 2
     end
 
   end
 
-  # println("oldfitness = $(oldfitness), tfitness = $(tfitness)")
+  println("in: $(startfitness), out: $(tfitness)")
 
   return xt, tfitness
 end
