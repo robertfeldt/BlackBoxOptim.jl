@@ -14,10 +14,18 @@ function points15(x)
 end
 
 # This is a hard problem so run for some time...
-MaxMinutes = 2
+MaxMinutes = 0.50
 
 # Run AdaptiveDE
-bboptimize(points15, (0.0, 1.0); dimensions = 45, max_time = MaxMinutes * 60)
+#bboptimize(points15, (0.0, 1.0); dimensions = 45, max_time = MaxMinutes * 60)
+
+compare_optimizers(points15, (0.0, 1.0); dimensions = 45, 
+  max_time = MaxMinutes * 60, 
+  methods = [
+    :adaptive_de_rand_1_bin_radiuslimited,
+    :resampling_inheritance_memetic_search
+  ]
+)
 
 # To run XNES on it we need to add a penalty for going outside the (0,1) box.
 function penalty(x, range)
@@ -29,7 +37,7 @@ end
 penalized_points15(x) = points15(x) + penalty(x, (0.0, 1.0))
 
 # Run XNES
-best, fitness = bboptimize(penalized_points15, (0.0, 1.0); dimensions = 45, 
-  max_time = MaxMinutes * 60, method = :xnes)
+#best, fitness = bboptimize(penalized_points15, (0.0, 1.0); dimensions = 45, 
+#  max_time = MaxMinutes * 60, method = :xnes)
 
-println("points15 fitness = ", points15(best))
+#println("points15 fitness = ", points15(best))
