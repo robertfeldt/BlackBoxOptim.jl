@@ -175,22 +175,22 @@ end
 # literature.
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(parameters = Dict(); sampler = random_sampler)
+function de_rand_1_bin(parameters = Dict(); sampler = random_sampler, name = "DE/rand/1/bin")
   params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
   params["NumParents"] = 3
-  DiffEvoOpt("DE/rand/1/bin", params[:Population], params[:SearchSpace], params, 
+  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params, 
     sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 
     rand_bound_from_target!)
 end
 
-function de_rand_2_bin(parameters = Dict(); sampler = random_sampler)
+function de_rand_2_bin(parameters = Dict(); sampler = random_sampler, name = "DE/rand/2/bin")
   params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 5 since de_mutation_rand_2 requires it.
   params["NumParents"] = 5
-  DiffEvoOpt("DE/rand/2/bin", params[:Population], params[:SearchSpace], params, 
+  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params, 
     sampler, 
     de_mutation_rand_2, 
     de_crossover_binomial, 
@@ -199,9 +199,9 @@ end
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
 function de_rand_1_bin_radiuslimited(parameters = Dict())
-  de_rand_1_bin(parameters; sampler = radius_limited_sampler)
+  de_rand_1_bin(parameters; sampler = radius_limited_sampler, name = "DE/rand/1/bin/radiuslimited")
 end
 
 function de_rand_2_bin_radiuslimited(parameters = Dict())
-  de_rand_2_bin(parameters; sampler = radius_limited_sampler)
+  de_rand_2_bin(parameters; sampler = radius_limited_sampler, name = "DE/rand/2/bin/radiuslimited")
 end
