@@ -16,7 +16,7 @@
 
 RSDefaultParameters = {
   :PrecisionRatio    => 0.40, # 40% of the diameter is used as the initial step length
-  :PrecisionTreshold => 1e-6  # This is the one they use in the papers; I want to set this even lower...
+  :PrecisionTreshold => 1e-6  # They use 1e-6 in the paper.
 }
 
 # SteppingOptimizer's do not have an ask and tell interface since they would be
@@ -54,6 +54,8 @@ type ResamplingMemeticSearcher <: SteppingOptimizer
 
   end
 end
+
+name(rs::ResamplingMemeticSearcher) = rs.name
 
 RISDefaultParameters = {
   :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
@@ -108,7 +110,7 @@ function step(rms::ResamplingMemeticSearcher)
   # the current elite so it has a "head start" compared to new sampled points
   # which have not yet gone through local refinement. Since the evaluator/archive
   # keeps the best candidates anyway there is no risk for us in always overwriting the elite...
-  #set_as_elite_if_better(rms, trial, fitness)
+  set_as_elite_if_better(rms, trial, fitness)
 
   # Then run the local search on the elite one until step length too small.
   trial, fitness = local_search(rms, trial, fitness)
@@ -132,16 +134,16 @@ function stop_due_to_low_precision(rms::ResamplingMemeticSearcher, precisions)
   norm(precisions ./ rms.diameters) < rms.params[:PrecisionTreshold]
 end
 
-function local_search(rms::ResamplingMemeticSearcher, xt, tfitness)
+function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
   ps = copy(rms.precisions)
-  #xt = copy(rms.elite)
-  startfitness = copy(tfitness)
+  xt = copy(xstart)
+  tfitness = copy(fitness)
 
-  #println("In: ps = $(ps), xt = $(xt), tfitness = $(tfitness)")
+  searchSpace = search_space(rms.evaluator)
+  ssmins, ssmaxs = mins(searchSpace), maxs(searchSpace)
 
   while !stop_due_to_low_precision(rms, ps)
 
-    old_tfitness = copy(tfitness)
     xs = copy(xt)
 
     for i in 1:numdims(rms.evaluator)
@@ -149,17 +151,24 @@ function local_search(rms::ResamplingMemeticSearcher, xt, tfitness)
       # This is how it is written in orig papers. To me it seems better to
       # take the step in a random direction; why prioritize one direction?
       xs[i] = xt[i] - ps[i]
-      #println("xs = $(xs), xt = $(xt), tfitness = $(tfitness)")
+
+      # rand bound from target if below min
+      if xs[i] < ssmins[i]
+        xs[i] = ssmins[i] + rand() * (xt[i] - ssmins[i])
+      end
 
       if is_better(rms.evaluator, xs, tfitness)
-        println("xs better 1! $(xt[i]) -> $(xs[i]), $(tfitness) -> $(last_fitness(rms.evaluator))")
         xt[i] = xs[i]
         tfitness = last_fitness(rms.evaluator)
       else
         xs[i] = xt[i] + ps[i]/2
 
+        # rand bound from target if above max
+        if xs[i] > ssmaxs[i]
+          xs[i] = xt[i] + rand() * (ssmaxs[i] - xt[i])
+        end
+
         if is_better(rms.evaluator, xs, tfitness)
-          println("xs better 2! $(xt[i]) -> $(xs[i]), $(tfitness) -> $(last_fitness(rms.evaluator))")
           xt[i] = xs[i]
           tfitness = last_fitness(rms.evaluator)
         end
@@ -167,14 +176,14 @@ function local_search(rms::ResamplingMemeticSearcher, xt, tfitness)
 
     end
 
-    if tfitness >= old_tfitness
-    #if !set_as_elite_if_better(rms, xt, tfitness)
+    if is_better(rms.evaluator, tfitness, fitness)
+      fitness = tfitness
+      xstart = xt
+    else
       ps = ps / 2
     end
 
   end
 
-  println("in: $(startfitness), out: $(tfitness)")
-
-  return xt, tfitness
+  return xstart, fitness
 end
