@@ -23,6 +23,6 @@ function tell!(rs::RandomSearcher, rankedCandidates)
   end
 end
 
-function random_search(searchSpace; population = nothing, options = {})
-  RandomSearcher(searchSpace)
+function random_search(parameters)
+  RandomSearcher(parameters[:SearchSpace])
 end

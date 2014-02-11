@@ -4,6 +4,10 @@
 # way in which these scores are considered in a coherent way.
 abstract FitnessScheme
 
+# A fitness datum is either complex or a FloatingPoint
+abstract ComplexFitness
+Fitness = Union(ComplexFitness, FloatingPoint)
+
 # In a RatioFitnessScheme the fitness values can be ranked on a ratio scale so
 # we need not rank them based on pairwise comparisons. The default scale used
 # is the aggregate of the fitness values.
@@ -13,7 +17,7 @@ worst_fitness(fs::FitnessScheme) = is_minimizing(fs) ? Inf : (-Inf)
 best_fitness(fs::FitnessScheme) = -worst_fitness(fs)
 is_minimizing(fs::FitnessScheme) = true # Default is to minimize, override if not
 
-hat_compare(a1::FloatingPoint, a2::FloatingPoint) = (a1 < a2) ? -1 : ((a1 > a2) ? 1 : 0)
+hat_compare(a1::Number, a2::Number) = (a1 < a2) ? -1 : ((a1 > a2) ? 1 : 0)
 
 # Hat comparison function that indicates which of fitness f1 and f2 is the better.
 # Returns -1 if f1 is better than f2, 1 if f2 is better than f1 and

@@ -10,7 +10,13 @@ export  Optimizer, PopulationOptimizer,
         SeparableNESOpt, separable_nes,
         XNESOpt, xnes,
 
+        # Parameters
         Parameters,
+
+        # Fitness
+
+        # Evaluator
+        ProblemEvaluator,
 
         # Problems
         Problems, FixedDimProblem, is_fixed_dimensional, is_any_dimensional, 
@@ -37,7 +43,23 @@ export  Optimizer, PopulationOptimizer,
         name
 
 abstract Optimizer
-abstract Evaluator
+
+include("parameters.jl")
+include("fitness.jl")
+include("archive.jl")
+
+module Utils
+  include("utilities/latin_hypercube_sampling.jl")
+end
+
+include("search_space.jl")
+include("population.jl")
+include("frequency_adaptation.jl")
+
+# Problems for testing
+include(joinpath("problems", "all_problems.jl"))
+
+include("evaluator.jl")
 
 function setup(o::Optimizer, evaluator::Evaluator)
   # Do nothing, override if you need to setup prior to the optimization loop
@@ -57,17 +79,6 @@ function name(o::Optimizer)
     return s
   end
 end
-
-module Utils
-  include("utilities/latin_hypercube_sampling.jl")
-end
-
-include("parameters.jl")
-include("fitness.jl")
-include("population.jl")
-include("frequency_adaptation.jl")
-include("search_space.jl")
-include("archive.jl")
 
 abstract PopulationOptimizer <: Optimizer
 
@@ -103,14 +114,14 @@ population(o::PopulationOptimizer) = o.population # Fallback method if sub-types
 # An archive collects information about the pareto optimal set or some 
 # approximation of it. Different archival strategies can be implemented.
 
+has_ask_tell_interface(o::Optimizer) = true # Default is to have an ask and tell interface...
+
 # Different optimization algorithms
 include("random_search.jl")
 include("differential_evolution.jl")
 include("adaptive_differential_evolution.jl")
 include("natural_evolution_strategies.jl")
-
-# Problems for testing
-include(joinpath("problems", "all_problems.jl"))
+include("resampling_memetic_search.jl")
 
 # End-user/interface functions
 include("bboptimize.jl")

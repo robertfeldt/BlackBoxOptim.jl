@@ -18,7 +18,7 @@ type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
   search_space::SearchSpace
 
   # Options
-  options::Dict{Any,Any}
+  options
 
   # Set of functions that together define a specific DE strategy.
   sample::Function
@@ -70,18 +70,22 @@ function tell!(de::AdaptConstantsDiffEvoOpt,
   num_better
 end
 
-function adaptive_de_rand_1_bin(searchSpace = BlackBoxOptim.symmetric_search_space(1); 
-  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = ADE_DefaultOptions)
-  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin", population, searchSpace, options, 
+function adaptive_de_rand_1_bin(parameters = Dict())
+  params = Parameters(parameters, ADE_DefaultOptions)
+  ss = get(params, :SearchSpace, BlackBoxOptim.symmetric_search_space(1))
+  population = get(params, :Population, BlackBoxOptim.rand_individuals_lhs(ss, 50))
+  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin", population, ss, params, 
     random_sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 
     rand_bound_from_target!)
 end
 
-function adaptive_de_rand_1_bin_radiuslimited(searchSpace = BlackBoxOptim.symmetric_search_space(1); 
-  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = ADE_DefaultOptions)
-  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin/radiuslimited", population, searchSpace, options, 
+function adaptive_de_rand_1_bin_radiuslimited(parameters = Dict())
+  params = Parameters(parameters, ADE_DefaultOptions)
+  ss = get(params, :SearchSpace, BlackBoxOptim.symmetric_search_space(1))
+  population = get(params, :Population, BlackBoxOptim.rand_individuals_lhs(ss, 50))
+  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin/radiuslimited", population, ss, params, 
     radius_limited_sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 

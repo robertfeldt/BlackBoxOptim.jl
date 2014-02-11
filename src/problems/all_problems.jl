@@ -68,7 +68,11 @@ function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
   FixedDimProblem(p.name, p.funcs, ss, p.fmins)
 end
 
-# A function set is specified through a duct mapping its function number
+function fixeddim_problem(f::Function; range = (-1.0, 1.0), dims = 5, name = "unknown")
+  as_fixed_dim_problem(anydim_problem(name, f, range), dims)
+end
+
+# A function set is specified through a dict mapping its function number
 # to an optimization problem. We can create a fixed dimensional variant of
 # an any dimensional function set with:
 function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dim::Int64)

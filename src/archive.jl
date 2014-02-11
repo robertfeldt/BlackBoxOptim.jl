@@ -49,7 +49,7 @@ function delta_fitness(a::Archive)
 end
 
 # Add a candidate with a fitness to the archive (if it is good enough).
-function add_candidate!(a::TopListArchive, fitness::Float64, 
+function add_candidate!(a::TopListArchive, fitness::Number, 
   candidate, num_fevals::Int64 = -1)
   a.num_fitnesses += 1
 
@@ -80,7 +80,8 @@ end
 # The magnitude class of a value is a tuple indicating its sign and scale in a 
 # tuple. This is used for filtering so that we only need to save one history 
 # value per magnitude class instead of saving them all.
-function magnitude_class(f::Float64)
+function magnitude_class(f::Number)
+  f = float(f)
   if f == 0.0
     (-1.0, 1e100)
   else
@@ -91,7 +92,7 @@ end
 # Save fitness history so we can reconstruct the most important events later.
 # We do this by only saving the first fitness event in its magnitude class, see
 # above.
-function push_to_fitness_history!(a::Archive, fitness::Float64, num_fevals::Int64 = -1)
+function push_to_fitness_history!(a::Archive, fitness::Number, num_fevals::Int64 = -1)
   mc = magnitude_class(fitness)
   if mc != a.last_magnitude_class
     a.last_magnitude_class = mc
@@ -119,7 +120,7 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
   close(fh)
 end
 
-function push_then_sort_by_fitness!(fitness::Float64, candidate, a::Archive)
+function push_then_sort_by_fitness!(fitness::Number, candidate, a::Archive)
   push!(a.fitnesses, fitness)
   push!(a.candidates, candidate)
   order = sortperm(a.fitnesses)

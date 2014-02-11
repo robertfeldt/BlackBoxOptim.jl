@@ -73,4 +73,29 @@ facts("Parameters") do
 
   end
 
+  context("Get key without default") do
+
+    ps = Parameters({:a => 1, "c" => 4}, {:a => 2, :b => 3})
+    @fact get(ps, :a) => 1
+    @fact get(ps, :b) => 3
+    @fact get(ps, :d) => nothing
+
+  end
+
+  context("Get key without default") do
+
+    ps = Parameters({:a => 1, "c" => 4}, {:a => 2, :b => 3})
+    @fact get(ps, :d, 10) => 10
+
+  end
+
+  context("Merge with Parameters or Dict") do
+
+    ps = Parameters({:a => 1, "c" => 4}, {:a => 2, :b => 3})
+    ps2 = merge(ps, {:d => 5, :a => 20})
+    @fact ps2[:d] => 5
+    @fact ps2[:b] => 3
+    @fact ps2[:a] => 20
+
+  end
 end

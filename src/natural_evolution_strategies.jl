@@ -45,12 +45,12 @@ NES_DefaultOptions = {
   "sigma_learnrate" => false, # If false it will be set based on the number of dimensions
 }
 
-function separable_nes(searchSpace; options = NES_DefaultOptions, population = false)
-  # Note that we do not care about the population given as a parameter;
-  # a NES generates a new population in every iteration so not used...
-  SeparableNESOpt(searchSpace; lambda = options["lambda"], 
-    mu_learnrate = options["mu_learnrate"], 
-    sigma_learnrate = options["sigma_learnrate"])
+function separable_nes(parameters)
+  params = merge(NES_DefaultOptions, parameters)
+  SeparableNESOpt(params[:SearchSpace]; 
+    lambda = params["lambda"], 
+    mu_learnrate = params["mu_learnrate"], 
+    sigma_learnrate = params["sigma_learnrate"])
 end
 
 calc_sigma_learnrate_for_snes(d) = (3 + log(d)) / (5 * sqrt(d))
@@ -139,8 +139,9 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   end
 end
 
-function xnes(searchSpace; options = NES_DefaultOptions, population = false)
-  XNESOpt(searchSpace; lambda = options["lambda"])
+function xnes(parameters)
+  params = merge(NES_DefaultOptions, parameters)
+  XNESOpt(params[:SearchSpace]; lambda = params["lambda"])
 end
 
 function ask(xnes::XNESOpt)

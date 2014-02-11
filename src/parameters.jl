@@ -30,7 +30,7 @@ function setindex!(p::Parameters, value, key)
   setindex!(first(p.dicts), value, key)
 end
 
-import Base.haskey
+import Base.haskey, Base.get, Base.merge
 
 function haskey(p::Parameters, key)
   for d in p.dicts
@@ -40,3 +40,12 @@ function haskey(p::Parameters, key)
   end
   return false
 end
+
+function get(p::Parameters, key, default = nothing)
+  value = getindex(p, key)
+  return (value == nothing ? default : value)
+end
+
+# In a merge the last parameter should be prioritized since this is the way
+# the normal Julia merge of dicts works.
+merge(p1::Union(Dict, Parameters), p2::Union(Dict, Parameters)) = Parameters(p2, p1)

@@ -23,7 +23,7 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
   search_space::SearchSpace
 
   # Options
-  options::Dict{Any,Any}
+  options
 
   # Set of functions that together define a specific DE strategy.
   sample::Function
@@ -175,36 +175,33 @@ end
 # literature.
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(searchSpace; 
-  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
+function de_rand_1_bin(parameters = Dict(); sampler = random_sampler)
+  params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
-  options["NumParents"] = 3
-  DiffEvoOpt("DE/rand/1/bin", population, searchSpace, options, 
-    random_sampler, 
+  params["NumParents"] = 3
+  DiffEvoOpt("DE/rand/1/bin", params[:Population], params[:SearchSpace], params, 
+    sampler, 
     de_mutation_rand_1, 
     de_crossover_binomial, 
     rand_bound_from_target!)
 end
 
-function de_rand_2_bin(searchSpace; 
-  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
+function de_rand_2_bin(parameters = Dict(); sampler = random_sampler)
+  params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 5 since de_mutation_rand_2 requires it.
-  options["NumParents"] = 5
-  DiffEvoOpt("DE/rand/1/bin", population, searchSpace, options, 
-    random_sampler, 
+  params["NumParents"] = 5
+  DiffEvoOpt("DE/rand/2/bin", params[:Population], params[:SearchSpace], params, 
+    sampler, 
     de_mutation_rand_2, 
     de_crossover_binomial, 
     rand_bound_from_target!)
 end
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
-function de_rand_1_bin_radiuslimited(searchSpace; 
-  population = BlackBoxOptim.rand_individuals_lhs(searchSpace, 50), options = DE_DefaultOptions)
-  # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
-  options["NumParents"] = 3
-  DiffEvoOpt("DE/rand/1/bin/radiuslimited", population, searchSpace, options, 
-    radius_limited_sampler, 
-    de_mutation_rand_1, 
-    de_crossover_binomial, 
-    rand_bound_from_target!)
+function de_rand_1_bin_radiuslimited(parameters = Dict())
+  de_rand_1_bin(parameters; sampler = radius_limited_sampler)
+end
+
+function de_rand_2_bin_radiuslimited(parameters = Dict())
+  de_rand_2_bin(parameters; sampler = radius_limited_sampler)
 end
