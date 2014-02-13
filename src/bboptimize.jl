@@ -12,53 +12,128 @@ ValidMethods = {
   :resampling_inheritance_memetic_search => BlackBoxOptim.resampling_inheritance_memetic_searcher
 }
 
-function compare_optimizers(func::Function, searchRange; methods = keys(ValidMethods),
-  iterations = 10000,
-  max_time = 3.0,
-  dimensions = :NotSpecified,
-  show_trace::Bool = true,
-  save_trace::Bool = false,
-  population_size::Integer = 50,
-  method_params = Dict())
+MethodNames = collect(keys(ValidMethods))
+
+# Default parameters for all convenience methods that are exported to the end user.
+DefaultParameters = {
+  :NumDimensions  => :NotSpecified, # Dimension of problem to be optimized
+  :SearchRange    => (-10.0, 10.0), # Default search range to use per dimension unless specified
+  :SearchSpace    => false, # Search space can be directly specified and takes precedence over Dimension and SearchRange if specified.
+
+  :MaxTime        => false,   # Max time in seconds (takes precedence over the other budget-related params if specified)
+  :MaxFuncEvals   => false,   # Max func evals (takes precedence over max iterations, but not max time)
+  :MaxSteps       => 10000,   # Max iterations gives the least control since different optimizers have different "size" of their "iterations"
+  :MinDeltaFitnessTolerance => 1e-11, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
+
+  :NumRepetitions => 1,     # Number of repetitions to run for each optimizer for each problem
+
+  :ShowTrace      => true,  # Print tracing information during the optimization
+  :TraceInterval  => 0.50,  # Minimum number of seconds between consecutive trace messages printed to STDOUT
+  :SaveTrace      => false, 
+  :SaveFitnessTraceToCsv => false, # Save a csv file with information about the major fitness improvement events (only the first event in each fitness magnitude class is saved)
+  :SaveParameters => false, # Save parameters to a json file for later scrutiny
+
+  :RandomizeRngSeed => true, # Randomize the RngSeed value before using any random numbers.
+  :RngSeed        => 1234,   # The specific random seed to set before any random numbers are generated. The seed is randomly selected if RandomizeRngSeed is true, and this parameter is updated with its actual value.
+
+  :PopulationSize => 50
+}
+
+# Create a problem given 
+#   a problem or 
+#   a function and a search range or
+#   a function and a
+# while possibly updating the params with the specific dimension and search 
+# space to be used.
+function setup_problem(functionOrProblem; parameters = Dict())
+
+  params = Parameters(parameters, DefaultParameters)
+
+  # If an OptimizationProblem was given it takes precedence over the search range param setting.
+  if issubtype(typeof(functionOrProblem), OptimizationProblem)
+
+    # If a fixed dim problem was given it takes precedence over the dimension param setting.
+    if typeof(functionOrProblem) == FixedDimProblem
+      problem = functionOrProblem
+    else 
+      # If an anydim problem was given the dimension param must have been specified.
+      if params[:NumDimensions] == :NotSpecified
+        throw(ArgumentError("You MUST specify the number of dimensions in a solution when an any-dimensional problem is given"))
+      else
+        problem = as_fixed_dim_problem(functionOrProblem, parameters[:NumDimensions])
+      end
+    end
+
+  elseif typeof(functionOrProblem) == Function
+
+    # Check that a valid search space has been stated and create the search_space
+    # based on it, or bail out.
+    if typeof(params[:SearchRange]) == typeof( (0.0, 1.0) )
+      if params[:NumDimensions] == :NotSpecified
+        throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
+      end
+      params[:SearchSpace] = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
+    elseif typeof(params[:SearchRange]) == typeof( [(0.0, 1.0)] )
+      params[:SearchSpace] = RangePerDimSearchSpace(params[:SearchRange])
+      params[:NumDimensions] = length(params[:SearchRange])
+    else
+      throw(ArgumentError("Invalid search range specification."))
+    end
+
+    # Now create an optimization problem with the given information. We currently reuse the type
+    # from our pre-defined problems so some of the data for the constructor is dummy.
+    problem = fixeddim_problem(functionOrProblem; 
+      search_space = params[:SearchSpace], range = params[:SearchRange],
+      dims = params[:NumDimensions]
+    )
+
+  end
+
+  params[:SearchSpace] = search_space(problem)
+
+  return problem, params
+
+end
+
+function compare_optimizers(functionOrProblem::Union(Function, OptimizationProblem); 
+  max_time = false, search_space = false, search_range = (0.0, 1.0), dimensions = 2,
+  methods = MethodNames, parameters = Dict())
+
+  params = Parameters(parameters, DefaultParameters)
 
   results = Any[]
   for(m in methods)
     tic()
-    best, fitness = bboptimize(func, searchRange; method = m, iterations = iterations,
-      max_time = max_time, dimensions = dimensions, 
-      show_trace = show_trace, save_trace = save_trace, 
-      population_size = population_size, method_params = method_params)
+    best, fitness = bboptimize(functionOrProblem; method = m, parameters = parameters,
+      max_time = max_time, search_space = search_space, dimensions = dimensions,
+      search_range = search_range)
     push!( results,  (m, best, fitness, toq()) )
   end
 
   sorted = sort( results, by = (t) -> t[3] )
 
-  if show_trace
+  if params[:ShowTrace]
     for(i in 1:length(sorted))
-      println("$(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
+      println("$(i). $(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
     end
   end
 
   return sorted
+
 end
 
-function compare_optimizers(funcsAndRanges; methods = collect(keys(ValidMethods)),
-  iterations = 10000,
-  max_time = 2.0,
-  dimensions = :NotSpecified,
-  show_trace::Bool = true,
-  save_trace::Bool = false,
-  population_size::Integer = 50,
-  method_params = Dict())
-  
-  # Lets create an array where we will save how the methods ranks per problem.
-  ranks = zeros(length(methods), length(funcsAndRanges))
-  fitnesses = zeros(Float64, length(methods), length(funcsAndRanges))
+function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = false,
+  methods = MethodNames, parameters = Dict())
 
-  for(i in 1:length(funcsAndRanges))
-    res = compare_optimizers(funcsAndRanges[i][1], funcsAndRanges[i][2]; methods = methods, iterations = iterations,
-      dimensions = dimensions, show_trace = show_trace, save_trace = save_trace, 
-      population_size = population_size, method_params = method_params, max_time = max_time)
+  # Lets create an array where we will save how the methods ranks per problem.
+  ranks = zeros(length(methods), length(problems))
+  fitnesses = zeros(Float64, length(methods), length(problems))
+
+  problems = collect(problems)
+
+  for i in 1:length(problems)
+    name, p = problems[i]
+    res = compare_optimizers(p; max_time = max_time, methods = methods, parameters = parameters)
     for(j in 1:length(res))
       method, best, fitness, time = res[j]
       index = findfirst(methods, method)
@@ -71,155 +146,145 @@ function compare_optimizers(funcsAndRanges; methods = collect(keys(ValidMethods)
   avg_fitness = mean(fitnesses, 2)
 
   perm = sortperm(avg_ranks[:])
-  println("By avg rank:")
+  println("\nBy avg rank:")
   for(i in 1:length(methods))
     j = perm[i]
-    print("$(i). $(methods[j]), average rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), ranks = $(ranks[j,:])")
+    print("\n$(i). $(methods[j]), average rank = $(round(avg_ranks[j], 3)), avg fitness = $(round(avg_fitness[j], 5)), ranks = ")
+    showcompact(ranks[j,:][:])
   end
 
   perm = sortperm(avg_fitness[:])
-  println("By avg fitness:")
+  println("\n\nBy avg fitness:")
   for(i in 1:length(methods))
     j = perm[i]
-    print("$(i). $(methods[j]), average rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), ranks = $(ranks[j,:])")
+    print("\n$(i). $(methods[j]), average rank = $(round(avg_ranks[j], 3)), avg fitness = $(round(avg_fitness[j], 5)), ranks = ")
+    showcompact(ranks[j,:][:])
   end
 
   return ranks, fitnesses
 end
 
-DefaultParameters = {
-  :MaxTime => false,
-  :MaxSteps => 10000,
-  :Dimensions => :NotSpecified,
-  :PopulationSize => 50,
-  :FitnessTolerance => 1e-11
-}
+function bboptimize(functionOrProblem; max_time = false,
+  search_space = false, search_range = (0.0, 1.0), dimensions = 2,
+  method = :adaptive_de_rand_1_bin_radiuslimited, 
+  parameters = Dict())
 
-function bboptimize(func::Function, searchRange; method = :adaptive_de_rand_1_bin_radiuslimited,
-  max_time = false,
-  iterations = 10000,
-  dimensions = :NotSpecified,
-  show_trace::Bool = true,
-  save_trace::Bool = false,
-  population_size::Integer = 50,
-  method_params = Dict())
+  params = Parameters(parameters, DefaultParameters)
+  params[:MaxTime] = max_time
+  params[:SearchSpace] = search_space
+  params[:SearchRange] = search_range
+  params[:NumDimensions] = dimensions
 
-  # Check that a valid search space has been stated and create the search_space
-  # based on it, or bail out.
-  if typeof(searchRange) == typeof( (0.0, 1.0) )
-    if dimensions == :NotSpecified
-      throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
-    end
-    search_space = symmetric_search_space(dimensions, searchRange)
-  elseif typeof(searchRange) == typeof( [(0.0, 1.0)] )
-    if dimensions != :NotSpecified
-      throw(ArgumentError("You CANNOT specify the number of dimensions in a solution when first stating the search space ranges $(searchRange)"))
-    end
-    dimensions = length(searchRange)
-    search_space = RangePerDimSearchSpace(searchRange)
-  else
-    throw(ArgumentError("Invalid search range specification. Either give only a range (ex: (0.0, 1.0)) AND the number of dimensions (ex: 2) or give an array of ranges (ex: [(0.0, 1.0), (10.0, 12.5)])."))
-  end
+  problem, params = setup_problem(functionOrProblem; parameters = params)
 
   # Create a random solution from the search space and ensure that the given function returns a Number.
-  ind = rand_individual(search_space)
-  res = func(ind)
+  ind = rand_individual(params[:SearchSpace])
+  res = eval1(ind, problem)
   if !(typeof(res) <: Number)
     throw(ArgumentError("The supplied function does NOT return a number when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 
   # Check that max_time is larger than zero if it has been specified.
-  if max_time != false
-    if max_time <= 0.0
+  if params[:MaxTime] != false
+    if params[:MaxTime] <= 0.0
       throw(ArgumentError("The max_time must be a positive number"))
     else
-      max_time = convert(Float64, max_time)
+      params[:MaxTime] = convert(Float64, params[:MaxTime])
     end
   end
 
   # Check that a valid number of iterations has been specified. Print warning if higher than 1e8.
-  if iterations < 1
+  if params[:MaxFuncEvals] != false
+    if params[:MaxFuncEvals] < 1
+      throw(ArgumentError("The number of function evals MUST be a positive number"))
+    elseif params[:MaxFuncEvals] >= 1e8
+      println("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
+    end
+  end
+
+  # Check that a valid number of iterations has been specified. Print warning if higher than 1e8.
+  if params[:MaxSteps] < 1
     throw(ArgumentError("The number of iterations MUST be a positive number"))
-  elseif iterations >= 1e8
-    println("Number of allowed iterations is $(iterations); this can take a LONG time")
+  elseif params[:MaxSteps] >= 1e7
+    println("Number of allowed iterations is $(params[:MaxSteps]); this can take a LONG time")
   end
 
   # Check that a valid population size has been given.
-  if population_size < 2
+  if params[:PopulationSize] < 2
     throw(ArgumentError("The population size MUST be at least 2"))
   end
 
-  # Now create an optimization problem with the given information. We currently reuse the type
-  # from our pre-defined problems so some of the data for the constructor is dummy.
-  problem = BlackBoxOptim.FixedDimProblem("interactive", [func], search_space)
-
   # Check that a valid method has been specified and then set up the optimizer
-  if (typeof(method) != Symbol) || !any([(method == vm) for vm in keys(ValidMethods)])
-    throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(ValidMethods)")) 
+  if (typeof(method) != Symbol) || !any([(method == vm) for vm in MethodNames])
+    throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)")) 
   end
-  pop = BlackBoxOptim.rand_individuals_lhs(search_space, population_size)
-  optimizer_func = ValidMethods[method]
+  pop = BlackBoxOptim.rand_individuals_lhs(params[:SearchSpace], params[:PopulationSize])
 
-  params = Parameters(method_params, DefaultParameters, {
+  params = Parameters(params, {
     :Evaluator    => ProblemEvaluator(problem),
     :Population   => pop,
     :SearchSpace  => search_space
   })
+  optimizer_func = ValidMethods[method]
   optimizer = optimizer_func(params)
 
-  run_optimizer_on_problem(optimizer, problem; params = params,
-   numSteps = iterations, shw = show_trace, save = save_trace, max_time = max_time)
+  run_optimizer_on_problem(optimizer, problem; parameters = params)
 end
 
-function tr(msg, showTrace, saveTrace, obj = None)
-  if showTrace
+function tr(msg, parameters, obj = None)
+  if parameters[:ShowTrace]
     print(msg)
     if obj != None
       show(obj)
     end
   end
-  if saveTrace
+  if parameters[:SaveTrace]
     # No saving for now
   end
 end
 
 function find_best_individual(e::Evaluator, opt::PopulationOptimizer)
   (best_candidate(e.archive), 1, best_fitness(e.archive))
-#  best_candidate(e.archive)
-  #pop = population(opt)
-  #candidates = [(pop[i,:], i) for i in 1:size(pop,1)]
-  #rank_by_fitness(e, candidates)[1]
 end
 
 function find_best_individual(e::Evaluator, opt::Optimizer)
   (best_candidate(e.archive), 1, best_fitness(e.archive))
-  #(opt.best, 1, opt.best_fitness)
 end
 
 function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
-  numSteps = 1e4, 
-  shw = true, 
-  save = false, 
-  max_time = false,
-  fitness_tolerance = 1e-11,
-  params = Dict())
+  parameters = Dict())
+
+  if parameters[:RandomizeRngSeed]
+    parameters[:RngSeed] = rand(1:int(1e6))
+    srand(parameters[:RngSeed])
+  end
 
   # No max time if unspecified. If max time specified it takes precedence over
-  # numSteps.
-  if max_time == false
+  # max_steps and MaxFuncEvals. If no max time MaxFuncEvals takes precedence over
+  # MaxSteps.
+  if parameters[:MaxTime] == false
     max_time = Inf
+    if parameters[:MaxFuncEvals] != false
+      max_fevals = parameters[:MaxFuncEvals]
+      max_steps = Inf
+    else
+      max_steps = parameters[:MaxSteps]
+      max_fevals = Inf
+    end
   else
-    numSteps = Inf
+    max_steps = Inf
+    max_fevals = Inf
+    max_time = parameters[:MaxTime]
   end
 
   # Now set up an evaluator for this problem. This will handle fitness
   # comparisons, keep track of the number of function evals as well as
   # keep an archive and top list.
-  evaluator = get(params, :Evaluator, ProblemEvaluator(problem))
+  evaluator = get(parameters, :Evaluator, ProblemEvaluator(problem))
 
   num_better = 0
   num_better_since_last = 0
-  tr("Starting optimization with optimizer $(name(opt))\n", shw, save)
+  tr("Starting optimization with optimizer $(name(opt))\n", parameters)
 
   step = 1
   t = last_report_time = start_time = time()
@@ -232,39 +297,44 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       break
     end
 
-    if step > numSteps
+    if num_evals(evaluator) > max_fevals
+      termination_reason = "Exceeded max number of function evaluations"
+      break
+    end
+
+    if step > max_steps
       termination_reason = "Exceeded max number of steps"
       break
     end
 
-    if delta_fitness(evaluator.archive) < fitness_tolerance
+    if delta_fitness(evaluator.archive) < parameters[:MinDeltaFitnessTolerance]
       termination_reason = "Delta fitness below tolerance"
       break
     end
 
-    # Report every 0.5 seconds
-    if (t - last_report_time) > 0.5
+    # Report on progress every now and then...
+    if (t - last_report_time) > parameters[:TraceInterval]
       last_report_time = t
       num_better += num_better_since_last
 
       # Always print step number, num fevals and elapsed time
       tr(@sprintf("%.2f secs, %d evals , %d steps", 
-        elapsed_time, num_evals(evaluator), step), shw, save) 
+        elapsed_time, num_evals(evaluator), step), parameters) 
 
       # Only print if this optimizer reports on number of better. They return 0
       # if they do not.
       if num_better_since_last > 0
         tr(@sprintf(", improv/step: %.3f (last = %.4f)", 
-          num_better/step, num_better_since_last/step), shw, save)
+          num_better/step, num_better_since_last/step), parameters)
         num_better_since_last = 0
       end
 
       # Always print fitness if num_evals > 0
       if num_evals(evaluator) > 0
-        tr(@sprintf(", %.9f", best_fitness(evaluator.archive)), shw, save)
+        tr(@sprintf(", %.9f", best_fitness(evaluator.archive)), parameters)
       end
 
-      tr("\n", shw, save)
+      tr("\n", parameters)
     end
 
     if has_ask_tell_interface(opt)
@@ -290,20 +360,20 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
 
   step -= 1 # Since it is one too high after while loop above
 
-  tr("\nOptimization stopped after $(step) steps and $(elapsed_time) seconds\n", shw, save)
-  tr("Steps per second = $(step/elapsed_time)\n", shw, save)
-  tr("Function evals per second = $(num_evals(evaluator)/elapsed_time)\n", shw, save)
-  tr("Improvements/step = $((num_better+num_better_since_last)/numSteps)\n", shw, save)
+  tr("\nOptimization stopped after $(step) steps and $(elapsed_time) seconds\n", parameters)
+  tr("Steps per second = $(step/elapsed_time)\n", parameters)
+  tr("Function evals per second = $(num_evals(evaluator)/elapsed_time)\n", parameters)
+  tr("Improvements/step = $((num_better+num_better_since_last)/max_steps)\n", parameters)
   if typeof(opt) <: PopulationOptimizer
-    tr("\nMean value (in population) per position:", shw, save, mean(population(opt),1))
-    tr("\n\nStd dev (in population) per position:", shw, save, std(population(opt),1))
+    tr("\nMean value (in population) per position:", parameters, mean(population(opt),1))
+    tr("\n\nStd dev (in population) per position:", parameters, std(population(opt),1))
   end
   best, index, fitness = find_best_individual(evaluator, opt)
-  tr("\n\nBest candidate found: ", shw, save, best)
-  tr("\n\nFitness: ", shw, save, fitness)
-  tr("\n\n", shw, false)
+  tr("\n\nBest candidate found: ", parameters, best)
+  tr("\n\nFitness: ", parameters, fitness)
+  tr("\n\n", parameters)
 
-  if save
+  if parameters[:SaveFitnessTraceToCsv]
     optname = replace(name(optimizer), r"\s+", "_")
     archive = evaluator.archive
     # Save history to csv file here...

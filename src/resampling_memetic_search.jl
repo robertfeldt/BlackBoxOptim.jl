@@ -143,15 +143,17 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
   ssmins, ssmaxs = mins(searchSpace), maxs(searchSpace)
   n = numdims(rms.evaluator)
 
+  indices = collect(1:n)
+
   while !stop_due_to_low_precision(rms, ps)
 
     xs = copy(xt)
 
     # We randomize the order that each decision var is changed. This is not done in the orig papers.
-    vars = shuffle(collect(1:n))
+    shuffle!(indices)
 
     for j in 1:n
-      i = vars[j]
+      i = indices[j]
 
       # This is how it is written in orig papers. To me it seems better to
       # take the step in a random direction; why prioritize one direction?

@@ -68,8 +68,16 @@ function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
   FixedDimProblem(p.name, p.funcs, ss, p.fmins)
 end
 
-function fixeddim_problem(f::Function; range = (-1.0, 1.0), dims = 5, name = "unknown")
-  as_fixed_dim_problem(anydim_problem(name, f, range), dims)
+function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0), dims = 5, name = "unknown")
+  if search_space == false
+    as_fixed_dim_problem(anydim_problem(name, f, range), dims)
+  elseif typeof(search_space) <: SearchSpace
+    FixedDimProblem(name, [f], search_space)
+  elseif typeof(search_space) <: Array{(Float64,Float64),1}
+    FixedDimProblem(name, [f], RangePerDimSearchSpace(search_space))
+  else
+    throw("Unknown search space $(search_space).")
+  end
 end
 
 # A function set is specified through a dict mapping its function number

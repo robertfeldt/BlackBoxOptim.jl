@@ -1,19 +1,16 @@
 using BlackBoxOptim
 
-function fitness_for_opt(problem, numDimensions, populationSize, numSteps, 
-  optFunc = de_rand_1_bin_radiuslimited)
+function fitness_for_opt(problem, numDimensions, populationSize, numSteps, method)
 
   problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
 
-  ss = search_space(problem)
+  println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
 
-  pop = BlackBoxOptim.rand_individuals_lhs(ss, populationSize)
+  best, fitness = bboptimize(problem; method = method, parameters = {
+    :NumDimensions => numDimensions,
+    :PopulationSize => populationSize,
+    :MaxSteps => numSteps
+    })
 
-  opt = optFunc(ss; population = pop)
-
-  println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(name(opt))")
-
-  best, fitness = BlackBoxOptim.run_optimizer_on_problem(opt, problem; 
-    numSteps = numSteps)
   fitness
 end
