@@ -135,20 +135,6 @@ JadeFunctionSet = {
   11  => anydim_problem("Griewank",      griewank,      (-600.0, 600.0), 0.0)
 }
 
-example_problems = {
-  "Sphere" => JadeFunctionSet[1],
-  "Rosenbrock" => JadeFunctionSet[5],
-  "Schwefel2.22" => JadeFunctionSet[2],
-  "Schwefel1.2" => JadeFunctionSet[3],
-  "Schwefel2.21" => JadeFunctionSet[4],
-  "Step" => JadeFunctionSet[6],
-  "Rastrigin" => JadeFunctionSet[9],
-  "Ackley" => JadeFunctionSet[10],
-  "Griewank" => JadeFunctionSet[11],
-  "Ellipsoid" => anydim_problem("Ellipsoid", ellipsoid, (-65.536, 65.536), 0.0),
-  "Cigar" => anydim_problem("Cigar", cigar, (-100.0, 100.0), 0.0)
-}
-
 
 #####################################################################
 # S3 Base functions.
@@ -299,3 +285,18 @@ end
 # Deceptive/hardest instances:
 deceptive_cuccu2011_15_2 = deceptive_cuccu2011(15, 2)
 deceptive_cuccu2011_30_2 = deceptive_cuccu2011(30, 2)
+
+example_problems = {
+  "Sphere" => JadeFunctionSet[1],
+  "Rosenbrock" => JadeFunctionSet[5],
+  "Schwefel2.22" => JadeFunctionSet[2],
+  "Schwefel1.2" => JadeFunctionSet[3],
+  "Schwefel2.21" => JadeFunctionSet[4],
+  "Step" => JadeFunctionSet[6],
+  "Rastrigin" => JadeFunctionSet[9],
+  "Ackley" => JadeFunctionSet[10],
+  "Griewank" => JadeFunctionSet[11],
+  "Ellipsoid" => anydim_problem("Ellipsoid", ellipsoid, (-65.536, 65.536), 0.0),
+  "Cigar" => anydim_problem("Cigar", cigar, (-100.0, 100.0), 0.0),
+  "DeceptiveCuccu2011_15_2" => anydim_problem("DeceptiveCuccu2011_15_2", deceptive_cuccu2011_15_2, (-100.0, 100.0), 0.0)
+}
