@@ -11,8 +11,9 @@ end
 desc "Run all tests"
 task :runalltest => [:runtest, :runslowtest]
 
+desc "Compare optimizers on standard, example problems"
 task :compare_optimizers do
-  sh "julia -L src/BlackBoxOptim.jl test/compare_optimizers.jl"
+  sh "julia -L src/BlackBoxOptim.jl -L test/helper.jl test/test_compare_optimizers.jl"
 end
 
 def filter_latest_changed_files(filenames, numLatestChangedToInclude = 1)

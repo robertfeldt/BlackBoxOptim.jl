@@ -9,7 +9,8 @@ ValidMethods = {
   :separable_nes => BlackBoxOptim.separable_nes,
   :xnes => BlackBoxOptim.xnes,
   :resampling_memetic_search => BlackBoxOptim.resampling_memetic_searcher,
-  :resampling_inheritance_memetic_search => BlackBoxOptim.resampling_inheritance_memetic_searcher
+  :resampling_inheritance_memetic_search => BlackBoxOptim.resampling_inheritance_memetic_searcher,
+  :simultaneous_perturbation_stochastic_approximation => BlackBoxOptim.SimultaneousPerturbationSA2
 }
 
 MethodNames = collect(keys(ValidMethods))
@@ -24,6 +25,7 @@ DefaultParameters = {
   :MaxFuncEvals   => false,   # Max func evals (takes precedence over max iterations, but not max time)
   :MaxSteps       => 10000,   # Max iterations gives the least control since different optimizers have different "size" of their "iterations"
   :MinDeltaFitnessTolerance => 1e-11, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
+  :FitnessTolerance => 1e-8,  # Stop optimization when the best fitness found is within this distance of the actual optimum (if known)
 
   :NumRepetitions => 1,     # Number of repetitions to run for each optimizer for each problem
 
@@ -104,7 +106,7 @@ function compare_optimizers(functionOrProblem::Union(Function, OptimizationProbl
   results = Any[]
   for(m in methods)
     tic()
-    best, fitness = bboptimize(functionOrProblem; method = m, parameters = parameters,
+    best, fitness, reason = bboptimize(functionOrProblem; method = m, parameters = parameters,
       max_time = max_time, search_space = search_space, dimensions = dimensions,
       search_range = search_range)
     push!( results,  (m, best, fitness, toq()) )
@@ -128,6 +130,7 @@ function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = fal
   # Lets create an array where we will save how the methods ranks per problem.
   ranks = zeros(length(methods), length(problems))
   fitnesses = zeros(Float64, length(methods), length(problems))
+  times = zeros(Float64, length(methods), length(problems))
 
   problems = collect(problems)
 
@@ -135,21 +138,23 @@ function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = fal
     name, p = problems[i]
     res = compare_optimizers(p; max_time = max_time, methods = methods, parameters = parameters)
     for(j in 1:length(res))
-      method, best, fitness, time = res[j]
+      method, best, fitness, elapsedtime = res[j]
       index = findfirst(methods, method)
       ranks[index, i] = j
       fitnesses[index, i] = fitness
+      times[index, i] = elapsedtime
     end
   end
 
-  avg_ranks = mean(ranks, 2)
-  avg_fitness = mean(fitnesses, 2)
+  avg_ranks = round(mean(ranks, 2), 2)
+  avg_fitness = round(mean(fitnesses, 2), 3)
+  avg_times = round(mean(times, 2), 2)
 
   perm = sortperm(avg_ranks[:])
   println("\nBy avg rank:")
   for(i in 1:length(methods))
     j = perm[i]
-    print("\n$(i). $(methods[j]), average rank = $(round(avg_ranks[j], 3)), avg fitness = $(round(avg_fitness[j], 5)), ranks = ")
+    print("\n$(i). $(methods[j]), avg rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), avg time = $(avg_times[j]), ranks = ")
     showcompact(ranks[j,:][:])
   end
 
@@ -157,7 +162,7 @@ function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = fal
   println("\n\nBy avg fitness:")
   for(i in 1:length(methods))
     j = perm[i]
-    print("\n$(i). $(methods[j]), average rank = $(round(avg_ranks[j], 3)), avg fitness = $(round(avg_fitness[j], 5)), ranks = ")
+    print("\n$(i). $(methods[j]), avg rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), avg time = $(avg_times[j]), ranks = ")
     showcompact(ranks[j,:][:])
   end
 
@@ -235,7 +240,7 @@ function tr(msg, parameters, obj = None)
   if parameters[:ShowTrace]
     print(msg)
     if obj != None
-      show(obj)
+      showcompact(obj)
     end
   end
   if parameters[:SaveTrace]
@@ -290,25 +295,32 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   t = last_report_time = start_time = time()
   elapsed_time = 0.0
 
+  termination_reason = "" # Will be set in loop below...
+
   while( true )
 
     if elapsed_time > max_time
-      termination_reason = "Exceeded time budget"
+      termination_reason = "Max time reached"
       break
     end
 
     if num_evals(evaluator) > max_fevals
-      termination_reason = "Exceeded max number of function evaluations"
+      termination_reason = "Max number of function evaluations reached"
       break
     end
 
     if step > max_steps
-      termination_reason = "Exceeded max number of steps"
+      termination_reason = "Max number of steps reached"
       break
     end
 
     if delta_fitness(evaluator.archive) < parameters[:MinDeltaFitnessTolerance]
       termination_reason = "Delta fitness below tolerance"
+      break
+    end
+
+    if fitness_is_within_ftol(evaluator, parameters[:FitnessTolerance])
+      termination_reason = "Within fitness tolerance of optimum"
       break
     end
 
@@ -361,6 +373,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   step -= 1 # Since it is one too high after while loop above
 
   tr("\nOptimization stopped after $(step) steps and $(elapsed_time) seconds\n", parameters)
+  tr("Termination reason: $(termination_reason)\n", parameters)
   tr("Steps per second = $(step/elapsed_time)\n", parameters)
   tr("Function evals per second = $(num_evals(evaluator)/elapsed_time)\n", parameters)
   tr("Improvements/step = $((num_better+num_better_since_last)/max_steps)\n", parameters)
@@ -379,5 +392,5 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
     # Save history to csv file here...
   end
 
-  return best, fitness
+  return best, fitness, termination_reason, elapsed_time
 end
