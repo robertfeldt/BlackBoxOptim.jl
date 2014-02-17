@@ -95,7 +95,8 @@ Most optimizers have specific options that can be specified in the `parameters` 
 * Stochastic Approximation:
   - Simultaneous Perturbation Stochastic Approximation (SPSA)
 * Direct search:
-  - Compass search
+  - Generating set search:
+    - Compass/coordinate search
 
 ## Planned Optimizers
 
