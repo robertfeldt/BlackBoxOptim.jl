@@ -61,6 +61,7 @@ type AnyDimProblem <: OptimizationProblem
 end
 
 anydim_problem(name, f::Function, range, fmin::Float64) = AnyDimProblem(name, [f], range, [fmin])
+anydim_problem(name, f::Function, range, fmins::Union(Nothing, Vector{Float64})) = AnyDimProblem(name, [f], range, fmins)
 anydim_problem(name, f::Function, range) = AnyDimProblem(name, [f], range, nothing)
 
 function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
@@ -68,13 +69,20 @@ function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
   FixedDimProblem(p.name, p.funcs, ss, p.fmins)
 end
 
-function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0), dims = 5, name = "unknown")
+function as_fixed_dim_problem(p::FixedDimProblem, dim::Int64)
+  if numdims(p) != dim
+    throw("Trying to set dimension $(dim) on a fixed dimensional problem of dimension $(numdims(p))")
+  end
+  p
+end
+
+function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0), dims = 5, name = "unknown", fmins = Nothing())
   if search_space == false
-    as_fixed_dim_problem(anydim_problem(name, f, range), dims)
+    as_fixed_dim_problem(anydim_problem(name, f, range, fmins), dims)
   elseif typeof(search_space) <: SearchSpace
-    FixedDimProblem(name, [f], search_space)
+    FixedDimProblem(name, [f], search_space, fmins)
   elseif typeof(search_space) <: Array{(Float64,Float64),1}
-    FixedDimProblem(name, [f], RangePerDimSearchSpace(search_space))
+    FixedDimProblem(name, [f], RangePerDimSearchSpace(search_space), fmins)
   else
     throw("Unknown search space $(search_space).")
   end

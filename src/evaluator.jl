@@ -14,6 +14,7 @@ type ProblemEvaluator <: Evaluator
   end
 end
 
+worst_fitness(e::Evaluator) = worst_fitness(e.fitness_scheme)
 num_evals(e::Evaluator) = e.num_evals
 numdims(e::Evaluator) = numdims(e.problem)
 search_space(e::Evaluator) = search_space(e.problem)
