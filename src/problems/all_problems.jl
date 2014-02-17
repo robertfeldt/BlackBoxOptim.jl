@@ -12,7 +12,7 @@ end
 
 name(p::OptimizationProblem) = p.name
 
-is_fixed_dimensional(p::OptimizationProblem) = false
+is_fixed_dimensional(p::Any) = false
 is_fixed_dimensional(p::FixedDimProblem) = true
 
 is_any_dimensional(p::OptimizationProblem) = !is_fixed_dimensional(p)

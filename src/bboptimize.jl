@@ -10,7 +10,8 @@ ValidMethods = {
   :xnes => BlackBoxOptim.xnes,
   :resampling_memetic_search => BlackBoxOptim.resampling_memetic_searcher,
   :resampling_inheritance_memetic_search => BlackBoxOptim.resampling_inheritance_memetic_searcher,
-  :simultaneous_perturbation_stochastic_approximation => BlackBoxOptim.SimultaneousPerturbationSA2
+  :simultaneous_perturbation_stochastic_approximation => BlackBoxOptim.SimultaneousPerturbationSA2,
+  :generating_set_search => BlackBoxOptim.GeneratingSetSearcher
 }
 
 MethodNames = collect(keys(ValidMethods))
@@ -55,7 +56,7 @@ function setup_problem(functionOrProblem; parameters = Dict())
   if issubtype(typeof(functionOrProblem), OptimizationProblem)
 
     # If a fixed dim problem was given it takes precedence over the dimension param setting.
-    if typeof(functionOrProblem) == FixedDimProblem
+    if is_fixed_dimensional(functionOrProblem)
       problem = functionOrProblem
     else 
       # If an anydim problem was given the dimension param must have been specified.
@@ -101,23 +102,28 @@ function compare_optimizers(functionOrProblem::Union(Function, OptimizationProbl
   max_time = false, search_space = false, search_range = (0.0, 1.0), dimensions = 2,
   methods = MethodNames, parameters = Dict())
 
-  params = Parameters(parameters, DefaultParameters)
+  evaluator = 1.0
 
   results = Any[]
   for(m in methods)
     tic()
-    best, fitness, reason = bboptimize(functionOrProblem; method = m, parameters = parameters,
+    best, fitness, reason, etime, parameters = bboptimize(functionOrProblem; method = m, parameters = parameters,
       max_time = max_time, search_space = search_space, dimensions = dimensions,
       search_range = search_range)
     push!( results,  (m, best, fitness, toq()) )
+    evaluator = parameters[:Evaluator]
+    delete!(parameters, :Evaluator)
   end
 
   sorted = sort( results, by = (t) -> t[3] )
 
-  if params[:ShowTrace]
+  if parameters[:ShowTrace]
+    println("\n********************************************************************************")
+    println(describe(evaluator))
     for(i in 1:length(sorted))
       println("$(i). $(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
     end
+    println("********************************************************************************\n")
   end
 
   return sorted
@@ -240,7 +246,7 @@ function tr(msg, parameters, obj = None)
   if parameters[:ShowTrace]
     print(msg)
     if obj != None
-      showcompact(obj)
+      showcompact(transform_horizontal(obj))
     end
   end
   if parameters[:SaveTrace]
@@ -254,6 +260,17 @@ end
 
 function find_best_individual(e::Evaluator, opt::Optimizer)
   (best_candidate(e.archive), 1, best_fitness(e.archive))
+end
+
+# Transform a vector to ensure it is largest in the horizontal direction.
+function transform_horizontal(x)
+  if typeof(x) <: Array
+    nrows, ncols = size(x)
+    if ncols < nrows
+      x = x'
+    end
+  end
+  return x
 end
 
 function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
@@ -377,10 +394,13 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   tr("Steps per second = $(step/elapsed_time)\n", parameters)
   tr("Function evals per second = $(num_evals(evaluator)/elapsed_time)\n", parameters)
   tr("Improvements/step = $((num_better+num_better_since_last)/max_steps)\n", parameters)
+  tr("Total function evaluations = $(num_evals(evaluator))\n", parameters)
+
   if typeof(opt) <: PopulationOptimizer
     tr("\nMean value (in population) per position:", parameters, mean(population(opt),1))
     tr("\n\nStd dev (in population) per position:", parameters, std(population(opt),1))
   end
+
   best, index, fitness = find_best_individual(evaluator, opt)
   tr("\n\nBest candidate found: ", parameters, best)
   tr("\n\nFitness: ", parameters, fitness)
@@ -392,5 +412,5 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
     # Save history to csv file here...
   end
 
-  return best, fitness, termination_reason, elapsed_time
+  return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
 end
