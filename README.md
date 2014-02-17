@@ -92,6 +92,10 @@ Most optimizers have specific options that can be specified in the `parameters` 
 * Resampling Memetic Searchers:
   - Resampling Memetic Search (RS): `resampling_memetic_search`
   - Resampling Inheritance Memetic Search (RIS): `resampling_inheritance_memetic_search`
+* Stochastic Approximation:
+  - Simultaneous Perturbation Stochastic Approximation (SPSA)
+* Direct search:
+  - Compass search
 
 ## Planned Optimizers
 
