@@ -70,13 +70,14 @@ function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false,
 
 end
 
-function report_on_methods_results_on_one_problem(problem, result_dicts, numrepeats, ftol)
+function report_on_methods_results_on_one_problem(problem, result_dicts, numrepeats, max_time, ftol)
 
   println("********************************************************************************\n")
 
   println("Problem: $(name(problem)), num dims = $(numdims(problem))")
   println("  Num repeats per method = ", numrepeats)
-  println("  Fitness tolerance = ", ftol, " (a run is a success if it reaches to within this value of true optimum)\n")
+  println("  Fitness tolerance = ", ftol, " (a run is a success if it reaches to within this value of true optimum)")
+  println("  Max time budget per run = ", max_time, " secs\n")
 
   rank_result_dicts_by(result_dicts, (d) -> d[:success_rate], "success rate (to reach within $(ftol) of optimum)"; 
     descsummary = "median", rev = true, rpad = "%")
@@ -114,12 +115,12 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
 
   end
 
-  report_on_methods_results_on_one_problem(fp, result_dicts, numrepeats, ftol)
+  report_on_methods_results_on_one_problem(fp, result_dicts, numrepeats, max_time, ftol)
 
 end
 
 p = BlackBoxOptim.example_problems["Ackley"]
-repeated_bboptimize(10, p, 100, [
+repeated_bboptimize(5, p, 100, [
   :generating_set_search, 
   :adaptive_de_rand_1_bin_radiuslimited,
   :random_search,
