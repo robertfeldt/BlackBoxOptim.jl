@@ -10,7 +10,7 @@ facts("bboptimize smoketest") do
       search_space = [(-5.0, 5.0), (-2.0, 2.0)], max_time = 0.3,
       parameters = {:ShowTrace => false})
      if (m != :random_search) & (m != :de_rand_2_bin)
-       @fact f < 1.0 => true
+       @fact f < 5.0 => true
      end
    end
  end
