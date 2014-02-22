@@ -446,37 +446,10 @@ function report_from_result_dict(statsdict)
   pdict["Within fitness tolerance of optimum"]
 end
 
-# Assign ranks to values but keep the rank the same if the values are within
-# tolerance of each other.
-function assign_rank_within(values; byfunc = (x) -> x, tolerance = 1e-5, rev = false)
-
-  perm = sortperm(values, by = byfunc, rev = rev)
-  ranked = Any[]
-  rank = 1
-  prev = byfunc(values[perm[1]])
-  num_of_this_rank = 0
-
-  for i in 1:length(perm)
-    r = values[perm[i]]
-    v = byfunc(r)
-    if abs(prev - v) > tolerance
-      rank += num_of_this_rank
-      num_of_this_rank = 1
-    else
-      num_of_this_rank += 1
-    end
-    push!(ranked, (rank, r, v))
-    prev = v
-  end
-
-  ranked
-
-end
-
 function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false, 
   descsummary = "mean", digits = 3, rpad = "")
 
-  ranked = assign_rank_within(result_dicts; byfunc = byfunc, tolerance = 1e-3, rev = rev)
+  ranked = assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1e-3, rev = rev)
   println("Ranked by $(descsummary) $(desc):")
   for (rank, rd, value) in ranked
     println("  $(rank). $(rd[:method]), $(signif(value, digits))$(rpad)")
@@ -507,13 +480,15 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
 
 end
 
-function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5)
+function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters = Dict{Any, Any}())
 
   fp = BlackBoxOptim.as_fixed_dim_problem(problem, dim)
   result_dicts = Any[]
 
   # Just so they are declared
   ps = best_so_far = nothing
+
+  params = Parameters(parameters, {:FitnessTolerance => ftol})
 
   for m in methods
 
@@ -523,7 +498,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
     for i in 1:numrepeats
       p = fp # BlackBoxOptim.ShiftedAndBiasedProblem(fp)
       best, fs[i], reason, ts[i], ps, nes[i] = bboptimize(p; max_time = max_time, 
-        method = m, parameters = {:FitnessTolerance => ftol})
+        method = m, parameters = params)
       rcounts[reason] = 1 + get(rcounts, reason, 0)
     end
 

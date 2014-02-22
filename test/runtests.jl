@@ -3,6 +3,7 @@ include("helper.jl")
 my_tests = [
 
   "utilities/test_latin_hypercube_sampling.jl",
+  "utilities/test_assign_ranks.jl",
 
   "test_parameters.jl",
   "test_fitness.jl",

@@ -50,6 +50,7 @@ include("archive.jl")
 
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
+  include("utilities/assign_ranks.jl")
 end
 
 include("search_space.jl")
