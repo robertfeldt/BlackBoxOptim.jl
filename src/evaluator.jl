@@ -19,6 +19,8 @@ num_evals(e::Evaluator) = e.num_evals
 numdims(e::Evaluator) = numdims(e.problem)
 search_space(e::Evaluator) = search_space(e.problem)
 describe(e::Evaluator) = "Problem: $(name(e.problem)) (dimensions = $(numdims(e)))"
+problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
+problem(e::Evaluator) = e.problem
 
 function evaluate(e::Evaluator, candidate)
   e.last_fitness = eval1(candidate, e.problem)

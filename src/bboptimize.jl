@@ -407,9 +407,13 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   tr("\n\n", parameters)
 
   if parameters[:SaveFitnessTraceToCsv]
-    optname = replace(name(optimizer), r"\s+", "_")
-    archive = evaluator.archive
-    # Save history to csv file here...
+    timestamp = strftime("%y%m%d_%H%M%S", ifloor(start_time))
+    filename = "$(timestamp)_$(problem_summary(evaluator))_$(name(opt)).csv" 
+    filename = replace(filename, r"\s+", "_")
+    header_prefix = "Problem,Dimension,Optimizer"
+    line_prefix = "$(name(problem)),$(numdims(problem)),$(name(opt))"
+    save_fitness_history_to_csv_file(evaluator.archive, filename; 
+      header_prefix = header_prefix, line_prefix = line_prefix)
   end
 
   return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)

@@ -25,10 +25,13 @@ type TopListArchive <: Archive
 
   numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
+  time_at_best::Float64
+  fevals_at_best::Int64
+
   TopListArchive(numdims, size::Int64 = 10) = begin
     new(time(), 0, size, 0, Float64[], Any[], 
       ((Float64, Float64), Float64, Int64, Float64, Float64)[], (0.0, 0.0),
-      int(numdims))
+      int(numdims), 0.0, 0)
   end
 end
 
@@ -65,6 +68,8 @@ function add_candidate!(a::TopListArchive, fitness::Number,
   elseif should_enter_toplist(fitness, a)
 
     if fitness < best_fitness(a)
+      a.time_at_best = time()
+      a.fevals_at_best = a.num_fitnesses
       push_to_fitness_history!(a, fitness, num_fevals)
     end
 
@@ -96,10 +101,14 @@ function push_to_fitness_history!(a::Archive, fitness::Number, num_fevals::Int64
   mc = magnitude_class(fitness)
   if mc != a.last_magnitude_class
     a.last_magnitude_class = mc
-    nf = num_fevals == -1 ? a.num_fitnesses : num_fevals
-    event = (mc, time(), nf, fitness, width_of_confidence_interval(a, 0.01))
-    push!(a.fitness_history, event)
+    push!(a.fitness_history, make_fitness_event(a, fitness, num_fevals, mc))
   end
+end
+
+function make_fitness_event(a::Archive, fitness::Number, num_fevals::Int64 = -1, mc = nothing)
+  mc = (mc == nothing) ? magnitude_class(fitness) : mc
+  nf = num_fevals == -1 ? a.num_fitnesses : num_fevals
+  (mc, time(), nf, fitness, width_of_confidence_interval(a, 0.01))  
 end
 
 function fitness_history_csv_header(a::Archive)
@@ -108,6 +117,15 @@ end
 
 function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_history.csv";
   header_prefix = "", line_prefix = "", include_header = true)
+
+  # Push the time for the best fitness unless it is not already in the fitness history.
+  # This might happen if the best fitness was not the first in its fitness magnitude class.
+  # Maybe this thing with the magnitude class is a bit too "clever" and we should skip it?
+  if a.fitness_history[end][4] != best_fitness(a)
+    mc, t, nf, fitness, w = make_fitness_event(a, best_fitness(a), a.fevals_at_best)
+    push!(a.fitness_history, (mc, a.time_at_best, nf, fitness, w))
+  end
+
   fh = open(filename, "a+")
   if include_header
     println(fh, join([header_prefix, fitness_history_csv_header(a)], ","))
@@ -115,7 +133,7 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
   for(event in a.fitness_history)
     mc, t, nf, f, w = event
     println(fh, join([line_prefix, strftime("%Y-%m-%d,%T", t), t-a.start_time,
-      mc[2], nf, w, f], ","))
+      mc[1]*mc[2], nf, w, f], ","))
   end
   close(fh)
 end
