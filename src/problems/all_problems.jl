@@ -76,7 +76,8 @@ function as_fixed_dim_problem(p::FixedDimProblem, dim::Int64)
   p
 end
 
-function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0), dims = 5, name = "unknown", fmins = Nothing())
+function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0), 
+  dims = 5, name = "unknown", fmins = Nothing())
   if search_space == false
     as_fixed_dim_problem(anydim_problem(name, f, range, fmins), dims)
   elseif typeof(search_space) <: SearchSpace
