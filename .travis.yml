@@ -20,5 +20,5 @@ before_install:
     - git config --global user.email "travis@example.net"
 script:
     - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("BlackBoxOptim"))`); Pkg.pin("BlackBoxOptim"); Pkg.resolve()'
-    - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
+    - julia -e 'for p in split(ENV["BlackBoxOptim"],";") Pkg.add(p) end'
     - julia test/runtests.jl
