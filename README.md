@@ -5,6 +5,8 @@ BlackBoxOptim is a (work-in-progress) global optimization framework for Julia (h
 
 Eventually we hope to provide a JuMP interface but since it is not clear if JuMP supports multiple objectives this is to be decided.
 
+[![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
+
 # Installation
 
 Just install from the github by calling:
