@@ -11,7 +11,8 @@ end
 p = BlackBoxOptim.fixeddim_problem(trefethen; range = (-1.0, 1.0), dims = 2, name = "trefethen")
 
 # To just run one optimization:
-bboptimize(p; max_time = 2.0, method = :generating_set_search, parameters = {:SaveFitnessTraceToCsv => true})
+bboptimize(p; max_time = 2.0, method = :generating_set_search, 
+  parameters = {:SaveFitnessTraceToCsv => true})
 
 # To compare several methods in several repetitions:
 #BlackBoxOptim.repeated_bboptimize(5, p, 2, [
