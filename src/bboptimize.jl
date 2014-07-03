@@ -409,11 +409,12 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   if parameters[:SaveFitnessTraceToCsv]
     timestamp = strftime("%y%m%d_%H%M%S", ifloor(start_time))
     filename = "$(timestamp)_$(problem_summary(evaluator))_$(name(opt)).csv" 
-    filename = replace(filename, r"\s+", "_")
+    filename = replace(replace(filename, r"\s+", "_"), r"/", "_")
     header_prefix = "Problem,Dimension,Optimizer"
     line_prefix = "$(name(problem)),$(numdims(problem)),$(name(opt))"
     save_fitness_history_to_csv_file(evaluator.archive, filename; 
-      header_prefix = header_prefix, line_prefix = line_prefix)
+      header_prefix = header_prefix, line_prefix = line_prefix, 
+      bestfitness = fmin(problem))
   end
 
   return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
@@ -453,7 +454,7 @@ end
 function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false, 
   descsummary = "mean", digits = 3, rpad = "")
 
-  ranked = assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1e-3, rev = rev)
+  ranked = BlackBoxOptim.Utils.assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1e-3, rev = rev)
   println("Ranked by $(descsummary) $(desc):")
   for (rank, rd, value) in ranked
     println("  $(rank). $(rd[:method]), $(signif(value, digits))$(rpad)")

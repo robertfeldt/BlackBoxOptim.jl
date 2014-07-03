@@ -30,6 +30,8 @@ search_space(p::FixedDimProblem) = p.ss
 
 fmins(p::OptimizationProblem) = p.fmins
 
+fmin(p::OptimizationProblem) = fmins(p) != Nothing() ? fmins(p)[1] : nothing
+
 ofunc(p::OptimizationProblem, index::Int64) = p.funcs[index]
 
 evalfunc(x, i::Int64, p::OptimizationProblem) = ofunc(p, i)(x)

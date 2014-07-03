@@ -20,25 +20,19 @@ type TopListArchive <: Archive
   # For each magnitude class (as defined by magnitude_class function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
   # class is: (magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)
-  fitness_history::Array{((Float64, Float64), Float64, Int64, Float64, Float64),1}
-  last_magnitude_class::(Float64, Float64)
+  fitness_history::Array{(Float64, Int64, Float64, Float64),1}
 
   numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
-  time_at_best::Float64
-  fevals_at_best::Int64
-
   TopListArchive(numdims, size::Int64 = 10) = begin
     new(time(), 0, size, 0, Float64[], Any[], 
-      ((Float64, Float64), Float64, Int64, Float64, Float64)[], (0.0, 0.0),
-      int(numdims), 0.0, 0)
+      (Float64, Int64, Float64, Float64)[], int(numdims))
   end
 end
 
 best_candidate(a::Archive) = a.candidates[1]
 best_fitness(a::Archive) = a.fitnesses[1]
 last_top_fitness(a::Archive) = a.fitnesses[a.count]
-
 should_enter_toplist(fitness::Float64, a::Archive) = fitness < last_top_fitness(a)
 
 # Delta fitness is the difference between the top two candidates found so far.
@@ -47,7 +41,7 @@ function delta_fitness(a::Archive)
   if length(a.fitness_history) < 2
     Inf
   else
-    abs(a.fitness_history[2][4] - a.fitness_history[1][4])
+    abs(a.fitness_history[2][3] - a.fitness_history[1][3])
   end
 end
 
@@ -68,8 +62,6 @@ function add_candidate!(a::TopListArchive, fitness::Number,
   elseif should_enter_toplist(fitness, a)
 
     if fitness < best_fitness(a)
-      a.time_at_best = time()
-      a.fevals_at_best = a.num_fitnesses
       push_to_fitness_history!(a, fitness, num_fevals)
     end
 
@@ -95,47 +87,70 @@ function magnitude_class(f::Number)
 end
 
 # Save fitness history so we can reconstruct the most important events later.
-# We do this by only saving the first fitness event in its magnitude class, see
-# above.
 function push_to_fitness_history!(a::Archive, fitness::Number, num_fevals::Int64 = -1)
-  mc = magnitude_class(fitness)
-  if mc != a.last_magnitude_class
-    a.last_magnitude_class = mc
-    push!(a.fitness_history, make_fitness_event(a, fitness, num_fevals, mc))
+  push!(a.fitness_history, make_fitness_event(a, fitness, num_fevals))
+end
+
+function fitness_improvement_ratio(a::Archive, newFitness) 
+  try
+    bestfitness = best_fitness(a)
+    return abs( (bestfitness - newFitness) / bestfitness )
+  catch
+    return 0.0
   end
 end
 
-function make_fitness_event(a::Archive, fitness::Number, num_fevals::Int64 = -1, mc = nothing)
-  mc = (mc == nothing) ? magnitude_class(fitness) : mc
+# Calculate the distance from a fitness value to the optimum/best known fitness value.
+function distance_to_optimum(fitness, bestfitness)
+  abs(fitness - bestfitness)
+end
+
+function make_fitness_event(a::Archive, fitness::Number, num_fevals::Int64 = -1)
   nf = num_fevals == -1 ? a.num_fitnesses : num_fevals
-  (mc, time(), nf, fitness, width_of_confidence_interval(a, 0.01))  
+  (time(), nf, fitness, fitness_improvement_ratio(a, fitness))
 end
 
 function fitness_history_csv_header(a::Archive)
-  "Date,Time,ElapsedTime,Magnitude,NumFuncEvals,ConfIntervalWidth0_01,Fitness"
+  "Date,Time,ElapsedTime,Magnitude,NumFuncEvals,FitnessImprovementRatio,Fitness"
 end
 
 function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_history.csv";
-  header_prefix = "", line_prefix = "", include_header = true)
-
-  # Push the time for the best fitness unless it is not already in the fitness history.
-  # This might happen if the best fitness was not the first in its fitness magnitude class.
-  # Maybe this thing with the magnitude class is a bit too "clever" and we should skip it?
-  if a.fitness_history[end][4] != best_fitness(a)
-    mc, t, nf, fitness, w = make_fitness_event(a, best_fitness(a), a.fevals_at_best)
-    push!(a.fitness_history, (mc, a.time_at_best, nf, fitness, w))
-  end
+  header_prefix = "", line_prefix = "", 
+  include_header = true, bestfitness = nothing)
 
   fh = open(filename, "a+")
+
   if include_header
-    println(fh, join([header_prefix, fitness_history_csv_header(a)], ","))
+
+    header = [header_prefix, fitness_history_csv_header(a)]
+
+    if bestfitness != nothing
+      push!(header, "DistanceToBestFitness")
+    end
+
+    println(fh, join(header, ","))
+
   end
+
   for(event in a.fitness_history)
-    mc, t, nf, f, w = event
-    println(fh, join([line_prefix, strftime("%Y-%m-%d,%T", t), t-a.start_time,
-      mc[1]*mc[2], nf, w, f], ","))
+
+    t, nf, f, fir = event
+
+    mc = magnitude_class(f)
+
+    line = [line_prefix, strftime("%Y-%m-%d,%T", t), t-a.start_time,
+      mc[1]*mc[2], nf, fir, f]
+
+    if bestfitness != nothing
+      push!(line, distance_to_optimum(f, bestfitness))
+    end
+
+    println(fh, join(line, ","))
+
   end
+
   close(fh)
+
 end
 
 function push_then_sort_by_fitness!(fitness::Number, candidate, a::Archive)
@@ -145,6 +160,38 @@ function push_then_sort_by_fitness!(fitness::Number, candidate, a::Archive)
   a.fitnesses = a.fitnesses[order]
   a.candidates = a.candidates[order]
 end
+
+# Merge multiple fitness histories and calculate the min, max, avg and median
+# values for fitness and fir at all fitness eval change points.
+function merge_fitness_histories(histories)
+  numhist = length(histories)
+  counts = ones(numhist)
+  fitnesses = zeros(numhist)
+  firs = zeros(numhist)
+  current_feval = 1
+
+  # Find max history length
+  histlengths = [length(h) for h in histories]
+  maxlen = maximum(histlengths)
+
+  while maximum(counts) < maxlen
+
+    # Find min feval for current events, this is the next current feval
+    for i in 1:numhist
+      t, nf, f, fir = histories[i][counts[i]]
+    end
+
+  end
+    
+end
+
+# Merge the fitness histories and save the average values of the fitness,
+# and distance to best fitness for each change in any of the histories.
+#function merge_fitness_histories_to_csv(archives::Archive[], filename = "fitness_history.csv";
+#  header_prefix = "", line_prefix = "", 
+#  include_header = true, bestfitness = nothing)
+#
+#end
 
 # Calculate the width of the confidence interval at a certain p-value.
 # This is based on the paper:
