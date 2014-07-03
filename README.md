@@ -1,11 +1,13 @@
 BlackBoxOptim.jl
 ==============
 
+[![Build Status](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl.svg?branch=master)](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl)
+
+[![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
+
 BlackBoxOptim is a (work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES, CMA-ES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability.
 
 Eventually we hope to provide a JuMP interface but since it is not clear if JuMP supports multiple objectives this is to be decided.
-
-[![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
 
 # Installation
 
