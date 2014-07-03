@@ -15,4 +15,6 @@ before_install:
 script:
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("BlackBoxOptim"))`); Pkg.pin("BlackBoxOptim"); Pkg.resolve()'
   - julia -e 'for p in split(ENV["PKGADD"],";") Pkg.add(p) end'
-  - julia -L src/BlackBoxOptim.jl test/runtests.jl
+  - julia --code-coverage -L src/BlackBoxOptim.jl test/runtests.jl
+after_success:
+  - julia -e 'cd(Pkg.dir("BlackBoxOptim")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
