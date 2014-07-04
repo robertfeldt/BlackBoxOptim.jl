@@ -29,6 +29,14 @@ task :t do
   sh "#{Julia} -L src/BlackBoxOptim.jl -L test/helper.jl #{latest_changed_test_file.first}"
 end
 
+desc "Clear build files etc"
+task :clobber do
+  Dir['**/*.jl.cov'].each do |f| 
+    puts "Deleting #{f}"
+    File.delete(f)
+  end
+end
+
 task :at => :runalltest
 task :st => :runslowtest
 
