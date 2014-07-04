@@ -3,6 +3,7 @@ function rosenbrock2d(x)
 end
 
 facts("bboptimize smoketest") do
+
  context("test each method option in short runs, just to ensure they work") do
 
    for(m in keys(BlackBoxOptim.ValidMethods))
@@ -10,8 +11,10 @@ facts("bboptimize smoketest") do
       search_space = [(-5.0, 5.0), (-2.0, 2.0)], max_time = 0.3,
       parameters = {:ShowTrace => false})
      if (m != :random_search) & (m != :de_rand_2_bin)
-       @fact f < 5.0 => true
+       @fact f < 10.0 => true
      end
    end
+
  end
+
 end
