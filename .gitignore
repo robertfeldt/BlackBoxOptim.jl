@@ -1,2 +1,3 @@
 external/*
 spikes/**/*.csv
+*.jl.cov
