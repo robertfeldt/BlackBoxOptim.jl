@@ -29,6 +29,11 @@ task :t do
   sh "#{Julia} -L src/BlackBoxOptim.jl -L test/helper.jl #{latest_changed_test_file.first}"
 end
 
+desc "Run and create code coverage information"
+task :coverage do
+  sh "#{Julia} --code-coverage -L src/BlackBoxOptim.jl test/runtests.jl"
+end
+
 desc "Clear build files etc"
 task :clobber do
   Dir['**/*.jl.cov'].each do |f| 
