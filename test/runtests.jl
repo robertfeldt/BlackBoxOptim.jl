@@ -25,3 +25,5 @@ my_tests = [
 for t in my_tests
   include(t)
 end
+
+exitstatus()
