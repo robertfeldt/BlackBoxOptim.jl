@@ -125,6 +125,7 @@ include("natural_evolution_strategies.jl")
 include("resampling_memetic_search.jl")
 include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")
+include("direct_search_with_probabilistic_descent.jl")
 
 # End-user/interface functions
 include("bboptimize.jl")
