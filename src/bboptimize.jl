@@ -417,7 +417,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       bestfitness = fmin(problem))
   end
 
-  return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
+  return transform_horizontal(best), fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
 end
 
 # Summarize a vector of float values by stating its mean, std dev and median.

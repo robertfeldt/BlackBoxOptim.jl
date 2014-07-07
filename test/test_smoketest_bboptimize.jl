@@ -10,9 +10,10 @@ facts("bboptimize smoketest") do
      b, f = bboptimize(rosenbrock2d; method = m, 
       search_space = [(-5.0, 5.0), (-2.0, 2.0)], max_time = 0.3,
       parameters = {:ShowTrace => false})
-     if (m != :random_search) & (m != :de_rand_2_bin)
-       @fact f < 10.0 => true
-     end
+
+     @fact size(b) => (1, 2)
+     @fact typeof(f) => Float64
+     @fact f < 100.0 => true # this can't be very tight since we give very little time for optimization...
    end
 
  end
