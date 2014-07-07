@@ -60,8 +60,6 @@ type GeneratingSetSearcher <: DirectSearcher
   end
 end
 
-calc_initial_step_size(gss::GeneratingSetSearcher) = calc_initial_step_size(gss.search_space, gss.parameters[:InitialStepSizeFactor])
-
 has_ask_tell_interface(gss::GeneratingSetSearcher) = false
 
 function has_converged(gss::GeneratingSetSearcher)
@@ -73,7 +71,7 @@ function step(gss::GeneratingSetSearcher)
     # Restart from a random point
     gss.x = rand_individual(gss.search_space)
     gss.xfitness = evaluate(gss.parameters[:Evaluator], gss.x)
-    gss.step_size = calc_initial_step_size(gss)
+    gss.step_size = calc_initial_step_size(gss.search_space, gss.parameters[:InitialStepSizeFactor])
   end
 
   # Get the directions for this iteration
