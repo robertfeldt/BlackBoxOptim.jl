@@ -1,0 +1,9 @@
+#!/bin/bash
+echo "julia03 test_pfind_colwise.jl"
+julia03 test_pfind_colwise.jl
+
+for np in 1 2 4 8 16 32
+do
+    echo "julia03 -p $np test_pfind_colwise.jl"
+    julia03 -p $np test_pfind_colwise.jl
+done
