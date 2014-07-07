@@ -5,7 +5,7 @@ MaxValue = 10
 #MaxNumProcs = 4
 Reps = 10
 
-@everywhere delay = 0.1
+@everywhere delay = 0.01
 
 #times = zeros(Reps, MaxNumProcs)
 times = zeros(Reps, 1)

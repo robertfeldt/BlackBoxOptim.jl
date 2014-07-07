@@ -1,0 +1,14 @@
+julia03 test_pfind_colwise.jl
+Nprocs = 1, Delay = 0.01, Avg time = 0.6278930662222222, Total time = 7.413460969924927
+julia03 -p 1 test_pfind_colwise.jl
+Nprocs = 2, Delay = 0.01, Avg time = 0.6724670507777779, Total time = 8.875360012054443
+julia03 -p 2 test_pfind_colwise.jl
+Nprocs = 3, Delay = 0.01, Avg time = 0.2546289835555556, Total time = 4.731289863586426
+julia03 -p 4 test_pfind_colwise.jl
+Nprocs = 5, Delay = 0.01, Avg time = 0.19295145588888893, Total time = 4.269449949264526
+julia03 -p 8 test_pfind_colwise.jl
+Nprocs = 9, Delay = 0.01, Avg time = 0.11570188244444446, Total time = 4.474034070968628
+julia03 -p 16 test_pfind_colwise.jl
+Nprocs = 17, Delay = 0.01, Avg time = 0.08187905955555554, Total time = 6.783844947814941
+julia03 -p 32 test_pfind_colwise.jl
+Nprocs = 33, Delay = 0.01, Avg time = 0.061221194222222226, Total time = 13.075139999389648
