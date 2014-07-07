@@ -29,9 +29,14 @@ compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
 
 GSSDefaultParameters = {
   :DeltaTolerance => 1e-10,       # GSS has converged if the StepSize drops below this tolerance level
-  :StepSizeFactor => 0.50,        # Factor times the minimum search space diameter to give the initial StepSize
+  :InitialStepSizeFactor => 0.50,        # Factor times the minimum search space diameter to give the initial StepSize
   :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
+  :StepSizeGamma => 2.0,          # Factor by which step size is multiplied if improved point is found. Should be >= 1.0.
+  :StepSizePhi => 0.5,            # Factor by which step size is multiplied if NO improved point is found. Should be < 1.0.
+  :StepSizeMax => Inf,            # A limit on the step size can be set but is typically not => Inf.
 }
+
+calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
 type GeneratingSetSearcher <: DirectSearcher
   parameters::Parameters
@@ -48,12 +53,14 @@ type GeneratingSetSearcher <: DirectSearcher
     n = numdims(params[:Evaluator])
     ss = search_space(params[:Evaluator])
     dgen = get(params, :DirectionGenerator, compass_search_directions(n))
-    step_size = params[:StepSizeFactor] * minimum(diameters(ss))
+    step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])
     x = rand_individual(ss)
     new(params, dgen, ss, n, 0, step_size, 
       x, evaluate(params[:Evaluator], x))
   end
 end
+
+calc_initial_step_size(gss::GeneratingSetSearcher) = calc_initial_step_size(gss.search_space, gss.parameters[:InitialStepSizeFactor])
 
 has_ask_tell_interface(gss::GeneratingSetSearcher) = false
 
@@ -66,7 +73,7 @@ function step(gss::GeneratingSetSearcher)
     # Restart from a random point
     gss.x = rand_individual(gss.search_space)
     gss.xfitness = evaluate(gss.parameters[:Evaluator], gss.x)
-    gss.step_size = gss.parameters[:StepSizeFactor] * minimum(diameters(gss.search_space))
+    gss.step_size = calc_initial_step_size(gss)
   end
 
   # Get the directions for this iteration
@@ -99,7 +106,8 @@ function step(gss::GeneratingSetSearcher)
   if found_better
     gss.x = candidate
     gss.xfitness = last_fitness(gss.parameters[:Evaluator])
+    gss.step_size = min(gss.parameters[:StepSizeGamma] * gss.step_size, gss.parameters[:StepSizeMax])
   else
-    gss.step_size = gss.step_size / 2
+    gss.step_size *= gss.parameters[:StepSizePhi]
   end
 end

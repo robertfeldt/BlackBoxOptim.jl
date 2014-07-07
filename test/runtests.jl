@@ -20,6 +20,9 @@ my_tests = [
   "test_smoketest_bboptimize.jl",
 
   "problems/test_single_objective.jl",
+
+  "test_generating_set_search.jl",
+  "test_direct_search_with_probabilistic_descent.jl",
 ]
 
 for t in my_tests
