@@ -12,6 +12,30 @@ facts("Fitness") do
     @fact hat_compare(-1.0, -1.0) => 0
   end
 
+  context("is_minimizing in float fitness schemes") do
+    mins = BlackBoxOptim.FloatFitness(true)
+    @fact BlackBoxOptim.is_minimizing(mins) => true
+
+    maxs = BlackBoxOptim.FloatFitness(false)
+    @fact BlackBoxOptim.is_minimizing(maxs) => false
+  end
+
+  context("hat_compare floats in a minimizing fitness scheme") do
+    scheme = BlackBoxOptim.FloatFitness(true)
+
+    @fact hat_compare(1.0, 2.0, scheme) => -1
+    @fact hat_compare(2.0, 1.0, scheme) => 1
+    @fact hat_compare(1.0, 1.0, scheme) => 0
+  end
+
+  context("hat_compare floats in a maximizing fitness scheme") do
+    scheme = BlackBoxOptim.FloatFitness(false)
+
+    @fact hat_compare(1.0, 2.0, scheme) => 1
+    @fact hat_compare(2.0, 1.0, scheme) => -1
+    @fact hat_compare(1.0, 1.0, scheme) => 0
+  end
+
   context("hat_compare fitnesses of size 1 in a minimizing FitnessScheme") do
     scheme = float_vector_scheme_min()
 
