@@ -71,6 +71,8 @@ The section above described the basic API for the BlackBoxOptim package. We empl
 * `de_rand_1_bin_radiuslimited`
 * `de_rand_2_bin_radiuslimited`
 * `random_search`
+* `generating_set_search`
+* `probabilistic_descent`
 
 In addition to the `method` keyword, you can alter the behavior of the Optim package by using other keywords:
 
@@ -95,15 +97,17 @@ Most optimizers have specific options that can be specified in the `parameters` 
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): `de_rand_1_bin_radiuslimited`
   - DE/rand/2/bin: `de_rand_2_bin`
   - DE/rand/2/bin with radius limited sampling (a type of trivial geography): `de_rand_2_bin_radiuslimited`
-* RandomSearch (to compare to): `random_search`
+* Direct search:
+  - Generating set search:
+    - Compass/coordinate search: generating_set_search
+    - Direct search through probabilistic descent: probabilistic_descent
 * Resampling Memetic Searchers:
   - Resampling Memetic Search (RS): `resampling_memetic_search`
   - Resampling Inheritance Memetic Search (RIS): `resampling_inheritance_memetic_search`
 * Stochastic Approximation:
   - Simultaneous Perturbation Stochastic Approximation (SPSA)
-* Direct search:
-  - Generating set search:
-    - Compass/coordinate search
+* RandomSearch (to compare to): `random_search`
+
 
 ## Planned Optimizers
 

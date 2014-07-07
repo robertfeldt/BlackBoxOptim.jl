@@ -60,6 +60,11 @@ type GeneratingSetSearcher <: DirectSearcher
   end
 end
 
+# We also include the name of the direction generator.
+function name(opt::GeneratingSetSearcher)
+  "GeneratingSetSearcher($(typeof(opt.direction_gen)))"
+end
+
 has_ask_tell_interface(gss::GeneratingSetSearcher) = false
 
 function has_converged(gss::GeneratingSetSearcher)

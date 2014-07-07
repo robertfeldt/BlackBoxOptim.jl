@@ -11,6 +11,8 @@ facts("bboptimize smoketest") do
       search_space = [(-5.0, 5.0), (-2.0, 2.0)], max_time = 0.3,
       parameters = {:ShowTrace => false})
 
+     # println("Fitness for $m: $f")
+
      @fact size(b) => (1, 2)
      @fact typeof(f) => Float64
      @fact f < 100.0 => true # this can't be very tight since we give very little time for optimization...

@@ -22,3 +22,37 @@ facts("Random sampling on unit, n-dimensional sphere") do
   end
 
 end
+
+facts("Random direction generator") do
+
+  rdg1 = BlackBoxOptim.RandomDirectionGen(2, 3)
+  ds1 = BlackBoxOptim.directions_for_k(rdg1, 1)
+  @fact size(ds1) => (2, 3)
+
+  rdg2 = BlackBoxOptim.RandomDirectionGen(10, 17)
+  ds2 = BlackBoxOptim.directions_for_k(rdg2, 1)
+  @fact size(ds2) => (10, 17)
+  
+end
+
+facts("Mirrored random direction generator") do
+
+  mrdg1 = BlackBoxOptim.MirroredRandomDirectionGen(2, 4)
+  ds1 = BlackBoxOptim.directions_for_k(mrdg1, 1)
+  @fact size(ds1) => (2, 4)
+  @fact ds1[:,3] == -ds1[:,1] => true
+  @fact ds1[:,4] == -ds1[:,2] => true
+
+  mrdg2 = BlackBoxOptim.MirroredRandomDirectionGen(10, 6)
+  ds2 = BlackBoxOptim.directions_for_k(mrdg2, 1)
+  @fact size(ds2) => (10, 6)
+  @fact ds2[:,4] == -ds2[:,1] => true
+  @fact ds2[:,5] == -ds2[:,2] => true
+  @fact ds2[:,6] == -ds2[:,3] => true
+  
+  # Must be even number of directions
+  @fact_throws BlackBoxOptim.MirroredRandomDirectionGen(10, 1)
+  @fact_throws BlackBoxOptim.MirroredRandomDirectionGen(10, 3)
+  @fact_throws BlackBoxOptim.MirroredRandomDirectionGen(10, 7)
+
+end

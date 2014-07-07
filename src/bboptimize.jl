@@ -11,7 +11,8 @@ ValidMethods = {
   :resampling_memetic_search => BlackBoxOptim.resampling_memetic_searcher,
   :resampling_inheritance_memetic_search => BlackBoxOptim.resampling_inheritance_memetic_searcher,
   :simultaneous_perturbation_stochastic_approximation => BlackBoxOptim.SimultaneousPerturbationSA2,
-  :generating_set_search => BlackBoxOptim.GeneratingSetSearcher
+  :generating_set_search => BlackBoxOptim.GeneratingSetSearcher,
+  :probabilistic_descent => BlackBoxOptim.direct_search_probabilistic_descent,
 }
 
 MethodNames = collect(keys(ValidMethods))

@@ -48,6 +48,6 @@ p = BlackBoxOptim.fixeddim_problem(modLangerman; range = (0.0, 10.0), dims = 10,
   name = "Modified Langerman", fmins = [-0.9650])
 
 BlackBoxOptim.repeated_bboptimize(30, p, 10, [
-  :generating_set_search, 
+  :generating_set_search,
   :adaptive_de_rand_1_bin_radiuslimited],
   10.0, 1e-5, {:MinDeltaFitnessTolerance => 1e-50})

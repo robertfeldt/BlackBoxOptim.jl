@@ -28,8 +28,26 @@ end
 type MirroredRandomDirectionGen <: DirectionGenerator
   numDimensions::Int64
   numDirections::Int64
+
+  MirroredRandomDirectionGen(numDims, numDirections) = begin
+    if numDirections % 2 == 1
+      throw("the number of directions must be even")
+    end
+    new(numDims, numDirections)
+  end
 end
 
-function directions_for_k(rdg::RandomDirectionGen, k)
-  sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections)
+function directions_for_k(rdg::MirroredRandomDirectionGen, k)
+  r = sample_unit_hypersphere(rdg.numDimensions, int(rdg.numDirections/2))
+  [r -r]
+end
+
+DirectSearchProbabilisticDescentDefaultParameters = {
+  :NumDirections => 2, # This should be a function of Gamma and Phi for the GSS but 2 is often enough
+}
+
+function direct_search_probabilistic_descent(parameters)
+  params = Parameters(parameters, DirectSearchProbabilisticDescentDefaultParameters)
+  params[:DirectionGenerator] = MirroredRandomDirectionGen(numdims(params[:Evaluator]), params[:NumDirections])
+  GeneratingSetSearcher(params)
 end
