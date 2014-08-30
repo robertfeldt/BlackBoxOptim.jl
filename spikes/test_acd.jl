@@ -105,8 +105,8 @@ bbob_sp1(rosenbrock, 1e-8, 10, 1, 30) # 5081 +/- 2226
 bbob_sp1(rosenbrock, 1e-8, 30, 1, 30) # 49568 +/- 21117
 
 P = 100
-bbob_sp1(rosenbrock, 1e-8, P, iceil(sqrt(P)), 3, 1e5*P) # 1.68466367e6 +/- 566216.47 (1322155-2337131)
 bbob_sp1(rosenbrock, 1e-8, P, 1, 3, 1e5*P) # 978986.0 +/- 397922.39 (578444-1374236)
+bbob_sp1(rosenbrock, 1e-8, P, iceil(sqrt(P)), 3, 1e5*P) # 1.68466367e6 +/- 566216.47 (1322155-2337131)
 bbob_sp1(rosenbrock, 1e-8, P, 4, 3, 1e5*P) # 978986.0 +/- 397922.39 (578444-1374236)
 
 P = 256

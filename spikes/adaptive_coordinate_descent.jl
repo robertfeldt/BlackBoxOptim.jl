@@ -196,7 +196,13 @@ type AdaptiveEncoding
   iter
   AdaptiveEncoding(mu::Int64, P::Int64, B::Matrix{Float64}, population = randn(P, mu)) = begin
     # We assume B is orthogonal!
-    weights = ones(mu) / mu # Can also try non-uniform weights here...
+
+    # Linear weights seem to be the best in my informal testing:
+    weights = ones(mu) / mu
+    # Non-uniform weights does not seem to work as well for harder problems:
+    #w = log(mu+1) - log(1:mu)
+    #weights = w / sum(w)
+
     new(mu, P, B, B, B',
       weights,
       mu, # mucov
