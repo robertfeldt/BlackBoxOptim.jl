@@ -20,7 +20,7 @@ best10, fitness10, termination_reason10, elapsed_time10, params, num_evals10 = B
 # And lets run it again:
 best20, fitness20, termination_reason20, elapsed_time20, params, num_evals20 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
 
-# Lets run 880 steps this time to try to get more progress:
+# Lets run 980 steps this time to try to get more progress:
 params[:MaxSteps] = 980
 best1000, fitness1000, termination_reason1000, elapsed_time1000, params, num_evals1000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
 
@@ -29,8 +29,11 @@ params[:MaxSteps] = 9000
 best10000, fitness10000, termination_reason10000, elapsed_time10000, params, num_evals10000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
 
 # Now compare fitness progress:
-println((fitness10, fitness20, fitness1000, fitness10000))
+println("Fitness progress: ", (fitness10, fitness20, fitness1000, fitness10000))
 
 # And note that the elapsed time was much larger for first call since things
 # were compiled:
-println((elapsed_time10, elapsed_time20, elapsed_time1000, elapsed_time10000))
+println("Elapsed time: ", (elapsed_time10, elapsed_time20, elapsed_time1000, elapsed_time10000))
+
+# And results should approach the Rosenbrock optimum at [1.0, 1.0]:
+println("Best solution progress: ", (best10, best20, best1000, best10000))
