@@ -181,6 +181,21 @@ function bboptimize(functionOrProblem; max_time = false,
   method = :adaptive_de_rand_1_bin_radiuslimited, 
   parameters = Dict())
 
+  # We just pass the kw params along...
+  optimizer, problem, params = setup_bboptimize(functionOrProblem; 
+    max_time = max_time, 
+    search_space = search_space, search_range = search_range, dimensions = dimensions,
+    method = method, parameters = parameters)
+
+  run_optimizer_on_problem(optimizer, problem; parameters = params)
+
+end
+
+function setup_bboptimize(functionOrProblem; max_time = false,
+  search_space = false, search_range = (0.0, 1.0), dimensions = 2,
+  method = :adaptive_de_rand_1_bin_radiuslimited, 
+  parameters = Dict())
+
   params = Parameters(parameters, DefaultParameters)
   params[:MaxTime] = max_time
   params[:SearchSpace] = search_space
@@ -240,7 +255,7 @@ function bboptimize(functionOrProblem; max_time = false,
   optimizer_func = ValidMethods[method]
   optimizer = optimizer_func(params)
 
-  run_optimizer_on_problem(optimizer, problem; parameters = params)
+  return (optimizer, problem, params)
 end
 
 function tr(msg, parameters, obj = None)
