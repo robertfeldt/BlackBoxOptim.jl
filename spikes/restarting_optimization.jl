@@ -24,7 +24,7 @@ best20, fitness20, termination_reason20, elapsed_time20, params, num_evals20 = B
 params[:MaxSteps] = 980
 best1000, fitness1000, termination_reason1000, elapsed_time1000, params, num_evals1000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
 
-# And finish it off with another 9000 steps in batches of 100 (and without tracing):
+# And finish it off with another 9000 steps in batches of 1000:
 params[:MaxSteps] = 1000
 fitness10000 = best10000 = elapsed_time1000b = 1 # Just so saved outside of loop body...
 for i in 1:9
