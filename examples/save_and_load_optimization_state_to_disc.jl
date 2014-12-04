@@ -22,7 +22,7 @@ b100, f100, tr100, time100, params, ne100 = BlackBoxOptim.run_optimizer_on_probl
 # Print a randomly selected individual so we can ensure it's the same later:
 popsize, dims = size(optimizer.population)
 random_individual = rand(1:popsize)
-println("Ind $random_individual: ", optimizer.population[random_individual, :])
+println("Individual $random_individual (orig): ", optimizer.population[random_individual, :])
 
 # Now serialize to a temp file:
 tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
@@ -36,7 +36,7 @@ opt2, prob2, params2 = deserialize(fh)
 close(fh)
 
 # Print the same randomly selected individual so we can ensure it's the same:
-println("Ind $random_individual: ", opt2.population[random_individual, :])
+println("Individual $random_individual (read): ", opt2.population[random_individual, :])
 
 # Clean up the temp file:
 rm(tempfilename)
