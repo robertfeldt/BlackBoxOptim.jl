@@ -19,6 +19,11 @@ optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d;
 b100, f100, tr100, time100, params, ne100 = BlackBoxOptim.run_optimizer_on_problem(
   optimizer, problem; parameters = params);
 
+# Print a randomly selected individual so we can ensure it's the same later:
+popsize, dims = size(optimizer.population)
+random_individual = rand(1:popsize)
+println("Ind $random_individual: ", optimizer.population[random_individual, :])
+
 # Now serialize to a temp file:
 tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
 fh = open(tempfilename, "w")
@@ -30,15 +35,19 @@ fh = open(tempfilename, "r")
 opt2, prob2, params2 = deserialize(fh)
 close(fh)
 
+# Print the same randomly selected individual so we can ensure it's the same:
+println("Ind $random_individual: ", opt2.population[random_individual, :])
+
 # Clean up the temp file:
 rm(tempfilename)
 
-# Now restart the optimization:
-b200, f200, tr200, time200, params, ne200 = BlackBoxOptim.run_optimizer_on_problem(
+# Now restart the optimization (but run more steps):
+params2[:MaxSteps] = 900
+b1000, f1000, tr1000, time1000, params, ne1000 = BlackBoxOptim.run_optimizer_on_problem(
   opt2, prob2; parameters = params2);
 
 # And print the fitness progress:
-println("Fitness progress: ", (f100, f200))
+println("Fitness progress: ", (f100, f1000))
 
 # NOTE! This method is not guaranteed to give stable results when you change
 # version of julia between saving and loading the data.
