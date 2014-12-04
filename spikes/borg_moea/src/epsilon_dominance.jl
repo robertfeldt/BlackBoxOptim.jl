@@ -53,3 +53,28 @@ function inner_epsilon_box_dominates_and_epsilon_progress(
   end
 
 end
+
+# An EpsilonBoxArchive keeps a epsilon Pareto set of the best, non-dominated solutions
+# found so far for a multi-objective search/optimization problem.
+type EpsilonBoxArchive
+  epsilon
+  numsolutions::Int64
+  solutions::Matrix{Float64}       # solutions in this archive, one solution per column
+
+  # For speedup we cache the boxes and leftpoints of all solutions. They have the same index as in
+  # the solutions above.
+  boxes::Matrix{Float64}      # the epsilon-boxes corresponding to each solution (same index as solutions)
+  leftpoints::Matrix{Float64} # Position of "lower left" point of box (same index as solutions)
+
+  function EpsilonBoxArchive(dimension::Integer, epsilon = 0.01, size = 100)
+    new(
+      epsilon,
+      0,
+      zeros(Float64, dimension, size),
+      zeros(Float64, dimension, size),
+      zeros(Float64, dimension, size)
+      )
+  end
+end
+
+add_if_dominates!(a::EpsilonBoxArchive)
