@@ -15,8 +15,8 @@ function sample_unit_hypersphere(n, num = 1)
 end
 
 type RandomDirectionGen <: DirectionGenerator
-  numDimensions::Int64
-  numDirections::Int64
+  numDimensions::Int
+  numDirections::Int
 end
 
 function directions_for_k(rdg::RandomDirectionGen, k)
@@ -26,8 +26,8 @@ end
 # A MirroredRandomDirectionGen generates half of the directions randomly and then
 # mirrors by negating them.
 type MirroredRandomDirectionGen <: DirectionGenerator
-  numDimensions::Int64
-  numDirections::Int64
+  numDimensions::Int
+  numDirections::Int
 
   MirroredRandomDirectionGen(numDims, numDirections) = begin
     if numDirections % 2 == 1

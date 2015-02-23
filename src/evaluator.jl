@@ -4,7 +4,7 @@ type ProblemEvaluator <: Evaluator
   problem::OptimizationProblem
   fitness_scheme::FitnessScheme
   archive::Archive
-  num_evals::Int64
+  num_evals::Int
   last_fitness
 
   ProblemEvaluator(problem::OptimizationProblem; archive = false,

@@ -32,9 +32,9 @@ fmins(p::OptimizationProblem) = p.fmins
 
 fmin(p::OptimizationProblem) = fmins(p) != Nothing() ? fmins(p)[1] : nothing
 
-ofunc(p::OptimizationProblem, index::Int64) = p.funcs[index]
+ofunc(p::OptimizationProblem, index::Int) = p.funcs[index]
 
-evalfunc(x, i::Int64, p::OptimizationProblem) = ofunc(p, i)(x)
+evalfunc(x, i::Int, p::OptimizationProblem) = ofunc(p, i)(x)
 
 # Evaluate fitness of a candidate solution on the 1st objective function of a problem.
 eval1(x, p::OptimizationProblem) = evalfunc(x, 1, p)
@@ -66,12 +66,12 @@ anydim_problem(name, f::Function, range, fmin::Float64) = AnyDimProblem(name, [f
 anydim_problem(name, f::Function, range, fmins::Union(Nothing, Vector{Float64})) = AnyDimProblem(name, [f], range, fmins)
 anydim_problem(name, f::Function, range) = AnyDimProblem(name, [f], range, nothing)
 
-function as_fixed_dim_problem(p::AnyDimProblem, dim::Int64)
+function as_fixed_dim_problem(p::AnyDimProblem, dim::Int)
   ss = symmetric_search_space(dim, p.range_per_dimension)
   FixedDimProblem(p.name, p.funcs, ss, p.fmins)
 end
 
-function as_fixed_dim_problem(p::FixedDimProblem, dim::Int64)
+function as_fixed_dim_problem(p::FixedDimProblem, dim::Int)
   if numdims(p) != dim
     throw("Trying to set dimension $(dim) on a fixed dimensional problem of dimension $(numdims(p))")
   end
@@ -94,12 +94,12 @@ end
 # A function set is specified through a dict mapping its function number
 # to an optimization problem. We can create a fixed dimensional variant of
 # an any dimensional function set with:
-function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dim::Int64)
+function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dim::Int)
   as_fixed_dim_problem_set(ps, [dim])
 end
 
 # Create a fixed dim version of each problem in ps for each dim in dims.
-function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dims::Array{Int64,1})
+function as_fixed_dim_problem_set(ps::Dict{Any, Any}, dims::Array{Int,1})
   next_free_index = 1
   result = Dict{Any, FixedDimProblem}()
   for(d in dims)

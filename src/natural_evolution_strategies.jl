@@ -24,7 +24,7 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
     sigma = ones(numDimensions, 1)
     distr = Normal(0, 1)
 
-    lambda = lambda || convert(Int64, 4 + ceil(log(3*numDimensions)))
+    lambda = lambda || convert(Int, 4 + ceil(log(3*numDimensions)))
     sigma_learnrate = sigma_learnrate || calc_sigma_learnrate_for_snes(numDimensions)
 
     new(numDimensions, lambda, mu, sigma, distr, 
@@ -128,7 +128,7 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
 
   XNESOpt(searchSpace; lambda = false) = begin
     d = numdims(searchSpace)
-    lambda = lambda || convert(Int64, 4 + 3*floor(log(d)))
+    lambda = lambda || convert(Int, 4 + 3*floor(log(d)))
     x_learnrate = 1
     a_learnrate = 0.5 * minimum([1.0 / d, 0.25])
     x = rand_individual(searchSpace)
@@ -176,7 +176,7 @@ end
 # Calculate the fitness shaping utilities vector using the steps method.
 function fitness_shaping_utilities_linear(n)
   # Second half has zero utility.
-  treshold = convert(Int64, floor(n/2))
+  treshold = convert(Int, floor(n/2))
   second_half = zeros(n - treshold, 1)
 
   # While first half's utility decreases in linear steps 

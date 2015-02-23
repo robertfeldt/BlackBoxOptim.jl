@@ -20,10 +20,10 @@ type FrequencyAdapter
   a::Vector{Float64}    # Current ai values.
   deltahat::Float64     # Running average of the progress values.
 
-  block::Vector{Int64}  # Current block of selected methods.
+  block::Vector{Int}  # Current block of selected methods.
 
-  numupdates::Int64     # Number of times we have been updated.
-  min_updates::Int64    # Number of updates until we start adapting frequencies.
+  numupdates::Int     # Number of times we have been updated.
+  min_updates::Int    # Number of updates until we start adapting frequencies.
 
   FrequencyAdapter(n, c = 0.2, pmin = 0.05, pmax = 20) = begin
     eta = 1/n
@@ -53,13 +53,13 @@ end
 
 # Create a new block.
 function create_new_block!(fa::FrequencyAdapter)
-  block = Int64[]
+  block = Int[]
   #print("Creating new block, psum = $(fa.psum), a = ", fa.a, ", p = ", fa.p)
   for(i in 1:fa.n)
     fa.a[i] += (fa.n * fa.p[i] / fa.psum)
-    num_ai = convert(Int64, floor(fa.a[i]))
+    num_ai = convert(Int, floor(fa.a[i]))
     if num_ai > 0
-      block = vcat(block, ones(Int64, num_ai)*i)
+      block = vcat(block, ones(Int, num_ai)*i)
       fa.a[i] -= num_ai
     end
   end

@@ -11,8 +11,8 @@ SPSADefaultParameters = {
 type SimultaneousPerturbationSA2 <: StochasticApproximationOptimizer
   search_space::SearchSpace
   parameters::Parameters
-  k::Int64
-  n::Int64
+  k::Int
+  n::Int
   theta::Array{Float64, 2}
   delta_ck::Array{Float64, 2}
 
@@ -26,7 +26,7 @@ end
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 
-sample_bernoulli_vector(n::Int64) = 2.0 * round(rand(n,1)) - 1.0
+sample_bernoulli_vector(n::Int) = 2.0 * round(rand(n,1)) - 1.0
 
 function ask(spsa::SimultaneousPerturbationSA2)
 

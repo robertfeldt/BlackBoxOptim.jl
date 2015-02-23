@@ -3,7 +3,7 @@
 # only take values in [0.0, 1.0] and it is up to the ParameterSet to translate
 # that to meaningful ranges.
 type BonesaTuner
-  numvectors::Int64                     # Current num of param vectors in archive
+  numvectors::Int                     # Current num of param vectors in archive
   parameter_vectors::Array{Float64, 2}  # Archive of param vectors, each column is one vector
   utilities::Array{Float64, 2}          # Each column has Nu * Np utility values for one and the same parameter vector
   num_utility_values

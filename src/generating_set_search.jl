@@ -42,8 +42,8 @@ type GeneratingSetSearcher <: DirectSearcher
   parameters::Parameters
   direction_gen::DirectionGenerator
   search_space::SearchSpace
-  n::Int64
-  k::Int64
+  n::Int
+  k::Int
   step_size::Float64
   x::Array{Float64, 2}
   xfitness::Float64

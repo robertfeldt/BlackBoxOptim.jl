@@ -8,10 +8,10 @@ abstract Archive
 # candidates/individuals seen.
 type TopListArchive <: Archive
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
-  num_fitnesses::Int64  # Number of calls to add_candidate
+  num_fitnesses::Int  # Number of calls to add_candidate
 
-  size::Int64           # Max size of top lists
-  count::Int64          # Current number of values in the top lists
+  size::Int           # Max size of top lists
+  count::Int          # Current number of values in the top lists
 
   fitnesses::Array{Float64,1}  # Top fitness values
   candidates::Array{Any, 1}    # Top candidates corresponding to top fitness values
@@ -20,13 +20,13 @@ type TopListArchive <: Archive
   # For each magnitude class (as defined by magnitude_class function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
   # class is: (magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)
-  fitness_history::Array{(Float64, Int64, Float64, Float64),1}
+  fitness_history::Array{(Float64, Int, Float64, Float64),1}
 
-  numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
+  numdims::Int        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
-  TopListArchive(numdims, size::Int64 = 10) = begin
+  TopListArchive(numdims, size::Int = 10) = begin
     new(time(), 0, size, 0, Float64[], Any[], 
-      (Float64, Int64, Float64, Float64)[], int(numdims))
+      (Float64, Int, Float64, Float64)[], int(numdims))
   end
 end
 
@@ -47,7 +47,7 @@ end
 
 # Add a candidate with a fitness to the archive (if it is good enough).
 function add_candidate!(a::TopListArchive, fitness::Number, 
-  candidate, num_fevals::Int64 = -1)
+  candidate, num_fevals::Int = -1)
   a.num_fitnesses += 1
 
   if a.count < a.size
@@ -87,7 +87,7 @@ function magnitude_class(f::Number)
 end
 
 # Save fitness history so we can reconstruct the most important events later.
-function push_to_fitness_history!(a::Archive, fitness::Number, num_fevals::Int64 = -1)
+function push_to_fitness_history!(a::Archive, fitness::Number, num_fevals::Int = -1)
   push!(a.fitness_history, make_fitness_event(a, fitness, num_fevals))
 end
 
@@ -105,7 +105,7 @@ function distance_to_optimum(fitness, bestfitness)
   abs(fitness - bestfitness)
 end
 
-function make_fitness_event(a::Archive, fitness::Number, num_fevals::Int64 = -1)
+function make_fitness_event(a::Archive, fitness::Number, num_fevals::Int = -1)
   nf = num_fevals == -1 ? a.num_fitnesses : num_fevals
   (time(), nf, fitness, fitness_improvement_ratio(a, fitness))
 end

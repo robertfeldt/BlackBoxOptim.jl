@@ -513,7 +513,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
 
   for m in methods
 
-    ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int64, numrepeats)
+    ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int, numrepeats)
     rcounts = {"Within fitness tolerance of optimum" => 0}
 
     for i in 1:numrepeats
