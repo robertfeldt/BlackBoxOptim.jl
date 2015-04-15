@@ -130,4 +130,7 @@ include("direct_search_with_probabilistic_descent.jl")
 # End-user/interface functions
 include("bboptimize.jl")
 
+# Genetic Operators
+include("genetic_operators/mutation/polynomial_mutation.jl")
+
 end # module BlackBoxOptim
