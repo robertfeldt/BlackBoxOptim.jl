@@ -1,6 +1,6 @@
 using BlackBoxOptim: PolynomialMutation, GeneticOperator, MutationOperator, apply
 
-describe("Polynomial mutation") do
+describe("Polynomial mutation genetic operator") do
   @repeat test("mutate float values to new float values within bounds") do
   	low = rand(-10.0:10.0)
   	high = low + rand(0.10:10.0)

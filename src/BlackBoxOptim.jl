@@ -132,5 +132,6 @@ include("bboptimize.jl")
 
 # Genetic Operators
 include("genetic_operators/mutation/polynomial_mutation.jl")
+include("genetic_operators/mutation/mutation_clock.jl")
 
 end # module BlackBoxOptim
