@@ -133,4 +133,7 @@ include("bboptimize.jl")
 # Genetic Operators
 include("genetic_operators/genetic_operator.jl")
 
+# Fitness
+include("fitness/pareto_dominance.jl")
+
 end # module BlackBoxOptim
