@@ -13,3 +13,19 @@ function pareto_dominates_fast{T <: Real}(u::Vector{T}, v::Vector{T})
 end
 
 pareto_dominates{T <: Real}(v1::Vector{T}, v2::Vector{T}) = pareto_dominates_fast(v1, v2)
+
+function pareto_dominates_hat{T <: Real}(u::Vector{T}, v::Vector{T})
+  one_larger = one_smaller = false
+  for i in 1:length(u)
+    if u[i] > v[i]
+      one_larger = true
+    elseif u[i] < v[i]
+      one_smaller = true
+    end
+  end
+  if one_larger
+    return (one_smaller ? 0 : 1)
+  else
+    return (one_smaller ? -1 : 0)
+  end
+end

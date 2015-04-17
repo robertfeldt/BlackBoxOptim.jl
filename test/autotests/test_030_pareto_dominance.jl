@@ -1,4 +1,4 @@
-using BlackBoxOptim: pareto_dominates
+using BlackBoxOptim: pareto_dominates, pareto_dominates_hat
 
 describe("Pareto dominance") do
   test("simple 1-objective cases where there is dominance") do
@@ -39,6 +39,17 @@ describe("Pareto dominance") do
   @repeat test("when the vectors are equal, i.e. NO dominance") do
     u = rand_vector()
     @check !pareto_dominates(u, u)
+    @check pareto_dominates_hat(u, u) == 0
+  end
+
+  @repeat test("when the vectors have one larger and one smaller value, i.e. NO dominance") do
+    u = rand_vector()
+    v = copy(u)
+    idxs = rand_indices(length(u), 2)
+    v[idxs[1]] += rand()
+    v[idxs[2]] -= rand()
+    @check !pareto_dominates(u, v)
+    @check pareto_dominates_hat(u, v) == 0
   end
 
   @repeat test("when there is one dominating") do
@@ -46,5 +57,7 @@ describe("Pareto dominance") do
     v = copy(u) .+ abs(delta_vector_for(u, rand(1:length(u))))
     @check pareto_dominates(u, v)
     @check !pareto_dominates(v, u)
+    @check pareto_dominates_hat(u, v) == -1
+    @check pareto_dominates_hat(v, u) ==  1
   end
 end
