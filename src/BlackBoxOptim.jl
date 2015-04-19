@@ -135,5 +135,7 @@ include("genetic_operators/genetic_operator.jl")
 
 # Fitness
 include("fitness/pareto_dominance.jl")
+include("fitness/epsilon_pareto_dominance.jl")
+include("fitness/epsilon_box_dominance.jl")
 
 end # module BlackBoxOptim

@@ -43,7 +43,7 @@ describe("Pareto dominance") do
   end
 
   @repeat test("when the vectors have one larger and one smaller value, i.e. NO dominance") do
-    u = rand_vector()
+    u = rand_vector(rand(2:107))
     v = copy(u)
     idxs = rand_indices(length(u), 2)
     v[idxs[1]] += rand()
