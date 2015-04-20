@@ -35,6 +35,6 @@ describe("Mutation Clock genetic operator") do
     # Not sure why the interval must be so wide. Seems we always get lower than the
     # expected number of mutations.
     nexpected = probmutate * size * nreps
-    @check (0.60 * nexpected) <= nmutations <= (1.40 * nexpected)
+    @check ifloor(0.50 * nexpected) <= nmutations <= iceil(1.50 * nexpected)
   end
 end
