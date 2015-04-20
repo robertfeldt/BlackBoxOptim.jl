@@ -39,6 +39,10 @@ describe("epsilon_box dominance and progress") do
       @check  epsilon_box_dominates([1.5, 0.5, 1.5], [1.5, 1.5, 1.5], 1.0)
       @check  epsilon_box_dominates([0.5, 1.5, 1.5], [1.5, 1.5, 1.5], 1.0)
 
+      @check !epsilon_box_dominates([1.5, 1.5, 1.5], [1.5, 1.5, 1.5], 1.0)
+      @check !epsilon_box_dominates([1.6, 1.5, 1.5], [1.5, 1.5, 1.5], 1.0)
+      @check !epsilon_box_dominates([0.4, 2.7, 1.5], [1.5, 1.5, 1.5], 1.0)
+
       @check  epsilon_box_progress([0.5, 0.5, 0.5], [1.5, 1.5, 1.5], 1.0)
       @check  epsilon_box_progress([1.5, 0.5, 0.5], [1.5, 1.5, 1.5], 1.0)
       @check  epsilon_box_progress([0.5, 1.5, 0.5], [1.5, 1.5, 1.5], 1.0)
@@ -58,8 +62,13 @@ describe("epsilon_box dominance and progress") do
       @check  epsilon_box_dominates([0.5, 0.5],  [1.5, 1.5], [1.0, 2.0])
       @check  epsilon_box_dominates([1.5, 0.5],  [1.5, 1.5], [1.0, 2.0])
 
+      @check !epsilon_box_dominates([1.5, 1.5],  [1.5, 1.5], [1.0, 2.0])
+      @check !epsilon_box_dominates([1.6, 1.5],  [1.5, 1.5], [1.0, 2.0])
+
       @check  epsilon_box_progress([0.5, 0.5],  [1.5, 1.5], [1.0, 2.0])
       @check !epsilon_box_progress([1.5, 0.5],  [1.5, 1.5], [1.0, 2.0])
+      @check !epsilon_box_progress([0.5, 0.5],  [1.5, 1.5], [2.0, 2.0])
+      @check !epsilon_box_progress([1.6, 1.5],  [1.5, 1.5], [1.0, 2.0])
     end
   end
 end
