@@ -54,7 +54,7 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
       return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
     end
 
-    res = compare_optimizers(rosenbrock; search_range = (-5.0, 5.0), dimensions = 30, max_time = 5.0)
+    res = compare_optimizers(rosenbrock; search_range = (-5.0, 5.0), dimensions = 30, max_time = 5.0);
 
 You can find more examples of using BlackBoxOptim in [the examples directory](https://github.com/robertfeldt/BlackBoxOptim.jl/tree/master/examples).
 
