@@ -60,4 +60,23 @@ describe("Pareto dominance") do
     @check pareto_dominates_hat(u, v) == -1
     @check pareto_dominates_hat(v, u) ==  1
   end
+
+  @repeat test("for single float fitness values") do
+    fval1 = randn()
+    f1 = makefitness(fval1)
+    fval2 = fval1 + rand(0.0001:113.0)
+    f2 = makefitness(fval2)
+    @check pareto_dominates(f1, f2)
+    @check !pareto_dominates(f2, f1)
+    @check !pareto_dominates(f1, f1)
+    @check !pareto_dominates(f2, f2)
+
+    fval3 = fval1 - rand(0.00001:113.0)
+    f3 = makefitness(fval3)
+    @check pareto_dominates(f3, f1)
+    @check pareto_dominates(f3, f2)
+    @check !pareto_dominates(f1, f3)
+    @check !pareto_dominates(f2, f3)
+    @check !pareto_dominates(f3, f3)
+  end
 end

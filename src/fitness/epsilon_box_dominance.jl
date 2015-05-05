@@ -8,6 +8,8 @@ function epsilon_box_dominates_and_epsilon_progress(u, v, epsilon)
     v, vindex, (epsilon .* vindex))
 end
 
+epsilon_box_dominates_and_epsilon_progress(f1::NewFitness, f2::NewFitness, epsilon) = epsilon_box_dominates_and_epsilon_progress(fitnessvalues(f1), fitnessvalues(f2), epsilon)
+
 epsilon_box_dominates(u, v, epsilon) = epsilon_box_dominates_and_epsilon_progress(u, v, epsilon)[1]
 epsilon_box_progress(u, v, epsilon) = epsilon_box_dominates_and_epsilon_progress(u, v, epsilon)[2]
 

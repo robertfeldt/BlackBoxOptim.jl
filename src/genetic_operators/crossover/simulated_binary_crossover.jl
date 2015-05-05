@@ -2,7 +2,7 @@
 
 calc_eta_exponent(eta) = 1 / (eta + 1)
 
-type SimulatedBinaryCrossover <: CrossoverOperator
+type SimulatedBinaryCrossover <: XoverOp2to2
   eta
   etaexponent # Precalc the eta exponent used in calc of beta
   SimulatedBinaryCrossover(eta = 3.0) = new(eta, calc_eta_exponent(eta))
