@@ -1,6 +1,6 @@
 include("bimodal_cauchy_distribution.jl")
 
-ADE_DefaultOptions = merge(DE_DefaultOptions, {
+ADE_DefaultOptions = mergeparam(DE_DefaultOptions, {
   # Distributions we will use to generate new F and CR values.
   "fdistr" => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
   "crdistr" => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
@@ -34,7 +34,7 @@ type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
     popsize = size(pop, 1)
     fs = [sample_bimodal_cauchy(options["fdistr"]; truncateBelow0 = false) for i in 1:popsize]
     crs = [sample_bimodal_cauchy(options["crdistr"]) for i in 1:popsize]
-    new(name, pop, ss, merge(DE_DefaultOptions, options), 
+    new(name, pop, ss, mergeparam(DE_DefaultOptions, options), 
       sample, mutate, crossover, bound, fs, crs)
   end
 end

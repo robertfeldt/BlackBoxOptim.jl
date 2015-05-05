@@ -92,7 +92,7 @@ facts("Parameters") do
   context("Merge with Parameters or Dict") do
 
     ps = Parameters({:a => 1, "c" => 4}, {:a => 2, :b => 3})
-    ps2 = merge(ps, {:d => 5, :a => 20})
+    ps2 = mergeparam(ps, {:d => 5, :a => 20})
     @fact ps2[:d] => 5
     @fact ps2[:b] => 3
     @fact ps2[:a] => 20

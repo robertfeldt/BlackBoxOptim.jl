@@ -11,7 +11,7 @@ export  Optimizer, PopulationOptimizer,
         XNESOpt, xnes,
 
         # Parameters
-        Parameters,
+        Parameters, mergeparam,
 
         # Fitness
 
