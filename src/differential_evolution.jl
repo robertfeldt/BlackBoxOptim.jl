@@ -32,7 +32,7 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
   bound::Function
 
   function DiffEvoOpt(name, pop, ss, options, sample, mutate, crossover, bound)
-    new(name, pop, ss, merge(DE_DefaultOptions, options), sample, mutate, crossover, bound)
+    new(name, pop, ss, mergeparam(DE_DefaultOptions, options), sample, mutate, crossover, bound)
   end
 end
 

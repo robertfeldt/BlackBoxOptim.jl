@@ -46,7 +46,7 @@ NES_DefaultOptions = {
 }
 
 function separable_nes(parameters)
-  params = merge(NES_DefaultOptions, parameters)
+  params = mergeparam(NES_DefaultOptions, parameters)
   SeparableNESOpt(params[:SearchSpace]; 
     lambda = params["lambda"], 
     mu_learnrate = params["mu_learnrate"], 
@@ -140,7 +140,7 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
 end
 
 function xnes(parameters)
-  params = merge(NES_DefaultOptions, parameters)
+  params = mergeparam(NES_DefaultOptions, parameters)
   XNESOpt(params[:SearchSpace]; lambda = params["lambda"])
 end
 
