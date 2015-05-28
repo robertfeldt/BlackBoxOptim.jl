@@ -64,7 +64,7 @@ function ask(de::DifferentialEvolutionOpt)
   # Bound the trial vector according to search space bounds
   trial = de.bound(trial, target, de.search_space)
 
-  # Return the candidates that should be ranked as tuples including their 
+  # Return the candidates that should be ranked as tuples including their
   # population indices.
   return [(trial, target_index), (target, target_index)]
 end
@@ -73,13 +73,19 @@ function random_sampler(de::DifferentialEvolutionOpt, numSamples)
   sample(1:popsize(de), numSamples; replace = false)
 end
 
-# This implements a "trivial geography" similar to Spector and Kline (2006) 
+# This implements a "trivial geography" similar to Spector and Kline (2006)
 # by first sampling an individual randomly and then selecting additional
 # individuals for the same tournament within a certain deme of limited size
 # for the sub-sequent individuals in the population. The version we implement
 # here is from:
 #  I. Harvey, "The Microbial Genetic Algorithm", in Advances in Artificial Life
 #  Darwin Meets von Neumann, Springer, 2011.
+# The original paper is:
+#  Spector, L., and J. Klein. 2005. Trivial Geography in Genetic Programming.
+#  In Genetic Programming Theory and Practice III, edited by T. Yu, R.L. Riolo,
+#  and B. Worzel, pp. 109-124. Boston, MA: Kluwer Academic Publishers.
+#  http://faculty.hampshire.edu/lspector/pubs/trivial-geography-toappear.pdf
+#
 function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
   # The radius must be at least as big as the number of samples + 2 so that
   # there is something to sample from.
@@ -152,7 +158,7 @@ end
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
 # better candidates that were inserted into the population.
-function tell!(de::DiffEvoOpt, 
+function tell!(de::DiffEvoOpt,
   # archive::Archive, # Skip for now
   rankedCandidates)
   num_candidates = length(rankedCandidates)
@@ -179,10 +185,10 @@ function de_rand_1_bin(parameters = Dict(); sampler = random_sampler, name = "DE
   params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
   params["NumParents"] = 3
-  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params, 
-    sampler, 
-    de_mutation_rand_1, 
-    de_crossover_binomial, 
+  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params,
+    sampler,
+    de_mutation_rand_1,
+    de_crossover_binomial,
     rand_bound_from_target!)
 end
 
@@ -190,10 +196,10 @@ function de_rand_2_bin(parameters = Dict(); sampler = random_sampler, name = "DE
   params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 5 since de_mutation_rand_2 requires it.
   params["NumParents"] = 5
-  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params, 
-    sampler, 
-    de_mutation_rand_2, 
-    de_crossover_binomial, 
+  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params,
+    sampler,
+    de_mutation_rand_2,
+    de_crossover_binomial,
     rand_bound_from_target!)
 end
 
