@@ -1,18 +1,18 @@
 # Implements variants of the memetic search algorithms RS and RIS. However,
-# we have modified them since they did not give very good performance when 
+# we have modified them since they did not give very good performance when
 # implemented as described in the papers below. Possibly, the papers are not
 # unambigous and I have misinterpreted something from them...
 #
 # The "Resampling Search" (RS) memetic algorithm is described in:
 #
-#  F. Caraffini, F. Neri, M. Gongora and B. N. Passow, "Re-sampling Search: A 
+#  F. Caraffini, F. Neri, M. Gongora and B. N. Passow, "Re-sampling Search: A
 #  Seriously Simple Memetic Approach with a High Performance", 2013.
 #
 # and its close sibling "Resampling Inheritance Search" (RIS) is described in:
 #
-#  F. Caraffini, F. Neri, B. N. Passow and G. Iacca, "Re-sampled Inheritance 
+#  F. Caraffini, F. Neri, B. N. Passow and G. Iacca, "Re-sampled Inheritance
 #  Search: High Performance Despite the Simplicity", 2013.
-#  
+#
 
 RSDefaultParameters = {
   :PrecisionRatio    => 0.40, # 40% of the diameter is used as the initial step length
@@ -63,9 +63,9 @@ RISDefaultParameters = {
 
 # Constructor for the RIS:
 function ResamplingInheritanceMemeticSearcher(evaluator; parameters = {})
-  ResamplingMemeticSearcher(evaluator; 
+  ResamplingMemeticSearcher(evaluator;
     parameters = Parameters(parameters, RISDefaultParameters, RSDefaultParameters),
-    resampling_function = random_resample_with_inheritance, 
+    resampling_function = random_resample_with_inheritance,
     name = "Resampling Inheritance Memetic Search (RIS)")
 end
 
@@ -100,7 +100,7 @@ end
 function step(rms::ResamplingMemeticSearcher)
 
   # First randomly sample two candidates and select the best one. It seems
-  # RS and RIS might be doing this in two different ways but use the RS way for 
+  # RS and RIS might be doing this in two different ways but use the RS way for
   # now.
   trial, fitness = best_of(rms.evaluator, rms.resampling_func(rms), rms.resampling_func(rms))
 

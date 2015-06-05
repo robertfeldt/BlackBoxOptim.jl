@@ -25,7 +25,7 @@ type TopListArchive <: Archive
   numdims::Int        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
   TopListArchive(numdims, size::Int = 10) = begin
-    new(time(), 0, size, 0, Float64[], Any[], 
+    new(time(), 0, size, 0, Float64[], Any[],
       (Float64, Int, Float64, Float64)[], int(numdims))
   end
 end
@@ -36,7 +36,7 @@ last_top_fitness(a::Archive) = a.fitnesses[a.count]
 should_enter_toplist(fitness::Float64, a::Archive) = fitness < last_top_fitness(a)
 
 # Delta fitness is the difference between the top two candidates found so far.
-# 
+#
 function delta_fitness(a::Archive)
   if length(a.fitness_history) < 2
     Inf
@@ -46,7 +46,7 @@ function delta_fitness(a::Archive)
 end
 
 # Add a candidate with a fitness to the archive (if it is good enough).
-function add_candidate!(a::TopListArchive, fitness::Number, 
+function add_candidate!(a::TopListArchive, fitness::Number,
   candidate, num_fevals::Int = -1)
   a.num_fitnesses += 1
 
@@ -74,8 +74,8 @@ function add_candidate!(a::TopListArchive, fitness::Number,
   end
 end
 
-# The magnitude class of a value is a tuple indicating its sign and scale in a 
-# tuple. This is used for filtering so that we only need to save one history 
+# The magnitude class of a value is a tuple indicating its sign and scale in a
+# tuple. This is used for filtering so that we only need to save one history
 # value per magnitude class instead of saving them all.
 function magnitude_class(f::Number)
   f = float(f)
@@ -91,7 +91,7 @@ function push_to_fitness_history!(a::Archive, fitness::Number, num_fevals::Int =
   push!(a.fitness_history, make_fitness_event(a, fitness, num_fevals))
 end
 
-function fitness_improvement_ratio(a::Archive, newFitness) 
+function fitness_improvement_ratio(a::Archive, newFitness)
   try
     bestfitness = best_fitness(a)
     return abs( (bestfitness - newFitness) / bestfitness )
@@ -115,7 +115,7 @@ function fitness_history_csv_header(a::Archive)
 end
 
 function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_history.csv";
-  header_prefix = "", line_prefix = "", 
+  header_prefix = "", line_prefix = "",
   include_header = true, bestfitness = nothing)
 
   fh = open(filename, "a+")
@@ -182,13 +182,13 @@ function merge_fitness_histories(histories)
     end
 
   end
-    
+
 end
 
 # Merge the fitness histories and save the average values of the fitness,
 # and distance to best fitness for each change in any of the histories.
 #function merge_fitness_histories_to_csv(archives::Archive[], filename = "fitness_history.csv";
-#  header_prefix = "", line_prefix = "", 
+#  header_prefix = "", line_prefix = "",
 #  include_header = true, bestfitness = nothing)
 #
 #end
@@ -219,9 +219,9 @@ function width_of_confidence_interval(a::Archive, p = 0.01)
   end
 end
 
-# We define the improvement potential as the percentage improvement 
+# We define the improvement potential as the percentage improvement
 # that can be expected from the current fitness value at a given p value.
-# In theory, an optimization run should be terminated when this value is very 
+# In theory, an optimization run should be terminated when this value is very
 # small, i.e. there is little improvement potential left in the run.
 function fitness_improvement_potential(a::Archive, p = 0.01)
   width_of_confidence_interval(a, p) / abs(best_fitness(a))

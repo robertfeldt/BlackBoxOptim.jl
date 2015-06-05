@@ -1,8 +1,8 @@
 # We have different sources for problem functions:
 #  S1 = CEC 2013 competition on large-scale optimization
 #  S2 = JADE paper http://150.214.190.154/EAMHCO/pdf/JADE.pdf
-#  S3 = "Test Suite for the Special Issue of Soft Computing on Scalability of 
-#        Evolutionary Algorithms and other Metaheuristics for Large Scale 
+#  S3 = "Test Suite for the Special Issue of Soft Computing on Scalability of
+#        Evolutionary Algorithms and other Metaheuristics for Large Scale
 #        Continuous Optimization Problems", http://sci2s.ugr.es/eamhco/functions1-19.pdf
 # Our primary focus is to implement all the problems from S1 since our
 # focus is on large-scale optimization but these problems also can be used
@@ -14,7 +14,7 @@ Shekel5 = fixeddim_problem(shekel5; range = (0.0, 10.0), dims = 4, name = "Sheke
 Hartman6 = fixeddim_problem(hartman6; range = (0.0, 1.0), dims = 6, name = "Hartman6", fmins = [-3.32237])
 Hartman3 = fixeddim_problem(hartman3; range = (0.0, 1.0), dims = 3, name = "Hartman3", fmins = [-3.860038442])
 
-# We skip (for now) f12 and f13 in the JADE paper since they are penalized 
+# We skip (for now) f12 and f13 in the JADE paper since they are penalized
 # functions which are quite nonstandard. We also skip f8 since we are unsure
 # about its proper implementation.
 JadeFunctionSet = {
@@ -51,14 +51,14 @@ numdims(tp::TransformedProblem) = numdims(sub_problem(tp))
 fmins(tp::TransformedProblem) = fmins(sub_problem(tp))
 name(tp::TransformedProblem) = name(sub_problem(tp))
 
-# A ShiftedAndBiasedProblem shifts the minimum value and biases the returned 
+# A ShiftedAndBiasedProblem shifts the minimum value and biases the returned
 # function values.
 type ShiftedAndBiasedProblem <: TransformedProblem
   xshift::Array{Float64, 1}
   funcshift::Float64
   subp::OptimizationProblem
 
-  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem; 
+  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem;
     xshift = false, funcshift = 0.0) = begin
     xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
     new(xshift[:], funcshift, sub_problem)
@@ -74,7 +74,7 @@ evalfunc(x, i::Int, sp::ShiftedAndBiasedProblem) = begin
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
 end
 
-shifted(p::OptimizationProblem; funcshift = 0.0) = ShiftedAndBiasedProblem(p; 
+shifted(p::OptimizationProblem; funcshift = 0.0) = ShiftedAndBiasedProblem(p;
   funcshift = funcshift)
 
 
@@ -111,12 +111,12 @@ s1_rosenbrock = rosenbrock
 # S1 Transformations
 #####################################################################
 
-# This transformation function is used to break the symmetry of symmetric 
+# This transformation function is used to break the symmetry of symmetric
 # functions.
 function t_asy(f, beta)
   D = length(f)
   g = copy(f)
-  temp = beta * linspace(0, 1, D) 
+  temp = beta * linspace(0, 1, D)
   ind = collect(1:D)[f .> 0]
   t = f[ind] .^ (1 + temp[ind] .* sqrt(f[ind]))
   setindex!(g, t, ind)

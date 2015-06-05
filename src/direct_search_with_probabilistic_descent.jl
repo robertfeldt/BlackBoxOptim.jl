@@ -1,6 +1,6 @@
 # Direct Search with Probabilistic Descent as described in Gratton2014:
 #
-#  S. Gratton, C. W. Royer, L. N. Vicente, and Z. Zhang, Direct search 
+#  S. Gratton, C. W. Royer, L. N. Vicente, and Z. Zhang, Direct search
 #  based on probabilistic descent, preprint 14-11, Dept. Mathematics, Univ. Coimbra.
 #  http://www.mat.uc.pt/~lnv/papers/ds-random.pdf
 #

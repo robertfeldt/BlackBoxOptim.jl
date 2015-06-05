@@ -33,7 +33,7 @@ DefaultParameters = {
 
   :ShowTrace      => true,  # Print tracing information during the optimization
   :TraceInterval  => 0.50,  # Minimum number of seconds between consecutive trace messages printed to STDOUT
-  :SaveTrace      => false, 
+  :SaveTrace      => false,
   :SaveFitnessTraceToCsv => false, # Save a csv file with information about the major fitness improvement events (only the first event in each fitness magnitude class is saved)
   :SaveParameters => false, # Save parameters to a json file for later scrutiny
 
@@ -43,11 +43,11 @@ DefaultParameters = {
   :PopulationSize => 50
 }
 
-# Create a problem given 
-#   a problem or 
+# Create a problem given
+#   a problem or
 #   a function and a search range or
 #   a function and a
-# while possibly updating the params with the specific dimension and search 
+# while possibly updating the params with the specific dimension and search
 # space to be used.
 function setup_problem(functionOrProblem; parameters = Dict())
 
@@ -59,7 +59,7 @@ function setup_problem(functionOrProblem; parameters = Dict())
     # If a fixed dim problem was given it takes precedence over the dimension param setting.
     if is_fixed_dimensional(functionOrProblem)
       problem = functionOrProblem
-    else 
+    else
       # If an anydim problem was given the dimension param must have been specified.
       if params[:NumDimensions] == :NotSpecified
         throw(ArgumentError("You MUST specify the number of dimensions in a solution when an any-dimensional problem is given"))
@@ -86,7 +86,7 @@ function setup_problem(functionOrProblem; parameters = Dict())
 
     # Now create an optimization problem with the given information. We currently reuse the type
     # from our pre-defined problems so some of the data for the constructor is dummy.
-    problem = fixeddim_problem(functionOrProblem; 
+    problem = fixeddim_problem(functionOrProblem;
       search_space = params[:SearchSpace], range = params[:SearchRange],
       dims = params[:NumDimensions]
     )
@@ -99,7 +99,7 @@ function setup_problem(functionOrProblem; parameters = Dict())
 
 end
 
-function compare_optimizers(functionOrProblem::Union(Function, OptimizationProblem); 
+function compare_optimizers(functionOrProblem::Union(Function, OptimizationProblem);
   max_time = false, search_space = false, search_range = (0.0, 1.0), dimensions = 2,
   methods = MethodNames, parameters = Dict())
 
@@ -178,12 +178,12 @@ end
 
 function bboptimize(functionOrProblem; max_time = false,
   search_space = false, search_range = (0.0, 1.0), dimensions = 2,
-  method = :adaptive_de_rand_1_bin_radiuslimited, 
+  method = :adaptive_de_rand_1_bin_radiuslimited,
   parameters = Dict())
 
   # We just pass the kw params along...
-  optimizer, problem, params = setup_bboptimize(functionOrProblem; 
-    max_time = max_time, 
+  optimizer, problem, params = setup_bboptimize(functionOrProblem;
+    max_time = max_time,
     search_space = search_space, search_range = search_range, dimensions = dimensions,
     method = method, parameters = parameters)
 
@@ -193,7 +193,7 @@ end
 
 function setup_bboptimize(functionOrProblem; max_time = false,
   search_space = false, search_range = (0.0, 1.0), dimensions = 2,
-  method = :adaptive_de_rand_1_bin_radiuslimited, 
+  method = :adaptive_de_rand_1_bin_radiuslimited,
   parameters = Dict())
 
   params = Parameters(parameters, DefaultParameters)
@@ -243,7 +243,7 @@ function setup_bboptimize(functionOrProblem; max_time = false,
 
   # Check that a valid method has been specified and then set up the optimizer
   if (typeof(method) != Symbol) || !any([(method == vm) for vm in MethodNames])
-    throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)")) 
+    throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)"))
   end
   pop = BlackBoxOptim.rand_individuals_lhs(params[:SearchSpace], params[:PopulationSize])
 
@@ -363,13 +363,13 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       num_better += num_better_since_last
 
       # Always print step number, num fevals and elapsed time
-      tr(@sprintf("%.2f secs, %d evals , %d steps", 
-        elapsed_time, num_evals(evaluator), step), parameters) 
+      tr(@sprintf("%.2f secs, %d evals , %d steps",
+        elapsed_time, num_evals(evaluator), step), parameters)
 
       # Only print if this optimizer reports on number of better. They return 0
       # if they do not.
       if num_better_since_last > 0
-        tr(@sprintf(", improv/step: %.3f (last = %.4f)", 
+        tr(@sprintf(", improv/step: %.3f (last = %.4f)",
           num_better/step, num_better_since_last/step), parameters)
         num_better_since_last = 0
       end
@@ -424,12 +424,12 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
 
   if parameters[:SaveFitnessTraceToCsv]
     timestamp = strftime("%y%m%d_%H%M%S", ifloor(start_time))
-    filename = "$(timestamp)_$(problem_summary(evaluator))_$(name(opt)).csv" 
+    filename = "$(timestamp)_$(problem_summary(evaluator))_$(name(opt)).csv"
     filename = replace(replace(filename, r"\s+", "_"), r"/", "_")
     header_prefix = "Problem,Dimension,Optimizer"
     line_prefix = "$(name(problem)),$(numdims(problem)),$(name(opt))"
-    save_fitness_history_to_csv_file(evaluator.archive, filename; 
-      header_prefix = header_prefix, line_prefix = line_prefix, 
+    save_fitness_history_to_csv_file(evaluator.archive, filename;
+      header_prefix = header_prefix, line_prefix = line_prefix,
       bestfitness = fmin(problem))
   end
 
@@ -441,7 +441,7 @@ function report_on_values(desc, v, lpad = "", rpad = "", digits = 3)
   println("$(lpad)$(desc): $(signif(mean(v), digits)) (std. dev = $(signif(std(v), digits)), median = $(signif(median(v), digits)))")
 end
 
-# Report on the number of times each key in a count dict was encountered. 
+# Report on the number of times each key in a count dict was encountered.
 # Returns a percentage dict calculated while iterating over the counted items.
 function count_dict_report(dict, desc, lpad = "", rpad = "")
   println(desc, ":")
@@ -467,7 +467,7 @@ function report_from_result_dict(statsdict)
   pdict["Within fitness tolerance of optimum"]
 end
 
-function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false, 
+function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false,
   descsummary = "mean", digits = 3, rpad = "")
 
   ranked = BlackBoxOptim.Utils.assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1e-3, rev = rev)
@@ -488,10 +488,10 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
   println("  Fitness tolerance = ", ftol, " (a run is a success if it reaches to within this value of true optimum)")
   println("  Max time budget per run = ", max_time, " secs\n")
 
-  rank_result_dicts_by(result_dicts, (d) -> d[:success_rate], "success rate (to reach within $(ftol) of optimum)"; 
+  rank_result_dicts_by(result_dicts, (d) -> d[:success_rate], "success rate (to reach within $(ftol) of optimum)";
     descsummary = "median", rev = true, rpad = "%")
   rank_result_dicts_by(result_dicts, (d) -> median(d[:fitnesses]), "fitness"; descsummary = "median")
-  rank_result_dicts_by(result_dicts, (d) -> median(d[:times]), "time (in seconds)"; 
+  rank_result_dicts_by(result_dicts, (d) -> median(d[:times]), "time (in seconds)";
     descsummary = "median", rpad = " secs")
   rank_result_dicts_by(result_dicts, (d) -> int(median(d[:numevals])), "num function evals"; descsummary = "median")
 
@@ -518,7 +518,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
 
     for i in 1:numrepeats
       p = fp # BlackBoxOptim.ShiftedAndBiasedProblem(fp)
-      best, fs[i], reason, ts[i], ps, nes[i] = bboptimize(p; max_time = max_time, 
+      best, fs[i], reason, ts[i], ps, nes[i] = bboptimize(p; max_time = max_time,
         method = m, parameters = params)
       rcounts[reason] = 1 + get(rcounts, reason, 0)
     end
@@ -527,7 +527,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
       best_so_far = worst_fitness(ps[:Evaluator])
     end
 
-    best_so_far = 
+    best_so_far =
 
     rdict = {:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts}
     rdict[:success_rate] = report_from_result_dict(rdict)
