@@ -1,4 +1,5 @@
-ValidMethods = {
+# FIXME replace Any with Type{Optimizer} when the support for Julia v0.3 would be dropped 
+ValidMethods = @compat Dict{Symbol,Union(Any,Function)}(
   :random_search => BlackBoxOptim.random_search,
   :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
   :de_rand_2_bin => BlackBoxOptim.de_rand_2_bin,
@@ -13,12 +14,12 @@ ValidMethods = {
   :simultaneous_perturbation_stochastic_approximation => BlackBoxOptim.SimultaneousPerturbationSA2,
   :generating_set_search => BlackBoxOptim.GeneratingSetSearcher,
   :probabilistic_descent => BlackBoxOptim.direct_search_probabilistic_descent,
-}
+)
 
 MethodNames = collect(keys(ValidMethods))
 
 # Default parameters for all convenience methods that are exported to the end user.
-DefaultParameters = {
+DefaultParameters = @compat Dict{Symbol,Any}(
   :NumDimensions  => :NotSpecified, # Dimension of problem to be optimized
   :SearchRange    => (-10.0, 10.0), # Default search range to use per dimension unless specified
   :SearchSpace    => false, # Search space can be directly specified and takes precedence over Dimension and SearchRange if specified.
@@ -41,7 +42,7 @@ DefaultParameters = {
   :RngSeed        => 1234,   # The specific random seed to set before any random numbers are generated. The seed is randomly selected if RandomizeRngSeed is true, and this parameter is updated with its actual value.
 
   :PopulationSize => 50
-}
+)
 
 # Create a problem given
 #   a problem or
@@ -49,7 +50,7 @@ DefaultParameters = {
 #   a function and a
 # while possibly updating the params with the specific dimension and search
 # space to be used.
-function setup_problem(functionOrProblem; parameters = Dict())
+function setup_problem(functionOrProblem; parameters = @compat Dict{Symbol,Any}())
 
   params = Parameters(parameters, DefaultParameters)
 
@@ -101,7 +102,7 @@ end
 
 function compare_optimizers(functionOrProblem::Union(Function, OptimizationProblem);
   max_time = false, search_space = false, search_range = (0.0, 1.0), dimensions = 2,
-  methods = MethodNames, parameters = Dict())
+  methods = MethodNames, parameters = @compat Dict{Symbol,Any}())
 
   evaluator = 1.0
 
@@ -132,7 +133,7 @@ function compare_optimizers(functionOrProblem::Union(Function, OptimizationProbl
 end
 
 function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = false,
-  methods = MethodNames, parameters = Dict())
+  methods = MethodNames, parameters = @compat Dict{Symbol,Any}())
 
   # Lets create an array where we will save how the methods ranks per problem.
   ranks = zeros(length(methods), length(problems))
@@ -179,7 +180,7 @@ end
 function bboptimize(functionOrProblem; max_time = false,
   search_space = false, search_range = (0.0, 1.0), dimensions = 2,
   method = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters = Dict())
+  parameters = @compat Dict{Symbol,Any}())
 
   # We just pass the kw params along...
   optimizer, problem, params = setup_bboptimize(functionOrProblem;
@@ -194,7 +195,7 @@ end
 function setup_bboptimize(functionOrProblem; max_time = false,
   search_space = false, search_range = (0.0, 1.0), dimensions = 2,
   method = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters = Dict())
+  parameters = @compat Dict{Symbol,Any}())
 
   params = Parameters(parameters, DefaultParameters)
   params[:MaxTime] = max_time
@@ -247,11 +248,11 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   end
   pop = BlackBoxOptim.rand_individuals_lhs(params[:SearchSpace], params[:PopulationSize])
 
-  params = Parameters(params, {
+  params = Parameters(params, @compat Dict{Symbol,Any}(
     :Evaluator    => ProblemEvaluator(problem),
     :Population   => pop,
     :SearchSpace  => search_space
-  })
+  ))
   optimizer_func = ValidMethods[method]
   optimizer = optimizer_func(params)
 
@@ -501,20 +502,20 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
 
 end
 
-function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters = Dict{Any, Any}())
+function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters = Dict{Symbol, Any}())
 
   fp = BlackBoxOptim.as_fixed_dim_problem(problem, dim)
-  result_dicts = Any[]
+  result_dicts = Dict{Symbol,Any}[]
 
   # Just so they are declared
   ps = best_so_far = nothing
 
-  params = Parameters(parameters, {:FitnessTolerance => ftol})
+  params = Parameters(parameters, @compat Dict{Symbol,Any}(:FitnessTolerance => ftol))
 
   for m in methods
 
     ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int, numrepeats)
-    rcounts = {"Within fitness tolerance of optimum" => 0}
+    rcounts = @compat Dict{String,Int}("Within fitness tolerance of optimum" => 0)
 
     for i in 1:numrepeats
       p = fp # BlackBoxOptim.ShiftedAndBiasedProblem(fp)
@@ -529,7 +530,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
 
     best_so_far =
 
-    rdict = {:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts}
+    rdict = @compat Dict{Symbol,Any}(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
     rdict[:success_rate] = report_from_result_dict(rdict)
     push!(result_dicts, rdict)
 

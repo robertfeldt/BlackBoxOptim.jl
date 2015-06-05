@@ -39,11 +39,11 @@ end
 # We use a different ordering of the dimensions than other optimizers, so transpose.
 population(o::NaturalEvolutionStrategyOpt) = o.population'
 
-NES_DefaultOptions = {
+NES_DefaultOptions = @compat Dict{String,Any}(
   "lambda" => false,          # If false it will be set based on the number of dimensions
   "mu_learnrate" => 1.0,
   "sigma_learnrate" => false, # If false it will be set based on the number of dimensions
-}
+)
 
 function separable_nes(parameters)
   params = mergeparam(NES_DefaultOptions, parameters)

@@ -112,7 +112,7 @@ facts("Search space") do
   context("feasible finds feasible points in the search space") do
     ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
-    # We use the double transpose below to ensure the actual and expected 
+    # We use the double transpose below to ensure the actual and expected
     # values have the same type (matrices, not vectors).
     @fact BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) == [1.0, 2.0, 4.0]'' => true
     @fact BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) == [1.0, 3.0, 4.0]'' => true

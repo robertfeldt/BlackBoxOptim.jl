@@ -27,14 +27,14 @@ end
 # individually (+ and -) for each coordinate.
 compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
 
-GSSDefaultParameters = {
+GSSDefaultParameters = @compat Dict{Symbol,Any}(
   :DeltaTolerance => 1e-10,       # GSS has converged if the StepSize drops below this tolerance level
   :InitialStepSizeFactor => 0.50,        # Factor times the minimum search space diameter to give the initial StepSize
   :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
   :StepSizeGamma => 2.0,          # Factor by which step size is multiplied if improved point is found. Should be >= 1.0.
   :StepSizePhi => 0.5,            # Factor by which step size is multiplied if NO improved point is found. Should be < 1.0.
   :StepSizeMax => Inf,            # A limit on the step size can be set but is typically not => Inf.
-}
+)
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 

@@ -14,10 +14,10 @@
 #  Search: High Performance Despite the Simplicity", 2013.
 #
 
-RSDefaultParameters = {
+RSDefaultParameters = @compat Dict{Symbol,Any}(
   :PrecisionRatio    => 0.40, # 40% of the diameter is used as the initial step length
   :PrecisionTreshold => 1e-6  # They use 1e-6 in the paper.
-}
+)
 
 # SteppingOptimizer's do not have an ask and tell interface since they would be
 # complex to implement if forced into that form.
@@ -37,7 +37,7 @@ type ResamplingMemeticSearcher <: SteppingOptimizer
   elite_fitness   # Fitness of current elite
 
   # Constructor for RS:
-  ResamplingMemeticSearcher(evaluator; parameters = {},
+  ResamplingMemeticSearcher(evaluator; parameters = @compat(Dict{Symbol,Any}()),
     resampling_function = random_resample,
     name = "Resampling Memetic Search (RS)"
     ) = begin
@@ -57,12 +57,12 @@ end
 
 name(rs::ResamplingMemeticSearcher) = rs.name
 
-RISDefaultParameters = {
+RISDefaultParameters = @compat Dict{Symbol,Any}(
   :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
-}
+)
 
 # Constructor for the RIS:
-function ResamplingInheritanceMemeticSearcher(evaluator; parameters = {})
+function ResamplingInheritanceMemeticSearcher(evaluator; parameters = @compat(Dict{Symbol,Any}()))
   ResamplingMemeticSearcher(evaluator;
     parameters = Parameters(parameters, RISDefaultParameters, RSDefaultParameters),
     resampling_function = random_resample_with_inheritance,

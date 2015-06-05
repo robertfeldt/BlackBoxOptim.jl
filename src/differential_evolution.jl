@@ -4,12 +4,12 @@ abstract DifferentialEvolutionOpt <: PopulationOptimizer
 
 name(de::DifferentialEvolutionOpt) = de.name
 
-DE_DefaultOptions = {
+DE_DefaultOptions = @compat Dict{String,Any}(
   "f" => 0.6,
   "cr" => 0.7,
   "NumParents" => 3,
   "SamplerRadius" => 8,
-}
+)
 
 type DiffEvoOpt <: DifferentialEvolutionOpt
   name::ASCIIString
@@ -152,7 +152,7 @@ function rand_bound_from_target!(individual, target, searchSpace::SearchSpace)
   individual
 end
 
-function rand_bound_from_target!(individual, target, searchSpace::Array{(Float64,Float64),1})
+function rand_bound_from_target!(individual, target, searchSpace::Array{@compat(Tuple{Float64,Float64}),1})
   rand_bound_from_target!(individual, target, RangePerDimSearchSpace(searchSpace))
 end
 

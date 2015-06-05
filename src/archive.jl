@@ -20,13 +20,13 @@ type TopListArchive <: Archive
   # For each magnitude class (as defined by magnitude_class function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
   # class is: (magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)
-  fitness_history::Array{(Float64, Int, Float64, Float64),1}
+  fitness_history::Array{@compat(Tuple{Float64, Int, Float64, Float64}),1}
 
   numdims::Int        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
   TopListArchive(numdims, size::Int = 10) = begin
     new(time(), 0, size, 0, Float64[], Any[],
-      (Float64, Int, Float64, Float64)[], int(numdims))
+      @compat(Tuple{Float64, Int, Float64, Float64})[], int(numdims))
   end
 end
 

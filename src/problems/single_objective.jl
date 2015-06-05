@@ -17,7 +17,7 @@ Hartman3 = fixeddim_problem(hartman3; range = (0.0, 1.0), dims = 3, name = "Hart
 # We skip (for now) f12 and f13 in the JADE paper since they are penalized
 # functions which are quite nonstandard. We also skip f8 since we are unsure
 # about its proper implementation.
-JadeFunctionSet = {
+JadeFunctionSet = @compat Dict{Int,OptimizationProblem}(
   1   => anydim_problem("Sphere",        sphere,        (-100.0, 100.0), 0.0),
   2   => anydim_problem("Schwefel2.22",  schwefel2_22,  ( -10.0,  10.0), 0.0),
   3   => anydim_problem("Schwefel1.2",   schwefel1_2,   (-100.0, 100.0), 0.0),
@@ -29,7 +29,7 @@ JadeFunctionSet = {
   9   => anydim_problem("Rastrigin",     rastrigin,     ( -5.12,  5.12), 0.0),
   10  => anydim_problem("Ackley",        ackley,        ( -32.0,  32.0), 0.0),
   11  => anydim_problem("Griewank",      griewank,      (-600.0, 600.0), 0.0)
-}
+)
 
 
 #####################################################################
@@ -160,7 +160,7 @@ function xrotatedandshifted(n, f, shiftAmplitude = 1.0, rotateAmplitude = 1.0)
   transformed_f(x) = f(rotmatrix * (x .- shift))
 end
 
-example_problems = {
+example_problems = @compat Dict{String,OptimizationProblem}(
   "Sphere" => JadeFunctionSet[1],
   "Rosenbrock" => JadeFunctionSet[5],
   "Schwefel2.22" => JadeFunctionSet[2],
@@ -178,4 +178,4 @@ example_problems = {
   "Shekel5" => Shekel5,
   "Hartman6" => Hartman6,
   "Hartman3" => Hartman3
-}
+)

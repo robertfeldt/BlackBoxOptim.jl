@@ -44,6 +44,8 @@ export  Optimizer, PopulationOptimizer,
 
 abstract Optimizer
 
+using Compat
+
 include("parameters.jl")
 include("fitness.jl")
 include("archive.jl")

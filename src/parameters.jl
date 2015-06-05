@@ -6,7 +6,7 @@ type Parameters
   Parameters(dicts...) = begin
     # Ensure we have at least one hash there if none are given
     if length(dicts) == 0
-      dicts = [Dict{Any, Any}()]
+      dicts = Dict{Any,Any}[Dict{Any, Any}()]
     end
 
     new(dicts)
