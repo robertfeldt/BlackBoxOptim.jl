@@ -4,6 +4,8 @@
 # potential there is.
 abstract Archive
 
+typealias ArchivedFitness @compat Tuple{Float64, Int64, Float64, Float64}
+
 # A top list archive saves a top list of the best performing (best fitness)
 # candidates/individuals seen.
 type TopListArchive <: Archive
@@ -20,13 +22,12 @@ type TopListArchive <: Archive
   # For each magnitude class (as defined by magnitude_class function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
   # class is: (magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)
-  fitness_history::Array{@compat(Tuple{Float64, Int, Float64, Float64}),1}
+  fitness_history::Vector{ArchivedFitness}
 
   numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
   TopListArchive(numdims, size = 10) = begin
-    new(time(), 0, size, 0, Float64[], Any[],
-      @compat(Tuple{Float64, Int, Float64, Float64})[], numdims)
+    new(time(), 0, size, 0, Float64[], Any[], ArchivedFitness[], numdims)
   end
 end
 
