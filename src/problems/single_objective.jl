@@ -70,7 +70,7 @@ sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
 is_fixed_dimensional(p::ShiftedAndBiasedProblem) = is_fixed_dimensional(sub_problem(p))
 
 # Evaluate by first shifting x and then biasing the returned function value.
-evalfunc(x, i::Int, sp::ShiftedAndBiasedProblem) = begin
+evalfunc(x, i, sp::ShiftedAndBiasedProblem) = begin
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
 end
 

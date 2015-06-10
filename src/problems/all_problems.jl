@@ -32,9 +32,9 @@ fmins(p::OptimizationProblem) = p.fmins
 
 fmin(p::OptimizationProblem) = fmins(p) != Nothing() ? fmins(p)[1] : nothing
 
-ofunc(p::OptimizationProblem, index::Int) = p.funcs[index]
+ofunc(p::OptimizationProblem, i) = p.funcs[i]
 
-evalfunc(x, i::Int, p::OptimizationProblem) = ofunc(p, i)(x)
+evalfunc(x, i, p::OptimizationProblem) = ofunc(p, i)(x)
 
 # Evaluate fitness of a candidate solution on the 1st objective function of a problem.
 eval1(x, p::OptimizationProblem) = evalfunc(x, 1, p)

@@ -8,10 +8,10 @@ abstract Archive
 # candidates/individuals seen.
 type TopListArchive <: Archive
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
-  num_fitnesses::Int  # Number of calls to add_candidate
+  num_fitnesses::Int64  # Number of calls to add_candidate
 
-  size::Int           # Max size of top lists
-  count::Int          # Current number of values in the top lists
+  size::Int64         # Max size of top lists
+  count::Int64        # Current number of values in the top lists
 
   fitnesses::Array{Float64,1}  # Top fitness values
   candidates::Array{Any, 1}    # Top candidates corresponding to top fitness values
@@ -22,11 +22,11 @@ type TopListArchive <: Archive
   # class is: (magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)
   fitness_history::Array{@compat(Tuple{Float64, Int, Float64, Float64}),1}
 
-  numdims::Int        # Number of dimensions in opt problem. Needed for confidence interval estimation.
+  numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
-  TopListArchive(numdims, size::Int = 10) = begin
+  TopListArchive(numdims, size = 10) = begin
     new(time(), 0, size, 0, Float64[], Any[],
-      @compat(Tuple{Float64, Int, Float64, Float64})[], int(numdims))
+      @compat(Tuple{Float64, Int, Float64, Float64})[], numdims)
   end
 end
 

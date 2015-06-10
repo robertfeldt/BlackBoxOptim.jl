@@ -11,8 +11,8 @@ SPSADefaultParameters = @compat Dict{Symbol,Any}(
 type SimultaneousPerturbationSA2 <: StochasticApproximationOptimizer
   search_space::SearchSpace
   parameters::Parameters
-  k::Int
-  n::Int
+  k::Int64
+  n::Int64
   theta::Array{Float64, 2}
   delta_ck::Array{Float64, 2}
 
