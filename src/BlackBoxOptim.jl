@@ -30,7 +30,7 @@ export  Optimizer, PopulationOptimizer,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # Search spaces
-        ParamBounds, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
+        ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
         RangePerDimSearchSpace, symmetric_search_space,
         numdims, mins, maxs, deltas, ranges, range_for_dim, diameters,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,

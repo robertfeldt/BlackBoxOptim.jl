@@ -18,12 +18,12 @@ context("ask") do
     trial, trialIndex = res[1]
     target, targetIndex = res[2]
 
-    @fact ndims(trial) => 2
-    @fact 1 <= trialIndex <= length(ade.population) => true
+    @fact ndims(trial) => 1
+    @fact 1 <= trialIndex <= popsize(ade) => true
     @fact isinspace(trial, ade.search_space) => true
 
-    @fact ndims(target) => 2
-    @fact 1 <= targetIndex <= length(ade.population) => true
+    @fact ndims(target) => 1
+    @fact 1 <= targetIndex <= popsize(ade) => true
     @fact isinspace(target, ade.search_space) => true
 
     @fact trialIndex == targetIndex => true

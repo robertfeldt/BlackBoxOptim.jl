@@ -263,7 +263,7 @@ function tr(msg, parameters, obj = None)
   if parameters[:ShowTrace]
     print(msg)
     if obj != None
-      showcompact(transform_horizontal(obj))
+      showcompact(obj)
     end
   end
   if parameters[:SaveTrace]
@@ -277,17 +277,6 @@ end
 
 function find_best_individual(e::Evaluator, opt::Optimizer)
   (best_candidate(e.archive), 1, best_fitness(e.archive))
-end
-
-# Transform a vector to ensure it is largest in the horizontal direction.
-function transform_horizontal(x)
-  if typeof(x) <: Array
-    nrows, ncols = size(x)
-    if ncols < nrows
-      x = x'
-    end
-  end
-  return x
 end
 
 function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
@@ -434,7 +423,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       bestfitness = fmin(problem))
   end
 
-  return transform_horizontal(best), fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
+  return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
 end
 
 # Summarize a vector of float values by stating its mean, std dev and median.

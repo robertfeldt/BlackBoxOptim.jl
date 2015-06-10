@@ -18,7 +18,7 @@ end
 fitness( a::ArchivedFitness ) = a.fitness
 
 immutable ArchivedIndividual
-    params
+    params::Individual
     fitness::Float64
 end
 

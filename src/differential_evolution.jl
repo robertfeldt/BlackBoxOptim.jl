@@ -14,7 +14,7 @@ DE_DefaultOptions = @compat Dict{Symbol,Any}(
 type DiffEvoOpt <: DifferentialEvolutionOpt
   name::ASCIIString
 
-  # A population is a matrix of floats.
+  # A population is a matrix of floats, individuals stored in columns.
   population::Array{Float64, 2}
 
   # A search space is defined by the min and max values (in tuples) for each
@@ -36,7 +36,7 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
   end
 end
 
-popsize(opt::DifferentialEvolutionOpt) = Base.size(population(opt),1)
+popsize(opt::DifferentialEvolutionOpt) = size(population(opt),2)
 fconst(de::DifferentialEvolutionOpt, i) = de.options[:f]
 crconst(de::DifferentialEvolutionOpt, i) = de.options[:cr]
 
@@ -52,7 +52,7 @@ function ask(de::DifferentialEvolutionOpt)
   #print("parent_indices = "); show(parent_indices); println("")
   target_index = indices[end]
   #print("target_index = "); show(target_index); println("")
-  target = de.population[target_index,:]
+  target = de.population[:,target_index]
   #print("target = "); show(target); println("")
 
   donor = de.mutate(de, target_index, parent_indices)
@@ -106,15 +106,15 @@ end
 # DE/rand/1 mutation strategy
 function de_mutation_rand_1(de::DifferentialEvolutionOpt, targetIndex, parentIndices)
   f = fconst(de, targetIndex)
-  p = de.population[parentIndices,:]
-  return p[3,:] + (f * (p[1,:] - p[2,:]))
+  p = de.population[:,parentIndices]
+  return p[:,3] + (f * (p[:,1] - p[:,2]))
 end
 
 # DE/rand/2 mutation strategy
 function de_mutation_rand_2(de::DifferentialEvolutionOpt, targetIndex, parentIndices)
   f = fconst(de, targetIndex)
-  p = de.population[parentIndices,:]
-  return p[3,:] + (f * (p[1,:] - p[2,:])) + (f * (p[4,:] - p[5,:]))
+  p = de.population[:,parentIndices]
+  return p[:,3] + (f * (p[:,1] - p[:,2])) + (f * (p[:,4] - p[:,5]))
 end
 
 # Binomial crossover for DE, i.e. DE/*/*/bin.
@@ -128,7 +128,7 @@ function de_crossover_binomial(de::DifferentialEvolutionOpt, target, targetIndex
   #print("switch = "); show(switch); println("")
   #print("trial = "); show(trial); println("")
   #print("donor = "); show(donor); println("")
-  trial[:,switch] = donor[:,switch]
+  trial[switch] = donor[switch]
   #print("trial = "); show(trial); println("")
 
   return trial
@@ -163,13 +163,13 @@ function tell!(de::DiffEvoOpt,
   num_better = 0
   for i in 1:div(num_candidates, 2)
     candidate, index = rankedCandidates[i]
-    if candidate != de.population[index, :]
+    if candidate != de.population[:,index]
       num_better += 1
       #print("candidate = "); show(candidate); println("")
       #print("index = "); show(index); println("")
       #print("target = "); show(de.population[index,:]); println("")
-      old = de.population[index,:]
-      de.population[index,:] = candidate
+      old = de.population[:,index]
+      de.population[:,index] = candidate
     end
   end
   num_better

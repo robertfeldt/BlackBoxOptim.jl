@@ -8,5 +8,5 @@ function latin_hypercube_sampling(mins, maxs, numSamples)
                       interval_len*rand(numSamples)
     result[:,i] = samples_for_dim[shuffle(collect(1:numSamples))]
   end
-  result
+  return result'
 end

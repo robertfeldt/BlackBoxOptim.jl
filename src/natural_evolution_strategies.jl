@@ -37,7 +37,7 @@ end
 
 
 # We use a different ordering of the dimensions than other optimizers, so transpose.
-population(o::NaturalEvolutionStrategyOpt) = o.population'
+population(o::NaturalEvolutionStrategyOpt) = o.population
 
 NES_DefaultOptions = @compat Dict{String,Any}(
   "lambda" => false,          # If false it will be set based on the number of dimensions
@@ -68,7 +68,7 @@ function ask(snes::SeparableNESOpt)
 
   # The rest of BlackBoxOptim still uses row-major order so transpose the
   # individuals before returning them.
-  mix_with_indices( sampled_solutions', 1:snes.lambda )
+  mix_with_indices( sampled_solutions, 1:snes.lambda )
 end
 
 function mix_with_indices(candidates, indices = false)
@@ -77,7 +77,7 @@ function mix_with_indices(candidates, indices = false)
   end
   ary = Any[]
   for i in indices
-    push!(ary, (candidates[i,:], i))
+    push!(ary, (candidates[:,i], i))
   end
   ary
 end
@@ -118,7 +118,7 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   A::Array{Float64,2}
   expA::Array{Float64,2}
   population::Array{Float64,2}    # The last sampled values, now being evaluated
-  x::Array{Float64,2}             # The current incumbent (aka most likely value, mu etc)
+  x::Individual             # The current incumbent (aka most likely value, mu etc)
   Z::Array{Float64,2}
 
   XNESOpt(searchSpace; lambda = false) = begin
@@ -146,7 +146,7 @@ function ask(xnes::XNESOpt)
 
   # The rest of BlackBoxOptim still uses row-major order so transpose the
   # individuals before returning them.
-  mix_with_indices( xnes.population', 1:xnes.lambda )
+  mix_with_indices( xnes.population, 1:xnes.lambda )
 end
 
 function tell!(xnes::XNESOpt, rankedCandidates)
