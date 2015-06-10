@@ -105,12 +105,7 @@ function assign_weights(rankedCandidates, u)
   # rankedCandidates!!! Or we must reorder the utilities accordingly. The latter
   # is the preferred method and we can use the indices in rankedCandidates to
   # accomplish it.
-  u_ordered = zeros(n, 1)
-  for(i in 1:n)
-    u_ordered[rankedCandidates[i][2]] = u[i]
-  end
-
-  u_ordered
+  u[sortperm(rankedCandidates, by = x->x[2])]
 end
 
 # xNES is nice but scales badly with increasing dimension.
