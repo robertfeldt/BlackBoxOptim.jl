@@ -40,14 +40,7 @@ evalfunc(x, i, p::OptimizationProblem) = ofunc(p, i)(x)
 eval1(x, p::OptimizationProblem) = evalfunc(x, 1, p)
 
 # Evaluate fitness of a candidate solution on all objective functions of a problem.
-evalall(x, p::OptimizationProblem) = begin
-  n = length(p.funcs)
-  results = zeros(n)
-  for(i in 1:n)
-    results[i] = evalfunc(x, i, p)
-  end
-  results
-end
+evalall(x, p::OptimizationProblem) = Float64[ f(x) for f in p.funcs ]
 
 # Within ftol of a certain fmin
 function fitness_is_within_ftol(p::OptimizationProblem, ftol, fitness; index = 1)
