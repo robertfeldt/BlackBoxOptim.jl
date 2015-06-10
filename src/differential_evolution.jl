@@ -152,7 +152,7 @@ function rand_bound_from_target!(individual, target, searchSpace::SearchSpace)
   individual
 end
 
-function rand_bound_from_target!(individual, target, searchSpace::Array{@compat(Tuple{Float64,Float64}),1})
+function rand_bound_from_target!(individual, target, searchSpace::Vector{ParamBounds})
   rand_bound_from_target!(individual, target, RangePerDimSearchSpace(searchSpace))
 end
 

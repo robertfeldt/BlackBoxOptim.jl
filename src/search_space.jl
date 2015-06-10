@@ -1,4 +1,4 @@
-# A SearchSpace determines which candidate points can be 
+# A SearchSpace determines which candidate points can be
 # considered in a search/optimization. This base class has very few restrictions
 # and can allow varying number of dimensions etc.
 abstract SearchSpace
@@ -10,10 +10,12 @@ abstract FixedDimensionSearchSpace <: SearchSpace
 # valid values.
 abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
 
-ranges(css::ContinuousSearchSpace) = [range_for_dim(css, i) for i in 1:numdims(css)]
+typealias ParamBounds @compat Tuple{Float64,Float64}
 
 # Access individual range for a dim.
-range_for_dim(css::ContinuousSearchSpace, i::Int) = (mins(css)[i], maxs(css)[i])
+range_for_dim(css::ContinuousSearchSpace, i) = (mins(css)[i], maxs(css)[i])
+
+ranges(css::ContinuousSearchSpace) = ParamBounds[range_for_dim(css, i) for i in 1:numdims(css)]
 
 # Generate a number of individuals by random sampling in the search space.
 function rand_individuals(css::ContinuousSearchSpace, numIndividuals)
@@ -59,7 +61,7 @@ numdims(rss::RangePerDimSearchSpace) = size(mins(rss), 1)
 diameters(rss::RangePerDimSearchSpace) = deltas(rss)
 
 # Convenience function to create symmetric search spaces.
-symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace([range for i in 1:numdims])
+symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(ParamBounds[range for i in 1:numdims])
 
 # Create a feasible point (i.e. within the search space) given one which is
 # outside.

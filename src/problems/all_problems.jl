@@ -51,7 +51,7 @@ end
 type AnyDimProblem <: OptimizationProblem
   name::ASCIIString
   funcs::Vector{Function}                 # Objective functions
-  range_per_dimension::@compat(Tuple{Float64, Float64}) # Default range per dimension
+  range_per_dimension::ParamBounds        # Default range per dimension
   fmins::Union(Nothing, Vector{Float64})
 end
 
@@ -76,9 +76,9 @@ function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0)
   if search_space == false
     as_fixed_dim_problem(anydim_problem(name, f, range, fmins), dims)
   elseif typeof(search_space) <: SearchSpace
-    FixedDimProblem(name, [f], search_space, fmins)
-  elseif typeof(search_space) <: Array{@compat(Tuple{Float64,Float64}),1}
-    FixedDimProblem(name, [f], RangePerDimSearchSpace(search_space), fmins)
+    FixedDimProblem(name, Function[f], search_space, fmins)
+  elseif typeof(search_space) <: Vector{ParamBounds}
+    FixedDimProblem(name, Function[f], RangePerDimSearchSpace(search_space), fmins)
   else
     throw("Unknown search space $(search_space).")
   end

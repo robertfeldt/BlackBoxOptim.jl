@@ -30,7 +30,7 @@ export  Optimizer, PopulationOptimizer,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # Search spaces
-        SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
+        ParamBounds, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
         RangePerDimSearchSpace, symmetric_search_space,
         numdims, mins, maxs, deltas, ranges, range_for_dim, diameters,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
@@ -46,18 +46,17 @@ abstract Optimizer
 
 using Compat
 
-include("parameters.jl")
-include("fitness.jl")
-include("archive.jl")
-
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
   include("utilities/assign_ranks.jl")
 end
 
 include("search_space.jl")
+include("parameters.jl")
+include("fitness.jl")
 include("population.jl")
 include("frequency_adaptation.jl")
+include("archive.jl")
 
 # Problems for testing
 include(joinpath("problems", "all_problems.jl"))
