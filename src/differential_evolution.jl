@@ -96,7 +96,7 @@ function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
   # Ensure they are not out of bounds by wrapping over at the end.
   map(indices) do index
     if index > psize
-      mod(index, psize) + 1 # We have to increase by 1 since Julia arrays start indices at 1
+      mod(index-1, psize) + 1 # We have to increase by 1 since Julia arrays start indices at 1
     else
       index
     end
