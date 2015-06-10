@@ -121,12 +121,10 @@ end
 function de_crossover_binomial(de::DifferentialEvolutionOpt, target, targetIndex, donor)
   trial = copy(target)
 
-  # Always ensure at least one value from donor is copied to trial vector
-  jrand = rand(1:length(trial))
-  trial[jrand] = donor[jrand]
-
   # Now crossover randomly for the rest of the indices
   switch = rand(length(trial)) .<= crconst(de, targetIndex)
+  # Always ensure at least one value from donor is copied to trial vector
+  switch[rand(1:length(trial))] = true
   #print("switch = "); show(switch); println("")
   #print("trial = "); show(trial); println("")
   #print("donor = "); show(donor); println("")
