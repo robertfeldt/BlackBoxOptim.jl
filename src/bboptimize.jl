@@ -294,7 +294,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   parameters = Dict())
 
   if parameters[:RandomizeRngSeed]
-    parameters[:RngSeed] = rand(1:int(1e6))
+    parameters[:RngSeed] = rand(1:1_000_000)
     srand(parameters[:RngSeed])
   end
 
