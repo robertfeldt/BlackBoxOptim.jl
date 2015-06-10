@@ -1,9 +1,9 @@
 include("bimodal_cauchy_distribution.jl")
 
-ADE_DefaultOptions = mergeparam(DE_DefaultOptions, @compat Dict{String,Any}(
+ADE_DefaultOptions = mergeparam(DE_DefaultOptions, @compat Dict{Symbol,Any}(
   # Distributions we will use to generate new F and CR values.
-  "fdistr" => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
-  "crdistr" => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
+  :fdistr => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
+  :crdistr => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
 ))
 
 # An Adaptive DE typically change parameters of the search dynamically. This is
@@ -32,8 +32,8 @@ type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
 
   function AdaptConstantsDiffEvoOpt(name, pop, ss, options, sample, mutate, crossover, bound)
     popsize = size(pop, 1)
-    fs = [sample_bimodal_cauchy(options["fdistr"]; truncateBelow0 = false) for i in 1:popsize]
-    crs = [sample_bimodal_cauchy(options["crdistr"]) for i in 1:popsize]
+    fs = [sample_bimodal_cauchy(options[:fdistr]; truncateBelow0 = false) for i in 1:popsize]
+    crs = [sample_bimodal_cauchy(options[:crdistr]) for i in 1:popsize]
     new(name, pop, ss, mergeparam(DE_DefaultOptions, options),
       sample, mutate, crossover, bound, fs, crs)
   end
@@ -44,8 +44,8 @@ fconst(ade::AdaptConstantsDiffEvoOpt, i) = ade.fs[i]
 crconst(ade::AdaptConstantsDiffEvoOpt, i) = ade.crs[i]
 
 # To sample we use the distribution given as options
-sample_f(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options["fdistr"]; truncateBelow0 = false)
-sample_cr(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options["crdistr"]; truncateBelow0 = false)
+sample_f(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options[:fdistr]; truncateBelow0 = false)
+sample_cr(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options[:crdistr]; truncateBelow0 = false)
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
 # better candidates that were inserted into the population.
@@ -70,7 +70,7 @@ function tell!(de::AdaptConstantsDiffEvoOpt,
   num_better
 end
 
-function adaptive_de_rand_1_bin(parameters = Dict())
+function adaptive_de_rand_1_bin(parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, ADE_DefaultOptions)
   ss = get(params, :SearchSpace, BlackBoxOptim.symmetric_search_space(1))
   population = get(params, :Population, BlackBoxOptim.rand_individuals_lhs(ss, 50))
@@ -81,7 +81,7 @@ function adaptive_de_rand_1_bin(parameters = Dict())
     rand_bound_from_target!)
 end
 
-function adaptive_de_rand_1_bin_radiuslimited(parameters = Dict())
+function adaptive_de_rand_1_bin_radiuslimited(parameters = @compat Dict{Symbol,Any})
   params = Parameters(parameters, ADE_DefaultOptions)
   ss = get(params, :SearchSpace, BlackBoxOptim.symmetric_search_space(1))
   population = get(params, :Population, BlackBoxOptim.rand_individuals_lhs(ss, 50))

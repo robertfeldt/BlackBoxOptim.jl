@@ -4,11 +4,11 @@ abstract DifferentialEvolutionOpt <: PopulationOptimizer
 
 name(de::DifferentialEvolutionOpt) = de.name
 
-DE_DefaultOptions = @compat Dict{String,Any}(
-  "f" => 0.6,
-  "cr" => 0.7,
-  "NumParents" => 3,
-  "SamplerRadius" => 8,
+DE_DefaultOptions = @compat Dict{Symbol,Any}(
+  :f => 0.6,
+  :cr => 0.7,
+  :NumParents => 3,
+  :SamplerRadius => 8,
 )
 
 type DiffEvoOpt <: DifferentialEvolutionOpt
@@ -37,15 +37,15 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
 end
 
 popsize(opt::DifferentialEvolutionOpt) = Base.size(population(opt),1)
-fconst(de::DifferentialEvolutionOpt, i) = de.options["f"]
-crconst(de::DifferentialEvolutionOpt, i) = de.options["cr"]
+fconst(de::DifferentialEvolutionOpt, i) = de.options[:f]
+crconst(de::DifferentialEvolutionOpt, i) = de.options[:cr]
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.
 function ask(de::DifferentialEvolutionOpt)
   # Sample parents and target
-  numparents = de.options["NumParents"]
+  numparents = de.options[:NumParents]
   indices = de.sample(de, 1 + numparents)
   #print("indices = "); show(indices); println("")
   parent_indices = indices[1:numparents]
@@ -89,7 +89,7 @@ end
 function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
   # The radius must be at least as big as the number of samples + 2 so that
   # there is something to sample from.
-  radius = max(de.options["SamplerRadius"], numSamples+2)
+  radius = max(de.options[:SamplerRadius], numSamples+2)
   psize = popsize(de)
   deme_start = rand(1:psize)
   indices = sample(deme_start:(deme_start+radius-1), numSamples; replace = false)
@@ -181,10 +181,10 @@ end
 # literature.
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(parameters = Dict(); sampler = random_sampler, name = "DE/rand/1/bin")
+function de_rand_1_bin(parameters = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/1/bin")
   params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
-  params["NumParents"] = 3
+  params[:NumParents] = 3
   DiffEvoOpt(name, params[:Population], params[:SearchSpace], params,
     sampler,
     de_mutation_rand_1,
@@ -192,10 +192,10 @@ function de_rand_1_bin(parameters = Dict(); sampler = random_sampler, name = "DE
     rand_bound_from_target!)
 end
 
-function de_rand_2_bin(parameters = Dict(); sampler = random_sampler, name = "DE/rand/2/bin")
+function de_rand_2_bin(parameters = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/2/bin")
   params = Parameters(parameters, DE_DefaultOptions)
   # Ensure NumParents is 5 since de_mutation_rand_2 requires it.
-  params["NumParents"] = 5
+  params[:NumParents] = 5
   DiffEvoOpt(name, params[:Population], params[:SearchSpace], params,
     sampler,
     de_mutation_rand_2,
