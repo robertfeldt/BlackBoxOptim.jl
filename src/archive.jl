@@ -171,14 +171,14 @@ function merge_fitness_histories(histories)
   current_feval = 1
 
   # Find max history length
-  histlengths = [length(h) for h in histories]
-  maxlen = maximum(histlengths)
+  maxlen = mapreduce( length, max, histories )
 
   while maximum(counts) < maxlen
 
     # Find min feval for current events, this is the next current feval
     for i in 1:numhist
       t, nf, f, fir = histories[i][counts[i]]
+      # FIXME ???
     end
 
   end
