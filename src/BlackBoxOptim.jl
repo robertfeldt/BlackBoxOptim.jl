@@ -26,7 +26,7 @@ export  Optimizer, PopulationOptimizer,
 
         # Archive
         TopListArchive, best_fitness, add_candidate!, best_candidate,
-        last_top_fitness, delta_fitness,
+        last_top_fitness, delta_fitness, capacity,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # Search spaces
