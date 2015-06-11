@@ -12,7 +12,7 @@ context("mix_with_indices") do
   @fact r[2][1] => cs[2,:]
 end
 
-assign_weights(rankedCandidates) = begin
+function assign_weights(rankedCandidates)
   u = BlackBoxOptim.fitness_shaping_utilities_linear(length(rankedCandidates))
   BlackBoxOptim.assign_weights(rankedCandidates, u)
 end

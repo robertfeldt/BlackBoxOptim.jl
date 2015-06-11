@@ -1,18 +1,18 @@
 abstract StochasticApproximationOptimizer <: Optimizer
 
-SPSADefaultParameters = {
+SPSADefaultParameters = @compat Dict{Symbol,Any}(
   :Alpha => 0.602,  # The optimal value is 1.0 but values down to 0.602 often can give faster convergence
   :Gamma => 0.101,  # The optimal value is 1/6 but values down to 0.101 often can give faster convergence
   :a     => 0.0017,
   :c     => 1.9, # Recommendation is value 1.9 but that assumes noisy function, otherwise should be low
   :A     => 10
-}
+)
 
 type SimultaneousPerturbationSA2 <: StochasticApproximationOptimizer
   search_space::SearchSpace
   parameters::Parameters
-  k::Int
-  n::Int
+  k::Int64
+  n::Int64
   theta::Array{Float64, 2}
   delta_ck::Array{Float64, 2}
 

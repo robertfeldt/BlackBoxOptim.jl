@@ -15,7 +15,7 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   population::Array{Float64,2}    # The last sampled values, now being evaluated
   utilities::Array{Float64,2}     # The fitness shaping utility vector
 
-  SeparableNESOpt(searchSpace; lambda = false, mu_learnrate = 1.0, 
+  SeparableNESOpt(searchSpace; lambda = false, mu_learnrate = 1.0,
     sigma_learnrate = false) = begin
 
     numDimensions = length(mins(searchSpace))
@@ -27,9 +27,9 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
     lambda = lambda || convert(Int, 4 + ceil(log(3*numDimensions)))
     sigma_learnrate = sigma_learnrate || calc_sigma_learnrate_for_snes(numDimensions)
 
-    new(numDimensions, lambda, mu, sigma, distr, 
+    new(numDimensions, lambda, mu, sigma, distr,
       mu_learnrate, sigma_learnrate,
-      eye(numDimensions), eye(numDimensions), 
+      eye(numDimensions), eye(numDimensions),
       # Most modern NES papers use log rather than linear fitness shaping.
       fitness_shaping_utilities_log(lambda))
   end
@@ -39,17 +39,17 @@ end
 # We use a different ordering of the dimensions than other optimizers, so transpose.
 population(o::NaturalEvolutionStrategyOpt) = o.population'
 
-NES_DefaultOptions = {
+NES_DefaultOptions = @compat Dict{String,Any}(
   "lambda" => false,          # If false it will be set based on the number of dimensions
   "mu_learnrate" => 1.0,
   "sigma_learnrate" => false, # If false it will be set based on the number of dimensions
-}
+)
 
 function separable_nes(parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
-  SeparableNESOpt(params[:SearchSpace]; 
-    lambda = params["lambda"], 
-    mu_learnrate = params["mu_learnrate"], 
+  SeparableNESOpt(params[:SearchSpace];
+    lambda = params["lambda"],
+    mu_learnrate = params["mu_learnrate"],
     sigma_learnrate = params["sigma_learnrate"])
 end
 
@@ -66,7 +66,7 @@ function ask(snes::SeparableNESOpt)
   # Quicker version as dimensions increase:
   snes.population = sampled_solutions = broadcast(+, snes.mu, broadcast(*, snes.sigma, s))
 
-  # The rest of BlackBoxOptim still uses row-major order so transpose the 
+  # The rest of BlackBoxOptim still uses row-major order so transpose the
   # individuals before returning them.
   mix_with_indices( sampled_solutions', 1:snes.lambda )
 end
@@ -103,14 +103,9 @@ function assign_weights(rankedCandidates, u)
   n = length(rankedCandidates)
   # We must reorder the samples according to the order of the fitness in
   # rankedCandidates!!! Or we must reorder the utilities accordingly. The latter
-  # is the preferred method and we can use the indices in rankedCandidates to 
+  # is the preferred method and we can use the indices in rankedCandidates to
   # accomplish it.
-  u_ordered = zeros(n, 1)
-  for(i in 1:n)
-    u_ordered[rankedCandidates[i][2]] = u[i]
-  end
-
-  u_ordered
+  u[sortperm(rankedCandidates, by = x->x[2])]
 end
 
 # xNES is nice but scales badly with increasing dimension.
@@ -133,8 +128,8 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
     a_learnrate = 0.5 * minimum([1.0 / d, 0.25])
     x = rand_individual(searchSpace)
 
-    new(d, lambda, fitness_shaping_utilities_log(lambda), 
-      x_learnrate, a_learnrate, 
+    new(d, lambda, fitness_shaping_utilities_log(lambda),
+      x_learnrate, a_learnrate,
       zeros(d, d), zeros(d, d), zeros(d, lambda), x, zeros(d, d))
   end
 end
@@ -149,7 +144,7 @@ function ask(xnes::XNESOpt)
   xnes.Z = randn(xnes.d, xnes.lambda)
   xnes.population = broadcast(+, xnes.x, (xnes.expA * xnes.Z))
 
-  # The rest of BlackBoxOptim still uses row-major order so transpose the 
+  # The rest of BlackBoxOptim still uses row-major order so transpose the
   # individuals before returning them.
   mix_with_indices( xnes.population', 1:xnes.lambda )
 end
@@ -160,7 +155,7 @@ function tell!(xnes::XNESOpt, rankedCandidates)
   G = (repmat(u', xnes.d, 1) .* xnes.Z) * xnes.Z' - eye(xnes.d)
   dx = xnes.x_learnrate * xnes.expA * (xnes.Z*u)
   dA = xnes.a_learnrate * G
-  
+
   xnes.x += dx
   xnes.A += dA
 
@@ -179,11 +174,11 @@ function fitness_shaping_utilities_linear(n)
   treshold = convert(Int, floor(n/2))
   second_half = zeros(n - treshold, 1)
 
-  # While first half's utility decreases in linear steps 
+  # While first half's utility decreases in linear steps
   step_size = 1 / treshold
   first_half = linspace(1.0, step_size, treshold)
 
   # But the utilities should sum to 1 so we normalize, then return
   u = vcat(first_half, second_half)
-  u / sum(u)  
+  u / sum(u)
 end

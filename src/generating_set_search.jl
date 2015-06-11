@@ -1,13 +1,13 @@
 # Generating Set Search as described in Kolda2003:
-#  Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization 
-#  by direct search: New perspectives on some classical and modern methods." 
+#  Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization
+#  by direct search: New perspectives on some classical and modern methods."
 #  SIAM review 45.3 (2003): 385-482.
 #
 
 # GSS is a type of DirectSearch
 abstract DirectSearcher <: Optimizer
 
-# A direction generator generates the search directions to use at each step of 
+# A direction generator generates the search directions to use at each step of
 # a GSS search.
 abstract DirectionGenerator
 
@@ -23,18 +23,18 @@ function directions_for_k(cg::ConstantDirectionGen, k)
   cg.directions # For a ConstantDirectionGen it is always the same regardless of k...
 end
 
-# We can easily do a compass search with GSS by generating directions 
+# We can easily do a compass search with GSS by generating directions
 # individually (+ and -) for each coordinate.
 compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
 
-GSSDefaultParameters = {
+GSSDefaultParameters = @compat Dict{Symbol,Any}(
   :DeltaTolerance => 1e-10,       # GSS has converged if the StepSize drops below this tolerance level
   :InitialStepSizeFactor => 0.50,        # Factor times the minimum search space diameter to give the initial StepSize
   :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
   :StepSizeGamma => 2.0,          # Factor by which step size is multiplied if improved point is found. Should be >= 1.0.
   :StepSizePhi => 0.5,            # Factor by which step size is multiplied if NO improved point is found. Should be < 1.0.
   :StepSizeMax => Inf,            # A limit on the step size can be set but is typically not => Inf.
-}
+)
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
@@ -55,7 +55,7 @@ type GeneratingSetSearcher <: DirectSearcher
     dgen = get(params, :DirectionGenerator, compass_search_directions(n))
     step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])
     x = rand_individual(ss)
-    new(params, dgen, ss, n, 0, step_size, 
+    new(params, dgen, ss, n, 0, step_size,
       x, evaluate(params[:Evaluator], x))
   end
 end

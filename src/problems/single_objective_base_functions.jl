@@ -7,7 +7,7 @@ function sphere(x)
 end
 
 # Schwefel's ellipsoid.
-function ellipsoid(x) 
+function ellipsoid(x)
   res = 0
   for(i in 1:length(x))
     res += sum(x[1:i])^2
@@ -195,11 +195,11 @@ end
 #    f(i,1)=sum((A-B).^2,1);
 #end
 
-# This is a generator for the family of deceptive functions from the 
+# This is a generator for the family of deceptive functions from the
 # Cuccu2011 paper on novelty-based restarts. We have vectorized it to allow
 # more than 1D versions. The Cuccu2011 paper uses the following values for
-# (l, w) = [(5, 0),  (15, 0),  (30, 0), 
-#           (5, 2),  (15, 2),  (30, 2), 
+# (l, w) = [(5, 0),  (15, 0),  (30, 0),
+#           (5, 2),  (15, 2),  (30, 2),
 #           (5, 10), (15, 10), (30, 10)]
 # and notes that (15, 2) and (30, 2) are the most difficult instances.
 function deceptive_cuccu2011(l, w)

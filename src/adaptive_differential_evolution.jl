@@ -1,12 +1,12 @@
 include("bimodal_cauchy_distribution.jl")
 
-ADE_DefaultOptions = mergeparam(DE_DefaultOptions, {
+ADE_DefaultOptions = mergeparam(DE_DefaultOptions, @compat Dict{Symbol,Any}(
   # Distributions we will use to generate new F and CR values.
-  "fdistr" => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
-  "crdistr" => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
-})
+  :fdistr => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
+  :crdistr => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
+))
 
-# An Adaptive DE typically change parameters of the search dynamically. This is 
+# An Adaptive DE typically change parameters of the search dynamically. This is
 # typically done in the tell! function when we know if the trial vector
 # was better than the target vector.
 type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
@@ -32,9 +32,9 @@ type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
 
   function AdaptConstantsDiffEvoOpt(name, pop, ss, options, sample, mutate, crossover, bound)
     popsize = size(pop, 1)
-    fs = [sample_bimodal_cauchy(options["fdistr"]; truncateBelow0 = false) for i in 1:popsize]
-    crs = [sample_bimodal_cauchy(options["crdistr"]) for i in 1:popsize]
-    new(name, pop, ss, mergeparam(DE_DefaultOptions, options), 
+    fs = [sample_bimodal_cauchy(options[:fdistr]; truncateBelow0 = false) for i in 1:popsize]
+    crs = [sample_bimodal_cauchy(options[:crdistr]) for i in 1:popsize]
+    new(name, pop, ss, mergeparam(DE_DefaultOptions, options),
       sample, mutate, crossover, bound, fs, crs)
   end
 end
@@ -44,12 +44,12 @@ fconst(ade::AdaptConstantsDiffEvoOpt, i) = ade.fs[i]
 crconst(ade::AdaptConstantsDiffEvoOpt, i) = ade.crs[i]
 
 # To sample we use the distribution given as options
-sample_f(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options["fdistr"]; truncateBelow0 = false)
-sample_cr(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options["crdistr"]; truncateBelow0 = false)
+sample_f(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options[:fdistr]; truncateBelow0 = false)
+sample_cr(ade::AdaptConstantsDiffEvoOpt) = sample_bimodal_cauchy(ade.options[:crdistr]; truncateBelow0 = false)
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
 # better candidates that were inserted into the population.
-function tell!(de::AdaptConstantsDiffEvoOpt, 
+function tell!(de::AdaptConstantsDiffEvoOpt,
   # archive::Archive, # Skip for now
   rankedCandidates)
   num_candidates = length(rankedCandidates)
@@ -70,24 +70,24 @@ function tell!(de::AdaptConstantsDiffEvoOpt,
   num_better
 end
 
-function adaptive_de_rand_1_bin(parameters = Dict())
+function adaptive_de_rand_1_bin(parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, ADE_DefaultOptions)
   ss = get(params, :SearchSpace, BlackBoxOptim.symmetric_search_space(1))
   population = get(params, :Population, BlackBoxOptim.rand_individuals_lhs(ss, 50))
-  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin", population, ss, params, 
-    random_sampler, 
-    de_mutation_rand_1, 
-    de_crossover_binomial, 
+  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin", population, ss, params,
+    random_sampler,
+    de_mutation_rand_1,
+    de_crossover_binomial,
     rand_bound_from_target!)
 end
 
-function adaptive_de_rand_1_bin_radiuslimited(parameters = Dict())
+function adaptive_de_rand_1_bin_radiuslimited(parameters = @compat Dict{Symbol,Any})
   params = Parameters(parameters, ADE_DefaultOptions)
   ss = get(params, :SearchSpace, BlackBoxOptim.symmetric_search_space(1))
   population = get(params, :Population, BlackBoxOptim.rand_individuals_lhs(ss, 50))
-  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin/radiuslimited", population, ss, params, 
-    radius_limited_sampler, 
-    de_mutation_rand_1, 
-    de_crossover_binomial, 
+  AdaptConstantsDiffEvoOpt("AdaptiveDE/rand/1/bin/radiuslimited", population, ss, params,
+    radius_limited_sampler,
+    de_mutation_rand_1,
+    de_crossover_binomial,
     rand_bound_from_target!)
 end
