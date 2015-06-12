@@ -45,7 +45,7 @@ type GeneratingSetSearcher <: DirectSearcher
   n::Int
   k::Int
   step_size::Float64
-  x::Array{Float64, 2}
+  x::Individual
   xfitness::Float64
 
   GeneratingSetSearcher(parameters) = begin

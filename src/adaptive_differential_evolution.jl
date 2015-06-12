@@ -12,7 +12,7 @@ ADE_DefaultOptions = mergeparam(DE_DefaultOptions, @compat Dict{Symbol,Any}(
 type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
   name::ASCIIString
 
-  # A population is a matrix of floats.
+  # A population is a matrix of floats, individuals are stored column-wise
   population::Array{Float64, 2}
 
   search_space::SearchSpace
@@ -31,7 +31,7 @@ type AdaptConstantsDiffEvoOpt <: DifferentialEvolutionOpt
   crs::Vector{Float64}  # One cr value per individual in population
 
   function AdaptConstantsDiffEvoOpt(name, pop, ss, options, sample, mutate, crossover, bound)
-    popsize = size(pop, 1)
+    popsize = size(pop, 2)
     fs = [sample_bimodal_cauchy(options[:fdistr]; truncateBelow0 = false) for i in 1:popsize]
     crs = [sample_bimodal_cauchy(options[:crdistr]) for i in 1:popsize]
     new(name, pop, ss, mergeparam(DE_DefaultOptions, options),
@@ -56,10 +56,10 @@ function tell!(de::AdaptConstantsDiffEvoOpt,
   num_better = 0
   for i in 1:div(num_candidates, 2)
     candidate, index = rankedCandidates[i]
-    if candidate != de.population[index, :]
+    if candidate != de.population[:,index]
       num_better += 1
-      old = de.population[index,:]
-      de.population[index,:] = candidate
+      old = de.population[:,index]
+      de.population[:,index] = candidate
       # Since the trial vector was better we keep the f and cr values for this target.
     else
       # The trial vector for this target was not better so we change the f and cr constants.

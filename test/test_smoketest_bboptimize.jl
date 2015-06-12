@@ -12,7 +12,7 @@ facts("bboptimize smoketest") do
 
       # println("Fitness for $m: $f")
 
-      @fact size(b) => (1, 2)
+      @fact size(b) => (2,)
       @fact typeof(f) => Float64
       @fact f < 100.0 => true # this can't be very tight since we give very little time for optimization...
     end

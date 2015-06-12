@@ -4,8 +4,10 @@ type FixedDimProblem <: OptimizationProblem
   name::ASCIIString
   funcs::Vector{Function}  # Objective functions
   ss::SearchSpace
-  fmins::Union(Nothing, Vector{Float64})
-  FixedDimProblem(name, funcs, ss, fmins = Nothing()) = begin
+  fmins::Nullable{Vector{Float64}}
+
+  function FixedDimProblem(name, funcs, ss, fmins::Nullable{Vector{Float64}} = Nullable{Vector{Float64}}())
+    @assert isnull(fmins) || length(funcs) == length(get(fmins))
     new(name, funcs, ss, fmins)
   end
 end
@@ -30,7 +32,7 @@ search_space(p::FixedDimProblem) = p.ss
 
 fmins(p::OptimizationProblem) = p.fmins
 
-fmin(p::OptimizationProblem) = fmins(p) != Nothing() ? fmins(p)[1] : nothing
+fmin(p::OptimizationProblem) = !isnull(fmins(p)) ? Nullable{Float64}( get(fmins(p))[1] ) : Nullable{Float64}()
 
 ofunc(p::OptimizationProblem, i) = p.funcs[i]
 
@@ -43,21 +45,25 @@ eval1(x, p::OptimizationProblem) = evalfunc(x, 1, p)
 evalall(x, p::OptimizationProblem) = Float64[ f(x) for f in p.funcs ]
 
 # Within ftol of a certain fmin
-function fitness_is_within_ftol(p::OptimizationProblem, ftol, fitness; index = 1)
-  fmins = BlackBoxOptim.fmins(p)
-  (fmins == nothing) ? false : (abs(fmins[index] - fitness) < ftol)
-end
+fitness_is_within_ftol(p::OptimizationProblem, ftol, fitness, index = 1) = isnull(fmins(p)) ? false : ( abs(get(fmins(p))[index] - fitness) < ftol )
 
 type AnyDimProblem <: OptimizationProblem
   name::ASCIIString
   funcs::Vector{Function}                 # Objective functions
   range_per_dimension::ParamBounds        # Default range per dimension
-  fmins::Union(Nothing, Vector{Float64})
+  fmins::Nullable{Vector{Float64}}
 end
 
-anydim_problem(name, f::Function, range, fmin::Float64) = AnyDimProblem(name, [f], range, [fmin])
-anydim_problem(name, f::Function, range, fmins::Union(Nothing, Vector{Float64})) = AnyDimProblem(name, [f], range, fmins)
-anydim_problem(name, f::Function, range) = AnyDimProblem(name, [f], range, nothing)
+function Base.convert( ::Type{Nullable{Vector{Float64}}}, v::Nullable{Float64} )
+  isnull(v) ? Nullable{Vector{Float64}}() : Nullable{Vector{Float64}}( Float64[get(v)] )
+end
+
+function Base.convert( ::Type{Nullable{Vector{Float64}}}, v::Float64 )
+  Nullable{Vector{Float64}}( Float64[v] )
+end
+
+anydim_problem(name, f::Function, range, fmin = Float64 ) = AnyDimProblem( name, Function[f], range, convert( Nullable{Vector{Float64}}, fmin ) )
+anydim_problem(name, f::Function, range ) = AnyDimProblem( name, Function[f], range, Nullable{Vector{Float64}}() )
 
 function as_fixed_dim_problem(p::AnyDimProblem, dim::Int)
   ss = symmetric_search_space(dim, p.range_per_dimension)
@@ -72,7 +78,8 @@ function as_fixed_dim_problem(p::FixedDimProblem, dim::Int)
 end
 
 function fixeddim_problem(f::Function; search_space = false, range = (-1.0, 1.0),
-  dims = 5, name = "unknown", fmins = nothing)
+  dims = 5, name = "unknown", fmin = Nullable{Float64}() )
+  fmins = convert( Nullable{Vector{Float64}}, fmin )
   if search_space == false
     as_fixed_dim_problem(anydim_problem(name, f, range, fmins), dims)
   elseif typeof(search_space) <: SearchSpace

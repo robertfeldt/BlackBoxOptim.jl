@@ -26,11 +26,11 @@ export  Optimizer, PopulationOptimizer,
 
         # Archive
         TopListArchive, best_fitness, add_candidate!, best_candidate,
-        last_top_fitness, delta_fitness,
+        last_top_fitness, delta_fitness, capacity,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # Search spaces
-        ParamBounds, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
+        ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
         RangePerDimSearchSpace, symmetric_search_space,
         numdims, mins, maxs, deltas, ranges, range_for_dim, diameters,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,

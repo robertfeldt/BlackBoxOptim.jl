@@ -2,7 +2,7 @@ abstract Population
 abstract PopulationWithFitness <: Population
 
 type FloatVectorPopulation <: PopulationWithFitness
-  # The population is a matrix of floats, each row being an individual.
+  # The population is a matrix of floats, each column being an individual.
   individuals::Array{Float64, 2}
 
   # The fitnesses is a matrix of floats, each row being the fitness for one
@@ -16,7 +16,7 @@ type FloatVectorPopulation <: PopulationWithFitness
   top_fitness::Array{Float64, 2}
   top_size::Int
 
-  function FloatVectorPopulation(size = 100, dimensions = 1, 
+  function FloatVectorPopulation(size = 100, dimensions = 1,
     scheme = float_vector_scheme_min(), numTopIndividuals = 10)
     inds = rand(size, dimensions)
     fs = ones(size, dimensions) * scheme.worst_fitness # Bug! Need not be the same num of objectives as there are dimensions...

@@ -18,7 +18,7 @@ facts("Search space") do
 
     for(i in 1:NumTestRepetitions)
       ind = rand_individual(ss1)
-      @fact size(ind) => (1, 1)
+      @fact size(ind) => (1,)
       @fact isinspace(ind, ss1) => true
     end
 
@@ -31,7 +31,7 @@ facts("Search space") do
 
     for(i in 1:NumTestRepetitions)
       ind = rand_individual(ss3)
-      @fact size(ind) => (3, 1)
+      @fact size(ind) => (3,)
       @fact isinspace(ind, ss3) => true
     end
   end
@@ -74,39 +74,39 @@ facts("Search space") do
       @fact size(inds,1) => numdims(ss)
       @fact size(inds,2) => numinds
       for(j in 1:numinds)
-        @fact isinspace(inds[j], ss) => true
+        @fact isinspace(inds[:,j], ss) => true
       end
     end
   end
 
   context("RangePerDimSearchSpace") do
     ss = RangePerDimSearchSpace([(0.0, 1.0)])
-    @fact mins(ss) => hcat([0.0])
-    @fact maxs(ss) => hcat([1.0])
-    @fact deltas(ss) => hcat([1.0])
+    @fact mins(ss) => [0.0]
+    @fact maxs(ss) => [1.0]
+    @fact deltas(ss) => [1.0]
 
     ss = RangePerDimSearchSpace([(0.0, 1.0), (0.5, 10.0)])
-    @fact mins(ss) => [0.0, 0.5]''
-    @fact maxs(ss) => [1.0, 10.0]''
-    @fact deltas(ss) => [1.0, 9.5]''
+    @fact mins(ss) => [0.0, 0.5]
+    @fact maxs(ss) => [1.0, 10.0]
+    @fact deltas(ss) => [1.0, 9.5]
   end
 
   context("rand_individuals_lhs samples in LHS intervals") do
     ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
     inds = rand_individuals_lhs(ss, 2)
-    @fact size(inds, 1) => 2
-    @fact size(inds, 2) => 3
+    @fact size(inds, 1) => 3
+    @fact size(inds, 2) => 2
 
-    sorted = sort(inds, 1) # Sort per column => in their ordered intervals
+    sorted = sort(inds, 2) # Sort per row => in their ordered intervals
     @fact 0.0 <= sorted[1,1] <= 0.5 => true
-    @fact 0.5 <= sorted[2,1] <= 1.0 => true
+    @fact 0.5 <= sorted[1,2] <= 1.0 => true
 
-    @fact 2.0 <= sorted[1,2] <= 2.5 => true
+    @fact 2.0 <= sorted[2,1] <= 2.5 => true
     @fact 2.5 <= sorted[2,2] <= 3.0 => true
 
-    @fact 4.0 <= sorted[1,3] <= 4.5 => true
-    @fact 4.5 <= sorted[2,3] <= 5.0 => true
+    @fact 4.0 <= sorted[3,1] <= 4.5 => true
+    @fact 4.5 <= sorted[3,2] <= 5.0 => true
   end
 
   context("feasible finds feasible points in the search space") do
@@ -114,27 +114,27 @@ facts("Search space") do
 
     # We use the double transpose below to ensure the actual and expected
     # values have the same type (matrices, not vectors).
-    @fact BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) == [1.0, 2.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) == [1.0, 3.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([1.1, 2.0, 5.0], ss) == [1.0, 2.0, 5.0]'' => true
-    @fact BlackBoxOptim.feasible([1.1, 3.0, 5.0], ss) == [1.0, 3.0, 5.0]'' => true
+    @fact BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) == [1.0, 2.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) == [1.0, 3.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([1.1, 2.0, 5.0], ss) == [1.0, 2.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([1.1, 3.0, 5.0], ss) == [1.0, 3.0, 5.0] => true
 
-    @fact BlackBoxOptim.feasible([-0.1, 2.0, 4.0], ss) == [0.0, 2.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([-0.1, 3.0, 4.0], ss) == [0.0, 3.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([-0.1, 2.0, 5.0], ss) == [0.0, 2.0, 5.0]'' => true
-    @fact BlackBoxOptim.feasible([-0.1, 3.0, 5.0], ss) == [0.0, 3.0, 5.0]'' => true
+    @fact BlackBoxOptim.feasible([-0.1, 2.0, 4.0], ss) == [0.0, 2.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([-0.1, 3.0, 4.0], ss) == [0.0, 3.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([-0.1, 2.0, 5.0], ss) == [0.0, 2.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([-0.1, 3.0, 5.0], ss) == [0.0, 3.0, 5.0] => true
 
-    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0]'' => true
-    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0]'' => true
+    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0] => true
 
-    @fact BlackBoxOptim.feasible([0.0, 3.3, 4.0], ss) == [0.0, 3.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([0.0, 3.2, 4.0], ss) == [0.0, 3.0, 4.0]'' => true
-    @fact BlackBoxOptim.feasible([1.0, 3.1, 5.0], ss) == [1.0, 3.0, 5.0]'' => true
-    @fact BlackBoxOptim.feasible([1.0, 3.9, 5.0], ss) == [1.0, 3.0, 5.0]'' => true
+    @fact BlackBoxOptim.feasible([0.0, 3.3, 4.0], ss) == [0.0, 3.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([0.0, 3.2, 4.0], ss) == [0.0, 3.0, 4.0] => true
+    @fact BlackBoxOptim.feasible([1.0, 3.1, 5.0], ss) == [1.0, 3.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([1.0, 3.9, 5.0], ss) == [1.0, 3.0, 5.0] => true
 
-    @fact BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0]'' => true
+    @fact BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0] => true
   end
 
   context("diameters") do

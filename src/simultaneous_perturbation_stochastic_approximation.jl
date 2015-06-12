@@ -13,20 +13,20 @@ type SimultaneousPerturbationSA2 <: StochasticApproximationOptimizer
   parameters::Parameters
   k::Int64
   n::Int64
-  theta::Array{Float64, 2}
-  delta_ck::Array{Float64, 2}
+  theta::Individual
+  delta_ck::Individual
 
   SimultaneousPerturbationSA2(parameters) = begin
     ss = parameters[:SearchSpace]
     n = numdims(ss)
     new(ss, Parameters(parameters, SPSADefaultParameters),
-      0, n, rand_individual(ss), zeros(Float64, n, 2))
+      0, n, rand_individual(ss), zeros(Float64, n))
   end
 end
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 
-sample_bernoulli_vector(n::Int) = 2.0 * round(rand(n,1)) - 1.0
+sample_bernoulli_vector(n::Int) = 2.0 * round(rand(n)) - 1.0
 
 function ask(spsa::SimultaneousPerturbationSA2)
 

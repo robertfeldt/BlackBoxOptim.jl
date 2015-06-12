@@ -8,11 +8,11 @@
 # focus is on large-scale optimization but these problems also can be used
 # in lower dimensions.
 include(joinpath(dirname(@__FILE__()), "single_objective_base_functions.jl"))
-Shekel10 = fixeddim_problem(shekel10; range = (0.0, 10.0), dims = 4, name = "Shekel10", fmins = [-10.5364])
-Shekel7 = fixeddim_problem(shekel7; range = (0.0, 10.0), dims = 4, name = "Shekel7", fmins = [-10.4029])
-Shekel5 = fixeddim_problem(shekel5; range = (0.0, 10.0), dims = 4, name = "Shekel5", fmins = [-10.1532])
-Hartman6 = fixeddim_problem(hartman6; range = (0.0, 1.0), dims = 6, name = "Hartman6", fmins = [-3.32237])
-Hartman3 = fixeddim_problem(hartman3; range = (0.0, 1.0), dims = 3, name = "Hartman3", fmins = [-3.860038442])
+Shekel10 = fixeddim_problem(shekel10; range = (0.0, 10.0), dims = 4, name = "Shekel10", fmin = -10.5364)
+Shekel7 = fixeddim_problem(shekel7; range = (0.0, 10.0), dims = 4, name = "Shekel7", fmin = -10.4029)
+Shekel5 = fixeddim_problem(shekel5; range = (0.0, 10.0), dims = 4, name = "Shekel5", fmin = -10.1532)
+Hartman6 = fixeddim_problem(hartman6; range = (0.0, 1.0), dims = 6, name = "Hartman6", fmin = -3.32237)
+Hartman3 = fixeddim_problem(hartman3; range = (0.0, 1.0), dims = 3, name = "Hartman3", fmin = -3.860038442)
 
 # We skip (for now) f12 and f13 in the JADE paper since they are penalized
 # functions which are quite nonstandard. We also skip f8 since we are unsure

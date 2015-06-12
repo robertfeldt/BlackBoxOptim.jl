@@ -8,8 +8,8 @@ context("mix_with_indices") do
   @fact length(r) => 2
   @fact r[1][2] => 1
   @fact r[2][2] => 2
-  @fact r[1][1] => cs[1,:]
-  @fact r[2][1] => cs[2,:]
+  @fact r[1][1] => cs[:,1]
+  @fact r[2][1] => cs[:,2]
 end
 
 function assign_weights(rankedCandidates)
