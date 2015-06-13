@@ -1,4 +1,6 @@
-type DiffEvoRandBin1{T <: Real} <: XoverOp3to1
+abstract DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC}
+
+type DiffEvoRandBin1{T <: Real} <: DiffEvoCrossoverOperator{3,1}
   f::Float64
   cr::Float64
   DiffEvoRandBin1(f = 0.65, cr = 0.4) = new(f, cr)
@@ -9,7 +11,7 @@ function apply{T <: Real}(xo::DiffEvoRandBin1{T}, p1::Vector{T}, p2::Vector{T}, 
   de_crossover_binomial(p3, donor)
 end
 
-type DiffEvoRandBin2{T <: Real} <: XoverOp5to1
+type DiffEvoRandBin2{T <: Real} <: DiffEvoCrossoverOperator{5,1}
   f::Float64
   cr::Float64
   DiffEvoRandBin2(f = 0.65, cr = 0.4) = new(f, cr)
