@@ -79,6 +79,29 @@ facts("Search space") do
     end
   end
 
+  context("rand_individuals correctly handles column-wise generation in assymetric search spaces") do
+    for(i in 1:ifloor(NumTestRepetitions/10))
+      numdims = rand(1:13)
+      minbounds = rand(numdims)
+      ds = rand(1:10, numdims) .* rand(numdims)
+      maxbounds = minbounds .+ ds
+      parambounds = collect(zip(minbounds, maxbounds))
+      ss = RangePerDimSearchSpace(parambounds)
+      @fact mins(ss) => minbounds
+      @fact maxs(ss) => maxbounds
+      @fact round(deltas(ss), 6) => round(ds, 6)
+
+      # Now generate 100 individuals and make sure they are all within bounds
+      inds = rand_individuals(ss, 100)
+      @fact size(inds, 2) => 100
+      for i in 1:size(inds, 2)
+        for d in 1:numdims
+          @fact (minbounds[d] <= inds[d,i] <= maxbounds[d]) => true
+        end
+      end
+    end
+  end
+
   context("RangePerDimSearchSpace") do
     ss = RangePerDimSearchSpace([(0.0, 1.0)])
     @fact mins(ss) => [0.0]
