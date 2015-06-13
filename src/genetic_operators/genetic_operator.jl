@@ -9,7 +9,9 @@ numparents(o::MutationOperator) = 1 # But it will apply to each parent separatel
 numparents{NP,NC}(o::CrossoverOperator{NP,NC}) = NP
 numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC
 
-apply{T <: Real}(xo::CrossoverOperator, parents::Vector{Vector{T}}) = apply(xo, parents...)
+# mutation operator that does nothing
+type NoMutation <: MutationOperator end
+function apply!(mo::NoMutation, target) end
 
 include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
