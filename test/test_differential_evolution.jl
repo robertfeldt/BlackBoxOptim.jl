@@ -76,54 +76,59 @@ context("rand_bound_from_target!") do
   end
 end
 
-context("de_crossover_binomial") do
+context("DiffEvoRandBin1") do
   context("always copies from donor if length is 1") do
-    @fact BlackBoxOptim.de_crossover_binomial(DE, [0.0], 1, [1.0]) => [1.0]
-
-    @fact BlackBoxOptim.de_crossover_binomial(DE, [-10.0], 1, [42.42]) => [42.42]
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 0.0, 0.0,
+                                [0.0], DE.population, [1,2,3]) => [3.0]
   end
 
   context("always copies at least one element from donor") do
     for(i in 1:NumTestRepetitions)
       len = rand(1:100)
-      target, donor = rand(len), rand(len)
-      res = BlackBoxOptim.de_crossover_binomial(DE, target, 1, donor)
-      @fact any([ in(x, donor) for x = res ]) => true
+      pop = rand(len,4)
+      target = pop[:,1]
+      saved_target = copy(target)
+      res = BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 0.0, 0.0,
+                                  target, pop, [2,3,4])
+      @fact res === target => true
+      @fact ndims( res ) => 1
+      @fact length( res ) => len
+      @fact sum(target .!= saved_target) => 1
     end
   end
 
   context("unlikely to copy everything if vectors are large") do
     for(i in 1:NumTestRepetitions)
-      len = 50
-      target, donor = rand(len), rand(len)
-      res = BlackBoxOptim.de_crossover_binomial(DE, target, 1, donor)
-      @fact any(target .== res) => true
+      len = 50 + rand(1:50)
+      pop = rand(len,4)
+      target = pop[:,1]
+      saved_target = copy(target)
+      res = BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 0.1, 0.5, target, pop, [2,3,4])
+      @fact any(target .!= saved_target) => true
+      @fact any(target .== saved_target) => true
     end
   end
-end
 
-context("de_mutation_rand_1") do
-  @fact ndims(BlackBoxOptim.de_mutation_rand_1(DE, 1, [4, 9, 8])) => 1
+  context("correctly modifies the parameters vector") do
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.4,
+                                [0.0], DE.population, [1,2,3]) => [3.0 + (0.4 * (1.0 - 2.0))]
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.4,
+                                [0.0], DE.population, [2,3,1]) => [1.0 + (0.4 * (2.0 - 3.0))]
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.4,
+                                [0.0], DE.population, [3,2,1]) => [1.0 + (0.4 * (3.0 - 2.0))]
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.4,
+                                [0.0], DE.population, [1,3,5]) => [5.0 + (0.4 * (1.0 - 3.0))]
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.4,
+                                [0.0], DE.population, [4,9,8]) => [8.0 + (0.4 * (4.0 - 9.0))]
 
-  @fact BlackBoxOptim.de_mutation_rand_1(DE, 1, [1, 2, 3])[1] => (3.0 + (0.4 * (1.0 - 2.0)))
-  @fact BlackBoxOptim.de_mutation_rand_1(DE, 2, [2, 3, 1])[1] => (1.0 + (0.4 * (2.0 - 3.0)))
-  @fact BlackBoxOptim.de_mutation_rand_1(DE, 3, [3, 2, 1])[1] => (1.0 + (0.4 * (3.0 - 2.0)))
-  @fact BlackBoxOptim.de_mutation_rand_1(DE, 4, [1, 3, 5])[1] => (5.0 + (0.4 * (1.0 - 3.0)))
-  @fact BlackBoxOptim.de_mutation_rand_1(DE, 5, [4, 9, 8])[1] => (8.0 + (0.4 * (4.0 - 9.0)))
-
-  de2 = de_rand_1_bin(@compat Dict{Symbol,Any}(:SearchSpace => symmetric_search_space(2, (0.0, 10.0)),
-    :Population => reshape(collect(1.0:8.0), 4, 2)',
-    :f => 0.6, :cr => 0.5, :NumParents => 3)
-  )
-
-  res = BlackBoxOptim.de_mutation_rand_1(de2, 10, [1, 2, 3])
-  @fact ndims(res) => 1
-  @fact res[1] => (3.0 + (0.6 * (1.0 - 2.0)))
-  @fact res[2] => (7.0 + (0.6 * (5.0 - 6.0)))
-
-  res2 = BlackBoxOptim.de_mutation_rand_1(de2, 2, [1, 2, 4])
-  @fact res2[1] => (4.0 + (0.6 * (1.0 - 2.0)))
-  @fact res2[2] => (8.0 + (0.6 * (5.0 - 6.0)))
+    pop2 = reshape(collect(1.0:8.0), 4, 2)'
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.6,
+                                [0.0,0.0], pop2, [1,2,3]) => [3.0 + (0.6 * (1.0 - 2.0)),
+                                                              7.0 + (0.6 * (5.0 - 6.0))]
+    @fact BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(), 1.0, 0.6,
+                                [0.0,0.0], pop2, [1,2,4]) => [4.0 + (0.6 * (1.0 - 2.0)),
+                                                              8.0 + (0.6 * (5.0 - 6.0))]
+  end
 end
 
 context("ask") do
