@@ -1,4 +1,4 @@
-# FIXME replace Any with Type{Optimizer} when the support for Julia v0.3 would be dropped 
+# FIXME replace Any with Type{Optimizer} when the support for Julia v0.3 would be dropped
 ValidMethods = @compat Dict{Symbol,Union(Any,Function)}(
   :random_search => BlackBoxOptim.random_search,
   :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
@@ -44,60 +44,54 @@ DefaultParameters = @compat Dict{Symbol,Any}(
   :PopulationSize => 50
 )
 
-# Create a problem given
-#   a problem or
-#   a function and a search range or
-#   a function and a
-# while possibly updating the params with the specific dimension and search
-# space to be used.
-function setup_problem(functionOrProblem; parameters = @compat Dict{Symbol,Any}())
+# Setup a fixed-dimensional problem
+function setup_problem(problem::FixedDimProblem; parameters = @compat Dict{Symbol,Any}())
+  params = Parameters(parameters, DefaultParameters)
+  params[:SearchSpace] = search_space(problem)
+  return problem, params
+end
 
+# Create a fixed-dimensional problem given
+#   any-dimensional problem and a number of dimensions as a parameter
+function setup_problem(problem::OptimizationProblem; parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
 
-  # If an OptimizationProblem was given it takes precedence over the search range param setting.
-  if issubtype(typeof(functionOrProblem), OptimizationProblem)
-
-    # If a fixed dim problem was given it takes precedence over the dimension param setting.
-    if is_fixed_dimensional(functionOrProblem)
-      problem = functionOrProblem
-    else
-      # If an anydim problem was given the dimension param must have been specified.
-      if params[:NumDimensions] == :NotSpecified
-        throw(ArgumentError("You MUST specify the number of dimensions in a solution when an any-dimensional problem is given"))
-      else
-        problem = as_fixed_dim_problem(functionOrProblem, parameters[:NumDimensions])
-      end
-    end
-
-  elseif typeof(functionOrProblem) == Function
-
-    # Check that a valid search space has been stated and create the search_space
-    # based on it, or bail out.
-    if typeof(params[:SearchRange]) == typeof( (0.0, 1.0) )
-      if params[:NumDimensions] == :NotSpecified
-        throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
-      end
-      params[:SearchSpace] = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
-    elseif typeof(params[:SearchRange]) == typeof( [(0.0, 1.0)] )
-      params[:SearchSpace] = RangePerDimSearchSpace(params[:SearchRange])
-      params[:NumDimensions] = length(params[:SearchRange])
-    else
-      throw(ArgumentError("Invalid search range specification."))
-    end
-
-    # Now create an optimization problem with the given information. We currently reuse the type
-    # from our pre-defined problems so some of the data for the constructor is dummy.
-    problem = fixeddim_problem(functionOrProblem;
-      search_space = params[:SearchSpace], range = params[:SearchRange],
-      dims = params[:NumDimensions]
-    )
-
+  # If an anydim problem was given the dimension param must have been specified.
+  if params[:NumDimensions] == :NotSpecified
+    throw(ArgumentError("You MUST specify the number of dimensions in a solution when an any-dimensional problem is given"))
   end
-
+  problem = as_fixed_dim_problem(problem, parameters[:NumDimensions])
   params[:SearchSpace] = search_space(problem)
 
   return problem, params
+end
 
+# Create a fixed-dimensional problem given
+#   a function and a search range + number of dimensions.
+function setup_problem(func::Function; parameters = @compat Dict{Symbol,Any}())
+  params = Parameters(parameters, DefaultParameters)
+  # Check that a valid search space has been stated and create the search_space
+  # based on it, or bail out.
+  if typeof(params[:SearchRange]) == typeof( (0.0, 1.0) )
+      if params[:NumDimensions] == :NotSpecified
+          throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
+      end
+      params[:SearchSpace] = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
+  elseif typeof(params[:SearchRange]) == typeof( [(0.0, 1.0)] )
+      params[:SearchSpace] = RangePerDimSearchSpace(params[:SearchRange])
+      params[:NumDimensions] = length(params[:SearchRange])
+  else
+      throw(ArgumentError("Invalid search range specification."))
+  end
+
+  # Now create an optimization problem with the given information. We currently reuse the type
+  # from our pre-defined problems so some of the data for the constructor is dummy.
+  problem = fixeddim_problem(func;
+                             search_space = params[:SearchSpace], range = params[:SearchRange],
+                             dims = params[:NumDimensions] )
+  params[:SearchSpace] = search_space(problem)
+
+  return problem, params
 end
 
 function compare_optimizers(functionOrProblem::Union(Function, OptimizationProblem);
