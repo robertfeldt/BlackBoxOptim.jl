@@ -72,7 +72,7 @@ end
 
 function as_fixed_dim_problem(p::FixedDimProblem, dim::Int)
   if numdims(p) != dim
-    throw("Trying to set dimension $(dim) on a fixed dimensional problem of dimension $(numdims(p))")
+    throw(DimensionMismatch("Trying to set dimension $(dim) on a fixed dimensional problem of dimension $(numdims(p))"))
   end
   p
 end
