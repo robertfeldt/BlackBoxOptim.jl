@@ -4,7 +4,7 @@
 # mutation. This is implemented as described in the paper:
 #  Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
 
-num_vars_to_next_mutation_point(probMutation) = int((-log(rand())) / probMutation)
+num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / probMutation)
 
 type MutationClock <: MutationOperator
   subMutationOperator::MutationOperator
