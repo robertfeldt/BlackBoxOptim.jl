@@ -28,11 +28,11 @@ fitness( a::ArchivedIndividual ) = a.fitness
 # candidates/individuals seen.
 type TopListArchive <: Archive
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
-  numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
+  numdims::Int          # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
-  num_fitnesses::Int64  # Number of calls to add_candidate
+  num_fitnesses::Int    # Number of calls to add_candidate
 
-  capacity::Int64       # Max size of top lists
+  capacity::Int         # Max size of top lists
   candidates::Vector{ArchivedIndividual}  # Top candidates and their fitness values
 
   # We save a fitness history that we can later print to a csv file.
