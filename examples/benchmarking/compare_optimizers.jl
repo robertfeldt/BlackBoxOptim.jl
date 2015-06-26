@@ -91,7 +91,7 @@ function main(args)
     list_benchmark_db(db)
   elseif cmd == "compare"
     db = read_benchmark_db(benchmarkfile)
-    compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, adapt)
+    compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, 0.01)
   else
     raise("Unknown command")
   end
@@ -123,14 +123,19 @@ ProblemSets = {
     ("Rosenbrock",   10, 50, 5e4),
     ("Rosenbrock",   30, 50, 2e5),
     ("Rosenbrock",   50, 40, 3e5),
+  ],
+
+  "test" => [
+    ("Rosenbrock",   30, 50, 2e5),
   ]
 }
 ProblemSets["all"] = vcat(values(ProblemSets)...)
 
 OptimizerSets = {
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
-  "test" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited],
+  "test" => [:de_rand_1_bin],
 }
+OptimizerSets["all"] = collect(keys(BlackBoxOptim.ValidMethods))
 
 function fitness_for_opt(problem, numDimensions, populationSize, numSteps, method)
   problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
@@ -235,6 +240,58 @@ function update_benchmarks(db, pset, optimizers, nreps = 10)
     end
   end
   db
+end
+
+using HypothesisTests
+
+function report_fitness_difference(oldfitnesses, newfitnesses, significancelevel = 0.05)
+  mdb, m = median(benchfitnesses), median(fs)
+  if mdb > m
+    println("  Median fitness of current implementation is LOWER than one in db: ",
+      @sprintf("%.3e < %.3e", m, mdb))
+  else
+    println("  Median fitness of current implementation is HIGHER than one in db: ",
+      @sprintf("%.3e < %.3e", m, mdb))
+  end
+end
+
+function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significancelevel::Float64 = 0.05)
+  dfs = DataFrame[]
+  for optmethod in optimizers
+    optsel = db[:,:Method] .== string(optmethod)
+    for pd in pset
+      probname, numdims, popsize, numsteps = pd
+      psel = db[:,:Problem] .== probname
+      dsel = db[:,:NumDims] .== numdims
+      df = db[optsel & psel & dsel,:]
+      benchfitnesses = df[:,:Fitness]
+      newfs = Float64[]
+      prob = BlackBoxOptim.example_problems[probname]
+      for r in 1:nreps
+        ftn = fitness_for_opt(prob, numdims, popsize, numsteps, optmethod)
+        push!(newfs, ftn)
+      end
+      pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
+      println("$(probname)($numdims), $(optmethod):")
+      local statsigndiff
+      if pval > significancelevel
+        println("No statistically significant difference in $nreps repetitions!")
+        statsigndiff = "No"
+      else
+        println("Statistically significant difference in $nreps repetitions!")
+        statsigndiff = "Yes"
+      end
+      oldmed = median(benchfitnesses)
+      newmed = median(newfs)
+      ord = (oldmed < newmed) ? "<" : ">"
+      push!(dfs, DataFrame(Problem = probname, NumDims = numdims, Method = optmethod, 
+        OldMedian = oldmed, Order = ord, NewMedian = newmed, 
+        Pvalue = pval, Level = significancelevel, StatSignDiff = statsigndiff))
+    end
+  end
+  df = vcat(dfs...)
+  println(df)
+  writetable(strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
 end
 
 main(ARGS)
