@@ -4,13 +4,20 @@ facts("Adaptive differential evolution optimizer") do
 
 ade = adaptive_de_rand_1_bin()
 
-context("sample_f") do
+context("parameters adjust!()") do
   for(i in 1:NumTestRepetitions)
-    @fact 0.0 <= BlackBoxOptim.sample_f(ade) <= 1.0 => true
+    cur_cr, cur_f = BlackBoxOptim.crossover_parameters(ade.params, 1)
+    @fact 0.0 <= cur_cr <= 1.0 => true
+    @fact 0.0 <= cur_f <= 1.0 => true
+    BlackBoxOptim.adjust!(ade.params, 1, false)
+    # FIXME this fails too often; needs adjusting the distribution?
+    #new_cr, new_f = BlackBoxOptim.crossover_parameters(ade.params, 1)
+    #@fact new_cr != cur_cr => true
+    #@fact new_f != cur_f => true
   end
 end
 
-context("ask") do
+context("ask()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(ade)
 

@@ -1,5 +1,7 @@
 module BlackBoxOptim
 
+using Distributions, Compat
+
 export  Optimizer, PopulationOptimizer,
         bboptimize, compare_optimizers,
 
@@ -44,8 +46,6 @@ export  Optimizer, PopulationOptimizer,
 
 abstract Optimizer
 
-using Compat
-
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
   include("utilities/assign_ranks.jl")
@@ -55,6 +55,10 @@ include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
 include("population.jl")
+
+# Genetic Operators
+include("genetic_operators/genetic_operator.jl")
+
 include("frequency_adaptation.jl")
 include("archive.jl")
 
@@ -130,9 +134,6 @@ include("direct_search_with_probabilistic_descent.jl")
 
 # End-user/interface functions
 include("bboptimize.jl")
-
-# Genetic Operators
-include("genetic_operators/genetic_operator.jl")
 
 # Fitness
 include("fitness/fitness_types.jl")

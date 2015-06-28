@@ -7,11 +7,26 @@ name(de::DifferentialEvolutionOpt) = de.name
 DE_DefaultOptions = @compat Dict{Symbol,Any}(
   :f => 0.6,
   :cr => 0.7,
-  :NumParents => 3,
   :SamplerRadius => 8,
 )
 
-type DiffEvoOpt <: DifferentialEvolutionOpt
+abstract DiffEvoParameters
+
+type FixedDiffEvoParameters <: DiffEvoParameters
+  f::Float64
+  cr::Float64
+
+  FixedDiffEvoParameters(options, popsize::Int) =  new(options[:f], options[:cr])
+end
+
+crossover_parameters(params::FixedDiffEvoParameters, index) = params.cr, params.f
+
+function adjust!( params::FixedDiffEvoParameters, index, is_improved::Bool )
+    # do nothing
+end
+
+type DiffEvoOpt{P<:DiffEvoParameters,M<:MutationOperator,X<:DiffEvoCrossoverOperator} <: DifferentialEvolutionOpt
+  # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
   name::ASCIIString
 
   # A population is a matrix of floats, individuals stored in columns.
@@ -23,46 +38,45 @@ type DiffEvoOpt <: DifferentialEvolutionOpt
   search_space::SearchSpace
 
   # Options
-  options
+  options::Parameters
 
   # Set of functions that together define a specific DE strategy.
-  sample::Function
-  mutate::Function
-  crossover::Function
-  bound::Function
+  params::P        # adjust crossover parameters after fitness calculation
+  sample::Function # TODO change function to SamplingOperator
+  mutate::M        # mutation operator
+  crossover::X     # crossover operator
+  bound!::Function # TODO change function to ProjectionOperator
 
-  function DiffEvoOpt(name, pop, ss, options, sample, mutate, crossover, bound)
-    new(name, pop, ss, mergeparam(DE_DefaultOptions, options), sample, mutate, crossover, bound)
+  function DiffEvoOpt(name, pop, ss, options, params::P, sample, mutate::M = M(), crossover::X = X(),
+                      bound = rand_bound_from_target!)
+    new(name, pop, ss, options, params, sample, mutate, crossover, bound)
   end
 end
 
 popsize(opt::DifferentialEvolutionOpt) = size(population(opt),2)
-fconst(de::DifferentialEvolutionOpt, i) = de.options[:f]
-crconst(de::DifferentialEvolutionOpt, i) = de.options[:cr]
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.
 function ask(de::DifferentialEvolutionOpt)
   # Sample parents and target
-  numparents = de.options[:NumParents]
-  indices = de.sample(de, 1 + numparents)
-  #print("indices = "); show(indices); println("")
-  parent_indices = indices[1:numparents]
-  #print("parent_indices = "); show(parent_indices); println("")
+  indices = de.sample(de, 1 + numparents(de.crossover))
+  parent_indices = indices[1:numparents(de.crossover)]
+  #println("parent_indices = $(parent_indices)")
   target_index = indices[end]
-  #print("target_index = "); show(target_index); println("")
-  target = de.population[:,target_index]
-  #print("target = "); show(target); println("")
+  target = de.population[:,target_index] # FIXME we can cache target somewhere
+  #println("target[$(target_index)] = $(target)")
+  apply!( de.mutate, target )
 
-  donor = de.mutate(de, target_index, parent_indices)
-  #print("donor = "); show(donor); println("")
-
-  # Crossover donor and target
-  trial = de.crossover(de, target, target_index, donor)
-
+  # Crossover parents and target
+  @assert numchildren(de.crossover)==1
+  trial = copy(target) # FIXME reuse some trial vector
+  apply!( de.crossover,
+          crossover_parameters( de.params, target_index )...,
+          trial, de.population, parent_indices )
   # Bound the trial vector according to search space bounds
-  trial = de.bound(trial, target, de.search_space)
+  de.bound!(trial, target, de.search_space)
+  #println("trial = $(trial)")
 
   # Return the candidates that should be ranked as tuples including their
   # population indices.
@@ -103,37 +117,6 @@ function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
   end
 end
 
-# DE/rand/1 mutation strategy
-function de_mutation_rand_1(de::DifferentialEvolutionOpt, targetIndex, parentIndices)
-  f = fconst(de, targetIndex)
-  p = de.population[:,parentIndices]
-  return p[:,3] + (f * (p[:,1] - p[:,2]))
-end
-
-# DE/rand/2 mutation strategy
-function de_mutation_rand_2(de::DifferentialEvolutionOpt, targetIndex, parentIndices)
-  f = fconst(de, targetIndex)
-  p = de.population[:,parentIndices]
-  return p[:,3] + (f * (p[:,1] - p[:,2])) + (f * (p[:,4] - p[:,5]))
-end
-
-# Binomial crossover for DE, i.e. DE/*/*/bin.
-function de_crossover_binomial(de::DifferentialEvolutionOpt, target, targetIndex, donor)
-  trial = copy(target)
-
-  # Now crossover randomly for the rest of the indices
-  switch = rand(length(trial)) .<= crconst(de, targetIndex)
-  # Always ensure at least one value from donor is copied to trial vector
-  switch[rand(1:length(trial))] = true
-  #print("switch = "); show(switch); println("")
-  #print("trial = "); show(trial); println("")
-  #print("donor = "); show(donor); println("")
-  trial[switch] = donor[switch]
-  #print("trial = "); show(trial); println("")
-
-  return trial
-end
-
 # If we come out-of-bounds we randomly sample between the target value
 # and the bound.
 function rand_bound_from_target!(individual, target, searchSpace::SearchSpace)
@@ -163,7 +146,9 @@ function tell!(de::DiffEvoOpt,
   num_better = 0
   for i in 1:div(num_candidates, 2)
     candidate, index = rankedCandidates[i]
-    if candidate != de.population[:,index]
+    is_inserted = candidate != de.population[:,index]
+    adjust!( de.params, index, is_inserted )
+    if is_inserted
       num_better += 1
       #print("candidate = "); show(candidate); println("")
       #print("index = "); show(index); println("")
@@ -179,33 +164,25 @@ end
 # literature.
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(parameters = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/1/bin")
-  params = Parameters(parameters, DE_DefaultOptions)
-  # Ensure NumParents is 3 since de_mutation_rand_1 requires it.
-  params[:NumParents] = 3
-  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params,
-    sampler,
-    de_mutation_rand_1,
-    de_crossover_binomial,
-    rand_bound_from_target!)
+function de_rand_1_bin(options = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/1/bin")
+  opts = Parameters(options, DE_DefaultOptions)
+  DiffEvoOpt{FixedDiffEvoParameters,NoMutation,DiffEvoRandBin1}(
+        name, opts[:Population], opts[:SearchSpace], opts,
+        FixedDiffEvoParameters( opts, size(opts[:Population],2) ), sampler )
 end
 
-function de_rand_2_bin(parameters = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/2/bin")
-  params = Parameters(parameters, DE_DefaultOptions)
-  # Ensure NumParents is 5 since de_mutation_rand_2 requires it.
-  params[:NumParents] = 5
-  DiffEvoOpt(name, params[:Population], params[:SearchSpace], params,
-    sampler,
-    de_mutation_rand_2,
-    de_crossover_binomial,
-    rand_bound_from_target!)
+function de_rand_2_bin(options = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/2/bin")
+  opts = Parameters(options, DE_DefaultOptions)
+  DiffEvoOpt{FixedDiffEvoParameters,NoMutation,DiffEvoRandBin2}(
+        name, opts[:Population], opts[:SearchSpace], opts,
+        FixedDiffEvoParameters( opts, size(opts[:Population],2) ), sampler )
 end
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
-function de_rand_1_bin_radiuslimited(parameters = Dict())
-  de_rand_1_bin(parameters; sampler = radius_limited_sampler, name = "DE/rand/1/bin/radiuslimited")
+function de_rand_1_bin_radiuslimited(options = @compat Dict{Symbol,Any}())
+  de_rand_1_bin(options; sampler = radius_limited_sampler, name = "DE/rand/1/bin/radiuslimited")
 end
 
-function de_rand_2_bin_radiuslimited(parameters = Dict())
-  de_rand_2_bin(parameters; sampler = radius_limited_sampler, name = "DE/rand/2/bin/radiuslimited")
+function de_rand_2_bin_radiuslimited(options = @compat Dict{Symbol,Any}())
+  de_rand_2_bin(options; sampler = radius_limited_sampler, name = "DE/rand/2/bin/radiuslimited")
 end
