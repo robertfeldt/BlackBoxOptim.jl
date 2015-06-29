@@ -146,6 +146,7 @@ ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 OptimizerSets = {
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
   "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
+  "nes" => [:xnes, :separable_nes],
   "test" => [:de_rand_1_bin],
 }
 OptimizerSets["all"] = collect(keys(BlackBoxOptim.ValidMethods))
@@ -160,7 +161,9 @@ increase_runs_per_problem(problemname, numdims) = begin
   RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
 end
 
-function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals, method)
+function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals,
+    method, showtrace = true)
+
   problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
@@ -168,6 +171,7 @@ function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals, m
   best, fitness = bboptimize(problem; method = method, parameters = {
     :NumDimensions => numDimensions,
     :PopulationSize => populationSize,
+    :ShowTrace => showtrace,
     :MaxFuncEvals => numFuncEvals
     })
 
@@ -193,7 +197,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
 
       # Ensure everything is compiled before we start measuring the 1st time.
       if runs_per_problem(probname, numdims) == 0
-        fitness_for_opt(prob, numdims, popsize, 100, method)
+        fitness_for_opt(prob, numdims, popsize, 100, method, false)
         increase_runs_per_problem(probname, numdims)
       end
 
