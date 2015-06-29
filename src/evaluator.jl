@@ -59,10 +59,4 @@ function rank_by_fitness(e::Evaluator, candidates)
   sort(fitness; by = (t) -> t[3])
 end
 
-function fitness_is_within_ftol(e::Evaluator, ftolerance; index = 1)
-  try
-    fitness_is_within_ftol(e.problem, ftolerance, best_fitness(e.archive); index = index)
-  catch
-    false # In case we have no information yet about the best fitness
-  end
-end
+fitness_is_within_ftol(e::Evaluator, ftolerance, index::Int = 1) = fitness_is_within_ftol(problem(e), ftolerance, best_fitness(e.archive), index)
