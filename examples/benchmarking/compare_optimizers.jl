@@ -1,6 +1,8 @@
+# Run with: julia -L ../../src/BlackBoxOptim.jl compare_optimizers.jl ...
 using DataFrames
 using BlackBoxOptim
 using ArgParse
+using CPUTime
 
 function main(args)
 
@@ -34,22 +36,22 @@ function main(args)
   end
 
   for cmd in ["update", "compare"]
-    @add_arg_table s[cmd] begin  
+    @add_arg_table s[cmd] begin
       "--problems"
         arg_type = String
         default = "all"
         help = "name of problem set"
-  
+
       "--optimizers"
         arg_type = String
-        default = "de"
+        default = "stable"
         help = "name of optimizer or optimizer set"
-  
+
       "--numreps"
         arg_type = Integer
         default = 10
         help = "number of repetitions per problem and optimizer"
-  
+
       "--adaptive"
         action = :store_true
         help = "adaptive number of reps until we can prove there is a difference (with a max of 30 reps)"
@@ -99,6 +101,7 @@ end
 
 ProblemSets = {
   "easy" => [
+    # ProblemName, NumDims, PopSize, MaxFevals
     ("Sphere",        5, 20, 5e3),
     ("Sphere",       10, 20, 1e4),
     ("Sphere",       30, 20, 3e4),
@@ -123,21 +126,41 @@ ProblemSets = {
     ("Rosenbrock",   10, 50, 5e4),
     ("Rosenbrock",   30, 50, 2e5),
     ("Rosenbrock",   50, 40, 3e5),
+
+    ("Rastrigin",    50, 50, 5e5),
+    ("Rastrigin",   100, 90, 8e5),
+
+    ("Ackley",       50, 50, 5e5),
+    ("Ackley",      100, 90, 8e5),
+
+    ("Griewank",     50, 50, 5e5),
+    ("Griewank",    100, 90, 8e5),
   ],
 
   "test" => [
     ("Rosenbrock",   30, 50, 2e5),
   ]
 }
-ProblemSets["all"] = vcat(values(ProblemSets)...)
+ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 
 OptimizerSets = {
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
+  "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
   "test" => [:de_rand_1_bin],
 }
 OptimizerSets["all"] = collect(keys(BlackBoxOptim.ValidMethods))
+OptimizerSets["stable"] = vcat(OptimizerSets["de"], OptimizerSets["stable_non_de"])
 
-function fitness_for_opt(problem, numDimensions, populationSize, numSteps, method)
+# Keep track of how many times we have executed each problem for this run of the script,
+# since we should never take time measurements before we have ensured everything has been compiled.
+const RunsPerProblem = Dict{Any,Int}()
+runs_per_problem(problemname, numdims) = get(RunsPerProblem, (problemname, numdims), 0)
+increase_runs_per_problem(problemname, numdims) = begin
+  k = (problemname, numdims)
+  RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
+end
+
+function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals, method)
   problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
@@ -145,7 +168,7 @@ function fitness_for_opt(problem, numDimensions, populationSize, numSteps, metho
   best, fitness = bboptimize(problem; method = method, parameters = {
     :NumDimensions => numDimensions,
     :PopulationSize => populationSize,
-    :MaxSteps => numSteps
+    :MaxFuncEvals => numFuncEvals
     })
 
   fitness
@@ -164,17 +187,24 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
   for pd in problemDescriptions
     println("Running $(NumRepetitions) reps for $(method)")
     for rep in 1:NumRepetitions
-      probname, numdims, popsize, numsteps = pd
+      probname, numdims, popsize, numfevals = pd
+
       prob = BlackBoxOptim.example_problems[probname]
 
-      df = DataFrame(Problem = probname, NumDims = numdims,  
-        Method = method, PopulationSize = popsize, NumSteps = numsteps, 
+      # Ensure everything is compiled before we start measuring the 1st time.
+      if runs_per_problem(probname, numdims) == 0
+        fitness_for_opt(prob, numdims, popsize, 100, method)
+        increase_runs_per_problem(probname, numdims)
+      end
+
+      df = DataFrame(Problem = probname, NumDims = numdims,
+        Method = string(method), PopulationSize = popsize, NumFevals = numfevals,
         GitID = gitid)
 
       start_time = time()
-      tic()
-      ftn = fitness_for_opt(prob, numdims, popsize, numsteps, method)
-      df[:ElapsedTime] = toc()
+      CPUtic()
+      ftn = fitness_for_opt(prob, numdims, popsize, numfevals, method)
+      df[:ElapsedTime] = CPUtoc()
       df[:StartTime] = strftime("%Y-%m-%d %H:%M:%S", start_time)
       df[:Fitness] = ftn
 
@@ -193,35 +223,58 @@ function read_benchmark_db(filename)
   end
 end
 
+function add_rank_per_group(df, groupcols, rankcol, resultcol)
+    dfs = DataFrame[]
+    for subdf in groupby(df, groupcols)
+        orderedsubdf = subdf[sortperm(subdf[:,rankcol]), :]
+        orderedsubdf[resultcol] = collect(1:size(orderedsubdf,1))
+        push!(dfs, orderedsubdf)
+    end
+    vcat(dfs...)
+end
+
 function list_benchmark_db(db)
   numrows = size(db, 1)
   println("Number of runs in db: ", numrows)
+
   if numrows > 1
+    # Find min fitness per problem
+    minfitpp = by(db, [:Problem, :NumDims], df -> DataFrame(
+        MinFitness = minimum(df[:,:Fitness])))
+
+    # Add col with order of magnitude worse than min fitness for each run
+    db = join(db, minfitpp, on = [:Problem, :NumDims])
+    db[:LogTimesWorseFitness] = log10(db[:Fitness] ./ db[:MinFitness])
+
+    # Calc median fitness and time per problem and method.
     sumdf = by(db, [:Problem, :NumDims, :Method], df ->
-      DataFrame(N = size(df, 1), MeanFitness = mean(df[:,:Fitness]), 
-        StdFitness = std(df[:,:Fitness]), MedianFitness = median(df[:,:Fitness])))
+        DataFrame(N = size(df, 1),
+            MedianFitness = median(df[:,:Fitness]),
+            MedianTime = median(df[:,:ElapsedTime])))
 
-    dfs = DataFrame[]
-    for subdf in groupby(sumdf, [:Problem, :NumDims])
-      mfitness = subdf[:,:MedianFitness]
-      sp = sortperm(mfitness)
-      subdf = subdf[sp, :]
-      #sort!(subdf, [:MedianFitness])
-      n = size(subdf, 1)
-      subdf[:Rank] = collect(1:n)
-      push!(dfs, subdf)
-    end
-    sumdf = vcat(dfs...)
-    #println(sumdf)
+    # Rank on median fitness and median time for each problem.
+    sumdf = add_rank_per_group(sumdf, [:Problem, :NumDims], :MedianFitness, :RankFitness)
+    sumdf = add_rank_per_group(sumdf, [:Problem, :NumDims], :MedianTime, :RankTime)
 
-    # Get number of runs per method
-    numrunspermethod = by(db, [:Method], df -> DataFrame(NumRuns = size(df, 1)))
+    # Get number of runs and median magnitude worse per method
+    permethod = by(db, [:Method], df -> DataFrame(
+        NumRuns = size(df, 1),
+        MedianLogTimesWorseFitness = round(median(df[:, :LogTimesWorseFitness]), 1),
+        )
+    )
 
-    # and merge with table with mean ranks.
-    summarydf = by(sumdf, [:Method], df -> DataFrame(MeanRank = mean(df[:,:Rank]), 
-      Num1s = sum(map(r -> (r == 1) ? 1 : 0, df[:,:Rank]))))
-    df = join(summarydf, numrunspermethod, on = :Method)
-    sort!(df; cols = [:MeanRank, :Num1s])
+    # and merge with table with mean ranks of fitness and time.
+    summarydf = by(sumdf, [:Method], df -> DataFrame(
+        MeanRank = round(mean(df[:,:RankFitness]), 3),
+        Num1sFitness = sum(map(r -> (r == 1) ? 1 : 0, df[:,:RankFitness])),
+        MeanRankTime = round(mean(df[:,:RankTime]), 3),
+        Num1sTime = sum(map(r -> (r == 1) ? 1 : 0, df[:,:RankTime])),
+        )
+    )
+    df = join(summarydf, permethod, on = :Method)
+
+    # Now sort and print
+    sort!(df; cols = [:MeanRank, :MeanRankTime, :Num1sFitness])
     println(df)
   end
 end
@@ -238,29 +291,20 @@ function update_benchmarks(db, pset, optimizers, nreps = 10)
     else
       db = vcat(db, res)
     end
+    #save_result_database(db, "temp.csv")
+    list_benchmark_db(db)
   end
   db
 end
 
 using HypothesisTests
 
-function report_fitness_difference(oldfitnesses, newfitnesses, significancelevel = 0.05)
-  mdb, m = median(benchfitnesses), median(fs)
-  if mdb > m
-    println("  Median fitness of current implementation is LOWER than one in db: ",
-      @sprintf("%.3e < %.3e", m, mdb))
-  else
-    println("  Median fitness of current implementation is HIGHER than one in db: ",
-      @sprintf("%.3e < %.3e", m, mdb))
-  end
-end
-
 function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significancelevel::Float64 = 0.05)
   dfs = DataFrame[]
   for optmethod in optimizers
     optsel = db[:,:Method] .== string(optmethod)
     for pd in pset
-      probname, numdims, popsize, numsteps = pd
+      probname, numdims, popsize, numfevals = pd
       psel = db[:,:Problem] .== probname
       dsel = db[:,:NumDims] .== numdims
       df = db[optsel & psel & dsel,:]
@@ -268,7 +312,7 @@ function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significa
       newfs = Float64[]
       prob = BlackBoxOptim.example_problems[probname]
       for r in 1:nreps
-        ftn = fitness_for_opt(prob, numdims, popsize, numsteps, optmethod)
+        ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
         push!(newfs, ftn)
       end
       pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
@@ -284,8 +328,8 @@ function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significa
       oldmed = median(benchfitnesses)
       newmed = median(newfs)
       ord = (oldmed < newmed) ? "<" : ">"
-      push!(dfs, DataFrame(Problem = probname, NumDims = numdims, Method = optmethod, 
-        OldMedian = oldmed, Order = ord, NewMedian = newmed, 
+      push!(dfs, DataFrame(Problem = probname, NumDims = numdims, Method = string(optmethod),
+        OldMedian = oldmed, Order = ord, NewMedian = newmed,
         Pvalue = pval, Level = significancelevel, StatSignDiff = statsigndiff))
     end
   end
@@ -294,4 +338,4 @@ function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significa
   writetable(strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
 end
 
-main(ARGS)
+@CPUtime main(ARGS)
