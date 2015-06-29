@@ -28,11 +28,11 @@ fitness( a::ArchivedIndividual ) = a.fitness
 # candidates/individuals seen.
 type TopListArchive <: Archive
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
-  numdims::Int64        # Number of dimensions in opt problem. Needed for confidence interval estimation.
+  numdims::Int          # Number of dimensions in opt problem. Needed for confidence interval estimation.
 
-  num_fitnesses::Int64  # Number of calls to add_candidate
+  num_fitnesses::Int    # Number of calls to add_candidate
 
-  capacity::Int64       # Max size of top lists
+  capacity::Int         # Max size of top lists
   candidates::Vector{ArchivedIndividual}  # Top candidates and their fitness values
 
   # We save a fitness history that we can later print to a csv file.
@@ -46,16 +46,16 @@ type TopListArchive <: Archive
   end
 end
 
-capacity(a::Archive) = a.capacity
-Base.length(a::Archive) = length(a.candidates)
+capacity(a::TopListArchive) = a.capacity
+Base.length(a::TopListArchive) = length(a.candidates)
 
-best_candidate(a::Archive) = a.candidates[1].params
-best_fitness(a::Archive) = fitness(a.candidates[1])
-last_top_fitness(a::Archive) = fitness(a.candidates[end])
+best_candidate(a::TopListArchive) = a.candidates[1].params
+best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[1]) : Inf
+last_top_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[end]) : Inf
 
 # Delta fitness is the difference between the top two candidates found so far.
 #
-function delta_fitness(a::Archive)
+function delta_fitness(a::TopListArchive)
   if length(a.fitness_history) < 2
     Inf
   else
@@ -67,12 +67,12 @@ end
 function add_candidate!(a::TopListArchive, fitness, candidate, num_fevals = -1)
   a.num_fitnesses += 1
 
-  if isempty(a.fitness_history) || fitness < best_fitness(a)
+  if isempty(a.candidates) || fitness < best_fitness(a)
     # Save fitness history so we can reconstruct the most important events later.
     push!(a.fitness_history, ArchivedFitness(a, fitness, num_fevals))
   end
 
-  if length(a) < capacity(a) || fitness < last_top_fitness(a)
+  if length(a) < capacity(a) || !isempty(a.candidates) && fitness < last_top_fitness(a)
     if length(a) >= capacity(a) pop!(a.candidates) end # pop the last candidate, the new one has better fitness
     new_cand = ArchivedIndividual(candidate, fitness)
     ix = searchsortedfirst( a.candidates, new_cand, by = BlackBoxOptim.fitness )
