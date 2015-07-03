@@ -25,17 +25,12 @@ function adjust!( params::FixedDiffEvoParameters, index, is_improved::Bool )
     # do nothing
 end
 
-type DiffEvoOpt{P<:DiffEvoParameters,M<:MutationOperator,X<:DiffEvoCrossoverOperator} <: DifferentialEvolutionOpt
+type DiffEvoOpt{P<:DiffEvoParameters,M<:MutationOperator,X<:DiffEvoCrossoverOperator,E<:EmbeddingOperator} <: DifferentialEvolutionOpt
   # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
   name::ASCIIString
 
   # A population is a matrix of floats, individuals stored in columns.
   population::Array{Float64, 2}
-
-  # A search space is defined by the min and max values (in tuples) for each
-  # of its dimenions. The dimension is the length of an individual, i.e. the
-  # number of Float64 values in it.
-  search_space::SearchSpace
 
   # Options
   options::Parameters
@@ -45,12 +40,13 @@ type DiffEvoOpt{P<:DiffEvoParameters,M<:MutationOperator,X<:DiffEvoCrossoverOper
   sample::Function # TODO change function to SamplingOperator
   mutate::M        # mutation operator
   crossover::X     # crossover operator
-  bound!::Function # TODO change function to ProjectionOperator
+  embed::E         # embedding operator
+end
 
-  function DiffEvoOpt(name, pop, ss, options, params::P, sample, mutate::M = M(), crossover::X = X(),
-                      bound = rand_bound_from_target!)
-    new(name, pop, ss, options, params, sample, mutate, crossover, bound)
-  end
+function DiffEvoOpt{P<:DiffEvoParameters,M<:MutationOperator,X<:DiffEvoCrossoverOperator,E<:EmbeddingOperator}(
+      name::ASCIIString, pop, options::Dict{Symbol,Any}, params::P, sample,
+      mutate::M = M(), crossover::X = X(), embed::E = E())
+  DiffEvoOpt{P,M,X,E}(name, pop, options, params, sample, mutate, crossover, embed)
 end
 
 popsize(opt::DifferentialEvolutionOpt) = size(population(opt),2)
@@ -74,8 +70,8 @@ function ask(de::DifferentialEvolutionOpt)
   apply!( de.crossover,
           crossover_parameters( de.params, target_index )...,
           trial, de.population, parent_indices )
-  # Bound the trial vector according to search space bounds
-  de.bound!(trial, target, de.search_space)
+  # embed the trial parameter vector into the search space
+  apply!(de.embed, trial, de.population, [target_index])
   #println("trial = $(trial)")
 
   # Return the candidates that should be ranked as tuples including their
@@ -117,26 +113,6 @@ function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
   end
 end
 
-# If we come out-of-bounds we randomly sample between the target value
-# and the bound.
-function rand_bound_from_target!(individual, target, searchSpace::SearchSpace)
-  ssmins, ssmaxs = mins(searchSpace), maxs(searchSpace)
-  for i in 1:length(individual)
-    min, max = ssmins[i], ssmaxs[i]
-
-    if individual[i] < min
-      individual[i] = min + rand() * (target[i] - min)
-    elseif individual[i] > ssmaxs[i]
-      individual[i] = target[i] + rand() * (max - target[i])
-    end
-  end
-  individual
-end
-
-function rand_bound_from_target!(individual, target, searchSpace::Vector{ParamBounds})
-  rand_bound_from_target!(individual, target, RangePerDimSearchSpace(searchSpace))
-end
-
 # Tell the optimizer about the ranking of candidates. Returns the number of
 # better candidates that were inserted into the population.
 function tell!(de::DiffEvoOpt,
@@ -166,16 +142,16 @@ end
 # The most used DE/rand/1/bin.
 function de_rand_1_bin(options = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/1/bin")
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt{FixedDiffEvoParameters,NoMutation,DiffEvoRandBin1}(
-        name, opts[:Population], opts[:SearchSpace], opts,
-        FixedDiffEvoParameters( opts, size(opts[:Population],2) ), sampler )
+  DiffEvoOpt(name, opts[:Population], opts,
+        FixedDiffEvoParameters(opts, size(opts[:Population], 2)), sampler,
+        NoMutation(), DiffEvoRandBin1(), RandomBound(opts[:SearchSpace]))
 end
 
 function de_rand_2_bin(options = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/2/bin")
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt{FixedDiffEvoParameters,NoMutation,DiffEvoRandBin2}(
-        name, opts[:Population], opts[:SearchSpace], opts,
-        FixedDiffEvoParameters( opts, size(opts[:Population],2) ), sampler )
+  DiffEvoOpt(name, opts[:Population], opts,
+        FixedDiffEvoParameters(opts, size(opts[:Population], 2)), sampler,
+        NoMutation(), DiffEvoRandBin2(), RandomBound(opts[:SearchSpace]))
 end
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.

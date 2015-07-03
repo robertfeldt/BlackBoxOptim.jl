@@ -38,29 +38,33 @@ GSSDefaultParameters = @compat Dict{Symbol,Any}(
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
-type GeneratingSetSearcher <: DirectSearcher
+type GeneratingSetSearcher{E<:EmbeddingOperator} <: DirectSearcher
   parameters::Parameters
   direction_gen::DirectionGenerator
+  embed::E
   search_space::SearchSpace
   n::Int
   k::Int
   step_size::Float64
   x::Individual
   xfitness::Float64
+end
 
-  GeneratingSetSearcher(parameters) = begin
+function GeneratingSetSearcher{E<:EmbeddingOperator}(embed::E, parameters)
     params = Parameters(parameters, GSSDefaultParameters)
     n = numdims(params[:Evaluator])
     ss = search_space(params[:Evaluator])
     dgen = get(params, :DirectionGenerator, compass_search_directions(n))
     step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])
     x = rand_individual(ss)
-    new(params, dgen, ss, n, 0, step_size,
+    GeneratingSetSearcher{E}(params, dgen, embed, ss, n, 0, step_size,
       x, evaluate(params[:Evaluator], x))
-  end
 end
 
-# We also include the name of the direction generator.
+# by default use RandomBound embedder
+GeneratingSetSearcher(parameters) = GeneratingSetSearcher(RandomBound(parameters[:SearchSpace]), parameters)
+
+# We also include the name of the direction generator.}
 function name(opt::GeneratingSetSearcher)
   "GeneratingSetSearcher($(typeof(opt.direction_gen)))"
 end
@@ -97,7 +101,7 @@ function step(gss::GeneratingSetSearcher)
   for(direction in order)
 
     candidate = gss.x + gss.step_size .* directions[:, direction]
-    rand_bound_from_target!(candidate, gss.x, gss.search_space)
+    apply!(gss.embed, candidate, gss.x)
 
     if is_better(gss.parameters[:Evaluator], candidate, gss.xfitness)
       found_better = true

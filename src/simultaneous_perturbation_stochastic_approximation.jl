@@ -8,21 +8,24 @@ SPSADefaultParameters = @compat Dict{Symbol,Any}(
   :A     => 10
 )
 
-type SimultaneousPerturbationSA2 <: StochasticApproximationOptimizer
-  search_space::SearchSpace
+type SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticApproximationOptimizer
+  embed::E # embed candidate into search space
   parameters::Parameters
   k::Int64
   n::Int64
   theta::Individual
   delta_ck::Individual
+end
 
-  SimultaneousPerturbationSA2(parameters) = begin
+function SimultaneousPerturbationSA2{E<:EmbeddingOperator}( embed::E, parameters )
     ss = parameters[:SearchSpace]
     n = numdims(ss)
-    new(ss, Parameters(parameters, SPSADefaultParameters),
-      0, n, rand_individual(ss), zeros(Float64, n))
-  end
+    SimultaneousPerturbationSA2{E}(embed, Parameters(parameters, SPSADefaultParameters),
+                                   0, n, rand_individual(ss), zeros(Float64, n))
 end
+
+# by default use RandomBound embedder
+SimultaneousPerturbationSA2(parameters) = SimultaneousPerturbationSA2( RandomBound(parameters[:SearchSpace]), parameters )
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 
@@ -58,7 +61,7 @@ function tell!(spsa::SimultaneousPerturbationSA2, rankedCandidates)
   # Calc new estimate of theta based on estimate of gradient, ghat.
   ak = spsa.parameters[:a]/(spsa.k + 1 + spsa.parameters[:A])^spsa.parameters[:Alpha]
   theta_new = spsa.theta - ak * ghat
-  rand_bound_from_target!(theta_new, spsa.theta, spsa.search_space)
+  apply!(spsa.embed, theta_new, spsa.theta)
   spsa.theta = theta_new
   spsa.k += 1
 

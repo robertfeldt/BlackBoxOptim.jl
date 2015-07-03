@@ -27,11 +27,11 @@ context("ask()") do
 
     @fact ndims(trial) => 1
     @fact 1 <= trialIndex <= popsize(ade) => true
-    @fact isinspace(trial, ade.search_space) => true
+    @fact isinspace(trial, ade.embed.searchSpace) => true
 
     @fact ndims(target) => 1
     @fact 1 <= targetIndex <= popsize(ade) => true
-    @fact isinspace(target, ade.search_space) => true
+    @fact isinspace(target, ade.embed.searchSpace) => true
 
     @fact trialIndex == targetIndex => true
   end

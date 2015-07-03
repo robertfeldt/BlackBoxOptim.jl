@@ -45,33 +45,40 @@ context("radius_limited_sampler") do
   end
 end
 
-context("rand_bound_from_target!") do
+context("RandomBound") do
   context("does nothing if within bounds") do
-    @fact BlackBoxOptim.rand_bound_from_target!([0.0], [0.0], [(0.0, 1.0)]) => [0.0]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [0.0], [0.0]) => [0.0]
 
-    @fact BlackBoxOptim.rand_bound_from_target!([0.0, 11.4], [0.1, 12.3],
-      RangePerDimSearchSpace([(0.0, 1.0), (10.0, 15.0)])) => [0.0, 11.4]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0), (10.0, 15.0)]),
+                               [0.0, 11.4], [0.1, 12.3] ) => [0.0, 11.4]
   end
 
   context("bounds if lower than min bound") do
-    @fact BlackBoxOptim.rand_bound_from_target!([-0.1], [0.0], [(0.0, 1.0)]) => [0.0]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [-0.1], [0.0]) => [0.0]
 
-    res = BlackBoxOptim.rand_bound_from_target!([-0.1], [0.5], [(0.0, 1.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [-0.1], [0.5])
     @fact 0.5 >= res[1] >= 0.0 => true
 
-    res = BlackBoxOptim.rand_bound_from_target!([-11.1, 0.5], [-10.8, 0.5], [(-11.0, 1.0), (0.0, 1.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(-11.0, 1.0), (0.0, 1.0)]),
+                               [-11.1, 0.5], [-10.8, 0.5])
     @fact -10.8 >= res[1] >= -11.0 => true
     @fact res[2] => 0.5
 
-    res = BlackBoxOptim.rand_bound_from_target!([50.4, -103.1], [49.6, -101.4], [(30.0, 60.0), (-102.0, -1.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(30.0, 60.0), (-102.0, -1.0)]),
+                               [50.4, -103.1], [49.6, -101.4])
     @fact res[1] => 50.4
     @fact -101.4 >= res[2] >= -102.0 => true
   end
 
   context("bounds if higher than max bound") do
-    @fact BlackBoxOptim.rand_bound_from_target!([1.1], [1.0], [(0.0, 1.0)]) => [1.0]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [1.1], [1.0]) => [1.0]
 
-    res = BlackBoxOptim.rand_bound_from_target!([97.0], [95.0], [(-10.0, 96.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(-10.0, 96.0)]),
+                               [97.0], [95.0])
     @fact 95.0 <= res[1] <= 96.0 => true
   end
 end
@@ -141,11 +148,11 @@ context("ask") do
 
     @fact ndims(trial) => 1
     @fact 1 <= trialIndex <= length(DE.population) => true
-    @fact isinspace(trial, DE.search_space) => true
+    @fact isinspace(trial, DE.embed.searchSpace) => true
 
     @fact ndims(target) => 1
     @fact 1 <= targetIndex <= length(DE.population) => true
-    @fact isinspace(target, DE.search_space) => true
+    @fact isinspace(target, DE.embed.searchSpace) => true
 
     @fact trialIndex == targetIndex => true
   end
