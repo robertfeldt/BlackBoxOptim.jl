@@ -32,4 +32,19 @@ facts("Mutation operators") do
     @fact 300 <= n_params_mutated/numdims(ss) <= 700 => true # roughly matches the probability
   end
 
+  context("MutationMixture") do
+    mx = MutationMixture([NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], [0.3, 0.7])
+
+    ref_ind = rand_individual(ss)
+    n_params_mutated = 0
+    for i in 1:10000
+      ind = copy(ref_ind)
+      BlackBoxOptim.apply!(mx, ind)
+      @fact isinspace(ind, ss) => true
+      n_params_mutated += (any(ind .!= ref_ind))
+    end
+    # the number of parameters changed should roughly match the weight of MutationClock multiplied by its mutation probability
+    @fact 200 < n_params_mutated/numdims(ss) < 500 => true
+  end
+
 end
