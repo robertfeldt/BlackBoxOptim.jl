@@ -1,6 +1,6 @@
 module BlackBoxOptim
 
-using Distributions, Compat
+using Distributions, StatsBase, Compat
 
 export  Optimizer, PopulationOptimizer,
         bboptimize, compare_optimizers,
@@ -44,7 +44,7 @@ export  Optimizer, PopulationOptimizer,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
-        NoMutation, MutationClock, MutationMixture, GibbsMutationOperator, SimpleGibbsMutation,
+        NoMutation, MutationClock, GibbsMutationOperator, SimpleGibbsMutation, MutationMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
 

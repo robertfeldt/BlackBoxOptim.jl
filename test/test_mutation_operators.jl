@@ -31,4 +31,19 @@ facts("Mutation operators") do
     end
   end
 
+  context("MutationMixture") do
+    mx = MutationMixture([NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], [0.3, 0.7])
+
+    ref_ind = rand_individual(ss)
+    n_changed = 0
+    for i in 1:1000
+      ind = copy(ref_ind)
+      BlackBoxOptim.apply!(mx, ind)
+      @fact isinspace(ind, ss) => true
+      n_changed += (any(ind .!= ref_ind))
+    end
+    # the number of times the vector actually changed should roughly match the weight of MutationClock
+    @fact 600 < n_changed < 800 => true
+  end
+
 end
