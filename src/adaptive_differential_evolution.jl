@@ -20,14 +20,16 @@ type AdaptiveDiffEvoParameters <: DiffEvoParameters
   fs::Vector{Float64}   # One f value per individual in population
   crs::Vector{Float64}  # One cr value per individual in population
 
-  function AdaptiveDiffEvoParameters(options, popsize::Int)
-    fdistr = options[:fdistr]
-    crdistr = options[:crdistr]
+  function AdaptiveDiffEvoParameters(popsize::Int = 100,
+                                     fdistr::BimodalCauchy = bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
+                                     crdistr::BimodalCauchy = bimodal_cauchy(0.1, 0.1, 0.95, 0.1) )
     new(fdistr, crdistr,
         [sample_bimodal_cauchy(fdistr; truncateBelow0 = false) for i in 1:popsize],
         [sample_bimodal_cauchy(crdistr) for i in 1:popsize])
   end
 end
+
+AdaptiveDiffEvoParameters(options, popsize::Int) = AdaptiveDiffEvoParameters(popsize, options[:fdistr], options[:crdistr])
 
 crossover_parameters(params::AdaptiveDiffEvoParameters, index) = params.crs[index], params.fs[index]
 
