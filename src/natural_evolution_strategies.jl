@@ -15,8 +15,8 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   population::Array{Float64,2}    # The last sampled values, now being evaluated
   utilities::Vector{Float64}      # The fitness shaping utility vector
 
-  SeparableNESOpt(searchSpace; lambda = false, mu_learnrate = 1.0,
-    sigma_learnrate = false) = begin
+  function SeparableNESOpt(searchSpace; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
+    sigma_learnrate::Float64 = 0.0)
 
     numDimensions = numdims(searchSpace)
 
@@ -24,8 +24,12 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
     sigma = ones(numDimensions)
     distr = Normal(0, 1)
 
-    lambda = lambda || convert(Int, 4 + ceil(log(3*numDimensions)))
-    sigma_learnrate = sigma_learnrate || calc_sigma_learnrate_for_snes(numDimensions)
+    if lambda == 0
+      lambda = 4 + ceil(Int, log(3*numDimensions)) # default lambda
+    end
+    if sigma_learnrate == 0.0
+      sigma_learnrate = calc_sigma_learnrate_for_snes(numDimensions) # default sigma learn rate
+    end
 
     new(numDimensions, lambda, mu, sigma, distr,
       mu_learnrate, sigma_learnrate,
@@ -40,9 +44,9 @@ end
 population(o::NaturalEvolutionStrategyOpt) = o.population
 
 NES_DefaultOptions = @compat Dict{String,Any}(
-  "lambda" => false,          # If false it will be set based on the number of dimensions
+  "lambda" => 0,              # If 0.0 it will be set based on the number of dimensions
   "mu_learnrate" => 1.0,
-  "sigma_learnrate" => false, # If false it will be set based on the number of dimensions
+  "sigma_learnrate" => 0.0,   # If 0.0 it will be set based on the number of dimensions
 )
 
 function separable_nes(parameters)
@@ -119,9 +123,11 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   x::Individual             # The current incumbent (aka most likely value, mu etc)
   Z::Array{Float64,2}
 
-  XNESOpt(searchSpace; lambda = false) = begin
+  XNESOpt(searchSpace; lambda::Int = 0) = begin
     d = numdims(searchSpace)
-    lambda = lambda || convert(Int, 4 + 3*floor(log(d)))
+    if lambda == 0
+      lambda = 4 + 3*floor(Int, log(d))
+    end
     x_learnrate = 1
     a_learnrate = 0.5 * minimum([1.0 / d, 0.25])
     x = rand_individual(searchSpace)
