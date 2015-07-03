@@ -6,22 +6,22 @@ abstract NaturalEvolutionStrategyOpt <: PopulationOptimizer
 type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   d::Int                          # Number of dimensions
   lambda::Int                     # Number of samples to take per iteration
-  mu::Array{Float64,2}            # Average position for sampling each position
-  sigma::Array{Float64,2}         # Average std deviation for sampling in position
+  mu::Vector{Float64}             # Average position for sampling each position
+  sigma::Vector{Float64}          # Average std deviation for sampling in position
   distr::Distribution             # Distribution we sample the step sizes from
   mu_learnrate::Float64
   sigma_learnrate::Float64
   last_s::Array{Float64,2}        # The s values sampled in the last call to ask
   population::Array{Float64,2}    # The last sampled values, now being evaluated
-  utilities::Array{Float64,2}     # The fitness shaping utility vector
+  utilities::Vector{Float64}      # The fitness shaping utility vector
 
   SeparableNESOpt(searchSpace; lambda = false, mu_learnrate = 1.0,
     sigma_learnrate = false) = begin
 
-    numDimensions = length(mins(searchSpace))
+    numDimensions = numdims(searchSpace)
 
-    mu = rand(numDimensions, 1)
-    sigma = ones(numDimensions, 1)
+    mu = rand(numDimensions)
+    sigma = ones(numDimensions)
     distr = Normal(0, 1)
 
     lambda = lambda || convert(Int, 4 + ceil(log(3*numDimensions)))
@@ -29,7 +29,7 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
 
     new(numDimensions, lambda, mu, sigma, distr,
       mu_learnrate, sigma_learnrate,
-      eye(numDimensions), eye(numDimensions),
+      zeros(numDimensions, lambda), zeros(numDimensions, lambda),
       # Most modern NES papers use log rather than linear fitness shaping.
       fitness_shaping_utilities_log(lambda))
   end
@@ -59,15 +59,13 @@ calc_sigma_learnrate_for_nes(d) = (9 + 3 * log(d)) / (5 * d * sqrt(d))
 # Get a set of new individuals to be ranked based on fitness.
 function ask(snes::SeparableNESOpt)
   # Sample from N(0, 1)
-  snes.last_s = s = randn(snes.d, snes.lambda)
+  randn!(snes.last_s)
 
   # Add in the mu and sigma's...
   #sampled_solutions = repmat(snes.mu, 1, l) + repmat(snes.sigma, 1, l) .* s
   # Quicker version as dimensions increase:
-  snes.population = sampled_solutions = broadcast(+, snes.mu, broadcast(*, snes.sigma, s))
+  sampled_solutions = broadcast!(+, snes.population, snes.mu, broadcast(*, snes.sigma, snes.last_s))
 
-  # The rest of BlackBoxOptim still uses row-major order so transpose the
-  # individuals before returning them.
   mix_with_indices( sampled_solutions, 1:snes.lambda )
 end
 
@@ -112,7 +110,7 @@ end
 type XNESOpt <: NaturalEvolutionStrategyOpt
   d::Int                          # Number of dimensions
   lambda::Int                     # Number of samples to take per iteration
-  utilities::Array{Float64,2}     # Fitness utility to give to each rank
+  utilities::Vector{Float64}      # Fitness utility to give to each rank
   x_learnrate::Float64
   a_learnrate::Float64
   A::Array{Float64,2}
@@ -130,7 +128,7 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
 
     new(d, lambda, fitness_shaping_utilities_log(lambda),
       x_learnrate, a_learnrate,
-      zeros(d, d), zeros(d, d), zeros(d, lambda), x, zeros(d, d))
+      zeros(d, d), zeros(d, d), zeros(d, lambda), x, zeros(d, lambda))
   end
 end
 
@@ -140,19 +138,18 @@ function xnes(parameters)
 end
 
 function ask(xnes::XNESOpt)
-  xnes.expA = expm(xnes.A)
-  xnes.Z = randn(xnes.d, xnes.lambda)
-  xnes.population = broadcast(+, xnes.x, (xnes.expA * xnes.Z))
+  xnes.expA = expm(xnes.A) # FIXME matrix allocation is expensive, use expm!() (when available)
+  randn!(xnes.Z)
+  broadcast!(+, xnes.population, xnes.x, (xnes.expA * xnes.Z))
 
-  # The rest of BlackBoxOptim still uses row-major order so transpose the
-  # individuals before returning them.
   mix_with_indices( xnes.population, 1:xnes.lambda )
 end
 
 function tell!(xnes::XNESOpt, rankedCandidates)
   u = assign_weights(rankedCandidates, xnes.utilities)
 
-  G = (repmat(u', xnes.d, 1) .* xnes.Z) * xnes.Z' - eye(xnes.d)
+  # fixme improve memory footprint by using A_mul_B!() etc
+  G = broadcast(*, u', xnes.Z) * xnes.Z' - eye(xnes.d)
   dx = xnes.x_learnrate * xnes.expA * (xnes.Z*u)
   dA = xnes.a_learnrate * G
 
@@ -163,16 +160,16 @@ function tell!(xnes::XNESOpt, rankedCandidates)
 end
 
 # Calculate the fitness shaping utilities vector using the log method.
-function fitness_shaping_utilities_log(n)
-  u = maximum(hcat(zeros(n, 1), log(n / 2 + 1.0) - log(1:n)), 2)
+function fitness_shaping_utilities_log(n::Int)
+  u = [max(0.0, log(n / 2 + 1.0) - log(i)) for i in 1:n]
   u / sum(u)
 end
 
 # Calculate the fitness shaping utilities vector using the steps method.
-function fitness_shaping_utilities_linear(n)
+function fitness_shaping_utilities_linear(n::Int)
   # Second half has zero utility.
-  treshold = convert(Int, floor(n/2))
-  second_half = zeros(n - treshold, 1)
+  treshold = floor(Int, n/2)
+  second_half = zeros(n - treshold)
 
   # While first half's utility decreases in linear steps
   step_size = 1 / treshold
