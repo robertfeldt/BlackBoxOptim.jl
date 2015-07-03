@@ -4,8 +4,8 @@ using Distributions
 abstract NaturalEvolutionStrategyOpt <: PopulationOptimizer
 
 type SeparableNESOpt <: NaturalEvolutionStrategyOpt
-  d::Integer                      # Number of dimensions
-  lambda::Integer                 # Number of samples to take per iteration
+  d::Int                          # Number of dimensions
+  lambda::Int                     # Number of samples to take per iteration
   mu::Array{Float64,2}            # Average position for sampling each position
   sigma::Array{Float64,2}         # Average std deviation for sampling in position
   distr::Distribution             # Distribution we sample the step sizes from
@@ -110,8 +110,8 @@ end
 
 # xNES is nice but scales badly with increasing dimension.
 type XNESOpt <: NaturalEvolutionStrategyOpt
-  d::Integer                      # Number of dimensions
-  lambda::Integer                 # Number of samples to take per iteration
+  d::Int                          # Number of dimensions
+  lambda::Int                     # Number of samples to take per iteration
   utilities::Array{Float64,2}     # Fitness utility to give to each rank
   x_learnrate::Float64
   a_learnrate::Float64

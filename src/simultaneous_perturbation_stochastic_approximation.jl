@@ -11,8 +11,8 @@ SPSADefaultParameters = @compat Dict{Symbol,Any}(
 type SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticApproximationOptimizer
   embed::E # embed candidate into search space
   parameters::Parameters
-  k::Int64
-  n::Int64
+  k::Int
+  n::Int
   theta::Individual
   delta_ck::Individual
 end
