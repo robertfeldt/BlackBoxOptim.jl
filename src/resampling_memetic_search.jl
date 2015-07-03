@@ -97,7 +97,7 @@ function random_resample_with_inheritance(rms::ResamplingMemeticSearcher)
   return xt
 end
 
-function step(rms::ResamplingMemeticSearcher)
+function step!(rms::ResamplingMemeticSearcher)
 
   # First randomly sample two candidates and select the best one. It seems
   # RS and RIS might be doing this in two different ways but use the RS way for

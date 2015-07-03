@@ -377,7 +377,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
 
     else
 
-      BlackBoxOptim.step(opt)
+      step!(opt)
       num_better_since_last = 0
 
     end

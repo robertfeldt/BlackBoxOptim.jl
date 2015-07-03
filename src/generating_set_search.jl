@@ -75,7 +75,7 @@ function has_converged(gss::GeneratingSetSearcher)
   gss.step_size < gss.parameters[:DeltaTolerance]
 end
 
-function step(gss::GeneratingSetSearcher)
+function step!(gss::GeneratingSetSearcher)
   if has_converged(gss)
     # Restart from a random point
     gss.x = rand_individual(gss.search_space)
