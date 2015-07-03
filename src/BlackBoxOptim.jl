@@ -44,6 +44,7 @@ export  Optimizer, PopulationOptimizer,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
+        NoMutation, MutationClock, MutationMixture, GibbsMutationOperator, SimpleGibbsMutation,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
 
