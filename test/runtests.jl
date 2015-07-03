@@ -10,6 +10,7 @@ my_tests = [
   "test_population.jl",
   "test_bimodal_cauchy_distribution.jl",
   "test_search_space.jl",
+  "test_mutation_operators.jl",
   "test_frequency_adaptation.jl",
   "test_archive.jl",
 
