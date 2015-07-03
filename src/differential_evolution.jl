@@ -32,9 +32,6 @@ type DiffEvoOpt{P<:DiffEvoParameters,S<:IndividualsSelector,M<:MutationOperator,
   # A population is a matrix of floats, individuals stored in columns.
   population::Array{Float64, 2}
 
-  # Options
-  options::Parameters
-
   # Set of operators that together define a specific DE strategy.
   params::P        # adjust crossover parameters after fitness calculation
   select::S        # random individuals selector
@@ -45,9 +42,9 @@ end
 
 function DiffEvoOpt{P<:DiffEvoParameters, S<:IndividualsSelector,
                     M<:MutationOperator, X<:DiffEvoCrossoverOperator, E<:EmbeddingOperator}(
-    name::ASCIIString, pop, options::Dict{Symbol,Any}, params::P,
+    name::ASCIIString, pop, params::P,
     select::S = S(), mutate::M = M(), crossover::X = X(), embed::E = E())
-  DiffEvoOpt{P,S,M,X,E}(name, pop, options, params, select, mutate, crossover, embed)
+  DiffEvoOpt{P,S,M,X,E}(name, pop, params, select, mutate, crossover, embed)
 end
 
 popsize(pop::Matrix{Float64}) = size(pop,2)
@@ -111,7 +108,7 @@ end
 function de_rand_1_bin(options = @compat Dict{Symbol,Any}();
                        select = SimpleSelector(), name = "DE/rand/1/bin")
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt(name, opts[:Population], opts,
+  DiffEvoOpt(name, opts[:Population],
         FixedDiffEvoParameters(opts, size(opts[:Population], 2)), select,
         NoMutation(), DiffEvoRandBin1(), RandomBound(opts[:SearchSpace]))
 end
@@ -119,7 +116,7 @@ end
 function de_rand_2_bin(options = @compat Dict{Symbol,Any}();
                        select = SimpleSelector(), name = "DE/rand/2/bin")
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt(name, opts[:Population], opts,
+  DiffEvoOpt(name, opts[:Population],
         FixedDiffEvoParameters(opts, size(opts[:Population], 2)), select,
         NoMutation(), DiffEvoRandBin2(), RandomBound(opts[:SearchSpace]))
 end

@@ -22,17 +22,17 @@ context("SimpleSelector") do
 end
 
 context("RadiusLimitedSelector") do
-  DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
+  DE = de_rand_1_bin_radiuslimited(@compat Dict{Symbol,Any}(
     :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
     :Population => rand(1,100),
     :f => 0.4, :cr => 0.5, :NumParents => 3))
 
   @fact popsize(DE) => 100
-  sampler_radius = DE.options[:SamplerRadius]
-  sel = BlackBoxOptim.RadiusLimitedSelector(sampler_radius)
+  sel = DE.select
+  @fact typeof(sel) => BlackBoxOptim.RadiusLimitedSelector
 
   for(i in 1:NumTestRepetitions)
-    numSamples = rand(1:sampler_radius)
+    numSamples = rand(1:sel.radius)
     sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
     @fact length(sampled) => numSamples
@@ -41,8 +41,8 @@ context("RadiusLimitedSelector") do
     @fact all([in(index, 1:popsize(DE)) for index in sampled]) => true
 
     mini, maxi = minimum(sampled), maximum(sampled)
-    if (maxi - mini) > max(numSamples+2, sampler_radius)
-      @fact mini + popsize(DE) <= maxi + sampler_radius => true
+    if (maxi - mini) > max(numSamples+2, sel.radius)
+      @fact mini + popsize(DE) <= maxi + sel.radius => true
     end
   end
 end

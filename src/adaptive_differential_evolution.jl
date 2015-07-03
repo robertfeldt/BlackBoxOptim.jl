@@ -43,7 +43,7 @@ function adaptive_de_rand_1_bin(options = @compat Dict{Symbol,Any}())
   opts = Parameters(options, ADE_DefaultOptions)
   ss = opts[:SearchSpace]
   population = get(opts, :Population, rand_individuals_lhs(ss, get(opts,:PopulationSize,50)))
-  DiffEvoOpt( "AdaptiveDE/rand/1/bin", population, opts,
+  DiffEvoOpt( "AdaptiveDE/rand/1/bin", population,
         AdaptiveDiffEvoParameters( opts, size(population,2) ), SimpleSelector(),
         NoMutation(), DiffEvoRandBin1(), RandomBound(ss) )
 end
@@ -52,7 +52,7 @@ function adaptive_de_rand_1_bin_radiuslimited(options = @compat Dict{Symbol,Any}
   opts = Parameters(options, ADE_DefaultOptions)
   ss = opts[:SearchSpace]
   population = get(opts, :Population, rand_individuals_lhs(ss, get(opts,:PopulationSize,50)))
-  DiffEvoOpt( "AdaptiveDE/rand/1/bin/radiuslimited", population, opts,
+  DiffEvoOpt( "AdaptiveDE/rand/1/bin/radiuslimited", population,
         AdaptiveDiffEvoParameters( opts, size(population,2) ),
         RadiusLimitedSelector(opts[:SamplerRadius]),
         NoMutation(), DiffEvoRandBin1(), RandomBound(ss) )
