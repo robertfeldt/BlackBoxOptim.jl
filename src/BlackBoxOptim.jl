@@ -42,6 +42,9 @@ export  Optimizer, PopulationOptimizer,
         FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
         FloatVectorPopulation,
 
+        # Genetic operators
+        GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
+
         name
 
 abstract Optimizer
