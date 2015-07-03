@@ -7,6 +7,9 @@ abstract CrossoverOperator{NP,NC} <: GeneticOperator
 # embeds(projects) the individual into the search space
 abstract EmbeddingOperator <: GeneticOperator
 
+# selects the individuals from the population
+abstract IndividualsSelector
+
 apply{T <: Real}(o::MutationOperator, parents::Vector{Vector{T}}) = map(p -> apply(o, p), parents)
 
 numchildren(o::GeneticOperator) = 1
@@ -27,3 +30,5 @@ include("mutation/mutation_clock.jl")
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
 include("embedding/random_bound.jl")
+include("selector/simple.jl")
+include("selector/radius_limited.jl")

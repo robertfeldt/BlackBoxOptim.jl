@@ -7,11 +7,12 @@ DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
 
 facts("Differential evolution optimizer") do
 
-context("random_sampler") do
+context("SimpleSelector") do
   @fact popsize(DE) => 10
+  sel = BlackBoxOptim.SimpleSelector()
   for(i in 1:NumTestRepetitions)
     numSamples = rand(1:8)
-    sampled = BlackBoxOptim.random_sampler(DE, numSamples)
+    sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
     @fact length(sampled) => numSamples
 
@@ -20,7 +21,7 @@ context("random_sampler") do
   end
 end
 
-context("radius_limited_sampler") do
+context("RadiusLimitedSelector") do
   DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
     :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
     :Population => rand(1,100),
@@ -28,10 +29,11 @@ context("radius_limited_sampler") do
 
   @fact popsize(DE) => 100
   sampler_radius = DE.options[:SamplerRadius]
+  sel = BlackBoxOptim.RadiusLimitedSelector(sampler_radius)
 
   for(i in 1:NumTestRepetitions)
     numSamples = rand(1:sampler_radius)
-    sampled = BlackBoxOptim.radius_limited_sampler(DE, numSamples)
+    sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
     @fact length(sampled) => numSamples
 
@@ -138,7 +140,7 @@ context("DiffEvoRandBin1") do
   end
 end
 
-context("ask") do
+context("ask()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(DE)
 
