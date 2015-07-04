@@ -12,7 +12,7 @@ RandomSearcher{S<:SearchSpace}(searchSpace::S) = RandomSearcher{S}(searchSpace)
 function ask(rs::RandomSearcher)
   # Just randomly generate a new individual and return it with a dummy index
   # (since we do not have a population there are no indices).
-  [Candidate{Float64}(rand_individual(rs.search_space), 1)]
+  Candidate{Float64}[Candidate{Float64}(rand_individual(rs.search_space), 1)]
 end
 
 function tell!{F}(rs::RandomSearcher, rankedCandidates::Vector{Candidate{F}})

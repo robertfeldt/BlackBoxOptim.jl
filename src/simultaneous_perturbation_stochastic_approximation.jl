@@ -32,7 +32,6 @@ name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stoc
 sample_bernoulli_vector(n::Int) = 2.0 * round(rand(n)) - 1.0
 
 function ask(spsa::SimultaneousPerturbationSA2)
-
   delta = sample_bernoulli_vector(spsa.n)
   ck = spsa.parameters[:c]/(spsa.k + 1)^spsa.parameters[:Gamma]
   spsa.delta_ck = ck * delta
@@ -40,8 +39,8 @@ function ask(spsa::SimultaneousPerturbationSA2)
   theta_plus = spsa.theta + spsa.delta_ck
   theta_minus = spsa.theta - spsa.delta_ck
 
-  [Candidate{Float64}(theta_plus, 1),
-   Candidate{Float64}(theta_minus, 2)]
+   Candidate{Float64}[Candidate{Float64}(theta_plus, 1),
+                      Candidate{Float64}(theta_minus, 2)]
 end
 
 function tell!{F}(spsa::SimultaneousPerturbationSA2, rankedCandidates::Vector{Candidate{F}})

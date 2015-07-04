@@ -70,14 +70,14 @@ function ask(snes::SeparableNESOpt)
   # Quicker version as dimensions increase:
   sampled_solutions = broadcast!(+, snes.population, snes.mu, broadcast(*, snes.sigma, snes.last_s))
 
-  mix_with_indices( sampled_solutions, 1:snes.lambda )
+  mix_with_indices(sampled_solutions, 1:snes.lambda)
 end
 
 function mix_with_indices(individuals::Matrix{Float64}, indices::Range)
   if popsize(individuals) != length(indices)
     throw(DimensionMismatch("The number of candidates does not match the number of indices"))
   end
-  [ make_candidate(individuals, i) for i in indices ]
+  Candidate{Float64}[make_candidate(individuals, i) for i in indices]
 end
 
 # Tell the sNES the ranking of a set of candidates.
@@ -144,7 +144,7 @@ function ask(xnes::XNESOpt)
   randn!(xnes.Z)
   broadcast!(+, xnes.population, xnes.x, (xnes.expA * xnes.Z))
 
-  mix_with_indices( xnes.population, 1:xnes.lambda )
+  mix_with_indices(xnes.population, 1:xnes.lambda)
 end
 
 function tell!{F}(xnes::XNESOpt, rankedCandidates::Vector{Candidate{F}})
