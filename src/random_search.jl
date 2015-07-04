@@ -12,14 +12,14 @@ RandomSearcher{S<:SearchSpace}(searchSpace::S) = RandomSearcher{S}(searchSpace)
 function ask(rs::RandomSearcher)
   # Just randomly generate a new individual and return it with a dummy index
   # (since we do not have a population there are no indices).
-  [(rand_individual(rs.search_space), 1)]
+  [Candidate{Float64}(rand_individual(rs.search_space), 1)]
 end
 
-function tell!(rs::RandomSearcher, rankedCandidates)
-  candidate, index, fitness = rankedCandidates[1]
-  if rs.best_fitness == nothing || fitness < rs.best_fitness
-    rs.best = candidate
-    rs.best_fitness = fitness
+function tell!{F}(rs::RandomSearcher, rankedCandidates::Vector{Candidate{F}})
+  candidate = rankedCandidates[1]
+  if rs.best_fitness == nothing || candidate.fitness < rs.best_fitness
+    rs.best = candidate.params
+    rs.best_fitness = candidate.fitness
     return 1
   else
     return 0

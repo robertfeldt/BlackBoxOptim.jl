@@ -73,19 +73,15 @@ function ask(snes::SeparableNESOpt)
   mix_with_indices( sampled_solutions, 1:snes.lambda )
 end
 
-function mix_with_indices(candidates, indices = false)
-  if indices == false
-    indices = 1:size(candidates,1)
+function mix_with_indices(individuals::Matrix{Float64}, indices::Range)
+  if popsize(individuals) != length(indices)
+    throw(DimensionMismatch("The number of candidates does not match the number of indices"))
   end
-  ary = Any[]
-  for i in indices
-    push!(ary, (candidates[:,i], i))
-  end
-  ary
+  [ make_candidate(individuals, i) for i in indices ]
 end
 
 # Tell the sNES the ranking of a set of candidates.
-function tell!(snes::SeparableNESOpt, rankedCandidates)
+function tell!{F}(snes::SeparableNESOpt, rankedCandidates::Vector{Candidate{F}})
   u = assign_weights(rankedCandidates, snes.utilities)
 
   # Calc gradient
@@ -101,13 +97,13 @@ function tell!(snes::SeparableNESOpt, rankedCandidates)
   0
 end
 
-function assign_weights(rankedCandidates, u)
-  n = length(rankedCandidates)
+function assign_weights{F}(candidates::Vector{Candidate{F}}, u::Vector{Float64})
+  n = length(candidates)
   # We must reorder the samples according to the order of the fitness in
-  # rankedCandidates!!! Or we must reorder the utilities accordingly. The latter
-  # is the preferred method and we can use the indices in rankedCandidates to
+  # candidates!!! Or we must reorder the utilities accordingly. The latter
+  # is the preferred method and we can use the indices in candidates to
   # accomplish it.
-  u[sortperm(rankedCandidates, by = x->x[2])]
+  u[sortperm(candidates, by = x->x.fitness)]
 end
 
 # xNES is nice but scales badly with increasing dimension.
@@ -151,7 +147,7 @@ function ask(xnes::XNESOpt)
   mix_with_indices( xnes.population, 1:xnes.lambda )
 end
 
-function tell!(xnes::XNESOpt, rankedCandidates)
+function tell!{F}(xnes::XNESOpt, rankedCandidates::Vector{Candidate{F}})
   u = assign_weights(rankedCandidates, xnes.utilities)
 
   # fixme improve memory footprint by using A_mul_B!() etc

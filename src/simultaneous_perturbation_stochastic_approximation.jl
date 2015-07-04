@@ -40,19 +40,19 @@ function ask(spsa::SimultaneousPerturbationSA2)
   theta_plus = spsa.theta + spsa.delta_ck
   theta_minus = spsa.theta - spsa.delta_ck
 
-  [(theta_plus, 1), (theta_minus, 2)]
-
+  [Candidate{Float64}(theta_plus, 1),
+   Candidate{Float64}(theta_minus, 2)]
 end
 
-function tell!(spsa::SimultaneousPerturbationSA2, rankedCandidates)
+function tell!{F}(spsa::SimultaneousPerturbationSA2, rankedCandidates::Vector{Candidate{F}})
 
   # Use index of rank to get right values for yplus and yminus, respectively.
-  if rankedCandidates[1][2] == 1
-    yplus = rankedCandidates[1][3]
-    yminus = rankedCandidates[2][3]
+  if rankedCandidates[1].index == 1
+    yplus = rankedCandidates[1].fitness
+    yminus = rankedCandidates[2].fitness
   else
-    yplus = rankedCandidates[2][3]
-    yminus = rankedCandidates[1][3]
+    yplus = rankedCandidates[2].fitness
+    yminus = rankedCandidates[1].fitness
   end
 
   # Estimate gradient.

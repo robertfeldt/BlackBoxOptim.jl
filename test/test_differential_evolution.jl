@@ -143,20 +143,19 @@ end
 context("ask()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(DE)
-
     @fact length(res) => 2
-    trial, trialIndex = res[1]
-    target, targetIndex = res[2]
 
-    @fact ndims(trial) => 1
-    @fact 1 <= trialIndex <= length(DE.population) => true
-    @fact isinspace(trial, DE.embed.searchSpace) => true
+    trial, target = res
 
-    @fact ndims(target) => 1
-    @fact 1 <= targetIndex <= length(DE.population) => true
-    @fact isinspace(target, DE.embed.searchSpace) => true
+    @fact ndims(trial.params) => 1
+    @fact 1 <= trial.index <= popsize(DE.population) => true
+    @fact isinspace(trial.params, DE.embed.searchSpace) => true
 
-    @fact trialIndex == targetIndex => true
+    @fact ndims(target.params) => 1
+    @fact 1 <= target.index <= popsize(DE.population) => true
+    @fact isinspace(target.params, DE.embed.searchSpace) => true
+
+    @fact trial.index == target.index => true
   end
 end
 
