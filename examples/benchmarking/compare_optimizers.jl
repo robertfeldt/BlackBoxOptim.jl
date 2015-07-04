@@ -5,7 +5,6 @@ using ArgParse
 using CPUTime
 
 global logfilehandle = nothing
-
 function log(color::Symbol, str)
     print_with_color(color, str)
     if logfilehandle != nothing
@@ -13,7 +12,7 @@ function log(color::Symbol, str)
         flush(logfilehandle)
     end
 end
-log{S <: String}(str::S) = log(:white, str)
+log(str::String) = log(:white, str)
 
 function main(args)
 
@@ -73,6 +72,13 @@ function main(args)
     end
   end
 
+  @add_arg_table s["compare"] begin
+    "--comparisonfile"
+      arg_type = String
+      default = ""
+      help = "name of comparison db file"
+  end
+
   pargs = parse_args(args, s)
 
   cmd = pargs["%COMMAND%"]
@@ -107,8 +113,8 @@ function main(args)
     db = read_benchmark_db(benchmarkfile)
     list_benchmark_db(db)
   elseif cmd == "compare"
-    db = read_benchmark_db(benchmarkfile)
-    compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, 0.01)
+    compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps, 0.01,
+        pargs[cmd]["comparisonfile"])
   else
     raise("Unknown command")
   end
@@ -320,46 +326,73 @@ end
 
 using HypothesisTests
 
-function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significancelevel::Float64 = 0.05)
-  dfs = DataFrame[]
-  for optmethod in optimizers
-    optsel = db[:,:Method] .== string(optmethod)
-    for pd in pset
-      probname, numdims, popsize, numfevals = pd
-      psel = db[:,:Problem] .== probname
-      dsel = db[:,:NumDims] .== numdims
-      df = db[optsel & psel & dsel,:]
-      benchfitnesses = df[:,:Fitness]
-      newfs = Float64[]
-      prob = BlackBoxOptim.example_problems[probname]
-      for r in 1:nreps
-          log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps)\n")
-
-        ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
-        push!(newfs, ftn)
-      end
-      pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
-      log(:blue, "$(probname)($numdims), $(optmethod):\n")
-      local statsigndiff
-      if pval > significancelevel
-        log(:green, "  No statistically significant difference in $nreps repetitions!\n")
-        statsigndiff = "No"
-      else
-        log(:red, "  Statistically significant difference in $nreps repetitions!\n")
-        statsigndiff = "Yes"
-      end
-      oldmed = median(benchfitnesses)
-      newmed = median(newfs)
-      ord = (oldmed < newmed) ? "<" : ">"
-      push!(dfs, DataFrame(Problem = probname, NumDims = numdims, Method = string(optmethod),
-        OldMedian = oldmed, Order = ord, NewMedian = newmed,
-        Pvalue = pval, Level = significancelevel, StatSignDiff = statsigndiff))
+function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps,
+    significancelevel::Float64 = 0.05, comparisonfile = "")
+    if comparisonfile == ""
+        db = read_benchmark_db(benchmarkfile)
+        dfs = DataFrame[]
+        totalruns = length(optimizers) * nreps * length(pset)
+        runnum = 0
+        for optmethod in optimizers
+            ptsel = db[:,:Method] .== string(optmethod)
+            for pd in pset
+                probname, numdims, popsize, numfevals = pd
+                psel = db[:,:Problem] .== probname
+                dsel = db[:,:NumDims] .== numdims
+                df = db[optsel & psel & dsel,:]
+                benchfitnesses = df[:,:Fitness]
+                newfs = Float64[]
+                prob = BlackBoxOptim.example_problems[probname]
+                for r in 1:nreps
+                    runnum += 1
+                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps)    (round(100.0 * runnum / totalruns, 2))% of total runs)\n")
+                    ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
+                    push!(newfs, ftn)
+                end
+                pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
+                log(:blue, "$(probname)($numdims), $(optmethod):\n")
+                local statsigndiff
+                if pval > significancelevel
+                    log(:green, "  No statistically significant difference in $nreps repetitions!\n")
+                    statsigndiff = "No"
+                else
+                    log(:red, "  Statistically significant difference in $nreps repetitions!\n")
+                    statsigndiff = "Yes"
+                end
+                oldmed = median(benchfitnesses)
+                newmed = median(newfs)
+                ord = (oldmed < newmed) ? "<" : ">"
+                push!(dfs, DataFrame(Problem = probname, NumDims = numdims, Method = string(optmethod),
+                OldMedian = oldmed, Order = ord, NewMedian = newmed,
+                Pvalue = pval, Level = significancelevel, StatSignDiff = statsigndiff))
+                log(:white, "  (Old median) $(oldmed) $(ord) $(newmed) (New median)\n")
+            end
+        end
+        df = vcat(dfs...)
+        writetable(strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
+    else
+        df = readtable(comparisonfile)
     end
-  end
-  df = vcat(dfs...)
-  sort!(df; cols = [:Pvalue])
-  println(df)
-  writetable(strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
+    sort!(df; cols = [:Pvalue])
+    report_below_pvalue(df, 1.00)
+    report_below_pvalue(df, 0.05)
+    report_below_pvalue(df, 0.01)
+end
+
+function report_below_pvalue(df, pvalue = 0.05)
+    selection = df[:,:Pvalue] .< pvalue
+    if pvalue >= 1.0
+        log("Num problems (any p-value) = $(sum(selection))\n")
+    else
+        log("Num problems (with p-values < $(pvalue)) = $(sum(selection))\n")
+    end
+    num_new_worse = sum(df[selection, :Order] .== "<")
+    num_new_better = sum(df[selection, :Order] .== ">")
+    log(:green, "  Num where new implementation is better = $(num_new_better)\n")
+    log(:red, "  Num where new implementation is worse = $(num_new_worse)\n")
+    if sum(selection) > 0 && pvalue < 1.0
+        println(df[selection,:])
+    end
 end
 
 @CPUtime main(ARGS)
