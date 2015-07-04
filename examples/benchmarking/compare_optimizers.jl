@@ -334,7 +334,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
         totalruns = length(optimizers) * nreps * length(pset)
         runnum = 0
         for optmethod in optimizers
-            ptsel = db[:,:Method] .== string(optmethod)
+            optsel = db[:,:Method] .== string(optmethod)
             for pd in pset
                 probname, numdims, popsize, numfevals = pd
                 psel = db[:,:Problem] .== probname
