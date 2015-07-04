@@ -1,10 +1,25 @@
-# Run with: julia -L ../../src/BlackBoxOptim.jl compare_optimizers.jl ...
+# Run with: julia --color=yes -L ../../src/BlackBoxOptim.jl compare_optimizers.jl ...
 using DataFrames
 using BlackBoxOptim
 using ArgParse
 using CPUTime
 
+global logfilehandle = nothing
+
+function log(color::Symbol, str)
+    print_with_color(color, str)
+    if logfilehandle != nothing
+        print(logfilehandle, str)
+        flush(logfilehandle)
+    end
+end
+log{S <: String}(str::S) = log(:white, str)
+
 function main(args)
+
+    start_time = time()
+    global logfilehandle
+    logfilehandle = open(strftime("%Y%m%d_%H%M%S.log", start_time), "a+")
 
   s = ArgParseSettings(description = "comparing optimizers to benchmark runs",
     commands_are_required = true,
@@ -97,6 +112,8 @@ function main(args)
   else
     raise("Unknown command")
   end
+
+  close(logfilehandle)
 end
 
 ProblemSets = {
@@ -166,8 +183,6 @@ function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals,
 
   problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
 
-  println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
-
   best, fitness = bboptimize(problem; method = method, parameters = {
     :NumDimensions => numDimensions,
     :PopulationSize => populationSize,
@@ -189,7 +204,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
   gitid = latest_git_id()
 
   for pd in problemDescriptions
-    println("Running $(NumRepetitions) reps for $(method)")
+    log("Running $(NumRepetitions) reps for $(method)\n")
     for rep in 1:NumRepetitions
       probname, numdims, popsize, numfevals = pd
 
@@ -204,6 +219,8 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
       df = DataFrame(Problem = probname, NumDims = numdims,
         Method = string(method), PopulationSize = popsize, NumFevals = numfevals,
         GitID = gitid)
+
+      log("\n$(probname), n = $(numdims), optimizer = $(string(method)), run $(rep) of $(NumRepetitions)\n")
 
       start_time = time()
       CPUtic()
@@ -316,17 +333,19 @@ function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significa
       newfs = Float64[]
       prob = BlackBoxOptim.example_problems[probname]
       for r in 1:nreps
+          log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps)\n")
+
         ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
         push!(newfs, ftn)
       end
       pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
-      println("$(probname)($numdims), $(optmethod):")
+      log(:blue, "$(probname)($numdims), $(optmethod):\n")
       local statsigndiff
       if pval > significancelevel
-        println("No statistically significant difference in $nreps repetitions!")
+        log(:green, "  No statistically significant difference in $nreps repetitions!\n")
         statsigndiff = "No"
       else
-        println("Statistically significant difference in $nreps repetitions!")
+        log(:red, "  Statistically significant difference in $nreps repetitions!\n")
         statsigndiff = "Yes"
       end
       oldmed = median(benchfitnesses)
@@ -338,6 +357,7 @@ function compare_optimizers_to_benchmarks(db, pset, optimizers, nreps, significa
     end
   end
   df = vcat(dfs...)
+  sort!(df; cols = [:Pvalue])
   println(df)
   writetable(strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
 end
