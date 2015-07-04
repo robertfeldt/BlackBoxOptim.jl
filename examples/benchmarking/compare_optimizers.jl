@@ -345,7 +345,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
                     runnum += 1
-                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps)    (round(100.0 * runnum / totalruns, 2))% of total runs)\n")
+                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, 2))% of total runs)\n")
                     ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
                     push!(newfs, ftn)
                 end
