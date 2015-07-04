@@ -1,10 +1,13 @@
-type RandomSearcher <: Optimizer
+type RandomSearcher{S<:SearchSpace} <: Optimizer
   name::ASCIIString
-  search_space::SearchSpace
-  best
-  best_fitness
-  RandomSearcher(searchSpace) = new("Random Search", searchSpace, nothing, nothing)
+  search_space::S
+  best_fitness          # FIXME fitness type should be known
+  best::Individual
+
+  RandomSearcher(searchSpace::S) = new("Random Search", searchSpace, nothing)
 end
+
+RandomSearcher{S<:SearchSpace}(searchSpace::S) = RandomSearcher{S}(searchSpace)
 
 function ask(rs::RandomSearcher)
   # Just randomly generate a new individual and return it with a dummy index
@@ -14,7 +17,7 @@ end
 
 function tell!(rs::RandomSearcher, rankedCandidates)
   candidate, index, fitness = rankedCandidates[1]
-  if rs.best == nothing || fitness < rs.best_fitness
+  if rs.best_fitness == nothing || fitness < rs.best_fitness
     rs.best = candidate
     rs.best_fitness = fitness
     return 1
@@ -23,6 +26,10 @@ function tell!(rs::RandomSearcher, rankedCandidates)
   end
 end
 
-function random_search(parameters)
+function random_search(parameters::Parameters)
   RandomSearcher(parameters[:SearchSpace])
+end
+
+function random_search(ss::SearchSpace)
+  RandomSearcher(ss)
 end
