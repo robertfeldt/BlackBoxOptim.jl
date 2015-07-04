@@ -20,14 +20,16 @@ type AdaptiveDiffEvoParameters <: DiffEvoParameters
   fs::Vector{Float64}   # One f value per individual in population
   crs::Vector{Float64}  # One cr value per individual in population
 
-  function AdaptiveDiffEvoParameters(options, popsize::Int)
-    fdistr = options[:fdistr]
-    crdistr = options[:crdistr]
+  function AdaptiveDiffEvoParameters(popsize::Int = 100,
+                                     fdistr::BimodalCauchy = bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
+                                     crdistr::BimodalCauchy = bimodal_cauchy(0.1, 0.1, 0.95, 0.1) )
     new(fdistr, crdistr,
         [sample_bimodal_cauchy(fdistr; truncateBelow0 = false) for i in 1:popsize],
         [sample_bimodal_cauchy(crdistr) for i in 1:popsize])
   end
 end
+
+AdaptiveDiffEvoParameters(options, popsize::Int) = AdaptiveDiffEvoParameters(popsize, options[:fdistr], options[:crdistr])
 
 crossover_parameters(params::AdaptiveDiffEvoParameters, index) = params.crs[index], params.fs[index]
 
@@ -42,17 +44,18 @@ end
 function adaptive_de_rand_1_bin(options = @compat Dict{Symbol,Any}())
   opts = Parameters(options, ADE_DefaultOptions)
   ss = opts[:SearchSpace]
-  population = get(opts, :Population, rand_individuals_lhs(ss, 50))
-  DiffEvoOpt{AdaptiveDiffEvoParameters,NoMutation,DiffEvoRandBin1}(
-        "AdaptiveDE/rand/1/bin", population, ss, opts,
-        AdaptiveDiffEvoParameters(opts, size(population,2)), random_sampler )
+  population = get(opts, :Population, rand_individuals_lhs(ss, get(opts,:PopulationSize,50)))
+  DiffEvoOpt( "AdaptiveDE/rand/1/bin", population,
+        AdaptiveDiffEvoParameters( opts, size(population,2) ), SimpleSelector(),
+        NoMutation(), DiffEvoRandBin1(), RandomBound(ss) )
 end
 
 function adaptive_de_rand_1_bin_radiuslimited(options = @compat Dict{Symbol,Any})
   opts = Parameters(options, ADE_DefaultOptions)
   ss = opts[:SearchSpace]
-  population = get(opts, :Population, rand_individuals_lhs(ss, 50))
-  DiffEvoOpt{AdaptiveDiffEvoParameters,NoMutation,DiffEvoRandBin1}(
-        "AdaptiveDE/rand/1/bin/radiuslimited", population, ss, opts,
-        AdaptiveDiffEvoParameters(opts, size(population,2)), radius_limited_sampler )
+  population = get(opts, :Population, rand_individuals_lhs(ss, get(opts,:PopulationSize,50)))
+  DiffEvoOpt( "AdaptiveDE/rand/1/bin/radiuslimited", population,
+        AdaptiveDiffEvoParameters( opts, size(population,2) ),
+        RadiusLimitedSelector(opts[:SamplerRadius]),
+        NoMutation(), DiffEvoRandBin1(), RandomBound(ss) )
 end

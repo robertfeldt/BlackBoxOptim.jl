@@ -25,42 +25,37 @@ function adjust!( params::FixedDiffEvoParameters, index, is_improved::Bool )
     # do nothing
 end
 
-type DiffEvoOpt{P<:DiffEvoParameters,M<:MutationOperator,X<:DiffEvoCrossoverOperator} <: DifferentialEvolutionOpt
+type DiffEvoOpt{P<:DiffEvoParameters,S<:IndividualsSelector,M<:MutationOperator,X<:DiffEvoCrossoverOperator,E<:EmbeddingOperator} <: DifferentialEvolutionOpt
   # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
   name::ASCIIString
 
   # A population is a matrix of floats, individuals stored in columns.
   population::Array{Float64, 2}
 
-  # A search space is defined by the min and max values (in tuples) for each
-  # of its dimenions. The dimension is the length of an individual, i.e. the
-  # number of Float64 values in it.
-  search_space::SearchSpace
-
-  # Options
-  options::Parameters
-
-  # Set of functions that together define a specific DE strategy.
+  # Set of operators that together define a specific DE strategy.
   params::P        # adjust crossover parameters after fitness calculation
-  sample::Function # TODO change function to SamplingOperator
+  select::S        # random individuals selector
   mutate::M        # mutation operator
   crossover::X     # crossover operator
-  bound!::Function # TODO change function to ProjectionOperator
-
-  function DiffEvoOpt(name, pop, ss, options, params::P, sample, mutate::M = M(), crossover::X = X(),
-                      bound = rand_bound_from_target!)
-    new(name, pop, ss, options, params, sample, mutate, crossover, bound)
-  end
+  embed::E         # embedding operator
 end
 
-popsize(opt::DifferentialEvolutionOpt) = size(population(opt),2)
+function DiffEvoOpt{P<:DiffEvoParameters, S<:IndividualsSelector,
+                    M<:MutationOperator, X<:DiffEvoCrossoverOperator, E<:EmbeddingOperator}(
+    name::ASCIIString, pop, params::P,
+    select::S = S(), mutate::M = M(), crossover::X = X(), embed::E = E())
+  DiffEvoOpt{P,S,M,X,E}(name, pop, params, select, mutate, crossover, embed)
+end
+
+popsize(pop::Matrix{Float64}) = size(pop,2)
+popsize(opt::DifferentialEvolutionOpt) = popsize(population(opt))
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.
 function ask(de::DifferentialEvolutionOpt)
   # Sample parents and target
-  indices = de.sample(de, 1 + numparents(de.crossover))
+  indices = select(de.select, de.population, 1 + numparents(de.crossover))
   parent_indices = indices[1:numparents(de.crossover)]
   #println("parent_indices = $(parent_indices)")
   target_index = indices[end]
@@ -74,67 +69,13 @@ function ask(de::DifferentialEvolutionOpt)
   apply!( de.crossover,
           crossover_parameters( de.params, target_index )...,
           trial, de.population, parent_indices )
-  # Bound the trial vector according to search space bounds
-  de.bound!(trial, target, de.search_space)
+  # embed the trial parameter vector into the search space
+  apply!(de.embed, trial, de.population, [target_index])
   #println("trial = $(trial)")
 
   # Return the candidates that should be ranked as tuples including their
   # population indices.
   return [(trial, target_index), (target, target_index)]
-end
-
-function random_sampler(de::DifferentialEvolutionOpt, numSamples)
-  sample(1:popsize(de), numSamples; replace = false)
-end
-
-# This implements a "trivial geography" similar to Spector and Kline (2006)
-# by first sampling an individual randomly and then selecting additional
-# individuals for the same tournament within a certain deme of limited size
-# for the sub-sequent individuals in the population. The version we implement
-# here is from:
-#  I. Harvey, "The Microbial Genetic Algorithm", in Advances in Artificial Life
-#  Darwin Meets von Neumann, Springer, 2011.
-# The original paper is:
-#  Spector, L., and J. Klein. 2005. Trivial Geography in Genetic Programming.
-#  In Genetic Programming Theory and Practice III, edited by T. Yu, R.L. Riolo,
-#  and B. Worzel, pp. 109-124. Boston, MA: Kluwer Academic Publishers.
-#  http://faculty.hampshire.edu/lspector/pubs/trivial-geography-toappear.pdf
-#
-function radius_limited_sampler(de::DifferentialEvolutionOpt, numSamples)
-  # The radius must be at least as big as the number of samples + 2 so that
-  # there is something to sample from.
-  radius = max(de.options[:SamplerRadius], numSamples+2)
-  psize = popsize(de)
-  deme_start = rand(1:psize)
-  indices = sample(deme_start:(deme_start+radius-1), numSamples; replace = false)
-  # Ensure they are not out of bounds by wrapping over at the end.
-  map(indices) do index
-    if index > psize
-      mod(index-1, psize) + 1 # We have to increase by 1 since Julia arrays start indices at 1
-    else
-      index
-    end
-  end
-end
-
-# If we come out-of-bounds we randomly sample between the target value
-# and the bound.
-function rand_bound_from_target!(individual, target, searchSpace::SearchSpace)
-  ssmins, ssmaxs = mins(searchSpace), maxs(searchSpace)
-  for i in 1:length(individual)
-    min, max = ssmins[i], ssmaxs[i]
-
-    if individual[i] < min
-      individual[i] = min + rand() * (target[i] - min)
-    elseif individual[i] > ssmaxs[i]
-      individual[i] = target[i] + rand() * (max - target[i])
-    end
-  end
-  individual
-end
-
-function rand_bound_from_target!(individual, target, searchSpace::Vector{ParamBounds})
-  rand_bound_from_target!(individual, target, RangePerDimSearchSpace(searchSpace))
 end
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
@@ -164,25 +105,31 @@ end
 # literature.
 
 # The most used DE/rand/1/bin.
-function de_rand_1_bin(options = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/1/bin")
+function de_rand_1_bin(options = @compat Dict{Symbol,Any}();
+                       select = SimpleSelector(), name = "DE/rand/1/bin")
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt{FixedDiffEvoParameters,NoMutation,DiffEvoRandBin1}(
-        name, opts[:Population], opts[:SearchSpace], opts,
-        FixedDiffEvoParameters( opts, size(opts[:Population],2) ), sampler )
+  DiffEvoOpt(name, opts[:Population],
+        FixedDiffEvoParameters(opts, size(opts[:Population], 2)), select,
+        NoMutation(), DiffEvoRandBin1(), RandomBound(opts[:SearchSpace]))
 end
 
-function de_rand_2_bin(options = @compat Dict{Symbol,Any}(); sampler = random_sampler, name = "DE/rand/2/bin")
+function de_rand_2_bin(options = @compat Dict{Symbol,Any}();
+                       select = SimpleSelector(), name = "DE/rand/2/bin")
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt{FixedDiffEvoParameters,NoMutation,DiffEvoRandBin2}(
-        name, opts[:Population], opts[:SearchSpace], opts,
-        FixedDiffEvoParameters( opts, size(opts[:Population],2) ), sampler )
+  DiffEvoOpt(name, opts[:Population],
+        FixedDiffEvoParameters(opts, size(opts[:Population], 2)), select,
+        NoMutation(), DiffEvoRandBin2(), RandomBound(opts[:SearchSpace]))
 end
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
 function de_rand_1_bin_radiuslimited(options = @compat Dict{Symbol,Any}())
-  de_rand_1_bin(options; sampler = radius_limited_sampler, name = "DE/rand/1/bin/radiuslimited")
+  opts = Parameters(options, DE_DefaultOptions)
+  de_rand_1_bin(opts; select = RadiusLimitedSelector(opts[:SamplerRadius]),
+                name = "DE/rand/1/bin/radiuslimited")
 end
 
 function de_rand_2_bin_radiuslimited(options = @compat Dict{Symbol,Any}())
-  de_rand_2_bin(options; sampler = radius_limited_sampler, name = "DE/rand/2/bin/radiuslimited")
+  opts = Parameters(options, DE_DefaultOptions)
+  de_rand_2_bin(opts; select = RadiusLimitedSelector(opts[:SamplerRadius]),
+                name = "DE/rand/2/bin/radiuslimited")
 end

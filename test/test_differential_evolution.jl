@@ -7,11 +7,12 @@ DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
 
 facts("Differential evolution optimizer") do
 
-context("random_sampler") do
+context("SimpleSelector") do
   @fact popsize(DE) => 10
+  sel = BlackBoxOptim.SimpleSelector()
   for(i in 1:NumTestRepetitions)
     numSamples = rand(1:8)
-    sampled = BlackBoxOptim.random_sampler(DE, numSamples)
+    sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
     @fact length(sampled) => numSamples
 
@@ -20,18 +21,19 @@ context("random_sampler") do
   end
 end
 
-context("radius_limited_sampler") do
-  DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
+context("RadiusLimitedSelector") do
+  DE = de_rand_1_bin_radiuslimited(@compat Dict{Symbol,Any}(
     :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
     :Population => rand(1,100),
     :f => 0.4, :cr => 0.5, :NumParents => 3))
 
   @fact popsize(DE) => 100
-  sampler_radius = DE.options[:SamplerRadius]
+  sel = DE.select
+  @fact typeof(sel) => BlackBoxOptim.RadiusLimitedSelector
 
   for(i in 1:NumTestRepetitions)
-    numSamples = rand(1:sampler_radius)
-    sampled = BlackBoxOptim.radius_limited_sampler(DE, numSamples)
+    numSamples = rand(1:sel.radius)
+    sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
     @fact length(sampled) => numSamples
 
@@ -39,39 +41,46 @@ context("radius_limited_sampler") do
     @fact all([in(index, 1:popsize(DE)) for index in sampled]) => true
 
     mini, maxi = minimum(sampled), maximum(sampled)
-    if (maxi - mini) > max(numSamples+2, sampler_radius)
-      @fact mini + popsize(DE) <= maxi + sampler_radius => true
+    if (maxi - mini) > max(numSamples+2, sel.radius)
+      @fact mini + popsize(DE) <= maxi + sel.radius => true
     end
   end
 end
 
-context("rand_bound_from_target!") do
+context("RandomBound") do
   context("does nothing if within bounds") do
-    @fact BlackBoxOptim.rand_bound_from_target!([0.0], [0.0], [(0.0, 1.0)]) => [0.0]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [0.0], [0.0]) => [0.0]
 
-    @fact BlackBoxOptim.rand_bound_from_target!([0.0, 11.4], [0.1, 12.3],
-      RangePerDimSearchSpace([(0.0, 1.0), (10.0, 15.0)])) => [0.0, 11.4]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0), (10.0, 15.0)]),
+                               [0.0, 11.4], [0.1, 12.3] ) => [0.0, 11.4]
   end
 
   context("bounds if lower than min bound") do
-    @fact BlackBoxOptim.rand_bound_from_target!([-0.1], [0.0], [(0.0, 1.0)]) => [0.0]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [-0.1], [0.0]) => [0.0]
 
-    res = BlackBoxOptim.rand_bound_from_target!([-0.1], [0.5], [(0.0, 1.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [-0.1], [0.5])
     @fact 0.5 >= res[1] >= 0.0 => true
 
-    res = BlackBoxOptim.rand_bound_from_target!([-11.1, 0.5], [-10.8, 0.5], [(-11.0, 1.0), (0.0, 1.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(-11.0, 1.0), (0.0, 1.0)]),
+                               [-11.1, 0.5], [-10.8, 0.5])
     @fact -10.8 >= res[1] >= -11.0 => true
     @fact res[2] => 0.5
 
-    res = BlackBoxOptim.rand_bound_from_target!([50.4, -103.1], [49.6, -101.4], [(30.0, 60.0), (-102.0, -1.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(30.0, 60.0), (-102.0, -1.0)]),
+                               [50.4, -103.1], [49.6, -101.4])
     @fact res[1] => 50.4
     @fact -101.4 >= res[2] >= -102.0 => true
   end
 
   context("bounds if higher than max bound") do
-    @fact BlackBoxOptim.rand_bound_from_target!([1.1], [1.0], [(0.0, 1.0)]) => [1.0]
+    @fact BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
+                               [1.1], [1.0]) => [1.0]
 
-    res = BlackBoxOptim.rand_bound_from_target!([97.0], [95.0], [(-10.0, 96.0)])
+    res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(-10.0, 96.0)]),
+                               [97.0], [95.0])
     @fact 95.0 <= res[1] <= 96.0 => true
   end
 end
@@ -131,7 +140,7 @@ context("DiffEvoRandBin1") do
   end
 end
 
-context("ask") do
+context("ask()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(DE)
 
@@ -141,11 +150,11 @@ context("ask") do
 
     @fact ndims(trial) => 1
     @fact 1 <= trialIndex <= length(DE.population) => true
-    @fact isinspace(trial, DE.search_space) => true
+    @fact isinspace(trial, DE.embed.searchSpace) => true
 
     @fact ndims(target) => 1
     @fact 1 <= targetIndex <= length(DE.population) => true
-    @fact isinspace(target, DE.search_space) => true
+    @fact isinspace(target, DE.embed.searchSpace) => true
 
     @fact trialIndex == targetIndex => true
   end
