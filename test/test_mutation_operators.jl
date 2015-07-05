@@ -48,7 +48,6 @@ facts("Mutation operators") do
       n_params_mutated += (any(ind .!= ref_ind))
     end
     # the number of parameters changed should roughly match the weight of MutationClock multiplied by its mutation probability
-    @show n_params_mutated
     @fact 200 < n_params_mutated/numdims(ss) < 500 => true
   end
 
