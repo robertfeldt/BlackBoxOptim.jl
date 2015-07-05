@@ -50,52 +50,53 @@ end
 popsize(pop::Matrix{Float64}) = size(pop,2)
 popsize(opt::DifferentialEvolutionOpt) = popsize(population(opt))
 
+make_candidate(pop::Matrix{Float64}, i::Int) = Candidate{Float64}(pop[:, i], i)
+
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.
-function ask(de::DifferentialEvolutionOpt)
+function ask(de::DiffEvoOpt)
   # Sample parents and target
   indices = select(de.select, de.population, 1 + numparents(de.crossover))
   parent_indices = indices[1:numparents(de.crossover)]
   #println("parent_indices = $(parent_indices)")
   target_index = indices[end]
-  target = de.population[:,target_index] # FIXME we can cache target somewhere
+  target = make_candidate(de.population, target_index) # FIXME we can cache target somewhere
   #println("target[$(target_index)] = $(target)")
-  apply!( de.mutate, target )
 
   # Crossover parents and target
   @assert numchildren(de.crossover)==1
   trial = copy(target) # FIXME reuse some trial vector
   apply!( de.crossover,
           crossover_parameters( de.params, target_index )...,
-          trial, de.population, parent_indices )
+          trial.params, de.population, parent_indices )
   # embed the trial parameter vector into the search space
-  apply!(de.embed, trial, de.population, [target_index])
+  apply!(de.embed, trial.params, de.population, [target_index])
   #println("trial = $(trial)")
 
   # Return the candidates that should be ranked as tuples including their
   # population indices.
-  return [(trial, target_index), (target, target_index)]
+  return Candidate{Float64}[trial, target]
 end
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
 # better candidates that were inserted into the population.
-function tell!(de::DiffEvoOpt,
+function tell!{F}(de::DiffEvoOpt,
   # archive::Archive, # Skip for now
-  rankedCandidates)
+  rankedCandidates::Vector{Candidate{F}})
   num_candidates = length(rankedCandidates)
   num_better = 0
   for i in 1:div(num_candidates, 2)
-    candidate, index = rankedCandidates[i]
-    is_inserted = candidate != de.population[:,index]
-    adjust!( de.params, index, is_inserted )
+    candi = rankedCandidates[i]
+    is_inserted = candi.params != de.population[:,candi.index]
+    adjust!( de.params, candi.index, is_inserted )
     if is_inserted
       num_better += 1
       #print("candidate = "); show(candidate); println("")
       #print("index = "); show(index); println("")
       #print("target = "); show(de.population[index,:]); println("")
-      old = de.population[:,index]
-      de.population[:,index] = candidate
+      #old = de.population[:,index]
+      de.population[:,candi.index] = candi.params
     end
   end
   num_better

@@ -11,8 +11,8 @@ SPSADefaultParameters = @compat Dict{Symbol,Any}(
 type SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticApproximationOptimizer
   embed::E # embed candidate into search space
   parameters::Parameters
-  k::Int64
-  n::Int64
+  k::Int
+  n::Int
   theta::Individual
   delta_ck::Individual
 end
@@ -32,7 +32,6 @@ name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stoc
 sample_bernoulli_vector(n::Int) = 2.0 * round(rand(n)) - 1.0
 
 function ask(spsa::SimultaneousPerturbationSA2)
-
   delta = sample_bernoulli_vector(spsa.n)
   ck = spsa.parameters[:c]/(spsa.k + 1)^spsa.parameters[:Gamma]
   spsa.delta_ck = ck * delta
@@ -40,19 +39,19 @@ function ask(spsa::SimultaneousPerturbationSA2)
   theta_plus = spsa.theta + spsa.delta_ck
   theta_minus = spsa.theta - spsa.delta_ck
 
-  [(theta_plus, 1), (theta_minus, 2)]
-
+   Candidate{Float64}[Candidate{Float64}(theta_plus, 1),
+                      Candidate{Float64}(theta_minus, 2)]
 end
 
-function tell!(spsa::SimultaneousPerturbationSA2, rankedCandidates)
+function tell!{F}(spsa::SimultaneousPerturbationSA2, rankedCandidates::Vector{Candidate{F}})
 
   # Use index of rank to get right values for yplus and yminus, respectively.
-  if rankedCandidates[1][2] == 1
-    yplus = rankedCandidates[1][3]
-    yminus = rankedCandidates[2][3]
+  if rankedCandidates[1].index == 1
+    yplus = rankedCandidates[1].fitness
+    yminus = rankedCandidates[2].fitness
   else
-    yplus = rankedCandidates[2][3]
-    yminus = rankedCandidates[1][3]
+    yplus = rankedCandidates[2].fitness
+    yminus = rankedCandidates[1].fitness
   end
 
   # Estimate gradient.

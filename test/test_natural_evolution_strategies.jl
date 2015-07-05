@@ -4,62 +4,65 @@ facts("sNES") do
 
 context("mix_with_indices") do
   cs = randn(2,3)
-  r = BlackBoxOptim.mix_with_indices(cs)
-  @fact length(r) => 2
-  @fact r[1][2] => 1
-  @fact r[2][2] => 2
-  @fact r[1][1] => cs[:,1]
-  @fact r[2][1] => cs[:,2]
+  @fact_throws DimensionMismatch BlackBoxOptim.mix_with_indices(cs, 1:2)
+  r = BlackBoxOptim.mix_with_indices(cs, 1:3)
+  @fact length(r) => 3
+  @fact r[1].index => 1
+  @fact r[2].index => 2
+  @fact r[3].index => 3
+  @fact r[1].params => cs[:,1]
+  @fact r[2].params => cs[:,2]
+  @fact r[3].params => cs[:,3]
 end
 
-function assign_weights(rankedCandidates)
-  u = BlackBoxOptim.fitness_shaping_utilities_linear(length(rankedCandidates))
-  BlackBoxOptim.assign_weights(rankedCandidates, u)
+function assign_weights{F}(fitnesses::Vector{F})
+  candidates = [BlackBoxOptim.Candidate{F}([0.0], -1, f) for f in fitnesses]
+  u = BlackBoxOptim.fitness_shaping_utilities_linear(length(candidates))
+  BlackBoxOptim.assign_weights(candidates, u)
 end
 
 context("assign_weights") do
-
   context("when indices are already ordered") do
-    u = assign_weights([(:dummy, 1.0), (:dummy, 2.0)])
+    u = assign_weights([1.0, 2.0])
     @fact length(u) => 2
     @fact u[1] => 1.0
     @fact u[2] => 0.0
 
-    u = assign_weights([(:d, 1.0), (:d, 2.0), (:d, 3.0)])
+    u = assign_weights([1.0, 2.0, 3.0])
     @fact length(u) => 3
     @fact u[1] => 1.0
     @fact u[2] => 0.0
     @fact u[3] => 0.0
 
-    u = assign_weights([(:d, 1), (:d, 2), (:d, 3), (:d, 4)])
+    u = assign_weights([1, 2, 3, 4])
     @fact length(u) => 4
-    @fact isapprox(u[1], 2/3) => true
-    @fact isapprox(u[2], 1/3) => true
+    @fact u[1] => roughly(2/3)
+    @fact u[2] => roughly(1/3)
     @fact u[3] => 0.0
     @fact u[4] => 0.0
 
-    u = assign_weights([(:d, 1), (:d, 2), (:d, 3), (:d, 4), (:d, 5)])
+    u = assign_weights([1, 2, 3, 4, 5])
     @fact length(u) => 5
-    @fact isapprox(u[1], 2/3) => true
-    @fact isapprox(u[2], 1/3) => true
+    @fact u[1] => roughly(2/3)
+    @fact u[2] => roughly(1/3)
     @fact u[3] => 0.0
     @fact u[4] => 0.0
     @fact u[5] => 0.0
 
-    u = assign_weights([(:d, 1), (:d, 2), (:d, 3), (:d, 4), (:d, 5), (:d, 6)])
+    u = assign_weights([1, 2, 3, 4, 5, 6])
     @fact length(u) => 6
-    @fact isapprox(u[1], (((3/3)/(3/3+2/3+1/3)))) => true
-    @fact isapprox(u[2], (((2/3)/(3/3+2/3+1/3)))) => true
-    @fact isapprox(u[3], (((1/3)/(3/3+2/3+1/3)))) => true
+    @fact u[1] => roughly((3/3)/(3/3+2/3+1/3))
+    @fact u[2] => roughly((2/3)/(3/3+2/3+1/3))
+    @fact u[3] => roughly((1/3)/(3/3+2/3+1/3))
     @fact u[4] => 0.0
     @fact u[5] => 0.0
     @fact u[6] => 0.0
   end
 
   context("when indices are not ordered") do
-    u = assign_weights([(:d, 4), (:d, 1), (:d, 2), (:d, 3)])
-    @fact isapprox(u[4], 2/3) => true
-    @fact isapprox(u[1], 1/3) => true
+    u = assign_weights([4, 1, 2, 3])
+    @fact u[4] => roughly(2/3)
+    @fact u[1] => roughly(1/3)
     @fact u[2] => 0.0
     @fact u[3] => 0.0
   end
