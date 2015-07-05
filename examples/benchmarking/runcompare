@@ -1,0 +1,1 @@
+julia --color=yes -L ../../src/BlackBoxOptim.jl compare_optimizers.jl compare --benchmarkfile benchmark_runs_150630.csv --numreps 5
