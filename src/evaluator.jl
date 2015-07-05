@@ -47,16 +47,30 @@ function best_of(e::Evaluator, candidate1, candidate2)
   f2 = evaluate(e, candidate2)
   if is_better(f1, f2, e.fitness_scheme)
     return candidate1, f1
-  else 
+  else
     return candidate2, f2
   end
 end
 
-function rank_by_fitness(e::Evaluator, candidates)
+# Candidate for the introduction into the population
+type Candidate{F}
+    params::Individual
+    index::Int           # index of individual in the population, -1 if unassigned
+    fitness::F           # fitness
+
+    Candidate(params::Individual, index::Int = -1,
+              fitness::F = NaN) = new(params, index, fitness)
+end
+
+function rank_by_fitness!{F}(e::Evaluator, candidates::Vector{Candidate{F}})
   # Note that we re-evaluate all candidates here. This might be wasteful and
   # we should cache if evaluations are costly.
-  fitness = [(c[1], c[2], evaluate(e, c[1])) for c=candidates]
-  sort(fitness; by = (t) -> t[3])
+  for i in eachindex(candidates)
+    candidates[i].fitness = evaluate(e, candidates[i].params)
+  end
+  sort!(candidates; by = c -> c.fitness)
 end
+
+Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness)
 
 fitness_is_within_ftol(e::Evaluator, ftolerance, index::Int = 1) = fitness_is_within_ftol(problem(e), ftolerance, best_fitness(e.archive), index)

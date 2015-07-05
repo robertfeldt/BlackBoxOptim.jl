@@ -372,12 +372,12 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       # elements from several optimizers using it. However, in this top-level
       # execution function we do not make use of this flexibility...
       candidates = ask(opt)
-      ranked_candidates = BlackBoxOptim.rank_by_fitness(evaluator, candidates)
-      num_better_since_last += tell!(opt, ranked_candidates)
+      rank_by_fitness!(evaluator, candidates)
+      num_better_since_last += tell!(opt, candidates)
 
     else
 
-      BlackBoxOptim.step(opt)
+      step!(opt)
       num_better_since_last = 0
 
     end

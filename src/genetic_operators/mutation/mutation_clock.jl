@@ -1,10 +1,11 @@
 # Mutation clock operator is a more efficient way to mutate vectors than to generate
 # a random value per variable in the vectors. It instead generates the number of variables
 # to skip until the next mutation. Then it uses a sub-mutation operator to do the actual
-# mutation. This is implemented as described in the paper:
+# mutation. This is based on the paper:
 #  Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
+# but we use a Poisson distribution.
 
-num_vars_to_next_mutation_point(probMutation) = rand(Poisson(1.0/probMutation))
+num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / probMutation)
 
 # implements apply() that mutates one specific index of the parameter vector
 abstract GibbsMutationOperator

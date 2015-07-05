@@ -17,23 +17,23 @@ context("parameters adjust!()") do
   end
 end
 
+# FIXME actually this test is not required as the standard DE already tests for that
 context("ask()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(ade)
-
     @fact length(res) => 2
-    trial, trialIndex = res[1]
-    target, targetIndex = res[2]
 
-    @fact ndims(trial) => 1
-    @fact 1 <= trialIndex <= popsize(ade) => true
-    @fact isinspace(trial, ade.embed.searchSpace) => true
+    trial, target = res
 
-    @fact ndims(target) => 1
-    @fact 1 <= targetIndex <= popsize(ade) => true
-    @fact isinspace(target, ade.embed.searchSpace) => true
+    @fact ndims(trial.params) => 1
+    @fact 1 <= trial.index <= popsize(ade) => true
+    @fact isinspace(trial.params, ade.embed.searchSpace) => true
 
-    @fact trialIndex == targetIndex => true
+    @fact ndims(target.params) => 1
+    @fact 1 <= target.index <= popsize(ade) => true
+    @fact isinspace(target.params, ade.embed.searchSpace) => true
+
+    @fact trial.index == target.index => true
   end
 end
 
