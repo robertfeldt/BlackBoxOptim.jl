@@ -62,9 +62,11 @@ function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Embedding
 end
 
 # by default use RandomBound embedder
-GeneratingSetSearcher(parameters) = GeneratingSetSearcher(parameters[:Evaluator],
-                                                          get(parameters, :DirectionGenerator, compass_search_directions(numdims(parameters[:Evaluator]))),
-                                                          RandomBound(parameters[:SearchSpace]), parameters)
+function GeneratingSetSearcher(problem::OptimizationProblem, parameters)
+  GeneratingSetSearcher(parameters[:Evaluator],
+                        get(parameters, :DirectionGenerator, compass_search_directions(numdims(parameters[:Evaluator]))),
+                        RandomBound(search_space(problem)), parameters)
+end
 
 # We also include the name of the direction generator.}
 function name(opt::GeneratingSetSearcher)

@@ -17,15 +17,15 @@ type SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticApproximatio
   delta_ck::Individual
 end
 
-function SimultaneousPerturbationSA2{E<:EmbeddingOperator}( embed::E, parameters )
-    ss = parameters[:SearchSpace]
+function SimultaneousPerturbationSA2{E<:EmbeddingOperator}(problem::OptimizationProblem, embed::E, parameters)
+    ss = search_space(problem)
     n = numdims(ss)
     SimultaneousPerturbationSA2{E}(embed, Parameters(parameters, SPSADefaultParameters),
                                    0, n, rand_individual(ss), zeros(Float64, n))
 end
 
 # by default use RandomBound embedder
-SimultaneousPerturbationSA2(parameters) = SimultaneousPerturbationSA2( RandomBound(parameters[:SearchSpace]), parameters )
+SimultaneousPerturbationSA2(problem::OptimizationProblem, parameters) = SimultaneousPerturbationSA2(problem, RandomBound(search_space(problem)), parameters)
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 

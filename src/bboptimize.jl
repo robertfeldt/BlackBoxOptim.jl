@@ -47,7 +47,6 @@ DefaultParameters = @compat Dict{Symbol,Any}(
 # Setup a fixed-dimensional problem
 function setup_problem(problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
-  params[:SearchSpace] = search_space(problem)
   return problem, params
 end
 
@@ -61,7 +60,6 @@ function setup_problem(family::FunctionBasedProblemFamily, parameters = @compat 
     throw(ArgumentError("You MUST specify the number of dimensions in a solution when a problem family is given"))
   end
   problem = fixed_dim_problem(family, parameters[:NumDimensions])
-  params[:SearchSpace] = search_space(problem)
 
   return problem, params
 end
@@ -72,12 +70,12 @@ function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
-  if typeof(params[:SearchRange]) == typeof( (0.0, 1.0) )
+  if typeof(params[:SearchRange]) == typeof((0.0, 1.0))
       if params[:NumDimensions] == :NotSpecified
           throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
       end
       ss = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
-  elseif typeof(params[:SearchRange]) == typeof( [(0.0, 1.0)] )
+  elseif typeof(params[:SearchRange]) == typeof([(0.0, 1.0)])
       ss = RangePerDimSearchSpace(params[:SearchRange])
   else
       throw(ArgumentError("Invalid search range specification."))
@@ -87,7 +85,6 @@ function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
   # from our pre-defined problems so some of the data for the constructor is dummy.
 
   problem = FunctionBasedProblem(func, "", ScalarFitness{true}(), ss)
-  params[:SearchSpace] = search_space(problem)
 
   return problem, params
 end
@@ -180,7 +177,7 @@ function bboptimize(functionOrProblem; max_time = false,
     search_space = search_space, search_range = search_range, dimensions = dimensions,
     method = method, parameters = parameters)
 
-  run_optimizer_on_problem(optimizer, problem; parameters = params)
+  run_optimizer(optimizer, problem, params)
 
 end
 
@@ -198,7 +195,7 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   problem, params = setup_problem(functionOrProblem, params)
 
   # Create a random solution from the search space and ensure that the given function returns a Number.
-  ind = rand_individual(params[:SearchSpace])
+  ind = rand_individual(BlackBoxOptim.search_space(problem))
   res = fitness(ind, problem)
   if !isa(res, Number)
     throw(ArgumentError("The supplied function does NOT return a number when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
@@ -238,15 +235,14 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   if (typeof(method) != Symbol) || !any([(method == vm) for vm in MethodNames])
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)"))
   end
-  pop = BlackBoxOptim.rand_individuals_lhs(params[:SearchSpace], params[:PopulationSize])
+  pop = BlackBoxOptim.rand_individuals_lhs(BlackBoxOptim.search_space(problem), params[:PopulationSize])
 
   params = Parameters(params, @compat Dict{Symbol,Any}(
     :Evaluator    => ProblemEvaluator(problem),
     :Population   => pop,
-    :SearchSpace  => search_space
   ))
   optimizer_func = ValidMethods[method]
-  optimizer = optimizer_func(params)
+  optimizer = optimizer_func(problem, params)
 
   return (optimizer, problem, params)
 end
@@ -278,9 +274,9 @@ function step!(optimizer::SteppingOptimizer, evaluator::Evaluator)
   return 0
 end
 
-function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
-  parameters = Dict())
+function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
 
+  # init RNG
   if parameters[:RandomizeRngSeed]
     parameters[:RngSeed] = rand(1:1_000_000)
     srand(parameters[:RngSeed])
@@ -352,7 +348,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       num_better += num_better_since_last
 
       # Always print step number, num fevals and elapsed time
-      tr(@sprintf("%.2f secs, %d evals , %d steps",
+      tr(@sprintf("%.2f secs, %d evals, %d steps",
         elapsed_time, num_evals(evaluator), step), parameters)
 
       # Only print if this optimizer reports on number of better. They return 0

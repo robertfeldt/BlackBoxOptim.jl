@@ -49,9 +49,9 @@ NES_DefaultOptions = @compat Dict{String,Any}(
   "sigma_learnrate" => 0.0,   # If 0.0 it will be set based on the number of dimensions
 )
 
-function separable_nes(parameters)
+function separable_nes(problem::OptimizationProblem, parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
-  SeparableNESOpt(params[:SearchSpace];
+  SeparableNESOpt(search_space(problem),
     lambda = params["lambda"],
     mu_learnrate = params["mu_learnrate"],
     sigma_learnrate = params["sigma_learnrate"])
@@ -134,9 +134,9 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   end
 end
 
-function xnes(parameters)
+function xnes(problem::OptimizationProblem, parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
-  XNESOpt(params[:SearchSpace]; lambda = params["lambda"])
+  XNESOpt(search_space(problem); lambda = params["lambda"])
 end
 
 function ask(xnes::XNESOpt)

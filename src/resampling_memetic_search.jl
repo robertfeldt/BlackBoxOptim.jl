@@ -56,24 +56,24 @@ RISDefaultParameters = @compat Dict{Symbol,Any}(
   :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
 )
 
-function ResamplingMemeticSearcher{E<:Evaluator}(evaluator::E, params)
+function ResamplingMemeticSearcher{E<:Evaluator}(problem::OptimizationProblem, evaluator::E, params)
   ResamplingMemeticSearcher{E}(evaluator, params)
 end
 
 # Constructor for the RIS:
-function ResamplingInheritanceMemeticSearcher{E<:Evaluator}(evaluator::E, parameters = @compat(Dict{Symbol,Any}()))
+function ResamplingInheritanceMemeticSearcher{E<:Evaluator}(problem::OptimizationProblem, evaluator::E, parameters = @compat(Dict{Symbol,Any}()))
   ResamplingMemeticSearcher{E}(evaluator,
     Parameters(parameters, RISDefaultParameters, RSDefaultParameters),
     resampling_function = random_resample_with_inheritance,
     name = "Resampling Inheritance Memetic Search (RIS)")
 end
 
-function resampling_memetic_searcher(params)
-  ResamplingMemeticSearcher(params[:Evaluator], params)
+function resampling_memetic_searcher(problem::OptimizationProblem, params)
+  ResamplingMemeticSearcher(problem, params[:Evaluator], params)
 end
 
-function resampling_inheritance_memetic_searcher(params)
-  ResamplingInheritanceMemeticSearcher(params[:Evaluator], params)
+function resampling_inheritance_memetic_searcher(problem::OptimizationProblem, params)
+  ResamplingInheritanceMemeticSearcher(problem, params[:Evaluator], params)
 end
 
 # For Resampling Search (RS) the resample is purely random.

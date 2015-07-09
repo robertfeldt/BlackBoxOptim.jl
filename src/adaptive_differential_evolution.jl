@@ -41,22 +41,21 @@ function adjust!( params::AdaptiveDiffEvoParameters, index, is_improved::Bool )
     end
 end
 
-function adaptive_diffevo(name::ASCIIString,
+function adaptive_diffevo(problem::OptimizationProblem, name::ASCIIString,
                  crossover::DiffEvoCrossoverOperator,
                  select::IndividualsSelector = SimpleSelector(),
                  options = @compat Dict{Symbol,Any}())
   opts = Parameters(options, ADE_DefaultOptions)
-  ss = opts[:SearchSpace]
   pop = opts[:Population]
   DiffEvoOpt(name, pop, AdaptiveDiffEvoParameters(opts, popsize(pop)), select,
-        NoMutation(), crossover, RandomBound(ss))
+        NoMutation(), crossover, RandomBound(search_space(problem)))
 end
 
-adaptive_de_rand_1_bin(options = @compat(Dict{Symbol,Any}()),
+adaptive_de_rand_1_bin(problem::OptimizationProblem, options = @compat(Dict{Symbol,Any}()),
               name = "AdaptiveDE/rand/1/bin") =
-    adaptive_diffevo(name, DiffEvoRandBin1(), SimpleSelector(), options)
+    adaptive_diffevo(problem, name, DiffEvoRandBin1(), SimpleSelector(), options)
 
-adaptive_de_rand_1_bin_radiuslimited(options = @compat(Dict{Symbol,Any}()),
+adaptive_de_rand_1_bin_radiuslimited(problem::OptimizationProblem, options = @compat(Dict{Symbol,Any}()),
                                      name = "AdaptiveDE/rand/1/bin/radiuslimited") =
-    adaptive_diffevo(name, DiffEvoRandBin1(),
+    adaptive_diffevo(problem, name, DiffEvoRandBin1(),
                      RadiusLimitedSelector(Parameters(options, ADE_DefaultOptions)[:SamplerRadius]), options)

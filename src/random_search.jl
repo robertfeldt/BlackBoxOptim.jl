@@ -26,8 +26,8 @@ function tell!{F}(rs::RandomSearcher, rankedCandidates::Vector{Candidate{F}})
   end
 end
 
-function random_search(parameters::Parameters)
-  RandomSearcher(parameters[:SearchSpace])
+function random_search(problem::OptimizationProblem, parameters::Parameters)
+  RandomSearcher(search_space(problem))
 end
 
 function random_search(ss::SearchSpace)

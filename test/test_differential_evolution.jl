@@ -1,11 +1,10 @@
-DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
-  :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
-  :Population => collect(1.0:10.0)',
-  :f => 0.4,
-  :cr => 0.5,
-  :NumParents => 3))
-
 facts("Differential evolution optimizer") do
+
+ss = symmetric_search_space(1, (0.0, 10.0))
+fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", ScalarFitness{true}(), ss)
+DE = de_rand_1_bin(fake_problem, @compat Dict{Symbol,Any}(
+  :Population => collect(1.0:10.0)',
+  :f => 0.4, :cr => 0.5, :NumParents => 3))
 
 context("SimpleSelector") do
   @fact popsize(DE) => 10
@@ -22,8 +21,7 @@ context("SimpleSelector") do
 end
 
 context("RadiusLimitedSelector") do
-  DE = de_rand_1_bin_radiuslimited(@compat Dict{Symbol,Any}(
-    :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
+  local DE = de_rand_1_bin_radiuslimited(fake_problem, @compat Dict{Symbol,Any}(
     :Population => rand(1,100),
     :f => 0.4, :cr => 0.5, :NumParents => 3))
 
