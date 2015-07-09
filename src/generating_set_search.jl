@@ -58,7 +58,7 @@ function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Embedding
     step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])
     x = rand_individual(ss)
     GeneratingSetSearcher{V, D, E}(params, dgen, evaluator, embed, ss, n, 0, step_size,
-      x, evaluate(evaluator, x))
+      x, fitness(x, evaluator))
 end
 
 # by default use RandomBound embedder
@@ -79,7 +79,7 @@ function step!(gss::GeneratingSetSearcher)
   if has_converged(gss)
     # Restart from a random point
     gss.x = rand_individual(gss.search_space)
-    gss.xfitness = evaluate(gss.evaluator, gss.x)
+    gss.xfitness = fitness(gss.x, gss.evaluator)
     gss.step_size = calc_initial_step_size(gss.search_space, gss.parameters[:InitialStepSizeFactor])
   end
 
