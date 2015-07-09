@@ -263,14 +263,6 @@ function tr(msg, parameters, obj = None)
   end
 end
 
-function find_best_individual(e::Evaluator, opt::PopulationOptimizer)
-  (best_candidate(e.archive), 1, best_fitness(e.archive))
-end
-
-function find_best_individual(e::Evaluator, opt::Optimizer)
-  (best_candidate(e.archive), 1, best_fitness(e.archive))
-end
-
 # The ask and tell interface is more general since you can mix and max
 # elements from several optimizers using it. However, in this top-level
 # execution function we do not make use of this flexibility...
@@ -400,7 +392,8 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
     tr("\n\nStd dev (in population) per position:", parameters, std(population(opt),1))
   end
 
-  best, index, fitness = find_best_individual(evaluator, opt)
+  best = best_candidate(evaluator.archive)
+  fitness = best_fitness(evaluator.archive)
   tr("\n\nBest candidate found: ", parameters, best)
   tr("\n\nFitness: ", parameters, fitness)
   tr("\n\n", parameters)
