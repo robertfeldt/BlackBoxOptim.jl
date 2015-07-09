@@ -1,42 +1,94 @@
 abstract Population
-abstract PopulationWithFitness <: Population
+abstract PopulationWithFitness{F} <: Population
 
-type FloatVectorPopulation <: PopulationWithFitness
+# The simplest population implementation -- a matrix of floats, each column is an individual.
+typealias PopulationMatrix Matrix{Float64}
+
+popsize(pop::PopulationMatrix) = size(pop, 2)
+numdims(pop::PopulationMatrix) = size(pop, 1)
+params_mean(pop::PopulationMatrix) = mean(pop, 1)
+params_std(pop::PopulationMatrix) = std(pop, 1)
+
+type FitPopulation{F} <: PopulationWithFitness{F}
   # The population is a matrix of floats, each column being an individual.
-  individuals::Array{Float64, 2}
+  individuals::PopulationMatrix
 
-  # The fitnesses is a matrix of floats, each row being the fitness for one
-  # individual, and each column corresponding to one objective/goal.
-  fitness::Array{Float64, 2}
-  fitness_scheme::FitnessScheme
+  nafitness::F
+  fitness::Vector{F}
 
-  # A population always saves the top/best individuals seen during a search,
-  # together with their fitness values.
-  top::Array{Float64, 2}
-  top_fitness::Array{Float64, 2}
-  top_size::Int
+  candi_pool::Vector{Candidate{F}} # pool of reusable candidates
 
-  function FloatVectorPopulation(size = 100, dimensions = 1,
-    scheme = ScalarFitness{true}(), numTopIndividuals = 10)
-    inds = rand(size, dimensions)
-    fs = fill(nafitness(scheme), size, dimensions)
-    new(inds, fs, scheme, inds[1:numTopIndividuals,:], fs[1:numTopIndividuals,:], numTopIndividuals)
+  function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F})
+    popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
+    new(individuals, nafitness, fitness, Vector{Candidate{F}}())
   end
 end
 
-best(pop::FloatVectorPopulation) = pop.top[1]
-bestfitness(pop::FloatVectorPopulation) = pop.top_fitness[1]
+FitPopulation{F}(individuals::PopulationMatrix, nafitness::F,
+                 fitnesses::Vector{F} = fill(nafitness, popsize(individuals))) =
+  FitPopulation{F}(individuals, nafitness, fitnesses)
 
-# Update the toplist if this individual is good enough.
-function update_toplist!(candidate, candidateFitness, population::PopulationWithFitness)
-  fscheme = population.fitness_scheme
-  if isbetter(candidateFitness, top_fitness[end], scheme)
-    i = length(population.top)
-    fs = population.top_fitness
-    while(i >= 1 & isbetter(candidateFitness, fs[i], fscheme))
-      i -= 1
-    end
-    population.top = vcat(population.top[1:i,:], candidate, population.top[i:end-1,:])
-    population.top_fitness = vcat(population.top_fitness[1:i,:], candidateFitness, population.top_fitness[i:end-1,:])
+FitPopulation(fs::FitnessScheme, individuals::PopulationMatrix) =
+  FitPopulation(individuals, nafitness(fs))
+
+FitPopulation(fs::FitnessScheme, popsize::Int = 100, dims::Int = 1) =
+  # FIXME use PopulationMatrix(), this is v0.3 workaround
+  FitPopulation(fs, Array(Float64, dims, popsize))
+
+popsize(pop::FitPopulation) = popsize(pop.individuals)
+numdims(pop::FitPopulation) = numdims(pop.individuals)
+params_mean(pop::FitPopulation) = mean(pop.individuals, 1)
+params_std(pop::FitPopulation) = std(pop.individuals, 1)
+
+fitness(pop::FitPopulation, ix::Int) = pop.fitness[ix]
+
+getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
+getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
+
+# get unitialized individual from a pool, or create one, if it's empty
+acquire_candi{F}(pop::FitPopulation{F}) = isempty(pop.candi_pool) ? Candidate{F}(Individual(numdims(pop)), -1, pop.nafitness) : pop!(pop.candi_pool)
+
+# get an individual from a pool and set it to ix-th individual from population
+function acquire_candi(pop::FitPopulation, ix::Int)
+    x = acquire_candi(pop)
+    x.params[:] = pop[ix] # FIXME might be suboptimal until Julia has array refs
+    x.index = ix
+    x.fitness = fitness(pop, ix)
+    return x
+end
+
+# get an individual from a pool and set it to another candidate
+acquire_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) = copy!(acquire_candi(pop), candi)
+
+# put the candidate back to the pool
+release_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) = push!(pop.candi_pool, candi)
+
+# put the candidate into the population
+function accept_candi!{F}(pop::FitPopulation{F}, candi::Candidate{F})
+  pop.individuals[:, candi.index] = candi.params
+  pop.fitness[candi.index] = candi.fitness
+  release_candi(pop, candi)
+end
+
+function reset_fitness!{F}(candi::Candidate{F}, pop::FitPopulation{F})
+  candi.fitness = pop.nafitness
+  return candi
+end
+
+candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
+
+# default population generation
+function population(problem::OptimizationProblem, options = @compat Dict{Symbol,Any}())
+  if !haskey(options, :Population)
+      pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50))
+  else
+     pop = options[:Population]
+  end
+  if isa(pop, Population)
+    return pop
+  elseif isa(pop, PopulationMatrix)
+    return FitPopulation(fitness_scheme(problem), pop)
+  else
+    throw(ArgumentError("\"Population\" parameter is of unsupported type: $(typeof(pop))"))
   end
 end

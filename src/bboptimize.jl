@@ -235,11 +235,9 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   if (typeof(method) != Symbol) || !any([(method == vm) for vm in MethodNames])
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)"))
   end
-  pop = BlackBoxOptim.rand_individuals_lhs(BlackBoxOptim.search_space(problem), params[:PopulationSize])
 
   params = Parameters(params, @compat Dict{Symbol,Any}(
-    :Evaluator    => ProblemEvaluator(problem),
-    :Population   => pop,
+    :Evaluator    => ProblemEvaluator(problem)
   ))
   optimizer_func = ValidMethods[method]
   optimizer = optimizer_func(problem, params)
@@ -384,8 +382,8 @@ function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters 
   tr("Total function evaluations = $(num_evals(evaluator))\n", parameters)
 
   if typeof(opt) <: PopulationOptimizer
-    tr("\nMean value (in population) per position:", parameters, mean(population(opt),1))
-    tr("\n\nStd dev (in population) per position:", parameters, std(population(opt),1))
+    tr("\nMean value (in population) per position:", parameters, params_mean(population(opt)))
+    tr("\n\nStd dev (in population) per position:", parameters, params_std(population(opt)))
   end
 
   best = best_candidate(evaluator.archive)

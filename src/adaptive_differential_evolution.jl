@@ -46,7 +46,7 @@ function adaptive_diffevo(problem::OptimizationProblem, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
                  options = @compat Dict{Symbol,Any}())
   opts = Parameters(options, ADE_DefaultOptions)
-  pop = opts[:Population]
+  pop = population(problem, opts)
   DiffEvoOpt(name, pop, AdaptiveDiffEvoParameters(opts, popsize(pop)), select,
         NoMutation(), crossover, RandomBound(search_space(problem)))
 end

@@ -25,12 +25,11 @@ function adjust!( params::FixedDiffEvoParameters, index, is_improved::Bool )
     # do nothing
 end
 
-type DiffEvoOpt{P<:DiffEvoParameters,S<:IndividualsSelector,M<:MutationOperator,X<:DiffEvoCrossoverOperator,E<:EmbeddingOperator} <: DifferentialEvolutionOpt
+type DiffEvoOpt{POP<:Population,P<:DiffEvoParameters,S<:IndividualsSelector,M<:MutationOperator,X<:DiffEvoCrossoverOperator,E<:EmbeddingOperator} <: DifferentialEvolutionOpt
   # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
   name::ASCIIString
 
-  # A population is a matrix of floats, individuals stored in columns.
-  population::Array{Float64, 2}
+  population::POP
 
   # Set of operators that together define a specific DE strategy.
   params::P        # adjust crossover parameters after fitness calculation
@@ -40,17 +39,12 @@ type DiffEvoOpt{P<:DiffEvoParameters,S<:IndividualsSelector,M<:MutationOperator,
   embed::E         # embedding operator
 end
 
-function DiffEvoOpt{P<:DiffEvoParameters, S<:IndividualsSelector,
+function DiffEvoOpt{POP<:Population,P<:DiffEvoParameters, S<:IndividualsSelector,
                     M<:MutationOperator, X<:DiffEvoCrossoverOperator, E<:EmbeddingOperator}(
-    name::ASCIIString, pop, params::P,
+    name::ASCIIString, pop::POP, params::P,
     select::S = S(), mutate::M = M(), crossover::X = X(), embed::E = E())
-  DiffEvoOpt{P,S,M,X,E}(name, pop, params, select, mutate, crossover, embed)
+  DiffEvoOpt{POP,P,S,M,X,E}(name, pop, params, select, mutate, crossover, embed)
 end
-
-popsize(pop::Matrix{Float64}) = size(pop,2)
-popsize(opt::DifferentialEvolutionOpt) = popsize(population(opt))
-
-make_candidate(pop::Matrix{Float64}, i::Int) = Candidate{Float64}(pop[:, i], i)
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
@@ -61,17 +55,21 @@ function ask(de::DiffEvoOpt)
   parent_indices = indices[1:numparents(de.crossover)]
   #println("parent_indices = $(parent_indices)")
   target_index = indices[end]
-  target = make_candidate(de.population, target_index) # FIXME we can cache target somewhere
+  target = acquire_candi(de.population, target_index)
   #println("target[$(target_index)] = $(target)")
 
   # Crossover parents and target
   @assert numchildren(de.crossover)==1
-  trial = copy(target) # FIXME reuse some trial vector
-  apply!( de.crossover,
-          crossover_parameters( de.params, target_index )...,
-          trial.params, de.population, parent_indices )
+  trial = acquire_candi(de.population, target)
+  apply!(de.crossover,
+         crossover_parameters( de.params, target_index )...,
+         trial.params, de.population, parent_indices)
   # embed the trial parameter vector into the search space
   apply!(de.embed, trial.params, de.population, [target_index])
+  if trial.params != target.params
+    reset_fitness!(trial, de.population)
+  end
+
   #println("trial = $(trial)")
 
   # Return the candidates that should be ranked as tuples including their
@@ -84,19 +82,27 @@ end
 function tell!{F}(de::DiffEvoOpt,
   # archive::Archive, # Skip for now
   rankedCandidates::Vector{Candidate{F}})
-  num_candidates = length(rankedCandidates)
+  n_acceptable_candidates = length(rankedCandidates)÷2
   num_better = 0
-  for i in 1:div(num_candidates, 2)
+  for i in eachindex(rankedCandidates)
     candi = rankedCandidates[i]
-    is_inserted = candi.params != de.population[:,candi.index]
-    adjust!( de.params, candi.index, is_inserted )
-    if is_inserted
+    # accept the modified individuals from the top ranked half
+    if i <= n_acceptable_candidates
+      is_improved = candi.params != population(de)[candi.index]
+      adjust!(de.params, candi.index, is_improved)
+    else
+      is_improved = false
+    end
+    if is_improved
       num_better += 1
       #print("candidate = "); show(candidate); println("")
       #print("index = "); show(index); println("")
       #print("target = "); show(de.population[index,:]); println("")
       #old = de.population[:,index]
-      de.population[:,candi.index] = candi.params
+      accept_candi!(de.population, candi)
+    else
+      # just return candidate to the pool
+      release_candi(de.population, candi)
     end
   end
   num_better
@@ -110,7 +116,7 @@ function diffevo(problem::OptimizationProblem, name::ASCIIString,
                  crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(),
                  options = @compat Dict{Symbol,Any}())
   opts = Parameters(options, DE_DefaultOptions)
-  pop = opts[:Population]
+  pop = population(problem, opts)
   DiffEvoOpt(name, pop, FixedDiffEvoParameters(opts, popsize(pop)), select,
         NoMutation(), crossover, RandomBound(search_space(problem)))
 end

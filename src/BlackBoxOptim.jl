@@ -30,7 +30,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         Problems,
         OptimizationProblem, FunctionBasedProblem,
         name, fitness_scheme, search_space, numdims, opt_value,
-        fitness_is_within_ftol, objfunc,
+        fitness_is_within_ftol, objfunc, fitness,
 
         # Problem factory/family
         FunctionBasedProblemFamily, MinimizationProblemFamily,
@@ -50,7 +50,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
 
         # Population
-        FloatVectorPopulation,
+        FitPopulation,
         popsize,
 
         # Genetic operators
@@ -75,6 +75,7 @@ abstract AskTellOptimizer <: Optimizer
 # population-based optimizers
 abstract PopulationOptimizer <: AskTellOptimizer
 population(popopt::PopulationOptimizer) = popopt.population
+popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
@@ -84,7 +85,6 @@ end
 include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
-include("population.jl")
 
 # Genetic Operators
 include("genetic_operators/genetic_operator.jl")
@@ -115,6 +115,9 @@ function name(o::Optimizer)
     return s
   end
 end
+
+# Population
+include("population.jl")
 
 # Our design is inspired by the object-oriented, ask-and-tell "optimizer API
 # format" as proposed in:

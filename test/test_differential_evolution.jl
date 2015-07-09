@@ -138,9 +138,10 @@ context("DiffEvoRandBin1") do
   end
 end
 
-context("ask()") do
+context("ask()/tell!()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(DE)
+    @fact BlackBoxOptim.candi_pool_size(BlackBoxOptim.population(DE)) => 0 # no candidates in the pool as we just exhausted it
     @fact length(res) => 2
 
     trial, target = res
@@ -154,6 +155,9 @@ context("ask()") do
     @fact isinspace(target.params, DE.embed.searchSpace) => true
 
     @fact trial.index == target.index => true
+
+    BlackBoxOptim.tell!(DE, res)
+    @fact BlackBoxOptim.candi_pool_size(BlackBoxOptim.population(DE)) => 2 # test that all candidates returned to the pool
   end
 end
 

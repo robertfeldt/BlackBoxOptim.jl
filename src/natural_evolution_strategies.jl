@@ -12,7 +12,7 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   mu_learnrate::Float64
   sigma_learnrate::Float64
   last_s::Array{Float64,2}        # The s values sampled in the last call to ask
-  population::Array{Float64,2}    # The last sampled values, now being evaluated
+  population::PopulationMatrix    # The last sampled values, now being evaluated
   utilities::Vector{Float64}      # The fitness shaping utility vector
 
   function SeparableNESOpt(searchSpace; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
@@ -77,7 +77,7 @@ function mix_with_indices(individuals::Matrix{Float64}, indices::Range)
   if popsize(individuals) != length(indices)
     throw(DimensionMismatch("The number of candidates does not match the number of indices"))
   end
-  Candidate{Float64}[make_candidate(individuals, i) for i in indices]
+  Candidate{Float64}[Candidate{Float64}(individuals[:,i], i) for i in indices]
 end
 
 # Tell the sNES the ranking of a set of candidates.
