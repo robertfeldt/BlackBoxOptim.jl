@@ -38,9 +38,10 @@ GSSDefaultParameters = @compat Dict{Symbol,Any}(
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
-type GeneratingSetSearcher{E<:EmbeddingOperator} <: DirectSearcher
+type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
   parameters::Parameters
-  direction_gen::DirectionGenerator
+  direction_gen::D
+  evaluator::V
   embed::E
   search_space::SearchSpace
   n::Int
@@ -50,19 +51,20 @@ type GeneratingSetSearcher{E<:EmbeddingOperator} <: DirectSearcher
   xfitness::Float64
 end
 
-function GeneratingSetSearcher{E<:EmbeddingOperator}(embed::E, parameters)
+function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E, parameters)
     params = Parameters(parameters, GSSDefaultParameters)
-    n = numdims(params[:Evaluator])
-    ss = search_space(params[:Evaluator])
-    dgen = get(params, :DirectionGenerator, compass_search_directions(n))
+    n = numdims(evaluator)
+    ss = search_space(evaluator)
     step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])
     x = rand_individual(ss)
-    GeneratingSetSearcher{E}(params, dgen, embed, ss, n, 0, step_size,
-      x, evaluate(params[:Evaluator], x))
+    GeneratingSetSearcher{V, D, E}(params, dgen, evaluator, embed, ss, n, 0, step_size,
+      x, evaluate(evaluator, x))
 end
 
 # by default use RandomBound embedder
-GeneratingSetSearcher(parameters) = GeneratingSetSearcher(RandomBound(parameters[:SearchSpace]), parameters)
+GeneratingSetSearcher(parameters) = GeneratingSetSearcher(parameters[:Evaluator],
+                                                          get(parameters, :DirectionGenerator, compass_search_directions(numdims(parameters[:Evaluator]))),
+                                                          RandomBound(parameters[:SearchSpace]), parameters)
 
 # We also include the name of the direction generator.}
 function name(opt::GeneratingSetSearcher)
@@ -79,7 +81,7 @@ function step!(gss::GeneratingSetSearcher)
   if has_converged(gss)
     # Restart from a random point
     gss.x = rand_individual(gss.search_space)
-    gss.xfitness = evaluate(gss.parameters[:Evaluator], gss.x)
+    gss.xfitness = evaluate(gss.evaluator, gss.x)
     gss.step_size = calc_initial_step_size(gss.search_space, gss.parameters[:InitialStepSizeFactor])
   end
 
@@ -103,7 +105,7 @@ function step!(gss::GeneratingSetSearcher)
     candidate = gss.x + gss.step_size .* directions[:, direction]
     apply!(gss.embed, candidate, gss.x)
 
-    if is_better(gss.parameters[:Evaluator], candidate, gss.xfitness)
+    if is_better(gss.evaluator, candidate, gss.xfitness)
       found_better = true
       break
     end
@@ -112,7 +114,7 @@ function step!(gss::GeneratingSetSearcher)
 
   if found_better
     gss.x = candidate
-    gss.xfitness = last_fitness(gss.parameters[:Evaluator])
+    gss.xfitness = last_fitness(gss.evaluator)
     gss.step_size = min(gss.parameters[:StepSizeGamma] * gss.step_size, gss.parameters[:StepSizeMax])
   else
     gss.step_size *= gss.parameters[:StepSizePhi]
