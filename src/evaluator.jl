@@ -67,6 +67,15 @@ type Candidate{F}
               fitness::F = NaN) = new(params, index, fitness)
 end
 
+Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness)
+
+function Base.copy!{F}(c::Candidate{F}, o::Candidate{F})
+  copy!(c.params, o.params)
+  c.index = o.index
+  c.fitness = o.fitness # FIXME if vector?
+  return c
+end
+
 function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates::Vector{Candidate{F}})
   fs = fitness_scheme(e)
   for i in eachindex(candidates)
@@ -78,7 +87,5 @@ function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates:
 
   sort!(candidates; by = c -> c.fitness, lt = (x, y) -> is_better(x, y, fs))
 end
-
-Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness)
 
 fitness_is_within_ftol(e::Evaluator, atol) = fitness_is_within_ftol(problem(e), best_fitness(e.archive), atol)
