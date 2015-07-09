@@ -2,7 +2,8 @@ NumTestRepetitions = 100
 
 facts("Adaptive differential evolution optimizer") do
 
-ade = adaptive_de_rand_1_bin()
+ade = adaptive_de_rand_1_bin(@compat Dict{Symbol,Any}(
+  :Population => rand(1, 100)))
 
 context("parameters adjust!()") do
   for(i in 1:NumTestRepetitions)

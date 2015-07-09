@@ -105,32 +105,31 @@ end
 # Now we can create specific DE optimizers that are commonly used in the
 # literature.
 
-# The most used DE/rand/1/bin.
-function de_rand_1_bin(options = @compat Dict{Symbol,Any}();
-                       select = SimpleSelector(), name = "DE/rand/1/bin")
+function diffevo(name::ASCIIString,
+                 select::IndividualsSelector = SimpleSelector(),
+                 crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(),
+                 options = @compat Dict{Symbol,Any}())
   opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt(name, opts[:Population],
-        FixedDiffEvoParameters(opts, size(opts[:Population], 2)), select,
-        NoMutation(), DiffEvoRandBin1(), RandomBound(opts[:SearchSpace]))
+  ss = opts[:SearchSpace]
+  pop = opts[:Population]
+  DiffEvoOpt(name, pop, FixedDiffEvoParameters(opts, popsize(pop)), select,
+        NoMutation(), crossover, RandomBound(ss))
 end
 
-function de_rand_2_bin(options = @compat Dict{Symbol,Any}();
-                       select = SimpleSelector(), name = "DE/rand/2/bin")
-  opts = Parameters(options, DE_DefaultOptions)
-  DiffEvoOpt(name, opts[:Population],
-        FixedDiffEvoParameters(opts, size(opts[:Population], 2)), select,
-        NoMutation(), DiffEvoRandBin2(), RandomBound(opts[:SearchSpace]))
-end
+# The most used DE/rand/1/bin.
+de_rand_1_bin(options = @compat(Dict{Symbol,Any}()),
+              name = "DE/rand/1/bin") = diffevo(name, SimpleSelector(), DiffEvoRandBin1(), options)
+
+de_rand_2_bin(options = @compat(Dict{Symbol,Any}()),
+              name = "DE/rand/2/bin") = diffevo(name, SimpleSelector(), DiffEvoRandBin2(), options)
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
-function de_rand_1_bin_radiuslimited(options = @compat Dict{Symbol,Any}())
-  opts = Parameters(options, DE_DefaultOptions)
-  de_rand_1_bin(opts; select = RadiusLimitedSelector(opts[:SamplerRadius]),
-                name = "DE/rand/1/bin/radiuslimited")
-end
+de_rand_1_bin_radiuslimited(options = @compat(Dict{Symbol,Any}()),
+                            name = "DE/rand/1/bin/radiuslimited") =
+    diffevo(name, RadiusLimitedSelector(Parameters(options, DE_DefaultOptions)[:SamplerRadius]),
+            DiffEvoRandBin1(), options)
 
-function de_rand_2_bin_radiuslimited(options = @compat Dict{Symbol,Any}())
-  opts = Parameters(options, DE_DefaultOptions)
-  de_rand_2_bin(opts; select = RadiusLimitedSelector(opts[:SamplerRadius]),
-                name = "DE/rand/2/bin/radiuslimited")
-end
+de_rand_2_bin_radiuslimited(options = @compat(Dict{Symbol,Any}()),
+                            name = "DE/rand/2/bin/radiuslimited") =
+    diffevo(name, RadiusLimitedSelector(Parameters(options, DE_DefaultOptions)[:SamplerRadius]),
+            DiffEvoRandBin2(), options)
