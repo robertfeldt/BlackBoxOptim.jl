@@ -2,7 +2,7 @@ facts("Single objective functions") do
 
 context("Sphere") do
   p = BlackBoxOptim.example_problems["Sphere"]
-  sphere = p.funcs[1]
+  sphere = objfunc(p)
 
   @fact sphere([0]) => 0
 
@@ -16,14 +16,14 @@ context("Sphere") do
 
   @fact_throws sphere([])
 
-  p2 = BlackBoxOptim.as_fixed_dim_problem(p, 3)
+  p2 = fixed_dim_problem(p, 3)
   @fact numdims(p2) => 3
   @fact ranges(search_space(p2)) => [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
 context("Schwefel2.22") do
   p = BlackBoxOptim.example_problems["Schwefel2.22"]
-  schwefel2_22 = p.funcs[1]
+  schwefel2_22 = objfunc(p)
 
   @fact schwefel2_22([0]) => 0
 
@@ -37,14 +37,14 @@ context("Schwefel2.22") do
 
   @fact_throws schwefel2_22([])
 
-  p2 = BlackBoxOptim.as_fixed_dim_problem(p, 4)
+  p2 = fixed_dim_problem(p, 4)
   @fact numdims(p2) => 4
   @fact ranges(search_space(p2)) => [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
 context("Schwefel1.2") do
   p = BlackBoxOptim.example_problems["Schwefel1.2"]
-  schwefel1_2 = p.funcs[1]
+  schwefel1_2 = objfunc(p)
 
   @fact schwefel1_2([0]) => 0
 
@@ -61,7 +61,7 @@ end
 
 context("Schwefel2.21") do
   p = BlackBoxOptim.example_problems["Schwefel2.21"]
-  schwefel2_21 = p.funcs[1]
+  schwefel2_21 = objfunc(p)
 
   @fact schwefel2_21([0]) => 0
 
@@ -78,7 +78,7 @@ end
 
 context("Rosenbrock") do
   p = BlackBoxOptim.example_problems["Rosenbrock"]
-  rosenbrock = p.funcs[1]
+  rosenbrock = objfunc(p)
 
   @fact rosenbrock([1, 2]) => 100
 

@@ -27,10 +27,16 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         #ProblemEvaluator,
 
         # Problems
-        Problems, FixedDimProblem, is_fixed_dimensional, is_any_dimensional,
-        is_single_objective_problem, is_multi_objective_problem,
-        search_space, eval1, evalall, anydim_problem, as_fixed_dim_problem,
-        fitness_is_within_ftol, save_fitness_history_to_csv_file,
+        Problems,
+        OptimizationProblem, FunctionBasedProblem,
+        name, fitness_scheme, search_space, numdims, opt_value,
+        fitness_is_within_ftol, objfunc,
+
+        # Problem factory/family
+        FunctionBasedProblemFamily, MinimizationProblemFamily,
+        fixed_dim_problem,
+
+        save_fitness_history_to_csv_file,
 
         # Archive
         TopListArchive, best_fitness, add_candidate!, best_candidate,
@@ -86,8 +92,8 @@ include("genetic_operators/genetic_operator.jl")
 include("frequency_adaptation.jl")
 include("archive.jl")
 
-# Problems for testing
 include(joinpath("problems", "all_problems.jl"))
+include(joinpath("problems", "problem_family.jl"))
 
 include("evaluator.jl")
 
@@ -158,5 +164,8 @@ include("bboptimize.jl")
 include("fitness/pareto_dominance.jl")
 include("fitness/epsilon_pareto_dominance.jl")
 include("fitness/epsilon_box_dominance.jl")
+
+# Problems for testing
+include(joinpath("problems", "single_objective.jl"))
 
 end # module BlackBoxOptim

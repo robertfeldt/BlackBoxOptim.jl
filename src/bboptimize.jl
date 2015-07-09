@@ -45,7 +45,7 @@ DefaultParameters = @compat Dict{Symbol,Any}(
 )
 
 # Setup a fixed-dimensional problem
-function setup_problem(problem::FixedDimProblem; parameters = @compat Dict{Symbol,Any}())
+function setup_problem(problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
   params[:SearchSpace] = search_space(problem)
   return problem, params
@@ -53,14 +53,14 @@ end
 
 # Create a fixed-dimensional problem given
 #   any-dimensional problem and a number of dimensions as a parameter
-function setup_problem(problem::OptimizationProblem; parameters = @compat Dict{Symbol,Any}())
+function setup_problem(family::FunctionBasedProblemFamily, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
 
   # If an anydim problem was given the dimension param must have been specified.
   if params[:NumDimensions] == :NotSpecified
-    throw(ArgumentError("You MUST specify the number of dimensions in a solution when an any-dimensional problem is given"))
+    throw(ArgumentError("You MUST specify the number of dimensions in a solution when a problem family is given"))
   end
-  problem = as_fixed_dim_problem(problem, parameters[:NumDimensions])
+  problem = fixed_dim_problem(family, parameters[:NumDimensions])
   params[:SearchSpace] = search_space(problem)
 
   return problem, params
@@ -68,7 +68,7 @@ end
 
 # Create a fixed-dimensional problem given
 #   a function and a search range + number of dimensions.
-function setup_problem(func::Function; parameters = @compat Dict{Symbol,Any}())
+function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
@@ -76,19 +76,17 @@ function setup_problem(func::Function; parameters = @compat Dict{Symbol,Any}())
       if params[:NumDimensions] == :NotSpecified
           throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
       end
-      params[:SearchSpace] = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
+      ss = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
   elseif typeof(params[:SearchRange]) == typeof( [(0.0, 1.0)] )
-      params[:SearchSpace] = RangePerDimSearchSpace(params[:SearchRange])
-      params[:NumDimensions] = length(params[:SearchRange])
+      ss = RangePerDimSearchSpace(params[:SearchRange])
   else
       throw(ArgumentError("Invalid search range specification."))
   end
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
-  problem = fixeddim_problem(func;
-                             search_space = params[:SearchSpace], range = params[:SearchRange],
-                             dims = params[:NumDimensions] )
+
+  problem = FunctionBasedProblem(func, "", ScalarFitness{true}(), ss)
   params[:SearchSpace] = search_space(problem)
 
   return problem, params
@@ -126,7 +124,7 @@ function compare_optimizers(functionOrProblem::Union(Function, OptimizationProbl
 
 end
 
-function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = false,
+function compare_optimizers(problems::Dict{Any, OptimizationProblem}; max_time = false,
   methods = MethodNames, parameters = @compat Dict{Symbol,Any}())
 
   # Lets create an array where we will save how the methods ranks per problem.
@@ -197,12 +195,12 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   params[:SearchRange] = search_range
   params[:NumDimensions] = dimensions
 
-  problem, params = setup_problem(functionOrProblem; parameters = params)
+  problem, params = setup_problem(functionOrProblem, params)
 
   # Create a random solution from the search space and ensure that the given function returns a Number.
   ind = rand_individual(params[:SearchSpace])
-  res = eval1(ind, problem)
-  if !(typeof(res) <: Number)
+  res = fitness(ind, problem)
+  if !isa(res, Number)
     throw(ArgumentError("The supplied function does NOT return a number when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 

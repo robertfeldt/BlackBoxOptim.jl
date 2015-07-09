@@ -23,7 +23,7 @@ problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 problem(e::Evaluator) = e.problem
 
 function evaluate(e::Evaluator, candidate)
-  e.last_fitness = eval1(candidate, e.problem)
+  e.last_fitness = fitness(candidate, e.problem)
   e.num_evals += 1
   add_candidate!(e.archive, e.last_fitness, candidate, e.num_evals)
   e.last_fitness
@@ -69,4 +69,4 @@ end
 
 Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness)
 
-fitness_is_within_ftol(e::Evaluator, ftolerance, index::Int = 1) = fitness_is_within_ftol(problem(e), ftolerance, best_fitness(e.archive), index)
+fitness_is_within_ftol(e::Evaluator, atol::Float64) = fitness_is_within_ftol(problem(e), best_fitness(e.archive), atol)
