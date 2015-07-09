@@ -10,24 +10,27 @@ type FunctionBasedProblemFamily{F,FS<:FitnessScheme}
                 opt_value::Nullable{F}) = new(objfunc, name, fitness_scheme, range, opt_value)
 end
 
+Base.convert{F,FS<:FitnessScheme}(FunctionBasedProblemFamily, objfunc::Function, name::ASCIIString, fitness_scheme::FS, range::ParamBounds,
+                opt_value::Nullable{F}) = FunctionBasedProblemFamily{F,FS}(objfunc, name, fitness_scheme, range, opt_value)
+
 objfunc(family::FunctionBasedProblemFamily) = family.objfunc
 
 # generates the problem with the specified number of dimensions
 function fixed_dim_problem(family::FunctionBasedProblemFamily, ndim::Int)
   ss = symmetric_search_space(ndim, family.range_per_dimension)
   if isnull(family.opt_value)
-    return FunctionBasedProblem(family.objfunc, family.name, family.fitness_scheme, ss)
+    return convert(FunctionBasedProblem, family.objfunc, family.name, family.fitness_scheme, ss)
   else
-    return FunctionBasedProblem(family.objfunc, family.name, family.fitness_scheme, ss, get(family.opt_value))
+    return convert(FunctionBasedProblem, family.objfunc, family.name, family.fitness_scheme, ss, get(family.opt_value))
   end
 end
 
 function MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds, fmin::Float64)
-  FunctionBasedProblemFamily{Float64, ScalarFitness{true}}(f, name, ScalarFitness{true}(), range, convert(Nullable{Float64}, fmin))
+  convert(FunctionBasedProblemFamily, f, name, ScalarFitness{true}(), range, convert(Nullable{Float64}, fmin))
 end
 
 function MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds)
-  FunctionBasedProblemFamily{Float64, ScalarFitness{true}}(f, name, ScalarFitness{true}(), range, Nullable{Float64}())
+  convert(FunctionBasedProblemFamily, f, name, ScalarFitness{true}(), range, Nullable{Float64}())
 end
 
 function minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int)

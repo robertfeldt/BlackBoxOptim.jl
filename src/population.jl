@@ -20,7 +20,7 @@ type FitPopulation{F} <: PopulationWithFitness{F}
 
   function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F})
     popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
-    new(individuals, nafitness, fitness, Vector{Candidate{F}}())
+    new(individuals, nafitness, fitness, @compat(Vector{Candidate{F}}()))
   end
 end
 
@@ -43,10 +43,11 @@ params_std(pop::FitPopulation) = std(pop.individuals, 1)
 fitness(pop::FitPopulation, ix::Int) = pop.fitness[ix]
 
 getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
+getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
 # get unitialized individual from a pool, or create one, if it's empty
-acquire_candi{F}(pop::FitPopulation{F}) = isempty(pop.candi_pool) ? Candidate{F}(Individual(numdims(pop)), -1, pop.nafitness) : pop!(pop.candi_pool)
+acquire_candi{F}(pop::FitPopulation{F}) = isempty(pop.candi_pool) ? Candidate{F}(@compat(Vector{Float64}(numdims(pop))), -1, pop.nafitness) : pop!(pop.candi_pool)
 
 # get an individual from a pool and set it to ix-th individual from population
 function acquire_candi(pop::FitPopulation, ix::Int)

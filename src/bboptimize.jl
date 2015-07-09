@@ -84,7 +84,7 @@ function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
 
-  problem = FunctionBasedProblem(func, "", ScalarFitness{true}(), ss)
+  problem = convert(FunctionBasedProblem, func, "", ScalarFitness{true}(), ss) # FIXME v0.3 workaround
 
   return problem, params
 end

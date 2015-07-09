@@ -43,7 +43,7 @@ JadeFunctionSet = @compat Dict{Int,FunctionBasedProblemFamily}(
 
 # A TransformedProblem just makes a few changes in a sub-problem but refers
 # most func calls to it. Concrete types must implement a sub_problem func.
-abstract TransformedProblem <: OptimizationProblem
+abstract TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS}
 search_space(tp::TransformedProblem) = search_space(sub_problem(tp))
 is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(tp))
 numfuncs(tp::TransformedProblem) = numfuncs(sub_problem(tp))
@@ -53,12 +53,12 @@ name(tp::TransformedProblem) = name(sub_problem(tp))
 
 # A ShiftedAndBiasedProblem shifts the minimum value and biases the returned
 # function values.
-type ShiftedAndBiasedProblem <: TransformedProblem
+type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
   xshift::Array{Float64, 1}
   funcshift::Float64
-  subp::OptimizationProblem
+  subp::OptimizationProblem{FS}
 
-  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem;
+  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem{FS};
     xshift = false, funcshift = 0.0) = begin
     xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
     new(xshift[:], funcshift, sub_problem)
@@ -74,7 +74,7 @@ evalfunc(x, i, sp::ShiftedAndBiasedProblem) = begin
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
 end
 
-shifted(p::OptimizationProblem; funcshift = 0.0) = ShiftedAndBiasedProblem(p;
+shifted{FS<:FitnessScheme}(p::OptimizationProblem{FS}; funcshift = 0.0) = ShiftedAndBiasedProblem{FS}(p;
   funcshift = funcshift)
 
 
@@ -160,7 +160,7 @@ function xrotatedandshifted(n, f, shiftAmplitude = 1.0, rotateAmplitude = 1.0)
   transformed_f(x) = f(rotmatrix * (x .- shift))
 end
 
-example_problems = @compat Dict{String,Union{OptimizationProblem,FunctionBasedProblemFamily}}(
+example_problems = @compat Dict{String,Any}( #FIXME use Union{Optimization,FunctionBasedProblemFamily}
   "Sphere" => JadeFunctionSet[1],
   "Rosenbrock" => JadeFunctionSet[5],
   "Schwefel2.22" => JadeFunctionSet[2],
