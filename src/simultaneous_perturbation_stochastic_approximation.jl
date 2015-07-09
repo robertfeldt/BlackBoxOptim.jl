@@ -1,4 +1,4 @@
-abstract StochasticApproximationOptimizer <: Optimizer
+abstract StochasticApproximationOptimizer <: AskTellOptimizer
 
 SPSADefaultParameters = @compat Dict{Symbol,Any}(
   :Alpha => 0.602,  # The optimal value is 1.0 but values down to 0.602 often can give faster convergence

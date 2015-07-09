@@ -273,6 +273,21 @@ function find_best_individual(e::Evaluator, opt::Optimizer)
   (best_candidate(e.archive), 1, best_fitness(e.archive))
 end
 
+# The ask and tell interface is more general since you can mix and max
+# elements from several optimizers using it. However, in this top-level
+# execution function we do not make use of this flexibility...
+function step!(optimizer::AskTellOptimizer, evaluator::Evaluator)
+  candidates = ask(optimizer)
+  rank_by_fitness!(evaluator, candidates)
+  return tell!(optimizer, candidates)
+end
+
+# step for SteppingOptimizers
+function step!(optimizer::SteppingOptimizer, evaluator::Evaluator)
+  step!(optimizer)
+  return 0
+end
+
 function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   parameters = Dict())
 
@@ -366,21 +381,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       tr("\n", parameters)
     end
 
-    if has_ask_tell_interface(opt)
-
-      # They ask and tell interface is more general since you can mix and max
-      # elements from several optimizers using it. However, in this top-level
-      # execution function we do not make use of this flexibility...
-      candidates = ask(opt)
-      rank_by_fitness!(evaluator, candidates)
-      num_better_since_last += tell!(opt, candidates)
-
-    else
-
-      step!(opt)
-      num_better_since_last = 0
-
-    end
+    num_better_since_last += step!(opt, evaluator)
 
     step += 1
     t = time()

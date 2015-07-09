@@ -5,7 +5,7 @@
 #
 
 # GSS is a type of DirectSearch
-abstract DirectSearcher <: Optimizer
+abstract DirectSearcher <: SteppingOptimizer
 
 # A direction generator generates the search directions to use at each step of
 # a GSS search.
@@ -70,8 +70,6 @@ GeneratingSetSearcher(parameters) = GeneratingSetSearcher(parameters[:Evaluator]
 function name(opt::GeneratingSetSearcher)
   "GeneratingSetSearcher($(typeof(opt.direction_gen)))"
 end
-
-has_ask_tell_interface(gss::GeneratingSetSearcher) = false
 
 function has_converged(gss::GeneratingSetSearcher)
   gss.step_size < gss.parameters[:DeltaTolerance]

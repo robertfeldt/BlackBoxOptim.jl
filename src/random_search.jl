@@ -1,4 +1,4 @@
-type RandomSearcher{S<:SearchSpace} <: Optimizer
+type RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
   name::ASCIIString
   search_space::S
   best_fitness          # FIXME fitness type should be known

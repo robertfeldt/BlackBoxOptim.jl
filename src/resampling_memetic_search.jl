@@ -19,11 +19,6 @@ RSDefaultParameters = @compat Dict{Symbol,Any}(
   :PrecisionTreshold => 1e-6  # They use 1e-6 in the paper.
 )
 
-# SteppingOptimizer's do not have an ask and tell interface since they would be
-# complex to implement if forced into that form.
-abstract SteppingOptimizer <: Optimizer
-has_ask_tell_interface(rms::SteppingOptimizer) = false
-
 type ResamplingMemeticSearcher <: SteppingOptimizer
   name::ASCIIString
   params::Parameters

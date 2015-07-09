@@ -2,7 +2,7 @@ module BlackBoxOptim
 
 using Distributions, StatsBase, Compat
 
-export  Optimizer, PopulationOptimizer,
+export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, compare_optimizers,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
@@ -50,7 +50,20 @@ export  Optimizer, PopulationOptimizer,
 
         name
 
+# base abstract class for black-box optimization algorithms
 abstract Optimizer
+
+# SteppingOptimizer's do not have an ask and tell interface since they would be
+# complex to implement if forced into that form.
+abstract SteppingOptimizer <: Optimizer
+evaluator(so::SteppingOptimizer) = so.evaluator
+
+# optimizer using ask()/..eval fitness../tell!() sequence at each step
+abstract AskTellOptimizer <: Optimizer
+
+# population-based optimizers
+abstract PopulationOptimizer <: AskTellOptimizer
+population(popopt::PopulationOptimizer) = popopt.population
 
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
@@ -92,10 +105,6 @@ function name(o::Optimizer)
   end
 end
 
-abstract PopulationOptimizer <: Optimizer
-
-population(o::PopulationOptimizer) = o.population # Fallback method if sub-types have not implemented it.
-
 # Our design is inspired by the object-oriented, ask-and-tell "optimizer API
 # format" as proposed in:
 #
@@ -125,8 +134,6 @@ population(o::PopulationOptimizer) = o.population # Fallback method if sub-types
 # is no single optimum. Instead there are many pareto optimal solutions.
 # An archive collects information about the pareto optimal set or some
 # approximation of it. Different archival strategies can be implemented.
-
-has_ask_tell_interface(o::Optimizer) = true # Default is to have an ask and tell interface...
 
 # Different optimization algorithms
 include("random_search.jl")
