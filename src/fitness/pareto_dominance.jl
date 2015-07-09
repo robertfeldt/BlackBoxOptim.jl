@@ -32,4 +32,5 @@ end
 
 pareto_dominates{T <: Real}(v1::Vector{T}, v2::Vector{T}) = pareto_dominates_fast(v1, v2)
 
+# FIXME
 pareto_dominates(f1::NewFitness, f2::NewFitness) = pareto_dominates(fitnessvalues(f1), fitnessvalues(f2))

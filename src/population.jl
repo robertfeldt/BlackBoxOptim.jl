@@ -17,9 +17,9 @@ type FloatVectorPopulation <: PopulationWithFitness
   top_size::Int
 
   function FloatVectorPopulation(size = 100, dimensions = 1,
-    scheme = float_vector_scheme_min(), numTopIndividuals = 10)
+    scheme = ScalarFitness{true}(), numTopIndividuals = 10)
     inds = rand(size, dimensions)
-    fs = ones(size, dimensions) * scheme.worst_fitness # Bug! Need not be the same num of objectives as there are dimensions...
+    fs = fill(nafitness(scheme), size, dimensions)
     new(inds, fs, scheme, inds[1:numTopIndividuals,:], fs[1:numTopIndividuals,:], numTopIndividuals)
   end
 end

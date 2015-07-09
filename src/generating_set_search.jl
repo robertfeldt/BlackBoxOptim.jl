@@ -103,7 +103,7 @@ function step!(gss::GeneratingSetSearcher)
     candidate = gss.x + gss.step_size .* directions[:, direction]
     apply!(gss.embed, candidate, gss.x)
 
-    if is_better(gss.evaluator, candidate, gss.xfitness)
+    if is_better(candidate, gss.xfitness, gss.evaluator)
       found_better = true
       break
     end

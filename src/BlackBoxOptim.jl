@@ -16,6 +16,12 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         Parameters, mergeparam,
 
         # Fitness
+        FitnessScheme,
+        ScalarFitness, ComplexFitness, VectorFitness,
+        fitness_type, numobjectives,
+        is_minimizing, nafitness, isnafitness,
+        hat_compare, is_better, is_worse, same_fitness,
+        vector_fitness_scheme_min, vector_fitness_scheme_max,
 
         # Evaluator
         #ProblemEvaluator,
@@ -37,10 +43,9 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         numdims, mins, maxs, deltas, ranges, range_for_dim, diameters,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
 
-        hat_compare, is_better, is_worse, same_fitness,
-        popsize,
-        FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
+        # Population
         FloatVectorPopulation,
+        popsize,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
@@ -149,7 +154,7 @@ include("direct_search_with_probabilistic_descent.jl")
 include("bboptimize.jl")
 
 # Fitness
-include("fitness/fitness_types.jl")
+# include("fitness/fitness_types.jl") FIXME merge it with fitness.jl
 include("fitness/pareto_dominance.jl")
 include("fitness/epsilon_pareto_dominance.jl")
 include("fitness/epsilon_box_dominance.jl")

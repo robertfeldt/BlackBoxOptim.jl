@@ -97,7 +97,7 @@ function step!(rms::ResamplingMemeticSearcher)
   # First randomly sample two candidates and select the best one. It seems
   # RS and RIS might be doing this in two different ways but use the RS way for
   # now.
-  trial, fitness = best_of(rms.evaluator, rms.resampling_func(rms), rms.resampling_func(rms))
+  trial, fitness = best_of(rms.resampling_func(rms), rms.resampling_func(rms), rms.evaluator)
 
   # Update elite if new trial is better. This is how they write it in the RIS paper
   # but in the RS paper it seems they always update the elite. Unclear! To me it
@@ -116,7 +116,7 @@ function step!(rms::ResamplingMemeticSearcher)
 end
 
 function set_as_elite_if_better(rms::ResamplingMemeticSearcher, candidate, fitness)
-  if is_better(rms.evaluator, fitness, rms.elite_fitness)
+  if is_better(fitness, rms.elite_fitness, rms.evaluator)
     rms.elite = candidate
     rms.elite_fitness = fitness
     return true
@@ -159,7 +159,7 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
         xs[i] = ssmins[i] + rand() * (xt[i] - ssmins[i])
       end
 
-      if is_better(rms.evaluator, xs, tfitness)
+      if is_better(xs, tfitness, rms.evaluator)
         xt[i] = xs[i]
         tfitness = last_fitness(rms.evaluator)
       else
@@ -170,7 +170,7 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
           xs[i] = xt[i] + rand() * (ssmaxs[i] - xt[i])
         end
 
-        if is_better(rms.evaluator, xs, tfitness)
+        if is_better(xs, tfitness, rms.evaluator)
           xt[i] = xs[i]
           tfitness = last_fitness(rms.evaluator)
         end
@@ -178,7 +178,7 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
 
     end
 
-    if is_better(rms.evaluator, tfitness, fitness)
+    if is_better(tfitness, fitness, rms.evaluator)
       fitness = tfitness
       xstart = xt
     else
