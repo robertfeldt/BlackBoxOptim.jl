@@ -11,7 +11,7 @@
 #  and B. Worzel, pp. 109-124. Boston, MA: Kluwer Academic Publishers.
 #  http://faculty.hampshire.edu/lspector/pubs/trivial-geography-toappear.pdf
 #
-type RadiusLimitedSelector <: IndividualsSelector
+immutable RadiusLimitedSelector <: IndividualsSelector
     radius::Int
 end
 

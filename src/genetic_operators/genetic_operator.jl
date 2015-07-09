@@ -22,7 +22,7 @@ numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
 # mutation operator that does nothing
-type NoMutation <: MutationOperator end
+immutable NoMutation <: MutationOperator end
 function apply!(mo::NoMutation, target) end
 
 include("mutation/polynomial_mutation.jl")

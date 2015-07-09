@@ -1,7 +1,7 @@
 abstract DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC}
 
 # FIXME is it possible somehow to do arithmetic operations with N?
-type DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
+immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
 end
 
 typealias DiffEvoRandBin1 DiffEvoRandBin{3}
