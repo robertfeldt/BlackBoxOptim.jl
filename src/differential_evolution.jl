@@ -74,7 +74,8 @@ function ask(de::DiffEvoOpt)
 
   # Return the candidates that should be ranked as tuples including their
   # population indices.
-  return Candidate{Float64}[trial, target]
+  T = candidate_type(de.population)
+  return T[trial, target]
 end
 
 # Tell the optimizer about the ranking of candidates. Returns the number of
