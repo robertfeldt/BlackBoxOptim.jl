@@ -25,6 +25,8 @@ function fixed_dim_problem(family::FunctionBasedProblemFamily, ndim::Int)
   end
 end
 
+fixed_dim_problem{FS<:FitnessScheme}(prob::OptimizationProblem{FS}, ndim::Int) = prob
+
 function MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds, fmin::Float64)
   convert(FunctionBasedProblemFamily, f, name, ScalarFitness{true}(), range, convert(Nullable{Float64}, fmin))
 end
