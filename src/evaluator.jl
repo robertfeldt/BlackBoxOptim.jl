@@ -32,10 +32,10 @@ num_evals(e::ProblemEvaluator) = e.num_evals
 
 # evaluates the fitness (and implicitly updates the stats)
 function fitness(params::Individual, e::ProblemEvaluator)
-  e.last_fitness = fitness(params, e.problem)
+  e.last_fitness = res = fitness(params, e.problem)
   e.num_evals += 1
-  add_candidate!(e.archive, e.last_fitness, params, e.num_evals)
-  e.last_fitness
+  add_candidate!(e.archive, res, params, e.num_evals)
+  res
 end
 
 # A way to get the fitness of the last evaluated candidate. Leads to nicer
