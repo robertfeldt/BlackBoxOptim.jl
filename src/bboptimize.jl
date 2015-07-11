@@ -400,7 +400,7 @@ function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters 
     line_prefix = "$(name(problem)),$(numdims(problem)),$(name(opt))"
     save_fitness_history_to_csv_file(evaluator.archive, filename;
       header_prefix = header_prefix, line_prefix = line_prefix,
-      bestfitness = fmin(problem))
+      bestfitness = opt_value(problem))
   end
 
   return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
