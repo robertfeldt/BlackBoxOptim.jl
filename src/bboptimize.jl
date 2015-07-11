@@ -473,7 +473,7 @@ end
 
 function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters = Dict{Symbol, Any}())
 
-  fp = BlackBoxOptim.as_fixed_dim_problem(problem, dim)
+  fp = BlackBoxOptim.fixed_dim_problem(problem, dim)
   result_dicts = Dict{Symbol,Any}[]
 
   # Just so they are declared
