@@ -184,10 +184,10 @@ increase_runs_per_problem(problemname, numdims) = begin
   RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
 end
 
-function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals,
+function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions, populationSize, numFuncEvals,
     method, showtrace = true)
 
-  problem = BlackBoxOptim.as_fixed_dim_problem(problem, numDimensions)
+  problem = BlackBoxOptim.fixed_dim_problem(family, numDimensions)
 
   best, fitness = bboptimize(problem; method = method, parameters = {
     :NumDimensions => numDimensions,
@@ -200,7 +200,7 @@ function fitness_for_opt(problem, numDimensions, populationSize, numFuncEvals,
 end
 
 function latest_git_id()
-  strip(readall(`git log --format="%H" -n 1`))
+  strip(readall(`git -C "$(Pkg.dir("BlackBoxOptim"))" log --format="%H" -n 1`))
 end
 
 # Test an optimizer on multiple problems and dimensions, return results in dict.

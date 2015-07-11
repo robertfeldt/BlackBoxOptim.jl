@@ -1,19 +1,19 @@
 # FIXME replace Any with Type{Optimizer} when the support for Julia v0.3 would be dropped
 ValidMethods = @compat Dict{Symbol,Union(Any,Function)}(
-  :random_search => BlackBoxOptim.random_search,
-  :de_rand_1_bin => BlackBoxOptim.de_rand_1_bin,
-  :de_rand_2_bin => BlackBoxOptim.de_rand_2_bin,
-  :de_rand_1_bin_radiuslimited => BlackBoxOptim.de_rand_1_bin_radiuslimited,
-  :de_rand_2_bin_radiuslimited => BlackBoxOptim.de_rand_2_bin_radiuslimited,
-  :adaptive_de_rand_1_bin => BlackBoxOptim.adaptive_de_rand_1_bin,
-  :adaptive_de_rand_1_bin_radiuslimited => BlackBoxOptim.adaptive_de_rand_1_bin_radiuslimited,
-  :separable_nes => BlackBoxOptim.separable_nes,
-  :xnes => BlackBoxOptim.xnes,
-  :resampling_memetic_search => BlackBoxOptim.resampling_memetic_searcher,
-  :resampling_inheritance_memetic_search => BlackBoxOptim.resampling_inheritance_memetic_searcher,
-  :simultaneous_perturbation_stochastic_approximation => BlackBoxOptim.SimultaneousPerturbationSA2,
-  :generating_set_search => BlackBoxOptim.GeneratingSetSearcher,
-  :probabilistic_descent => BlackBoxOptim.direct_search_probabilistic_descent,
+  :random_search => random_search,
+  :de_rand_1_bin => de_rand_1_bin,
+  :de_rand_2_bin => de_rand_2_bin,
+  :de_rand_1_bin_radiuslimited => de_rand_1_bin_radiuslimited,
+  :de_rand_2_bin_radiuslimited => de_rand_2_bin_radiuslimited,
+  :adaptive_de_rand_1_bin => adaptive_de_rand_1_bin,
+  :adaptive_de_rand_1_bin_radiuslimited => adaptive_de_rand_1_bin_radiuslimited,
+  :separable_nes => separable_nes,
+  :xnes => xnes,
+  :resampling_memetic_search => resampling_memetic_searcher,
+  :resampling_inheritance_memetic_search => resampling_inheritance_memetic_searcher,
+  :simultaneous_perturbation_stochastic_approximation => SimultaneousPerturbationSA2,
+  :generating_set_search => GeneratingSetSearcher,
+  :probabilistic_descent => direct_search_probabilistic_descent,
 )
 
 MethodNames = collect(keys(ValidMethods))
@@ -45,51 +45,46 @@ DefaultParameters = @compat Dict{Symbol,Any}(
 )
 
 # Setup a fixed-dimensional problem
-function setup_problem(problem::FixedDimProblem; parameters = @compat Dict{Symbol,Any}())
+function setup_problem(problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
-  params[:SearchSpace] = search_space(problem)
   return problem, params
 end
 
 # Create a fixed-dimensional problem given
 #   any-dimensional problem and a number of dimensions as a parameter
-function setup_problem(problem::OptimizationProblem; parameters = @compat Dict{Symbol,Any}())
+function setup_problem(family::FunctionBasedProblemFamily, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
 
   # If an anydim problem was given the dimension param must have been specified.
   if params[:NumDimensions] == :NotSpecified
-    throw(ArgumentError("You MUST specify the number of dimensions in a solution when an any-dimensional problem is given"))
+    throw(ArgumentError("You MUST specify the number of dimensions in a solution when a problem family is given"))
   end
-  problem = as_fixed_dim_problem(problem, parameters[:NumDimensions])
-  params[:SearchSpace] = search_space(problem)
+  problem = fixed_dim_problem(family, parameters[:NumDimensions])
 
   return problem, params
 end
 
 # Create a fixed-dimensional problem given
 #   a function and a search range + number of dimensions.
-function setup_problem(func::Function; parameters = @compat Dict{Symbol,Any}())
+function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
   params = Parameters(parameters, DefaultParameters)
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
-  if typeof(params[:SearchRange]) == typeof( (0.0, 1.0) )
+  if typeof(params[:SearchRange]) == typeof((0.0, 1.0))
       if params[:NumDimensions] == :NotSpecified
           throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(searchRange)"))
       end
-      params[:SearchSpace] = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
-  elseif typeof(params[:SearchRange]) == typeof( [(0.0, 1.0)] )
-      params[:SearchSpace] = RangePerDimSearchSpace(params[:SearchRange])
-      params[:NumDimensions] = length(params[:SearchRange])
+      ss = symmetric_search_space(params[:NumDimensions], params[:SearchRange])
+  elseif typeof(params[:SearchRange]) == typeof([(0.0, 1.0)])
+      ss = RangePerDimSearchSpace(params[:SearchRange])
   else
       throw(ArgumentError("Invalid search range specification."))
   end
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
-  problem = fixeddim_problem(func;
-                             search_space = params[:SearchSpace], range = params[:SearchRange],
-                             dims = params[:NumDimensions] )
-  params[:SearchSpace] = search_space(problem)
+
+  problem = convert(FunctionBasedProblem, func, "", ScalarFitness{true}(), ss) # FIXME v0.3 workaround
 
   return problem, params
 end
@@ -126,7 +121,7 @@ function compare_optimizers(functionOrProblem::Union(Function, OptimizationProbl
 
 end
 
-function compare_optimizers(problems::Dict{Any, FixedDimProblem}; max_time = false,
+function compare_optimizers(problems::Dict{Any, OptimizationProblem}; max_time = false,
   methods = MethodNames, parameters = @compat Dict{Symbol,Any}())
 
   # Lets create an array where we will save how the methods ranks per problem.
@@ -182,7 +177,7 @@ function bboptimize(functionOrProblem; max_time = false,
     search_space = search_space, search_range = search_range, dimensions = dimensions,
     method = method, parameters = parameters)
 
-  run_optimizer_on_problem(optimizer, problem; parameters = params)
+  run_optimizer(optimizer, problem, params)
 
 end
 
@@ -197,12 +192,12 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   params[:SearchRange] = search_range
   params[:NumDimensions] = dimensions
 
-  problem, params = setup_problem(functionOrProblem; parameters = params)
+  problem, params = setup_problem(functionOrProblem, params)
 
   # Create a random solution from the search space and ensure that the given function returns a Number.
-  ind = rand_individual(params[:SearchSpace])
-  res = eval1(ind, problem)
-  if !(typeof(res) <: Number)
+  ind = rand_individual(BlackBoxOptim.search_space(problem))
+  res = fitness(ind, problem)
+  if !isa(res, Number)
     throw(ArgumentError("The supplied function does NOT return a number when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 
@@ -240,15 +235,12 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   if (typeof(method) != Symbol) || !any([(method == vm) for vm in MethodNames])
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)"))
   end
-  pop = BlackBoxOptim.rand_individuals_lhs(params[:SearchSpace], params[:PopulationSize])
 
   params = Parameters(params, @compat Dict{Symbol,Any}(
-    :Evaluator    => ProblemEvaluator(problem),
-    :Population   => pop,
-    :SearchSpace  => search_space
+    :Evaluator    => ProblemEvaluator(problem)
   ))
   optimizer_func = ValidMethods[method]
-  optimizer = optimizer_func(params)
+  optimizer = optimizer_func(problem, params)
 
   return (optimizer, problem, params)
 end
@@ -265,17 +257,24 @@ function tr(msg, parameters, obj = None)
   end
 end
 
-function find_best_individual(e::Evaluator, opt::PopulationOptimizer)
-  (best_candidate(e.archive), 1, best_fitness(e.archive))
+# The ask and tell interface is more general since you can mix and max
+# elements from several optimizers using it. However, in this top-level
+# execution function we do not make use of this flexibility...
+function step!(optimizer::AskTellOptimizer, evaluator::Evaluator)
+  candidates = ask(optimizer)
+  rank_by_fitness!(evaluator, candidates)
+  return tell!(optimizer, candidates)
 end
 
-function find_best_individual(e::Evaluator, opt::Optimizer)
-  (best_candidate(e.archive), 1, best_fitness(e.archive))
+# step for SteppingOptimizers
+function step!(optimizer::SteppingOptimizer, evaluator::Evaluator)
+  step!(optimizer)
+  return 0
 end
 
-function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
-  parameters = Dict())
+function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
 
+  # init RNG
   if parameters[:RandomizeRngSeed]
     parameters[:RngSeed] = rand(1:1_000_000)
     srand(parameters[:RngSeed])
@@ -347,7 +346,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       num_better += num_better_since_last
 
       # Always print step number, num fevals and elapsed time
-      tr(@sprintf("%.2f secs, %d evals , %d steps",
+      tr(@sprintf("%.2f secs, %d evals, %d steps",
         elapsed_time, num_evals(evaluator), step), parameters)
 
       # Only print if this optimizer reports on number of better. They return 0
@@ -366,21 +365,7 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
       tr("\n", parameters)
     end
 
-    if has_ask_tell_interface(opt)
-
-      # They ask and tell interface is more general since you can mix and max
-      # elements from several optimizers using it. However, in this top-level
-      # execution function we do not make use of this flexibility...
-      candidates = ask(opt)
-      rank_by_fitness!(evaluator, candidates)
-      num_better_since_last += tell!(opt, candidates)
-
-    else
-
-      step!(opt)
-      num_better_since_last = 0
-
-    end
+    num_better_since_last += step!(opt, evaluator)
 
     step += 1
     t = time()
@@ -397,11 +382,12 @@ function run_optimizer_on_problem(opt::Optimizer, problem::OptimizationProblem;
   tr("Total function evaluations = $(num_evals(evaluator))\n", parameters)
 
   if typeof(opt) <: PopulationOptimizer
-    tr("\nMean value (in population) per position:", parameters, mean(population(opt),1))
-    tr("\n\nStd dev (in population) per position:", parameters, std(population(opt),1))
+    tr("\nMean value (in population) per position:", parameters, params_mean(population(opt)))
+    tr("\n\nStd dev (in population) per position:", parameters, params_std(population(opt)))
   end
 
-  best, index, fitness = find_best_individual(evaluator, opt)
+  best = best_candidate(evaluator.archive)
+  fitness = best_fitness(evaluator.archive)
   tr("\n\nBest candidate found: ", parameters, best)
   tr("\n\nFitness: ", parameters, fitness)
   tr("\n\n", parameters)

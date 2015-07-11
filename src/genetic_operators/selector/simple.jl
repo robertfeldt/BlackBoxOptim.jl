@@ -1,5 +1,5 @@
 # simple random selector
-type SimpleSelector <: IndividualsSelector
+immutable SimpleSelector <: IndividualsSelector
 end
 
 function select(::SimpleSelector, population, numSamples::Int)

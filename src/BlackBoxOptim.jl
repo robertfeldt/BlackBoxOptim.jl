@@ -2,7 +2,7 @@ module BlackBoxOptim
 
 using Distributions, StatsBase, Compat
 
-export  Optimizer, PopulationOptimizer,
+export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, compare_optimizers,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
@@ -16,15 +16,27 @@ export  Optimizer, PopulationOptimizer,
         Parameters, mergeparam,
 
         # Fitness
+        FitnessScheme,
+        ScalarFitness, ComplexFitness, VectorFitness,
+        fitness_type, numobjectives,
+        is_minimizing, nafitness, isnafitness,
+        hat_compare, is_better, is_worse, same_fitness,
+        vector_fitness_scheme_min, vector_fitness_scheme_max,
 
         # Evaluator
         #ProblemEvaluator,
 
         # Problems
-        Problems, FixedDimProblem, is_fixed_dimensional, is_any_dimensional,
-        is_single_objective_problem, is_multi_objective_problem,
-        search_space, eval1, evalall, anydim_problem, as_fixed_dim_problem,
-        fitness_is_within_ftol, save_fitness_history_to_csv_file,
+        Problems,
+        OptimizationProblem, FunctionBasedProblem,
+        name, fitness_scheme, search_space, numdims, opt_value,
+        fitness_is_within_ftol, objfunc, fitness,
+
+        # Problem factory/family
+        FunctionBasedProblemFamily, MinimizationProblemFamily,
+        fixed_dim_problem,
+
+        save_fitness_history_to_csv_file,
 
         # Archive
         TopListArchive, best_fitness, add_candidate!, best_candidate,
@@ -37,10 +49,9 @@ export  Optimizer, PopulationOptimizer,
         numdims, mins, maxs, deltas, ranges, range_for_dim, diameters,
         rand_individual, rand_individuals, isinspace, rand_individuals_lhs,
 
-        hat_compare, is_better, is_worse, same_fitness,
+        # Population
+        FitPopulation,
         popsize,
-        FloatVectorFitness, float_vector_scheme_min, float_vector_scheme_max,
-        FloatVectorPopulation,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
@@ -50,7 +61,21 @@ export  Optimizer, PopulationOptimizer,
 
         name
 
+# base abstract class for black-box optimization algorithms
 abstract Optimizer
+
+# SteppingOptimizer's do not have an ask and tell interface since they would be
+# complex to implement if forced into that form.
+abstract SteppingOptimizer <: Optimizer
+evaluator(so::SteppingOptimizer) = so.evaluator
+
+# optimizer using ask()/..eval fitness../tell!() sequence at each step
+abstract AskTellOptimizer <: Optimizer
+
+# population-based optimizers
+abstract PopulationOptimizer <: AskTellOptimizer
+population(popopt::PopulationOptimizer) = popopt.population
+popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
@@ -60,7 +85,6 @@ end
 include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
-include("population.jl")
 
 # Genetic Operators
 include("genetic_operators/genetic_operator.jl")
@@ -68,8 +92,8 @@ include("genetic_operators/genetic_operator.jl")
 include("frequency_adaptation.jl")
 include("archive.jl")
 
-# Problems for testing
 include(joinpath("problems", "all_problems.jl"))
+include(joinpath("problems", "problem_family.jl"))
 
 include("evaluator.jl")
 
@@ -92,9 +116,8 @@ function name(o::Optimizer)
   end
 end
 
-abstract PopulationOptimizer <: Optimizer
-
-population(o::PopulationOptimizer) = o.population # Fallback method if sub-types have not implemented it.
+# Population
+include("population.jl")
 
 # Our design is inspired by the object-oriented, ask-and-tell "optimizer API
 # format" as proposed in:
@@ -126,8 +149,6 @@ population(o::PopulationOptimizer) = o.population # Fallback method if sub-types
 # An archive collects information about the pareto optimal set or some
 # approximation of it. Different archival strategies can be implemented.
 
-has_ask_tell_interface(o::Optimizer) = true # Default is to have an ask and tell interface...
-
 # Different optimization algorithms
 include("random_search.jl")
 include("differential_evolution.jl")
@@ -142,9 +163,12 @@ include("direct_search_with_probabilistic_descent.jl")
 include("bboptimize.jl")
 
 # Fitness
-include("fitness/fitness_types.jl")
+# include("fitness/fitness_types.jl") FIXME merge it with fitness.jl
 include("fitness/pareto_dominance.jl")
 include("fitness/epsilon_pareto_dominance.jl")
 include("fitness/epsilon_box_dominance.jl")
+
+# Problems for testing
+include(joinpath("problems", "single_objective.jl"))
 
 end # module BlackBoxOptim

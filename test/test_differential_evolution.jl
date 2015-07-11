@@ -1,11 +1,10 @@
-DE = de_rand_1_bin(@compat Dict{Symbol,Any}(
-  :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
-  :Population => collect(1.0:10.0)',
-  :f => 0.4,
-  :cr => 0.5,
-  :NumParents => 3))
-
 facts("Differential evolution optimizer") do
+
+ss = symmetric_search_space(1, (0.0, 10.0))
+fake_problem = convert(FunctionBasedProblem, x -> 0.0, "test_problem", ScalarFitness{true}(), ss) # FIXME v0.3 workaround
+DE = de_rand_1_bin(fake_problem, @compat Dict{Symbol,Any}(
+  :Population => collect(1.0:10.0)',
+  :f => 0.4, :cr => 0.5, :NumParents => 3))
 
 context("SimpleSelector") do
   @fact popsize(DE) => 10
@@ -22,8 +21,7 @@ context("SimpleSelector") do
 end
 
 context("RadiusLimitedSelector") do
-  DE = de_rand_1_bin_radiuslimited(@compat Dict{Symbol,Any}(
-    :SearchSpace => symmetric_search_space(1, (0.0, 10.0)),
+  local DE = de_rand_1_bin_radiuslimited(fake_problem, @compat Dict{Symbol,Any}(
     :Population => rand(1,100),
     :f => 0.4, :cr => 0.5, :NumParents => 3))
 
@@ -140,9 +138,10 @@ context("DiffEvoRandBin1") do
   end
 end
 
-context("ask()") do
+context("ask()/tell!()") do
   for(i in 1:NumTestRepetitions)
     res = BlackBoxOptim.ask(DE)
+    @fact BlackBoxOptim.candi_pool_size(BlackBoxOptim.population(DE)) => 0 # no candidates in the pool as we just exhausted it
     @fact length(res) => 2
 
     trial, target = res
@@ -156,6 +155,9 @@ context("ask()") do
     @fact isinspace(target.params, DE.embed.searchSpace) => true
 
     @fact trial.index == target.index => true
+
+    BlackBoxOptim.tell!(DE, res)
+    @fact BlackBoxOptim.candi_pool_size(BlackBoxOptim.population(DE)) => 2 # test that all candidates returned to the pool
   end
 end
 

@@ -11,7 +11,7 @@ num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / prob
 abstract GibbsMutationOperator
 
 # randomly mutate one index of parameter vector within its boundaries
-type SimpleGibbsMutation <: GibbsMutationOperator
+immutable SimpleGibbsMutation <: GibbsMutationOperator
     ss::SearchSpace
 end
 

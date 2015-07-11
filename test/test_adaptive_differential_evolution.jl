@@ -2,7 +2,11 @@ NumTestRepetitions = 100
 
 facts("Adaptive differential evolution optimizer") do
 
-ade = adaptive_de_rand_1_bin()
+ss = symmetric_search_space(1, (0.0, 10.0))
+fake_problem = convert(FunctionBasedProblem, x -> 0.0, "test_problem", ScalarFitness{true}(), ss) # FIXME v0.3 workaround
+
+ade = adaptive_de_rand_1_bin(fake_problem, @compat Dict{Symbol,Any}(
+  :Population => rand(1, 100)))
 
 context("parameters adjust!()") do
   for(i in 1:NumTestRepetitions)

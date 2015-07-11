@@ -12,7 +12,7 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   mu_learnrate::Float64
   sigma_learnrate::Float64
   last_s::Array{Float64,2}        # The s values sampled in the last call to ask
-  population::Array{Float64,2}    # The last sampled values, now being evaluated
+  population::PopulationMatrix    # The last sampled values, now being evaluated
   utilities::Vector{Float64}      # The fitness shaping utility vector
 
   function SeparableNESOpt(searchSpace; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
@@ -49,9 +49,9 @@ NES_DefaultOptions = @compat Dict{String,Any}(
   "sigma_learnrate" => 0.0,   # If 0.0 it will be set based on the number of dimensions
 )
 
-function separable_nes(parameters)
+function separable_nes(problem::OptimizationProblem, parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
-  SeparableNESOpt(params[:SearchSpace];
+  SeparableNESOpt(search_space(problem),
     lambda = params["lambda"],
     mu_learnrate = params["mu_learnrate"],
     sigma_learnrate = params["sigma_learnrate"])
@@ -77,7 +77,7 @@ function mix_with_indices(individuals::Matrix{Float64}, indices::Range)
   if popsize(individuals) != length(indices)
     throw(DimensionMismatch("The number of candidates does not match the number of indices"))
   end
-  Candidate{Float64}[make_candidate(individuals, i) for i in indices]
+  Candidate{Float64}[Candidate{Float64}(individuals[:,i], i) for i in indices]
 end
 
 # Tell the sNES the ranking of a set of candidates.
@@ -134,9 +134,9 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   end
 end
 
-function xnes(parameters)
+function xnes(problem::OptimizationProblem, parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
-  XNESOpt(params[:SearchSpace]; lambda = params["lambda"])
+  XNESOpt(search_space(problem); lambda = params["lambda"])
 end
 
 function ask(xnes::XNESOpt)

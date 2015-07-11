@@ -36,7 +36,7 @@ facts("Search space") do
     end
   end
 
-  context("SymmetricSearchSpace with given range") do  
+  context("SymmetricSearchSpace with given range") do
     ss1 = symmetric_search_space(1, (-1.0, 1.0))
     @fact numdims(ss1) => 1
     @fact ranges(ss1) => [(-1.0, 1.0)]
@@ -80,7 +80,7 @@ facts("Search space") do
   end
 
   context("rand_individuals correctly handles column-wise generation in assymetric search spaces") do
-    for(i in 1:ifloor(NumTestRepetitions/10))
+    for(i in 1:NumTestRepetitions÷10)
       numdims = rand(1:13)
       minbounds = rand(numdims)
       ds = rand(1:10, numdims) .* rand(numdims)
