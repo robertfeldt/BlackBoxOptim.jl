@@ -37,6 +37,10 @@ function minimization_problem(f::Function, name::ASCIIString, range::ParamBounds
     fixed_dim_problem(MinimizationProblemFamily(f, name, range), ndim)
 end
 
+function minimization_problem(f::Function, range::ParamBounds, ndim::Int)
+    fixed_dim_problem(MinimizationProblemFamily(f, "unknown name", range), ndim)
+end
+
 function minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int, fmin::Float64)
     fixed_dim_problem(MinimizationProblemFamily(f, name, range, fmin), ndim)
 end

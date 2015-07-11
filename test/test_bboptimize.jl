@@ -23,7 +23,7 @@ facts("bboptimize") do
   end
 
   context("example 4 from README") do
-    best, fitness = bboptimize(rosenbrock2d; search_range = (-5.0, 5.0), dimensions = 2, 
+    best, fitness = bboptimize(rosenbrock2d; search_range = (-5.0, 5.0), dimensions = 2,
       method = :random_search, max_time = 10.0, parameters = {:ShowTrace => false})
     @fact fitness < 0.2 => true
   end
@@ -33,13 +33,13 @@ facts("bboptimize") do
   end
 
   context("run one longer example in case there is problem with the reporting in long runs") do
-    best, fitness = bboptimize(rosenbrock2d; search_range = (-5.0, 5.0), dimensions = 2, 
+    best, fitness = bboptimize(rosenbrock2d; search_range = (-5.0, 5.0), dimensions = 2,
       method = :de_rand_1_bin, parameters = {:ShowTrace => false, :MaxSteps => 25001})
     @fact fitness < 0.001 => true
   end
 
   context("Fixed-dimensional problem takes precedence over search range and related params") do
-    prob = BlackBoxOptim.fixeddim_problem((x) -> sum(x); range = (10.0, 20.0), dims = 3)
+    prob = BlackBoxOptim.minimization_problem((x) -> sum(x), "no name", (10.0, 20.0), 3)
     xbest, rest = bboptimize(prob; search_range = (0.0, 2.0), dimensions = 2, parameters = {:ShowTrace => false})
     @fact length(xbest) => 3
     @fact xbest[1] >= 10.0 => true
@@ -65,17 +65,17 @@ facts("bboptimize") do
   end
 
   context("restarting an optimizer again and again should gradually improve") do
-    optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d; 
-      search_range = (-5.0, 5.0), dimensions = 2, 
+    optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d;
+      search_range = (-5.0, 5.0), dimensions = 2,
       parameters = {:MaxSteps => 10, :ShowTrace => false})
-    best10, fitness10, termination_reason10, elapsed_time10, params, num_evals10 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
-    best20, fitness20, termination_reason20, elapsed_time20, params, num_evals20 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
+    best10, fitness10, termination_reason10, elapsed_time10, params, num_evals10 = BlackBoxOptim.run_optimizer(optimizer, problem, params);
+    best20, fitness20, termination_reason20, elapsed_time20, params, num_evals20 = BlackBoxOptim.run_optimizer(optimizer, problem, params);
     params[:MaxSteps] = 980
-    best1000, fitness1000, termination_reason1000, elapsed_time1000, params, num_evals1000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
+    best1000, fitness1000, termination_reason1000, elapsed_time1000, params, num_evals1000 = BlackBoxOptim.run_optimizer(optimizer, problem, params);
     params[:MaxSteps] = 1000
     fitness10000 = best10000 = elapsed_time1000b = 1 # Just so saved outside of loop body...
     for i in 1:9
-      best10000, fitness10000, termination_reason10000, elapsed_time1000b, params, num_evals10000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
+      best10000, fitness10000, termination_reason10000, elapsed_time1000b, params, num_evals10000 = BlackBoxOptim.run_optimizer(optimizer, problem, params);
     end
 
     # Fitness is not worse in sub-sequent runs
