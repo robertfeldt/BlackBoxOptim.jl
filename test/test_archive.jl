@@ -2,10 +2,11 @@ facts("TopListArchive") do
 
   context("Constructing a small archive and adding to it") do
 
-    a = TopListArchive(1, 3)
+    a = TopListArchive(ScalarFitness{true}(), 1, 3)
 
     @fact capacity(a) => 3
     @fact length(a)   => 0
+    @fact best_fitness(a) => isnan
 
     add_candidate!(a, 1.0, [0.0])
     @fact capacity(a)         => 3
@@ -99,7 +100,7 @@ facts("TopListArchive") do
   end
 
   context("archive copies the individuals") do
-    a = TopListArchive(2, 3)
+    a = TopListArchive(ScalarFitness{true}(), 2, 3)
 
     indiv = [0.0, 2.0]
     add_candidate!(a, 1.0, indiv)
@@ -111,5 +112,39 @@ facts("TopListArchive") do
     indiv[1] = 5.0
     # test that archived version is still the same
     @fact best_candidate(a) => [0.0, 2.0]
+  end
+
+  context("for maximizing fitness") do
+    a = TopListArchive(ScalarFitness{false}(), 1, 3)
+
+    add_candidate!(a, 1.0, [0.0])
+    @fact best_fitness(a)     => 1.0
+    @fact best_candidate(a)   => [0.0]
+    @fact last_top_fitness(a) => 1.0
+    @fact delta_fitness(a)    => Inf
+
+    add_candidate!(a, 2.0, [1.0])
+    @fact best_fitness(a)   => 2.0
+    @fact best_candidate(a) => [1.0]
+    @fact last_top_fitness(a) => 1.0
+    @fact delta_fitness(a)    => 1.0
+
+    add_candidate!(a, 0.5, [2.0])
+    @fact best_fitness(a)   => 2.0
+    @fact best_candidate(a) => [1.0]
+    @fact last_top_fitness(a) => 0.5
+    @fact delta_fitness(a)    => 1.0
+
+    add_candidate!(a, 1.5, [4.0])
+    @fact best_fitness(a)   => 2.0
+    @fact best_candidate(a) => [1.0]
+    @fact last_top_fitness(a) => 1.0
+    @fact delta_fitness(a)    => 1.0
+
+    add_candidate!(a, 2.5, [5.0])
+    @fact best_fitness(a)   => 2.5
+    @fact best_candidate(a) => [5.0]
+    @fact last_top_fitness(a) => 1.5
+    @fact delta_fitness(a)    => 0.5
   end
 end
