@@ -98,4 +98,18 @@ facts("TopListArchive") do
 
   end
 
+  context("archive copies the individuals") do
+    a = TopListArchive(2, 3)
+
+    indiv = [0.0, 2.0]
+    add_candidate!(a, 1.0, indiv)
+    # equal but not identical
+    @fact best_candidate(a) == indiv => true
+    @fact best_candidate(a) === indiv => false
+
+    # modify the vector
+    indiv[1] = 5.0
+    # test that archived version is still the same
+    @fact best_candidate(a) => [0.0, 2.0]
+  end
 end

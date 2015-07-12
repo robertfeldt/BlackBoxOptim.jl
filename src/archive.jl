@@ -22,7 +22,7 @@ immutable ArchivedIndividual
     fitness::Float64
 end
 
-fitness( a::ArchivedIndividual ) = a.fitness
+fitness(a::ArchivedIndividual) = a.fitness
 
 # A top list archive saves a top list of the best performing (best fitness)
 # candidates/individuals seen.
@@ -74,7 +74,7 @@ function add_candidate!(a::TopListArchive, fitness, candidate, num_fevals = -1)
 
   if length(a) < capacity(a) || !isempty(a.candidates) && fitness < last_top_fitness(a)
     if length(a) >= capacity(a) pop!(a.candidates) end # pop the last candidate, the new one has better fitness
-    new_cand = ArchivedIndividual(candidate, fitness)
+    new_cand = ArchivedIndividual(copy(candidate), fitness)
     ix = searchsortedfirst( a.candidates, new_cand, by = BlackBoxOptim.fitness )
     insert!(a.candidates, ix, new_cand)
   end
