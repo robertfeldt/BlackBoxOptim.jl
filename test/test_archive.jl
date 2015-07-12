@@ -8,7 +8,7 @@ facts("TopListArchive") do
     @fact length(a)   => 0
     @fact best_fitness(a) => isnan
 
-    add_candidate!(a, 1.0, [0.0])
+    BlackBoxOptim.add_candidate!(a, 1.0, [0.0])
     @fact capacity(a)         => 3
     @fact length(a)           => 1
     @fact best_fitness(a)     => 1.0
@@ -16,7 +16,7 @@ facts("TopListArchive") do
     @fact last_top_fitness(a) => 1.0
     @fact delta_fitness(a)    => Inf
 
-    add_candidate!(a, 2.0, [1.0])
+    BlackBoxOptim.add_candidate!(a, 2.0, [1.0])
     @fact capacity(a)       => 3
     @fact length(a)         => 2
     @fact best_fitness(a)   => 1.0
@@ -24,7 +24,7 @@ facts("TopListArchive") do
     @fact last_top_fitness(a) => 2.0
     @fact delta_fitness(a)    => Inf
 
-    add_candidate!(a, 0.5, [2.0])
+    BlackBoxOptim.add_candidate!(a, 0.5, [2.0])
     @fact capacity(a)         => 3
     @fact length(a)           => 3
     @fact best_fitness(a)   => 0.5
@@ -32,7 +32,7 @@ facts("TopListArchive") do
     @fact last_top_fitness(a) => 2.0
     @fact delta_fitness(a)    => 0.5
 
-    add_candidate!(a, 0.8, [4.0])
+    BlackBoxOptim.add_candidate!(a, 0.8, [4.0])
     @fact capacity(a)         => 3
     @fact length(a)           => 3
     @fact best_fitness(a)   => 0.5
@@ -44,7 +44,7 @@ facts("TopListArchive") do
     @fact width_of_confidence_interval(a, 0.05) => expected
     @fact fitness_improvement_potential(a, 0.05) => (expected / 0.50)
 
-    add_candidate!(a, 0.4, [1.9])
+    BlackBoxOptim.add_candidate!(a, 0.4, [1.9])
     @fact capacity(a)       => 3
     @fact length(a)         => 3
     @fact best_fitness(a)   => 0.4
@@ -103,7 +103,7 @@ facts("TopListArchive") do
     a = TopListArchive(ScalarFitness{true}(), 2, 3)
 
     indiv = [0.0, 2.0]
-    add_candidate!(a, 1.0, indiv)
+    BlackBoxOptim.add_candidate!(a, 1.0, indiv)
     # equal but not identical
     @fact best_candidate(a) == indiv => true
     @fact best_candidate(a) === indiv => false
@@ -117,31 +117,31 @@ facts("TopListArchive") do
   context("for maximizing fitness") do
     a = TopListArchive(ScalarFitness{false}(), 1, 3)
 
-    add_candidate!(a, 1.0, [0.0])
+    BlackBoxOptim.add_candidate!(a, 1.0, [0.0])
     @fact best_fitness(a)     => 1.0
     @fact best_candidate(a)   => [0.0]
     @fact last_top_fitness(a) => 1.0
     @fact delta_fitness(a)    => Inf
 
-    add_candidate!(a, 2.0, [1.0])
+    BlackBoxOptim.add_candidate!(a, 2.0, [1.0])
     @fact best_fitness(a)   => 2.0
     @fact best_candidate(a) => [1.0]
     @fact last_top_fitness(a) => 1.0
     @fact delta_fitness(a)    => 1.0
 
-    add_candidate!(a, 0.5, [2.0])
+    BlackBoxOptim.add_candidate!(a, 0.5, [2.0])
     @fact best_fitness(a)   => 2.0
     @fact best_candidate(a) => [1.0]
     @fact last_top_fitness(a) => 0.5
     @fact delta_fitness(a)    => 1.0
 
-    add_candidate!(a, 1.5, [4.0])
+    BlackBoxOptim.add_candidate!(a, 1.5, [4.0])
     @fact best_fitness(a)   => 2.0
     @fact best_candidate(a) => [1.0]
     @fact last_top_fitness(a) => 1.0
     @fact delta_fitness(a)    => 1.0
 
-    add_candidate!(a, 2.5, [5.0])
+    BlackBoxOptim.add_candidate!(a, 2.5, [5.0])
     @fact best_fitness(a)   => 2.5
     @fact best_candidate(a) => [5.0]
     @fact last_top_fitness(a) => 1.5
