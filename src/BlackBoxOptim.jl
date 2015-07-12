@@ -61,6 +61,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
 
+        # Utilities
+        FrequencyAdapter, next, update!, frequencies,
         name
 
 # base abstract class for black-box optimization algorithms
