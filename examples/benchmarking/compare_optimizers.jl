@@ -42,7 +42,7 @@ function main(args)
 
   for cmd in ["update", "compare", "list"]
     @add_arg_table s[cmd] begin
-      "--benchmarkfile"
+      "--benchmarkfile", "-b"
         arg_type = String
         default = "benchmark_runs.csv"
         help = "name of benchmark runs db file"
@@ -61,7 +61,7 @@ function main(args)
         default = "stable"
         help = "name of optimizer or optimizer set"
 
-      "--numreps"
+      "--numreps", "-n"
         arg_type = Integer
         default = 10
         help = "number of repetitions per problem and optimizer"
