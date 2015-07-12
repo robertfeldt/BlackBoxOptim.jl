@@ -115,8 +115,8 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   a_learnrate::Float64
   A::Array{Float64,2}
   expA::Array{Float64,2}
-  population::Array{Float64,2}    # The last sampled values, now being evaluated
-  x::Individual             # The current incumbent (aka most likely value, mu etc)
+  population::PopulationMatrix    # The last sampled values, now being evaluated
+  x::Individual                   # The current incumbent (aka most likely value, mu etc)
   Z::Array{Float64,2}
 
   XNESOpt(searchSpace; lambda::Int = 0) = begin
