@@ -235,9 +235,6 @@ function setup_bboptimize(functionOrProblem; max_time = false,
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)"))
   end
 
-  params = Parameters(params, @compat Dict{Symbol,Any}(
-    :Evaluator    => ProblemEvaluator(problem)
-  ))
   optimizer_func = ValidMethods[method]
   optimizer = optimizer_func(problem, params)
 
@@ -300,7 +297,12 @@ function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters 
   # Now set up an evaluator for this problem. This will handle fitness
   # comparisons, keep track of the number of function evals as well as
   # keep an archive and top list.
-  evaluator = get(parameters, :Evaluator, ProblemEvaluator(problem))
+  if isa(opt, SteppingOptimizer)
+    # has its own evaluator
+    evaluator = BlackBoxOptim.evaluator(opt)
+  else
+    evaluator = ProblemEvaluator(problem)
+  end
 
   num_better = 0
   num_better_since_last = 0

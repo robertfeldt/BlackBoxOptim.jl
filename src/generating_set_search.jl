@@ -63,8 +63,8 @@ end
 
 # by default use RandomBound embedder
 function GeneratingSetSearcher(problem::OptimizationProblem, parameters)
-  GeneratingSetSearcher(parameters[:Evaluator],
-                        get(parameters, :DirectionGenerator, compass_search_directions(numdims(parameters[:Evaluator]))),
+  GeneratingSetSearcher(ProblemEvaluator(problem),
+                        get(parameters, :DirectionGenerator, compass_search_directions(numdims(problem))),
                         RandomBound(search_space(problem)), parameters)
 end
 
