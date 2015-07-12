@@ -152,4 +152,15 @@ facts("Fitness") do
     @fact same_fitness([0.0], [0.0], scheme) => true
   end
 
+  if VERSION >= v"0.4.0-dev+1258" # FIXME remove version check once v0.4 is released
+    context("fitness_scheme(x, y)") do
+      mins = BlackBoxOptim.ScalarFitness{true}()
+      @fact mins(5.0, 3.0) => false
+      @fact mins(1.0, 2.0) => true
+
+      maxs = BlackBoxOptim.ScalarFitness{false}()
+      @fact maxs(3.0, 5.0) => false
+      @fact maxs(2.0, 1.0) => true
+    end
+  end
 end

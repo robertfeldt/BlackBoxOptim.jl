@@ -10,6 +10,10 @@ fitness_type{F}(::FitnessScheme{F}) = F
 #fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
+if VERSION >= v"0.4.0-dev+1258" # FIXME remove version check once v0.4 is released
+Base.call{F}(fs::FitnessScheme{F}, x::F, y::F) = is_better(x, y, fs)
+end
+
 # In a RatioFitnessScheme the fitness values can be ranked on a ratio scale so
 # we need not rank them based on pairwise comparisons. The default scale used
 # is the aggregate of the fitness values.
