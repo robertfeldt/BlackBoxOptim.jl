@@ -17,7 +17,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Fitness
         FitnessScheme,
-        ScalarFitness, ComplexFitness, VectorFitness,
+        ScalarFitnessScheme, ComplexFitnessScheme, VectorFitnessScheme,
+        MinimizingFitnessScheme, MaximizingFitnessScheme,
         fitness_type, numobjectives,
         is_minimizing, nafitness, isnafitness,
         hat_compare, is_better, is_worse, same_fitness,

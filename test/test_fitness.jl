@@ -13,15 +13,15 @@ facts("Fitness") do
   end
 
   context("is_minimizing in ScalarFitness schemes") do
-    mins = BlackBoxOptim.ScalarFitness{true}()
+    mins = MinimizingFitnessScheme
     @fact BlackBoxOptim.is_minimizing(mins) => true
 
-    maxs = BlackBoxOptim.ScalarFitness{false}()
+    maxs = MaximizingFitnessScheme
     @fact BlackBoxOptim.is_minimizing(maxs) => false
   end
 
   context("hat_compare floats in a minimizing fitness scheme") do
-    scheme = BlackBoxOptim.ScalarFitness{true}()
+    scheme = MinimizingFitnessScheme
 
     @fact hat_compare(1.0, 2.0, scheme) => -1
     @fact hat_compare(2.0, 1.0, scheme) => 1
@@ -29,7 +29,7 @@ facts("Fitness") do
   end
 
   context("hat_compare floats in a maximizing fitness scheme") do
-    scheme = BlackBoxOptim.ScalarFitness{false}()
+    scheme = MaximizingFitnessScheme
 
     @fact hat_compare(1.0, 2.0, scheme) => 1
     @fact hat_compare(2.0, 1.0, scheme) => -1
@@ -154,11 +154,11 @@ facts("Fitness") do
 
   if VERSION >= v"0.4.0-dev+1258" # FIXME remove version check once v0.4 is released
     context("fitness_scheme(x, y)") do
-      mins = BlackBoxOptim.ScalarFitness{true}()
+      mins = MinimizingFitnessScheme
       @fact mins(5.0, 3.0) => false
       @fact mins(1.0, 2.0) => true
 
-      maxs = BlackBoxOptim.ScalarFitness{false}()
+      maxs = MaximizingFitnessScheme
       @fact maxs(3.0, 5.0) => false
       @fact maxs(2.0, 1.0) => true
     end

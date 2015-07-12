@@ -2,7 +2,7 @@ facts("TopListArchive") do
 
   context("Constructing a small archive and adding to it") do
 
-    a = TopListArchive(ScalarFitness{true}(), 1, 3)
+    a = TopListArchive(MinimizingFitnessScheme, 1, 3)
 
     @fact capacity(a) => 3
     @fact length(a)   => 0
@@ -100,7 +100,7 @@ facts("TopListArchive") do
   end
 
   context("archive copies the individuals") do
-    a = TopListArchive(ScalarFitness{true}(), 2, 3)
+    a = TopListArchive(MinimizingFitnessScheme, 2, 3)
 
     indiv = [0.0, 2.0]
     BlackBoxOptim.add_candidate!(a, 1.0, indiv)
@@ -115,7 +115,7 @@ facts("TopListArchive") do
   end
 
   context("for maximizing fitness") do
-    a = TopListArchive(ScalarFitness{false}(), 1, 3)
+    a = TopListArchive(MaximizingFitnessScheme, 1, 3)
 
     BlackBoxOptim.add_candidate!(a, 1.0, [0.0])
     @fact best_fitness(a)     => 1.0
