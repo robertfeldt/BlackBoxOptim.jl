@@ -1,4 +1,12 @@
 facts("TopListArchive") do
+  context("ArchivedIndividual") do
+    # test equality
+    @fact isequal(BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0), BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) => true
+    @fact BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) == BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => true
+    @fact BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => false
+    @fact BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 1.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => true
+    @fact BlackBoxOptim.ArchivedIndividual([1.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => true
+  end
 
   context("Constructing a small archive and adding to it") do
 
@@ -55,6 +63,17 @@ facts("TopListArchive") do
     expected = ((0.5 - 0.4) / ((1 - 0.05)^(-2/1) - 1))
     @fact width_of_confidence_interval(a, 0.05) => expected
     @fact fitness_improvement_potential(a, 0.05) => (expected / 0.40)
+
+    # identical candidate is not inserted
+    BlackBoxOptim.add_candidate!(a, 0.5, [2.0])
+    @fact capacity(a)       => 3
+    @fact length(a)         => 3
+    @fact last_top_fitness(a)   => 0.8
+
+    # different candidates with the same fitness are inserted
+    BlackBoxOptim.add_candidate!(a, 0.5, [3.0])
+    @fact length(a)             => 3
+    @fact last_top_fitness(a)   => 0.5
   end
 
   context("magnitude_class for positive fitness values") do

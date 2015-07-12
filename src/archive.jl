@@ -25,6 +25,8 @@ immutable ArchivedIndividual{F}
 end
 
 ArchivedIndividual{F}(params::Individual, fitness::F) = ArchivedIndividual{F}(params, fitness)
+Base.(:(==)){F}(x::ArchivedIndividual{F}, y::ArchivedIndividual{F}) =
+  (x.fitness == y.fitness) && (x.params == y.params)
 
 fitness(a::ArchivedIndividual) = a.fitness
 
@@ -84,11 +86,13 @@ function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F
 
   if length(a) < capacity(a) ||
      !isempty(a.candidates) && is_better(fitness, last_top_fitness(a), fitness_scheme(a))
-    if length(a) >= capacity(a) pop!(a.candidates) end # pop the last candidate, the new one has better fitness
     new_cand = ArchivedIndividual(copy(candidate), fitness)
     ix = searchsortedfirst(a.candidates, new_cand,
                            by=BlackBoxOptim.fitness, lt=fitness_scheme_lt(fitness_scheme(a)))
-    insert!(a.candidates, ix, new_cand)
+    if ix > length(a) || a.candidates[ix] != new_cand
+      insert!(a.candidates, ix, new_cand)
+    end
+    if length(a) > capacity(a) pop!(a.candidates) end # don't grow over the capacity
   end
 end
 
