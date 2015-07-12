@@ -1,0 +1,8 @@
+"Method","MeanRank","Num1sFitness","MeanRankTime","Num1sTime","NumRuns","MedianLogTimesWorseFitness"
+"adaptive_de_rand_1_bin_radiuslimited",2.783,2,4.652,0,575,1.0
+"de_rand_1_bin_radiuslimited",3.087,5,3.217,0,575,0.9
+"adaptive_de_rand_1_bin",3.174,5,4.0,0,575,1.7
+"generating_set_search",3.565,6,1.435,18,575,0.6
+"de_rand_1_bin",3.913,2,3.652,0,575,2.4
+"probabilistic_descent",4.478,3,4.348,5,575,2.5
+"random_search",7.0,0,6.696,0,575,11.2

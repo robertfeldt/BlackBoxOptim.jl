@@ -146,4 +146,4 @@ In our experiments the radius limited DE's perform better than the classic de_ra
 
 The separable NES often beats all of the DE optimizers in the tests we have done. But it is about 2-3 times slower per iteration so not really a fair comparison. It seems it can still hold up even if we normalize for time rather than number of executions but since it is not as good for non-separable problems it is not our default for now. XNES can sometimes beat sNES but scales very badly so is not a good default choice.
 
-Once we have Amalgam implemented we believe that Amalgam(PSO, CMA-ES, DE/rand/1/bin/radiuslimited) will be a very powerful default choice. This remains to be evaluated though.
+[A ranked list of the performance of some of the optimizers when tested on a large set of problems can be found here](https://github.com/robertfeldt/BlackBoxOptim.jl/tree/master/examples/benchmarking/latest_toplist.csv).

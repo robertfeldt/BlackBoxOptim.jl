@@ -79,6 +79,13 @@ function main(args)
       help = "name of comparison db file"
   end
 
+  @add_arg_table s["list"] begin
+    "--outfile", "-o"
+      arg_type = String
+      default = ""
+      help = "name of csv file where result comparison table is saved"
+  end
+
   pargs = parse_args(args, s)
 
   cmd = pargs["%COMMAND%"]
@@ -111,7 +118,7 @@ function main(args)
     save_result_database(db, benchmarkfile)
   elseif cmd == "list"
     db = read_benchmark_db(benchmarkfile)
-    list_benchmark_db(db)
+    list_benchmark_db(db, pargs[cmd]["outfile"])
   elseif cmd == "compare"
     compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps, 0.01,
         pargs[cmd]["comparisonfile"])
@@ -260,7 +267,7 @@ function add_rank_per_group(df, groupcols, rankcol, resultcol)
     vcat(dfs...)
 end
 
-function list_benchmark_db(db)
+function list_benchmark_db(db, saveResultCsvFile = nothing)
   numrows = size(db, 1)
   println("Number of runs in db: ", numrows)
 
@@ -303,6 +310,10 @@ function list_benchmark_db(db)
     # Now sort and print
     sort!(df; cols = [:MeanRank, :MeanRankTime, :Num1sFitness])
     println(df)
+    if typeof(saveResultCsvFile) <: String && length(saveResultCsvFile) > 0
+        writetable(saveResultCsvFile, df)
+        println("Results written to file: ", saveResultCsvFile)
+    end
   end
 end
 
