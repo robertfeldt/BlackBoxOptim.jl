@@ -53,13 +53,13 @@ best_candidate(a::TopListArchive) = a.candidates[1].params
 best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[1]) : Inf
 last_top_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[end]) : Inf
 
-# Delta fitness is the difference between the top two candidates found so far.
-#
+# Delta fitness is the difference between the best fitness and the former
+# best fitness
 function delta_fitness(a::TopListArchive)
   if length(a.fitness_history) < 2
     Inf
   else
-    abs(a.fitness_history[2].fitness - a.fitness_history[1].fitness)
+    abs(a.fitness_history[end].fitness - a.fitness_history[end-1].fitness)
   end
 end
 

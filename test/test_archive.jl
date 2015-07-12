@@ -37,6 +37,7 @@ facts("TopListArchive") do
     @fact best_fitness(a)   => 0.5
     @fact best_candidate(a) => [2.0]
     @fact last_top_fitness(a) => 1.0
+    @fact delta_fitness(a)    => 0.5
 
     expected = ((0.8 - 0.5) / ((1 - 0.05)^(-2/1) - 1))
     @fact width_of_confidence_interval(a, 0.05) => expected
@@ -48,6 +49,7 @@ facts("TopListArchive") do
     @fact best_fitness(a)   => 0.4
     @fact best_candidate(a) => [1.9]
     @fact last_top_fitness(a) => 0.8
+    @fact delta_fitness(a)    => roughly(0.1)
 
     expected = ((0.5 - 0.4) / ((1 - 0.05)^(-2/1) - 1))
     @fact width_of_confidence_interval(a, 0.05) => expected
