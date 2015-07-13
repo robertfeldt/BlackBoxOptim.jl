@@ -23,7 +23,7 @@ function ProblemEvaluator{P<:OptimizationProblem}(
         problem::P;
         archiveCapacity::Int = 10 )
     ProblemEvaluator{fitness_type(fitness_scheme(problem)), P}(problem,
-        TopListArchive(numdims(problem), archiveCapacity),
+        TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
         0, nafitness(fitness_scheme(problem)))
 end
 

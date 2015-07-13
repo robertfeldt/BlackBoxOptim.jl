@@ -17,7 +17,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Fitness
         FitnessScheme,
-        ScalarFitness, ComplexFitness, VectorFitness,
+        ScalarFitnessScheme, ComplexFitnessScheme, VectorFitnessScheme,
+        MinimizingFitnessScheme, MaximizingFitnessScheme,
         fitness_type, numobjectives,
         is_minimizing, nafitness, isnafitness,
         hat_compare, is_better, is_worse, same_fitness,
@@ -39,7 +40,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         save_fitness_history_to_csv_file,
 
         # Archive
-        TopListArchive, best_fitness, add_candidate!, best_candidate,
+        TopListArchive, best_fitness, best_candidate,
         last_top_fitness, delta_fitness, capacity,
         width_of_confidence_interval, fitness_improvement_potential,
 

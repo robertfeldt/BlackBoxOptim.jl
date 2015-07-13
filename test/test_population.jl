@@ -1,7 +1,7 @@
 facts("Population") do
 
   context("FitPopulation") do
-    fs = ScalarFitness{true}()
+    fs = MinimizingFitnessScheme
     p1 = FitPopulation(fs, 10, 2)
     @fact isa(p1, FitPopulation) => true
 

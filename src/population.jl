@@ -46,6 +46,8 @@ getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
+candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
+
 # get unitialized individual from a pool, or create one, if it's empty
 acquire_candi{F}(pop::FitPopulation{F}) = isempty(pop.candi_pool) ? Candidate{F}(@compat(Vector{Float64}(numdims(pop))), -1, pop.nafitness) : pop!(pop.candi_pool)
 
