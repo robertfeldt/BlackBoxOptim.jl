@@ -36,8 +36,8 @@ facts("Mutation operators") do
     end
   end
 
-  context("MutationMixture") do
-    mx = MutationMixture([NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], [0.3, 0.7])
+  context("FixedGeneticOperatorsMixture") do
+    mx = FixedGeneticOperatorsMixture(GeneticOperator[NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], [0.3, 0.7])
 
     ref_ind = rand_individual(ss)
     n_params_mutated = 0

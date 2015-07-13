@@ -25,9 +25,13 @@ numchildren(o::EmbeddingOperator) = 1
 immutable NoMutation <: MutationOperator end
 function apply!(mo::NoMutation, target) end
 
+# a mixture of genetic operators,
+# use next() to choose the next operator from the mixture
+abstract GeneticOperatorsMixture <: GeneticOperator
+
+include("operators_mixture.jl")
 include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
-include("mutation/mutation_mixture.jl")
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
 include("embedding/random_bound.jl")
