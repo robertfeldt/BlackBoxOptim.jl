@@ -167,6 +167,14 @@ ProblemSets = {
     ("Griewank",    100, 90, 8e5),
   ],
 
+  "lowdim" => [
+    ("Schwefel1.2",   2, 25, 1e4),
+    ("Rosenbrock",    2, 25, 1e4),
+    ("Rastrigin",     2, 25, 1e4),
+    ("Ackley",        2, 25, 1e4),
+    ("Griewank",      2, 25, 1e4),  
+  ],
+
   "test" => [
     ("Rosenbrock",   30, 50, 2e5),
   ]
