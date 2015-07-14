@@ -30,6 +30,8 @@ DefaultParameters = @compat Dict{Symbol,Any}(
   :MinDeltaFitnessTolerance => 1e-11, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
   :FitnessTolerance => 1e-8,  # Stop optimization when the best fitness found is within this distance of the actual optimum (if known)
 
+  :MaxNumStepsWithoutFuncEvals => 100, # Stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
+
   :NumRepetitions => 1,     # Number of repetitions to run for each optimizer for each problem
 
   :ShowTrace      => true,  # Print tracing information during the optimization
@@ -307,11 +309,14 @@ function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters 
   num_better_since_last = 0
   tr("Starting optimization with optimizer $(name(opt))\n", parameters)
 
+  termination_reason = "" # Will be set in loop below...
+
+  last_numfevals = -1
+  num_steps_without_fevals = 0
+
   step = 1
   t = last_report_time = start_time = time()
   elapsed_time = 0.0
-
-  termination_reason = "" # Will be set in loop below...
 
   while( true )
 
@@ -324,6 +329,17 @@ function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters 
       termination_reason = "Max number of function evaluations reached"
       break
     end
+
+    if num_evals(evaluator) == last_numfevals
+        num_steps_without_fevals += 1
+        if num_steps_without_fevals > parameters[:MaxNumStepsWithoutFuncEvals]
+            termination_reason = "Too many steps ($(num_steps_without_fevals)) without any function evaluations (probably search has converged)"
+            break
+        end
+    else
+        num_steps_without_fevals = 0
+    end
+    last_numfevals = num_evals(evaluator)
 
     if step > max_steps
       termination_reason = "Max number of steps reached"
