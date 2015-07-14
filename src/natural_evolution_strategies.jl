@@ -43,18 +43,18 @@ end
 # We use a different ordering of the dimensions than other optimizers, so transpose.
 population(o::NaturalEvolutionStrategyOpt) = o.population
 
-NES_DefaultOptions = @compat Dict{String,Any}(
-  "lambda" => 0,              # If 0.0 it will be set based on the number of dimensions
-  "mu_learnrate" => 1.0,
-  "sigma_learnrate" => 0.0,   # If 0.0 it will be set based on the number of dimensions
+NES_DefaultOptions = @compat Dict{Symbol,Any}(
+  :lambda => 0,              # If 0.0 it will be set based on the number of dimensions
+  :mu_learnrate => 1.0,
+  :sigma_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
 )
 
 function separable_nes(problem::OptimizationProblem, parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
   SeparableNESOpt(search_space(problem),
-    lambda = params["lambda"],
-    mu_learnrate = params["mu_learnrate"],
-    sigma_learnrate = params["sigma_learnrate"])
+    lambda = params[:lambda],
+    mu_learnrate = params[:mu_learnrate],
+    sigma_learnrate = params[:sigma_learnrate])
 end
 
 calc_sigma_learnrate_for_snes(d) = (3 + log(d)) / (5 * sqrt(d))
@@ -136,7 +136,7 @@ end
 
 function xnes(problem::OptimizationProblem, parameters)
   params = mergeparam(NES_DefaultOptions, parameters)
-  XNESOpt(search_space(problem); lambda = params["lambda"])
+  XNESOpt(search_space(problem); lambda = params[:lambda])
 end
 
 function ask(xnes::XNESOpt)
