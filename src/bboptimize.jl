@@ -16,7 +16,7 @@ ValidMethods = @compat Dict{Symbol,Union(Any,Function)}(
   :probabilistic_descent => direct_search_probabilistic_descent,
 )
 
-MethodNames = collect(keys(ValidMethods))
+MethodNames = sort!(collect(keys(ValidMethods)))
 
 # Default parameters for all convenience methods that are exported to the end user.
 DefaultParameters = @compat Dict{Symbol,Any}(
