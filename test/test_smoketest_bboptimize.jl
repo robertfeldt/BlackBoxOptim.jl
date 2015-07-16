@@ -14,7 +14,7 @@ facts("bboptimize smoketest") do
 
       @fact size(b) => (2,)
       @fact typeof(f) => Float64
-      @fact f < 100.0 => true # this can't be very tight since we give very little time for optimization...
+      @fact f => less_than(100.0) # this can't be very tight since we give very little time for optimization...
     end
 
   end
