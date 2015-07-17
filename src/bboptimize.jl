@@ -47,13 +47,13 @@ DefaultParameters = @compat Dict{Symbol,Any}(
 )
 
 # Setup a fixed-dimensional problem
-function setup_problem(problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
+function setup_problem(problem::OptimizationProblem, parameters::Parameters = EMPTY_PARAMS)
   return problem, chain(DefaultParameters, parameters)
 end
 
 # Create a fixed-dimensional problem given
 #   any-dimensional problem and a number of dimensions as a parameter
-function setup_problem(family::FunctionBasedProblemFamily, parameters = @compat Dict{Symbol,Any}())
+function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters = EMPTY_PARAMS)
   params = chain(DefaultParameters, parameters)
 
   # If an anydim problem was given the dimension param must have been specified.
@@ -67,7 +67,7 @@ end
 
 # Create a fixed-dimensional problem given
 #   a function and a search range + number of dimensions.
-function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
+function setup_problem(func::Function, parameters::Parameters = EMPTY_PARAMS)
   params = chain(DefaultParameters, parameters)
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
@@ -90,7 +90,7 @@ end
 
 function compare_optimizers(functionOrProblem::Union(Function, OptimizationProblem);
   max_time = false, search_space = false, search_range = (0.0, 1.0), dimensions = 2,
-  methods = MethodNames, parameters = @compat Dict{Symbol,Any}())
+  methods = MethodNames, parameters::Parameters = EMPTY_PARAMS)
 
   evaluator = 1.0
 
@@ -121,7 +121,7 @@ function compare_optimizers(functionOrProblem::Union(Function, OptimizationProbl
 end
 
 function compare_optimizers(problems::Dict{Any, OptimizationProblem}; max_time = false,
-  methods = MethodNames, parameters = @compat Dict{Symbol,Any}())
+  methods = MethodNames, parameters::Parameters = EMPTY_PARAMS)
 
   # Lets create an array where we will save how the methods ranks per problem.
   ranks = zeros(length(methods), length(problems))
@@ -168,7 +168,7 @@ end
 function bboptimize(functionOrProblem; max_time::Number = 0,
   search_space = false, search_range = (0.0, 1.0), dimensions = 2,
   method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters::@compat(Union{Dict{Symbol,Any},Parameters}) = @compat Dict{Symbol,Any}())
+  parameters::Parameters = EMPTY_PARAMS)
 
   # We just pass the kw params along...
   optimizer, problem, params = setup_bboptimize(functionOrProblem;
@@ -183,7 +183,7 @@ end
 function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
   search_space = false, search_range = (0.0, 1.0), dimensions::Int = 2,
   method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters::@compat(Union{Dict{Symbol,Any},Parameters}) = @compat Dict{Symbol,Any}())
+  parameters::Parameters = EMPTY_PARAMS)
   # override dict parameters with arguments
   parameters[:MaxTime] = max_time
   parameters[:SearchSpace] = search_space
@@ -252,7 +252,7 @@ function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
 end
 
 function run_optimizer(opt::Optimizer, problem::OptimizationProblem,
-                       parameters::@compat(Union{Dict{Symbol,Any},Parameters}) = @compat Dict{Symbol,Any}())
+                       parameters::Parameters = EMPTY_PARAMS)
 
   # init RNG
   if parameters[:RandomizeRngSeed]
@@ -344,7 +344,7 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
 
 end
 
-function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters = Dict{Symbol, Any}())
+function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters::Parameters = EMPTY_PARAMS)
 
   fp = BlackBoxOptim.fixed_dim_problem(problem, dim)
   result_dicts = Dict{Symbol,Any}[]

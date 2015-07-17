@@ -82,7 +82,7 @@ end
 candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
 
 # default population generation
-function population(problem::OptimizationProblem, options = @compat Dict{Symbol,Any}())
+function population(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
   if !haskey(options, :Population)
       pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50))
   else

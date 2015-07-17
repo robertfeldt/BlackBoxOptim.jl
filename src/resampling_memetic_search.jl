@@ -60,25 +60,25 @@ function ResamplingMemeticSearcher{E<:Evaluator}(evaluator::E,
 end
 
 function ResamplingMemeticSearcher(problem::OptimizationProblem,
-    params = @compat(Dict{Symbol,Any}()),
+    params::Parameters = EMPTY_PARAMS,
     resampling_function = random_resample,
     name = "Resampling Memetic Search (RS)")
   ResamplingMemeticSearcher(ProblemEvaluator(problem), params, resampling_function, name)
 end
 
 # Constructor for the RIS:
-function ResamplingInheritanceMemeticSearcher(problem::OptimizationProblem, parameters = @compat(Dict{Symbol,Any}()))
+function ResamplingInheritanceMemeticSearcher(problem::OptimizationProblem, parameters::Parameters = EMPTY_PARAMS)
   ResamplingMemeticSearcher(problem,
     chain(RSDefaultParameters, RISDefaultParameters, parameters),
     random_resample_with_inheritance,
     "Resampling Inheritance Memetic Search (RIS)")
 end
 
-function resampling_memetic_searcher(problem::OptimizationProblem, params)
+function resampling_memetic_searcher(problem::OptimizationProblem, params::Parameters)
   ResamplingMemeticSearcher(problem, params)
 end
 
-function resampling_inheritance_memetic_searcher(problem::OptimizationProblem, params)
+function resampling_inheritance_memetic_searcher(problem::OptimizationProblem, params::Parameters)
   ResamplingInheritanceMemeticSearcher(problem, params)
 end
 

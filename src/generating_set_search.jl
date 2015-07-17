@@ -51,7 +51,7 @@ type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOper
   xfitness::Float64
 end
 
-function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E, parameters)
+function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E, parameters::Parameters)
     params = chain(GSSDefaultParameters, parameters)
     n = numdims(evaluator)
     ss = search_space(evaluator)
@@ -62,7 +62,7 @@ function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Embedding
 end
 
 # by default use RandomBound embedder
-function GeneratingSetSearcher(problem::OptimizationProblem, parameters)
+function GeneratingSetSearcher(problem::OptimizationProblem, parameters::Parameters)
   GeneratingSetSearcher(ProblemEvaluator(problem),
                         get(parameters, :DirectionGenerator, compass_search_directions(numdims(problem))),
                         RandomBound(search_space(problem)), parameters)

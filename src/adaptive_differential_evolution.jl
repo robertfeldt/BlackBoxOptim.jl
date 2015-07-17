@@ -44,18 +44,18 @@ end
 function adaptive_diffevo(problem::OptimizationProblem, name::ASCIIString,
                  crossover::DiffEvoCrossoverOperator,
                  select::IndividualsSelector = SimpleSelector(),
-                 options = @compat Dict{Symbol,Any}())
+                 options::Parameters = EMPTY_PARAMS)
   opts = chain(ADE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, AdaptiveDiffEvoParameters(opts, popsize(pop)), select,
         NoMutation(), crossover, RandomBound(search_space(problem)))
 end
 
-adaptive_de_rand_1_bin(problem::OptimizationProblem, options = @compat(Dict{Symbol,Any}()),
+adaptive_de_rand_1_bin(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS,
               name = "AdaptiveDE/rand/1/bin") =
     adaptive_diffevo(problem, name, DiffEvoRandBin1(), SimpleSelector(), options)
 
-adaptive_de_rand_1_bin_radiuslimited(problem::OptimizationProblem, options = @compat(Dict{Symbol,Any}()),
+adaptive_de_rand_1_bin_radiuslimited(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS,
                                      name = "AdaptiveDE/rand/1/bin/radiuslimited") =
     adaptive_diffevo(problem, name, DiffEvoRandBin1(),
                      RadiusLimitedSelector(chain(ADE_DefaultOptions, options)[:SamplerRadius]), options)

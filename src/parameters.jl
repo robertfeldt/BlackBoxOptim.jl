@@ -87,4 +87,10 @@ function delete!{K,V}(p::DictChain{K,V}, key::K)
 end
 
 # The default parameters storage in BlackBoxOptim
-typealias Parameters DictChain{Symbol,Any}
+typealias Parameters Associative{Symbol,Any}
+
+typealias ParamsDict Dict{Symbol,Any}
+typealias ParamsDictChain DictChain{Symbol,Any}
+
+# Default place for parameters argument in many methods
+const EMPTY_PARAMS = @compat(Dict{Symbol, Any})

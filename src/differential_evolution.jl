@@ -115,7 +115,7 @@ end
 function diffevo(problem::OptimizationProblem, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
                  crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(),
-                 options = @compat Dict{Symbol,Any}())
+                 options::Parameters = EMPTY_PARAMS)
   opts = chain(DE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, FixedDiffEvoParameters(opts, popsize(pop)), select,
@@ -124,22 +124,22 @@ end
 
 # The most used DE/rand/1/bin.
 de_rand_1_bin(problem::OptimizationProblem,
-              options = @compat(Dict{Symbol,Any}()),
+              options::Parameters = EMPTY_PARAMS,
               name = "DE/rand/1/bin") = diffevo(problem, name, SimpleSelector(), DiffEvoRandBin1(), options)
 
 de_rand_2_bin(problem::OptimizationProblem,
-              options = @compat(Dict{Symbol,Any}()),
+              options::Parameters = EMPTY_PARAMS,
               name = "DE/rand/2/bin") = diffevo(problem, name, SimpleSelector(), DiffEvoRandBin2(), options)
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
 de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
-                            options = @compat(Dict{Symbol,Any}()),
+                            options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/1/bin/radiuslimited") =
     diffevo(problem, name, RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
             DiffEvoRandBin1(), options)
 
 de_rand_2_bin_radiuslimited(problem::OptimizationProblem,
-                            options = @compat(Dict{Symbol,Any}()),
+                            options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/2/bin/radiuslimited") =
     diffevo(problem, name, RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
             DiffEvoRandBin2(), options)

@@ -103,7 +103,8 @@ facts("Parameters") do
 
   context("When no parameters or key type doesn't match") do
 
-    ps = Parameters()
+    ps = ParamsDictChain()
+    @fact isa(ps, Parameters) => true
     @fact_throws ps[:NotThere] KeyError
     @fact_throws ps["Neither there"] MethodError
 
@@ -114,7 +115,8 @@ facts("Parameters") do
 
   context("With one parameter in one set") do
 
-    ps = Parameters(@compat Dict{Symbol,Any}(:a => 1))
+    ps = ParamsDictChain(@compat Dict{Symbol,Any}(:a => 1))
+    @fact isa(ps, Parameters) => true
 
     @fact ps[:a] => 1
     @fact_throws ps["a"] MethodError # incorrect key type
@@ -126,9 +128,10 @@ facts("Parameters") do
 
   context("With parameters in multiple sets") do
 
-    ps = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
-                    @compat(Dict{Symbol,Any}(:a => 2, :b => 3)),
-                    @compat(Dict{Symbol,Any}(:c => 5)))
+    ps = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
+                         @compat(Dict{Symbol,Any}(:a => 2, :b => 3)),
+                         @compat(Dict{Symbol,Any}(:c => 5)))
+    @fact isa(ps, Parameters) => true
 
     @fact ps[:a] => 1
 
@@ -142,9 +145,9 @@ facts("Parameters") do
 
   context("Updating parameters after construction") do
 
-    ps = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
-                    @compat(Dict{Symbol,Any}(:a => 2, :b => 3)),
-                    @compat(Dict{Symbol,Any}(:c => 5)))
+    ps = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
+                         @compat(Dict{Symbol,Any}(:a => 2, :b => 3)),
+                         @compat(Dict{Symbol,Any}(:c => 5)))
 
     ps[:c] = 6
     ps[:b] = 7
@@ -159,10 +162,10 @@ facts("Parameters") do
 
   context("Constructing from another parameters object") do
 
-    ps1 = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
-                     @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
-    ps2 = Parameters(@compat(Dict{Symbol,Any}(:a => 5)), ps1,
-                     @compat(Dict{Symbol,Any}(:c => 6)))
+    ps1 = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
+                          @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
+    ps2 = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 5)), ps1,
+                          @compat(Dict{Symbol,Any}(:c => 6)))
 
     @fact ps1[:a] => 1
     @fact ps2[:a] => 5
@@ -171,8 +174,8 @@ facts("Parameters") do
 
   context("Get key without default") do
 
-    ps = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
-                    @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
+    ps = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
+                         @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
     @fact get(ps, :a) => 1
     @fact get(ps, :b) => 3
     @fact get(ps, :d) => nothing
@@ -181,16 +184,16 @@ facts("Parameters") do
 
   context("Get key with default") do
 
-    ps = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
-                    @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
+    ps = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
+                         @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
     @fact get(ps, :d, 10) => 10
 
   end
 
   context("Merge with Parameters or Dict") do
 
-    ps = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
-                    @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
+    ps = ParamsDictChain(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
+                         @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
     ps2 = chain(ps, @compat(Dict{Symbol,Any}(:d => 5, :a => 20)))
     @fact ps2[:d] => 5
     @fact ps2[:b] => 3
