@@ -3,6 +3,7 @@ using DataFrames
 using BlackBoxOptim
 using ArgParse
 using CPUTime
+using Compat
 
 global logfilehandle = nothing
 function log(color::Symbol, str)
@@ -129,7 +130,7 @@ function main(args)
   close(logfilehandle)
 end
 
-ProblemSets = {
+ProblemSets = @compat Dict{ASCIIString,Any}(
   "easy" => [
     # ProblemName, NumDims, PopSize, MaxFevals
     ("Sphere",        5, 20, 5e3),
@@ -172,21 +173,21 @@ ProblemSets = {
     ("Rosenbrock",    2, 25, 1e4),
     ("Rastrigin",     2, 25, 1e4),
     ("Ackley",        2, 25, 1e4),
-    ("Griewank",      2, 25, 1e4),  
+    ("Griewank",      2, 25, 1e4),
   ],
 
   "test" => [
     ("Rosenbrock",   30, 50, 2e5),
   ]
-}
+)
 ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 
-OptimizerSets = {
+OptimizerSets = @compat Dict{ASCIIString,Any}(
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
   "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
   "nes" => [:xnes, :separable_nes],
   "test" => [:de_rand_1_bin],
-}
+)
 OptimizerSets["all"] = collect(keys(BlackBoxOptim.ValidMethods))
 OptimizerSets["stable"] = vcat(OptimizerSets["de"], OptimizerSets["stable_non_de"])
 
