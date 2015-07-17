@@ -140,6 +140,7 @@ end
 
 function run!(ctrl::OptController)
   tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
+  setup!(ctrl.optimizer, evaluator(ctrl))
   # FIXME all counters need to be reset if OptController could be run 2nd time
   ctrl.start_time = time()
   ctrl.num_steps = 0
@@ -164,6 +165,7 @@ function run!(ctrl::OptController)
   ctrl.stop_time = time()
   ctrl.num_better += ctrl.num_better_since_last_report
   ctrl.num_better_since_last_report = 0
+  finalize!(ctrl.optimizer, evaluator(ctrl))
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
 

@@ -100,11 +100,11 @@ include(joinpath("problems", "problem_family.jl"))
 include("evaluator.jl")
 include("opt_controller.jl")
 
-function setup(o::Optimizer, evaluator::Evaluator)
+function setup!(o::Optimizer, evaluator::Evaluator)
   # Do nothing, override if you need to setup prior to the optimization loop
 end
 
-function finalize(o::Optimizer, evaluator::Evaluator)
+function finalize!(o::Optimizer, evaluator::Evaluator)
   # Do nothing, override if you need to finalize something after the optimization loop
 end
 
