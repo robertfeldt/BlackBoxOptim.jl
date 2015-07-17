@@ -165,10 +165,10 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem}; max_time =
   return ranks, fitnesses
 end
 
-function bboptimize(functionOrProblem; max_time = false,
+function bboptimize(functionOrProblem; max_time::Number = 0,
   search_space = false, search_range = (0.0, 1.0), dimensions = 2,
-  method = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters = @compat Dict{Symbol,Any}())
+  method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
+  parameters::@compat(Union{Dict{Symbol,Any},Parameters}) = @compat Dict{Symbol,Any}())
 
   # We just pass the kw params along...
   optimizer, problem, params = setup_bboptimize(functionOrProblem;
@@ -180,10 +180,10 @@ function bboptimize(functionOrProblem; max_time = false,
 
 end
 
-function setup_bboptimize(functionOrProblem; max_time::Float64 = 0.0,
+function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
   search_space = false, search_range = (0.0, 1.0), dimensions::Int = 2,
-  method = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters = @compat Dict{Symbol,Any}())
+  method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
+  parameters::@compat(Union{Dict{Symbol,Any},Parameters}) = @compat Dict{Symbol,Any}())
   # override dict parameters with arguments
   parameters[:MaxTime] = max_time
   parameters[:SearchSpace] = search_space
@@ -251,7 +251,8 @@ function setup_bboptimize(functionOrProblem; max_time::Float64 = 0.0,
   return (optimizer, problem, params)
 end
 
-function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
+function run_optimizer(opt::Optimizer, problem::OptimizationProblem,
+                       parameters::@compat(Union{Dict{Symbol,Any},Parameters}) = @compat Dict{Symbol,Any}())
 
   # init RNG
   if parameters[:RandomizeRngSeed]
