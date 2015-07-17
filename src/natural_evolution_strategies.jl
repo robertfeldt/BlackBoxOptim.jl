@@ -50,7 +50,7 @@ NES_DefaultOptions = @compat Dict{Symbol,Any}(
 )
 
 function separable_nes(problem::OptimizationProblem, parameters)
-  params = mergeparam(NES_DefaultOptions, parameters)
+  params = chain(NES_DefaultOptions, parameters)
   SeparableNESOpt(search_space(problem),
     lambda = params[:lambda],
     mu_learnrate = params[:mu_learnrate],
@@ -135,7 +135,7 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
 end
 
 function xnes(problem::OptimizationProblem, parameters)
-  params = mergeparam(NES_DefaultOptions, parameters)
+  params = chain(NES_DefaultOptions, parameters)
   XNESOpt(search_space(problem); lambda = params[:lambda])
 end
 

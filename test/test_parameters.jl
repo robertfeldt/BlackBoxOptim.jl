@@ -12,9 +12,22 @@ facts("DictChain") do
   context("merging and chaining") do
     dc1 = DictChain{Symbol,ASCIIString}()
 
-    d1 = @compat Dict{Symbol, Int}(:a => 1)
-    d2 = @compat Dict{Symbol, Int}(:a => 2, :b => 4)
-    d3 = @compat Dict{Symbol, Int}(:b => 3, :c => 5)
+    # incompatible dictionary types
+    context("incompatible dictionary types") do
+      dc2 = DictChain{Int,ASCIIString}()
+      @fact_throws chain(dc1, dc2) MethodError
+      @fact_throws merge(dc1, dc2) MethodError
+      @fact_throws merge!(dc1, dc2) MethodError
+
+      dc3 = DictChain{Symbol,Int}()
+      @fact_throws chain(dc1, dc3) MethodError
+      @fact_throws merge(dc1, dc3) MethodError
+      @fact_throws merge!(dc1, dc3) MethodError
+    end
+
+    d1 = @compat Dict{Symbol,Int}(:a => 1)
+    d2 = @compat Dict{Symbol,Int}(:a => 2, :b => 4)
+    d3 = @compat Dict{Symbol,Int}(:b => 3, :c => 5)
 
     context("using constructor") do
       dc = DictChain(d1, d2, d3)
@@ -27,6 +40,57 @@ facts("DictChain") do
       dc = DictChain(DictChain(d3, d1), d2)
       @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
     end
+
+    context("using merge()") do
+      dc = merge(merge(d1, d2), d3)
+      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+
+      dc = merge(d2, merge(d1, d3))
+      @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
+
+      dc = merge(merge(d3, d1), d2)
+      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+    end
+
+    context("using merge!()") do
+      dc = DictChain{Int,ASCIIString}()
+      @fact_throws merge!(dc, d1) MethodError # incompatible types
+
+      dc = DictChain{Symbol,Int}()
+      merge!(dc, d1)
+      @fact dc[:a] => 1
+      @fact_throws dc[:b] KeyError
+      merge!(dc, d2)
+      @fact dc[:a], dc[:b] => 2, 4
+      merge!(dc, d3)
+      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+    end
+
+    context("using chain()") do
+      dc = chain(chain(d1, d2), d3)
+      @fact typeof(dc) => DictChain{Symbol,Int}
+      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+
+      dc = chain(d2, chain(d1, d3))
+      @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
+
+      dc = chain(chain(d3, d1), d2)
+      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+    end
+  end
+
+  context("converting to Dict") do
+    d1 = @compat Dict{Symbol,Int}(:a => 1)
+    d2 = @compat Dict{Symbol,Int}(:a => 2, :b => 4)
+    d3 = @compat Dict{Symbol,Int}(:a => 3, :b => 5)
+
+    dc = DictChain(d1, d2, d3)
+    d123 = convert(Dict{Symbol,Int}, dc)
+    @fact typeof(d123) => Dict{Symbol,Int}
+    @fact length(d123) => 2
+    @fact d123[:a] => 1
+    @fact d123[:b] => 4
+  end
 end
 
 facts("Parameters") do
@@ -121,7 +185,7 @@ facts("Parameters") do
 
     ps = Parameters(@compat(Dict{Symbol,Any}(:a => 1, :c => 4)),
                     @compat(Dict{Symbol,Any}(:a => 2, :b => 3)))
-    ps2 = mergeparam(ps, @compat(Dict{Symbol,Any}(:d => 5, :a => 20)))
+    ps2 = chain(ps, @compat(Dict{Symbol,Any}(:d => 5, :a => 20)))
     @fact ps2[:d] => 5
     @fact ps2[:b] => 3
     @fact ps2[:a] => 20

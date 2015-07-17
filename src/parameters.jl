@@ -51,8 +51,32 @@ function get{K,V}(p::DictChain{K,V}, key::K, default = nothing)
 end
 
 # In a merge the last parameter should be prioritized since this is the way
-# the normal Julia merge of dicts works.
-mergeparam{K,V}(p1::Union(Dict{K,V}, DictChain{K,V}), p2::Union(Dict{K,V}, DictChain{K,V})) = DictChain(p2, p1)
+# the normal Julia merge() of dicts works.
+Base.merge{K,V}(p1::DictChain{K,V}, p2::Dict{K,V}) = DictChain([p2; p1.dicts])
+Base.merge{K,V}(p1::DictChain{K,V}, p2::DictChain{K,V}) = DictChain([p2.dicts; p1.dicts])
+Base.merge{K,V}(p1::Dict{K,V}, p2::DictChain{K,V}) = DictChain([p2.dicts; p1])
+
+function Base.merge!{K,V}(dc::DictChain{K,V}, d::Dict{K,V})
+  insert!(dc.dicts, 1, d); dc
+end
+
+function Base.merge!{K,V}(d::Dict{K,V}, dc::DictChain{K,V})
+  for dict in reverse(dc.dicts)
+    merge!(d, dict)
+  end
+  return d
+end
+
+# since Base.merge(Dict, Dict) generates Dict, we need another name
+# for operation that generates DictChain.
+# The difference between chain() and merge() for other argument types is that
+# merge() grows horizontally (extends dicts vector),
+# whereas chain() grows vertically
+# (references its two arguments in the new 2-element dicts vector)
+chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}) = DictChain(p2, p1)
+
+# converts DictChain into Dict
+Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
 
 function delete!{K,V}(p::DictChain{K,V}, key::K)
   for d in p.dicts

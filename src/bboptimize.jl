@@ -48,14 +48,13 @@ DefaultParameters = @compat Dict{Symbol,Any}(
 
 # Setup a fixed-dimensional problem
 function setup_problem(problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
-  params = Parameters(parameters, DefaultParameters)
-  return problem, params
+  return problem, chain(DefaultParameters, parameters)
 end
 
 # Create a fixed-dimensional problem given
 #   any-dimensional problem and a number of dimensions as a parameter
 function setup_problem(family::FunctionBasedProblemFamily, parameters = @compat Dict{Symbol,Any}())
-  params = Parameters(parameters, DefaultParameters)
+  params = chain(DefaultParameters, parameters)
 
   # If an anydim problem was given the dimension param must have been specified.
   if params[:NumDimensions] == :NotSpecified
@@ -69,7 +68,7 @@ end
 # Create a fixed-dimensional problem given
 #   a function and a search range + number of dimensions.
 function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
-  params = Parameters(parameters, DefaultParameters)
+  params = chain(DefaultParameters, parameters)
   # Check that a valid search space has been stated and create the search_space
   # based on it, or bail out.
   if typeof(params[:SearchRange]) == typeof((0.0, 1.0))
@@ -85,9 +84,7 @@ function setup_problem(func::Function, parameters = @compat Dict{Symbol,Any}())
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
-
   problem = convert(FunctionBasedProblem, func, "", MinimizingFitnessScheme, ss) # FIXME v0.3 workaround
-
   return problem, params
 end
 
@@ -188,7 +185,7 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   method = :adaptive_de_rand_1_bin_radiuslimited,
   parameters = @compat Dict{Symbol,Any}())
 
-  params = Parameters(parameters, DefaultParameters)
+  params = chain(DefaultParameters, parameters)
   params[:MaxTime] = max_time
   params[:SearchSpace] = search_space
   params[:SearchRange] = search_range
@@ -495,7 +492,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
   # Just so they are declared
   ps = best_so_far = nothing
 
-  params = Parameters(parameters, @compat Dict{Symbol,Any}(:FitnessTolerance => ftol))
+  params = chain(parameters, @compat Dict{Symbol,Any}(:FitnessTolerance => ftol))
 
   for m in methods
 
