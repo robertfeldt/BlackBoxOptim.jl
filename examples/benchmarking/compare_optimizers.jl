@@ -200,17 +200,17 @@ increase_runs_per_problem(problemname, numdims) = begin
   RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
 end
 
-function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions, populationSize, numFuncEvals,
-    method, showtrace = true)
+function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions::Int, populationSize::Int, numFuncEvals::Int,
+    method::Symbol, showtrace::Bool = true)
 
   problem = BlackBoxOptim.fixed_dim_problem(family, numDimensions)
 
-  best, fitness = bboptimize(problem; method = method, parameters = {
+  best, fitness = bboptimize(problem; method = method, parameters = @compat(Dict{Symbol,Any}(
     :NumDimensions => numDimensions,
     :PopulationSize => populationSize,
     :ShowTrace => showtrace,
     :MaxFuncEvals => numFuncEvals
-    })
+    )))
 
   fitness
 end
@@ -246,7 +246,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
 
       start_time = time()
       CPUtic()
-      ftn = fitness_for_opt(prob, numdims, popsize, numfevals, method)
+      ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), method)
       df[:ElapsedTime] = CPUtoc()
       df[:StartTime] = strftime("%Y-%m-%d %H:%M:%S", start_time)
       df[:Fitness] = ftn
@@ -366,7 +366,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 for r in 1:nreps
                     runnum += 1
                     log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, 2))% of total runs)\n")
-                    ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
+                    ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
                     push!(newfs, ftn)
                 end
                 pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
