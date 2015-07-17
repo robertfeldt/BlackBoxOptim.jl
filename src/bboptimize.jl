@@ -251,19 +251,6 @@ function setup_bboptimize(functionOrProblem; max_time::Float64 = 0.0,
   return (optimizer, problem, params)
 end
 
-function tr(msg, parameters, obj = None)
-  if parameters[:ShowTrace]
-    print(msg)
-    if obj != None
-      showcompact(obj)
-    end
-  end
-  if parameters[:SaveTrace]
-    # No saving for now
-  end
-end
-
-
 function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
 
   # init RNG
