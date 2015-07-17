@@ -105,7 +105,7 @@ function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(runf
   for(i in 1:length(pvs))
     param_dict = pvs[i]
     # Add other arguments.
-    param_dict = mergeparam(param_dict, fixed_params)
+    param_dict = chain(param_dict, fixed_params)
     print("params: "); show(param_dict); println("")
 
     # Set up for saving results
