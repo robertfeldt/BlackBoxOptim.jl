@@ -24,8 +24,8 @@ DefaultParameters = @compat Dict{Symbol,Any}(
   :SearchRange    => (-10.0, 10.0), # Default search range to use per dimension unless specified
   :SearchSpace    => false, # Search space can be directly specified and takes precedence over Dimension and SearchRange if specified.
 
-  :MaxTime        => false,   # Max time in seconds (takes precedence over the other budget-related params if specified)
-  :MaxFuncEvals   => false,   # Max func evals (takes precedence over max iterations, but not max time)
+  :MaxTime        => 0.0, # Max time in seconds (takes precedence over the other budget-related params if specified), 0.0 disables the check
+  :MaxFuncEvals   => 0,   # Max func evals (takes precedence over max iterations, but not max time), 0 disables the check
   :MaxSteps       => 10000,   # Max iterations gives the least control since different optimizers have different "size" of their "iterations"
   :MinDeltaFitnessTolerance => 1e-11, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
   :FitnessTolerance => 1e-8,  # Stop optimization when the best fitness found is within this distance of the actual optimum (if known)
@@ -180,18 +180,17 @@ function bboptimize(functionOrProblem; max_time = false,
 
 end
 
-function setup_bboptimize(functionOrProblem; max_time = false,
-  search_space = false, search_range = (0.0, 1.0), dimensions = 2,
+function setup_bboptimize(functionOrProblem; max_time::Float64 = 0.0,
+  search_space = false, search_range = (0.0, 1.0), dimensions::Int = 2,
   method = :adaptive_de_rand_1_bin_radiuslimited,
   parameters = @compat Dict{Symbol,Any}())
+  # override dict parameters with arguments
+  parameters[:MaxTime] = max_time
+  parameters[:SearchSpace] = search_space
+  parameters[:SearchRange] = search_range
+  parameters[:NumDimensions] = dimensions
 
-  params = chain(DefaultParameters, parameters)
-  params[:MaxTime] = max_time
-  params[:SearchSpace] = search_space
-  params[:SearchRange] = search_range
-  params[:NumDimensions] = dimensions
-
-  problem, params = setup_problem(functionOrProblem, params)
+  problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
 
   # Create a random solution from the search space and ensure that the given function returns a Number.
   ind = rand_individual(BlackBoxOptim.search_space(problem))
@@ -201,28 +200,39 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   end
 
   # Check that max_time is larger than zero if it has been specified.
-  if params[:MaxTime] != false
-    if params[:MaxTime] <= 0.0
-      throw(ArgumentError("The max_time must be a positive number"))
+  if haskey(params, :MaxTime)
+    if !isa(params[:MaxTime], Number) || params[:MaxTime] < 0.0
+      throw(ArgumentError("max_time parameter must be a non-negative number"))
     else
       params[:MaxTime] = convert(Float64, params[:MaxTime])
+      params[:MaxFuncEvals] = 0
+      params[:MaxSteps] = 0
     end
   end
 
   # Check that a valid number of iterations has been specified. Print warning if higher than 1e8.
-  if params[:MaxFuncEvals] != false
-    if params[:MaxFuncEvals] < 1
-      throw(ArgumentError("The number of function evals MUST be a positive number"))
-    elseif params[:MaxFuncEvals] >= 1e8
-      println("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
+  if haskey(params,:MaxFuncEvals)
+    if !isa(params[:MaxFuncEvals], Integer) || params[:MaxFuncEvals] < 0.0
+      throw(ArgumentError("MaxFuncEvals parameter MUST be a non-negative integer"))
+    else
+      if params[:MaxFuncEvals] >= 1e8
+        warn("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
+      end
+      params[:MaxFuncEvals] = convert(Int, params[:MaxFuncEvals])
+      params[:MaxSteps] = 0
     end
   end
 
   # Check that a valid number of iterations has been specified. Print warning if higher than 1e8.
-  if params[:MaxSteps] < 1
-    throw(ArgumentError("The number of iterations MUST be a positive number"))
-  elseif params[:MaxSteps] >= 1e7
-    println("Number of allowed iterations is $(params[:MaxSteps]); this can take a LONG time")
+  if haskey(params, :MaxSteps)
+    if !isa(params[:MaxSteps], Number) || params[:MaxSteps] < 0.0
+      throw(ArgumentError("The number of iterations MUST be a non-negative number"))
+    else
+      if params[:MaxSteps] >= 1e7
+        warn("Number of allowed iterations is $(params[:MaxSteps]); this can take a LONG time")
+      end
+      params[:MaxSteps] = convert(Int, params[:MaxSteps])
+    end
   end
 
   # Check that a valid population size has been given.
@@ -231,7 +241,7 @@ function setup_bboptimize(functionOrProblem; max_time = false,
   end
 
   # Check that a valid method has been specified and then set up the optimizer
-  if (typeof(method) != Symbol) || !any([(method == vm) for vm in MethodNames])
+  if !isa(method, Symbol) || method ∉ MethodNames
     throw(ArgumentError("The method specified, $(method), is NOT among the valid methods: $(MethodNames)"))
   end
 
