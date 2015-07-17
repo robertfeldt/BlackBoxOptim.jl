@@ -52,7 +52,7 @@ type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOper
 end
 
 function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E, parameters)
-    params = Parameters(parameters, GSSDefaultParameters)
+    params = chain(GSSDefaultParameters, parameters)
     n = numdims(evaluator)
     ss = search_space(evaluator)
     step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])

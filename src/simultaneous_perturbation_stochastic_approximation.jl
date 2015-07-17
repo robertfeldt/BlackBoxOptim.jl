@@ -20,7 +20,7 @@ end
 function SimultaneousPerturbationSA2{E<:EmbeddingOperator}(problem::OptimizationProblem, embed::E, parameters)
     ss = search_space(problem)
     n = numdims(ss)
-    SimultaneousPerturbationSA2{E}(embed, Parameters(parameters, SPSADefaultParameters),
+    SimultaneousPerturbationSA2{E}(embed, chain(SPSADefaultParameters, parameters),
                                    0, n, rand_individual(ss), zeros(Float64, n))
 end
 

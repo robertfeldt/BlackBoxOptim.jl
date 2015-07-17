@@ -116,7 +116,7 @@ function diffevo(problem::OptimizationProblem, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
                  crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(),
                  options = @compat Dict{Symbol,Any}())
-  opts = Parameters(options, DE_DefaultOptions)
+  opts = chain(DE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, FixedDiffEvoParameters(opts, popsize(pop)), select,
         NoMutation(), crossover, RandomBound(search_space(problem)))
@@ -135,11 +135,11 @@ de_rand_2_bin(problem::OptimizationProblem,
 de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
                             options = @compat(Dict{Symbol,Any}()),
                             name = "DE/rand/1/bin/radiuslimited") =
-    diffevo(problem, name, RadiusLimitedSelector(Parameters(options, DE_DefaultOptions)[:SamplerRadius]),
+    diffevo(problem, name, RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
             DiffEvoRandBin1(), options)
 
 de_rand_2_bin_radiuslimited(problem::OptimizationProblem,
                             options = @compat(Dict{Symbol,Any}()),
                             name = "DE/rand/2/bin/radiuslimited") =
-    diffevo(problem, name, RadiusLimitedSelector(Parameters(options, DE_DefaultOptions)[:SamplerRadius]),
+    diffevo(problem, name, RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
             DiffEvoRandBin2(), options)

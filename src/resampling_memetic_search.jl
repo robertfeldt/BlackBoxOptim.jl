@@ -35,7 +35,7 @@ type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
   ResamplingMemeticSearcher(evaluator::E, parameters::Parameters,
     resampling_function::Function, name::ASCIIString) = begin
 
-    params = Parameters(parameters, RSDefaultParameters)
+    params = chain(RSDefaultParameters, parameters)
 
     elite = rand_individual(search_space(evaluator))
 
@@ -69,7 +69,7 @@ end
 # Constructor for the RIS:
 function ResamplingInheritanceMemeticSearcher(problem::OptimizationProblem, parameters = @compat(Dict{Symbol,Any}()))
   ResamplingMemeticSearcher(problem,
-    Parameters(parameters, RISDefaultParameters, RSDefaultParameters),
+    chain(RSDefaultParameters, RISDefaultParameters, parameters),
     random_resample_with_inheritance,
     "Resampling Inheritance Memetic Search (RIS)")
 end

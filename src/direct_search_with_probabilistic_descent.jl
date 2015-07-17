@@ -47,7 +47,7 @@ DirectSearchProbabilisticDescentDefaultParameters = @compat Dict{Symbol,Any}(
 )
 
 function direct_search_probabilistic_descent(problem::OptimizationProblem, parameters)
-  params = Parameters(parameters, DirectSearchProbabilisticDescentDefaultParameters)
+  params = chain(DirectSearchProbabilisticDescentDefaultParameters, parameters)
   params[:DirectionGenerator] = MirroredRandomDirectionGen(numdims(problem), params[:NumDirections])
   GeneratingSetSearcher(problem, params)
 end
