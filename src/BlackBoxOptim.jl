@@ -13,7 +13,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         XNESOpt, xnes,
 
         # Parameters
-        Parameters, mergeparam,
+        DictChain, Parameters, mergeparam,
 
         # Fitness
         FitnessScheme,
