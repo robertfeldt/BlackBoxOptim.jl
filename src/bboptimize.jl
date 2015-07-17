@@ -253,20 +253,6 @@ function tr(msg, parameters, obj = None)
   end
 end
 
-# The ask and tell interface is more general since you can mix and max
-# elements from several optimizers using it. However, in this top-level
-# execution function we do not make use of this flexibility...
-function step!(optimizer::AskTellOptimizer, evaluator::Evaluator)
-  candidates = ask(optimizer)
-  rank_by_fitness!(evaluator, candidates)
-  return tell!(optimizer, candidates)
-end
-
-# step for SteppingOptimizers
-function step!(optimizer::SteppingOptimizer, evaluator::Evaluator)
-  step!(optimizer)
-  return 0
-end
 
 function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters = @compat Dict{Symbol,Any}())
 
@@ -276,149 +262,23 @@ function run_optimizer(opt::Optimizer, problem::OptimizationProblem, parameters 
     srand(parameters[:RngSeed])
   end
 
-  # No max time if unspecified. If max time specified it takes precedence over
-  # max_steps and MaxFuncEvals. If no max time MaxFuncEvals takes precedence over
-  # MaxSteps.
-  if parameters[:MaxTime] == false
-    max_time = Inf
-    if parameters[:MaxFuncEvals] != false
-      max_fevals = parameters[:MaxFuncEvals]
-      max_steps = Inf
-    else
-      max_steps = parameters[:MaxSteps]
-      max_fevals = Inf
-    end
-  else
-    max_steps = Inf
-    max_fevals = Inf
-    max_time = parameters[:MaxTime]
-  end
+  # Now set up a controller for this problem. This will handle
+  # application of optimizer, checking for termination conditions
+  # as well as collecting the statistics about the number of function evals,
+  # keep an archive and top list of candidates.
+  ctrl = OptController(opt, problem, parameters)
 
-  # Now set up an evaluator for this problem. This will handle fitness
-  # comparisons, keep track of the number of function evals as well as
-  # keep an archive and top list.
-  if isa(opt, SteppingOptimizer)
-    # has its own evaluator
-    evaluator = BlackBoxOptim.evaluator(opt)
-  else
-    evaluator = ProblemEvaluator(problem)
-  end
-
-  num_better = 0
-  num_better_since_last = 0
-  tr("Starting optimization with optimizer $(name(opt))\n", parameters)
-
-  termination_reason = "" # Will be set in loop below...
-
-  last_numfevals = -1
-  num_steps_without_fevals = 0
-
-  step = 1
-  t = last_report_time = start_time = time()
-  elapsed_time = 0.0
-
-  while( true )
-
-    if elapsed_time > max_time
-      termination_reason = "Max time reached"
-      break
-    end
-
-    if num_evals(evaluator) > max_fevals
-      termination_reason = "Max number of function evaluations reached"
-      break
-    end
-
-    if num_evals(evaluator) == last_numfevals
-        num_steps_without_fevals += 1
-        if num_steps_without_fevals > parameters[:MaxNumStepsWithoutFuncEvals]
-            termination_reason = "Too many steps ($(num_steps_without_fevals)) without any function evaluations (probably search has converged)"
-            break
-        end
-    else
-        num_steps_without_fevals = 0
-    end
-    last_numfevals = num_evals(evaluator)
-
-    if step > max_steps
-      termination_reason = "Max number of steps reached"
-      break
-    end
-
-    if delta_fitness(evaluator.archive) < parameters[:MinDeltaFitnessTolerance]
-      termination_reason = "Delta fitness below tolerance"
-      break
-    end
-
-    if fitness_is_within_ftol(evaluator, parameters[:FitnessTolerance])
-      termination_reason = "Within fitness tolerance of optimum"
-      break
-    end
-
-    # Report on progress every now and then...
-    if (t - last_report_time) > parameters[:TraceInterval]
-      last_report_time = t
-      num_better += num_better_since_last
-
-      # Always print step number, num fevals and elapsed time
-      tr(@sprintf("%.2f secs, %d evals, %d steps",
-        elapsed_time, num_evals(evaluator), step), parameters)
-
-      # Only print if this optimizer reports on number of better. They return 0
-      # if they do not.
-      if num_better_since_last > 0
-        tr(@sprintf(", improv/step: %.3f (last = %.4f)",
-          num_better/step, num_better_since_last/step), parameters)
-        num_better_since_last = 0
-      end
-
-      # Always print fitness if num_evals > 0
-      if num_evals(evaluator) > 0
-        tr(@sprintf(", %.9f", best_fitness(evaluator.archive)), parameters)
-      end
-
-      tr("\n", parameters)
-    end
-
-    num_better_since_last += step!(opt, evaluator)
-
-    step += 1
-    t = time()
-    elapsed_time = t - start_time
-  end
-
-  step -= 1 # Since it is one too high after while loop above
-
-  tr("\nOptimization stopped after $(step) steps and $(elapsed_time) seconds\n", parameters)
-  tr("Termination reason: $(termination_reason)\n", parameters)
-  tr("Steps per second = $(step/elapsed_time)\n", parameters)
-  tr("Function evals per second = $(num_evals(evaluator)/elapsed_time)\n", parameters)
-  tr("Improvements/step = $((num_better+num_better_since_last)/max_steps)\n", parameters)
-  tr("Total function evaluations = $(num_evals(evaluator))\n", parameters)
-
-  if typeof(opt) <: PopulationOptimizer
-    tr("\nMean value (in population) per position:", parameters, params_mean(population(opt)))
-    tr("\n\nStd dev (in population) per position:", parameters, params_std(population(opt)))
-  end
-
-  best = best_candidate(evaluator.archive)
-  fitness = best_fitness(evaluator.archive)
-  tr("\n\nBest candidate found: ", parameters, best)
-  tr("\n\nFitness: ", parameters, fitness)
-  tr("\n\n", parameters)
+  # run the optimization
+  run!(ctrl)
+  show_report(ctrl)
 
   if parameters[:SaveFitnessTraceToCsv]
-    timestamp = strftime("%y%m%d_%H%M%S", ifloor(start_time))
-    filename = "$(timestamp)_$(problem_summary(evaluator))_$(name(opt)).csv"
-    filename = replace(replace(filename, r"\s+", "_"), r"/", "_")
-    header_prefix = "Problem,Dimension,Optimizer"
-    line_prefix = "$(name(problem)),$(numdims(problem)),$(name(opt))"
-    save_fitness_history_to_csv_file(evaluator.archive, filename;
-      header_prefix = header_prefix, line_prefix = line_prefix,
-      bestfitness = opt_value(problem))
+    write_results(ctrl)
   end
 
-  return best, fitness, termination_reason, elapsed_time, parameters, num_evals(evaluator)
+  return best_candidate(ctrl), best_fitness(ctrl),
+         stop_reason(ctrl), elapsed_time(ctrl), parameters,
+         num_func_evals(ctrl)
 end
 
 # Summarize a vector of float values by stating its mean, std dev and median.
