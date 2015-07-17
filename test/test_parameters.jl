@@ -76,6 +76,12 @@ facts("DictChain") do
 
       dc = chain(chain(d3, d1), d2)
       @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+
+      dc = chain(d1, d2, d3)
+      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+
+      dc = chain(d3, d1, d2)
+      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
     end
   end
 

@@ -74,6 +74,7 @@ end
 # whereas chain() grows vertically
 # (references its two arguments in the new 2-element dicts vector)
 chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}) = DictChain(p2, p1)
+chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}...) = DictChain(chain(p2...), p1)
 
 # converts DictChain into Dict
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)

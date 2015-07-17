@@ -32,7 +32,7 @@ type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
   elite_fitness   # Fitness of current elite
 
   # Constructor for RS:
-  ResamplingMemeticSearcher(evaluator::E, parameters,
+  ResamplingMemeticSearcher(evaluator::E, parameters::Parameters,
     resampling_function::Function, name::ASCIIString) = begin
 
     params = Parameters(parameters, RSDefaultParameters)
