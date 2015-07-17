@@ -88,11 +88,11 @@ function check_stop_condition(ctrl::OptController)
     end
 
     if delta_fitness(ctrl.evaluator.archive) < ctrl.min_delta_fitness_tol
-      return "Delta fitness ($(delta_fitness(ctrl.evaluator.archive)) below tolerance ($(ctrl.min_delta_fitness_tol))"
+      return "Delta fitness ($(delta_fitness(ctrl.evaluator.archive))) below tolerance ($(ctrl.min_delta_fitness_tol))"
     end
 
     if fitness_is_within_ftol(ctrl.evaluator, ctrl.fitness_tol)
-      return "Fitness ($(best_fitness(ctrl)) within tolerance ($(ctrl.fitness_tol)) of optimum"
+      return "Fitness ($(best_fitness(ctrl))) within tolerance ($(ctrl.fitness_tol)) of optimum"
     end
 
     return "" # empty string, no termination
