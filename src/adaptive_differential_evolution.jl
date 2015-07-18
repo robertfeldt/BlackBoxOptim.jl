@@ -48,7 +48,7 @@ function adaptive_diffevo(problem::OptimizationProblem, name::ASCIIString,
   opts = chain(ADE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, AdaptiveDiffEvoParameters(opts, popsize(pop)), select,
-        NoMutation(), crossover, RandomBound(search_space(problem)))
+             crossover, RandomBound(search_space(problem)))
 end
 
 adaptive_de_rand_1_bin(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS,
