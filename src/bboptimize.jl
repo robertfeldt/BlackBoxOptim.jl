@@ -203,7 +203,7 @@ function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
   if haskey(params, :MaxTime)
     if !isa(params[:MaxTime], Number) || params[:MaxTime] < 0.0
       throw(ArgumentError("max_time parameter must be a non-negative number"))
-    else
+    elseif params[:MaxTime] > 0.0
       params[:MaxTime] = convert(Float64, params[:MaxTime])
       params[:MaxFuncEvals] = 0
       params[:MaxSteps] = 0
@@ -214,7 +214,7 @@ function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
   if haskey(params,:MaxFuncEvals)
     if !isa(params[:MaxFuncEvals], Integer) || params[:MaxFuncEvals] < 0.0
       throw(ArgumentError("MaxFuncEvals parameter MUST be a non-negative integer"))
-    else
+    elseif params[:MaxFuncEvals] > 0.0
       if params[:MaxFuncEvals] >= 1e8
         warn("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
       end
@@ -227,7 +227,7 @@ function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
   if haskey(params, :MaxSteps)
     if !isa(params[:MaxSteps], Number) || params[:MaxSteps] < 0.0
       throw(ArgumentError("The number of iterations MUST be a non-negative number"))
-    else
+    elseif params[:MaxSteps] > 0.0
       if params[:MaxSteps] >= 1e7
         warn("Number of allowed iterations is $(params[:MaxSteps]); this can take a LONG time")
       end
