@@ -3,6 +3,7 @@ using DataFrames
 using BlackBoxOptim
 using ArgParse
 using CPUTime
+using Compat
 
 global logfilehandle = nothing
 function log(color::Symbol, str)
@@ -129,7 +130,7 @@ function main(args)
   close(logfilehandle)
 end
 
-ProblemSets = {
+ProblemSets = @compat Dict{ASCIIString,Any}(
   "easy" => [
     # ProblemName, NumDims, PopSize, MaxFevals
     ("Sphere",        5, 20, 5e3),
@@ -172,21 +173,21 @@ ProblemSets = {
     ("Rosenbrock",    2, 25, 1e4),
     ("Rastrigin",     2, 25, 1e4),
     ("Ackley",        2, 25, 1e4),
-    ("Griewank",      2, 25, 1e4),  
+    ("Griewank",      2, 25, 1e4),
   ],
 
   "test" => [
     ("Rosenbrock",   30, 50, 2e5),
   ]
-}
+)
 ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 
-OptimizerSets = {
+OptimizerSets = @compat Dict{ASCIIString,Any}(
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
   "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
   "nes" => [:xnes, :separable_nes],
   "test" => [:de_rand_1_bin],
-}
+)
 OptimizerSets["all"] = collect(keys(BlackBoxOptim.ValidMethods))
 OptimizerSets["stable"] = vcat(OptimizerSets["de"], OptimizerSets["stable_non_de"])
 
@@ -199,17 +200,17 @@ increase_runs_per_problem(problemname, numdims) = begin
   RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
 end
 
-function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions, populationSize, numFuncEvals,
-    method, showtrace = true)
+function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions::Int, populationSize::Int, numFuncEvals::Int,
+    method::Symbol, showtrace::Bool = true)
 
   problem = BlackBoxOptim.fixed_dim_problem(family, numDimensions)
 
-  best, fitness = bboptimize(problem; method = method, parameters = {
+  best, fitness = bboptimize(problem; method = method, parameters = @compat(Dict{Symbol,Any}(
     :NumDimensions => numDimensions,
     :PopulationSize => populationSize,
     :ShowTrace => showtrace,
     :MaxFuncEvals => numFuncEvals
-    })
+    )))
 
   fitness
 end
@@ -245,7 +246,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
 
       start_time = time()
       CPUtic()
-      ftn = fitness_for_opt(prob, numdims, popsize, numfevals, method)
+      ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), method)
       df[:ElapsedTime] = CPUtoc()
       df[:StartTime] = strftime("%Y-%m-%d %H:%M:%S", start_time)
       df[:Fitness] = ftn
@@ -365,7 +366,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 for r in 1:nreps
                     runnum += 1
                     log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, 2))% of total runs)\n")
-                    ftn = fitness_for_opt(prob, numdims, popsize, numfevals, optmethod)
+                    ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
                     push!(newfs, ftn)
                 end
                 pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))

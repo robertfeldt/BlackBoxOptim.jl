@@ -32,12 +32,10 @@ type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
   elite_fitness   # Fitness of current elite
 
   # Constructor for RS:
-  ResamplingMemeticSearcher(evaluator::E, parameters = @compat(Dict{Symbol,Any}());
-    resampling_function = random_resample,
-    name = "Resampling Memetic Search (RS)"
-    ) = begin
+  ResamplingMemeticSearcher(evaluator::E, parameters::Parameters,
+    resampling_function::Function, name::ASCIIString) = begin
 
-    params = Parameters(parameters, RSDefaultParameters)
+    params = chain(RSDefaultParameters, parameters)
 
     elite = rand_individual(search_space(evaluator))
 
@@ -56,24 +54,32 @@ RISDefaultParameters = @compat Dict{Symbol,Any}(
   :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
 )
 
-function ResamplingMemeticSearcher{E<:Evaluator}(problem::OptimizationProblem, evaluator::E, params)
-  ResamplingMemeticSearcher{E}(evaluator, params)
+function ResamplingMemeticSearcher{E<:Evaluator}(evaluator::E,
+    params, resampling_function, name)
+  ResamplingMemeticSearcher{E}(evaluator, params, resampling_function, name)
+end
+
+function ResamplingMemeticSearcher(problem::OptimizationProblem,
+    params::Parameters = EMPTY_PARAMS,
+    resampling_function = random_resample,
+    name = "Resampling Memetic Search (RS)")
+  ResamplingMemeticSearcher(ProblemEvaluator(problem), params, resampling_function, name)
 end
 
 # Constructor for the RIS:
-function ResamplingInheritanceMemeticSearcher{E<:Evaluator}(problem::OptimizationProblem, evaluator::E, parameters = @compat(Dict{Symbol,Any}()))
-  ResamplingMemeticSearcher{E}(evaluator,
-    Parameters(parameters, RISDefaultParameters, RSDefaultParameters),
-    resampling_function = random_resample_with_inheritance,
-    name = "Resampling Inheritance Memetic Search (RIS)")
+function ResamplingInheritanceMemeticSearcher(problem::OptimizationProblem, parameters::Parameters = EMPTY_PARAMS)
+  ResamplingMemeticSearcher(problem,
+    chain(RSDefaultParameters, RISDefaultParameters, parameters),
+    random_resample_with_inheritance,
+    "Resampling Inheritance Memetic Search (RIS)")
 end
 
-function resampling_memetic_searcher(problem::OptimizationProblem, params)
-  ResamplingMemeticSearcher(problem, params[:Evaluator], params)
+function resampling_memetic_searcher(problem::OptimizationProblem, params::Parameters)
+  ResamplingMemeticSearcher(problem, params)
 end
 
-function resampling_inheritance_memetic_searcher(problem::OptimizationProblem, params)
-  ResamplingInheritanceMemeticSearcher(problem, params[:Evaluator], params)
+function resampling_inheritance_memetic_searcher(problem::OptimizationProblem, params::Parameters)
+  ResamplingInheritanceMemeticSearcher(problem, params)
 end
 
 # For Resampling Search (RS) the resample is purely random.

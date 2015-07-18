@@ -57,6 +57,7 @@ TopListArchive{FS<:FitnessScheme}(fit_scheme::FS, numdims, capacity = 10) =
   TopListArchive{fitness_type(fit_scheme),FS}(fit_scheme, numdims, capacity)
 
 fitness_scheme(a::TopListArchive) = a.fit_scheme
+fitness_type(a::TopListArchive) = fitness_type(fitness_scheme(a))
 capacity(a::TopListArchive) = a.capacity
 Base.length(a::TopListArchive) = length(a.candidates)
 

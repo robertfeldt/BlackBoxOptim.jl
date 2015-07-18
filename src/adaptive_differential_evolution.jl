@@ -1,6 +1,6 @@
 include("bimodal_cauchy_distribution.jl")
 
-ADE_DefaultOptions = mergeparam(DE_DefaultOptions, @compat Dict{Symbol,Any}(
+ADE_DefaultOptions = chain(DE_DefaultOptions, @compat Dict{Symbol,Any}(
   # Distributions we will use to generate new F and CR values.
   :fdistr => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
   :crdistr => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
@@ -44,18 +44,18 @@ end
 function adaptive_diffevo(problem::OptimizationProblem, name::ASCIIString,
                  crossover::DiffEvoCrossoverOperator,
                  select::IndividualsSelector = SimpleSelector(),
-                 options = @compat Dict{Symbol,Any}())
-  opts = Parameters(options, ADE_DefaultOptions)
+                 options::Parameters = EMPTY_PARAMS)
+  opts = chain(ADE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, AdaptiveDiffEvoParameters(opts, popsize(pop)), select,
         NoMutation(), crossover, RandomBound(search_space(problem)))
 end
 
-adaptive_de_rand_1_bin(problem::OptimizationProblem, options = @compat(Dict{Symbol,Any}()),
+adaptive_de_rand_1_bin(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS,
               name = "AdaptiveDE/rand/1/bin") =
     adaptive_diffevo(problem, name, DiffEvoRandBin1(), SimpleSelector(), options)
 
-adaptive_de_rand_1_bin_radiuslimited(problem::OptimizationProblem, options = @compat(Dict{Symbol,Any}()),
+adaptive_de_rand_1_bin_radiuslimited(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS,
                                      name = "AdaptiveDE/rand/1/bin/radiuslimited") =
     adaptive_diffevo(problem, name, DiffEvoRandBin1(),
-                     RadiusLimitedSelector(Parameters(options, ADE_DefaultOptions)[:SamplerRadius]), options)
+                     RadiusLimitedSelector(chain(ADE_DefaultOptions, options)[:SamplerRadius]), options)
