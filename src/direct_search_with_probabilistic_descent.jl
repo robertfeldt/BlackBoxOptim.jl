@@ -46,8 +46,8 @@ DirectSearchProbabilisticDescentDefaultParameters = @compat Dict{Symbol,Any}(
   :NumDirections => 2, # This should be a function of Gamma and Phi for the GSS but 2 is often enough
 )
 
-function direct_search_probabilistic_descent(problem::OptimizationProblem, parameters)
-  params = Parameters(parameters, DirectSearchProbabilisticDescentDefaultParameters)
+function direct_search_probabilistic_descent(problem::OptimizationProblem, parameters::Parameters)
+  params = chain(DirectSearchProbabilisticDescentDefaultParameters, parameters)
   params[:DirectionGenerator] = MirroredRandomDirectionGen(numdims(problem), params[:NumDirections])
   GeneratingSetSearcher(problem, params)
 end

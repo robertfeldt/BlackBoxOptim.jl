@@ -46,6 +46,7 @@ getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
+fitness_type{F}(pop::FitPopulation{F}) = F
 candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 
 # get unitialized individual from a pool, or create one, if it's empty
@@ -81,7 +82,7 @@ end
 candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
 
 # default population generation
-function population(problem::OptimizationProblem, options = @compat Dict{Symbol,Any}())
+function population(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
   if !haskey(options, :Population)
       pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50))
   else

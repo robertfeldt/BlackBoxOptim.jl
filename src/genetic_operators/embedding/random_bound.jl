@@ -15,12 +15,12 @@ function apply!(eo::RandomBound, target::Individual, pop, parentIndices)
 
   parentIx = parentIndices[1]
   for i in 1:length(target)
-    min, max = ssmins[i], ssmaxs[i]
+    l, u = ssmins[i], ssmaxs[i]
 
-    if target[i] < min
-      target[i] = min + rand() * (pop[i, parentIx] - min)
-    elseif target[i] > ssmaxs[i]
-      target[i] = max + rand() * (pop[i, parentIx] - max)
+    if target[i] < l
+      target[i] = l + rand() * (pop[i, parentIx] - l)
+    elseif target[i] > u
+      target[i] = u + rand() * (pop[i, parentIx] - u)
     end
   end
   return target

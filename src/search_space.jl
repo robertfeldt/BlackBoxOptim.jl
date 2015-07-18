@@ -39,7 +39,13 @@ end
 
 # True iff ind is within the search space.
 function isinspace(ind, css::ContinuousSearchSpace)
-  all(mins(css) .<= ind .<= maxs(css))
+  @assert length(ind) == numdims(css)
+  for i in eachindex(ind)
+      if !(mins(css)[i] <= ind[i] <= maxs(css)[i])
+        return false
+      end
+  end
+  return true
 end
 
 # In a RangePerDimSearchSpace each dimension is specified as a range of valid

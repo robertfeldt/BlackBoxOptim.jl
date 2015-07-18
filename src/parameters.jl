@@ -17,6 +17,17 @@ DictChain{K,V}(dict::Associative{K,V}) = DictChain{K,V}(dict)
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}) = DictChain{K,V}(dict1, dict2)
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}, dict3::Associative{K,V}) = DictChain{K,V}(dict1, dict2, dict3)
 
+function Base.show{K,V}(io::IO, dc::DictChain{K,V})
+  print(io, typeof(dc), "[")
+  for (i, dict) in enumerate(dc.dicts)
+    if i > 1
+      print(",")
+    end
+    show(io, dict)
+  end
+  print(io, "]")
+end
+
 function Base.getindex{K,V}(p::DictChain{K,V}, key::K)
   for d in p.dicts
     if haskey(d, key)
@@ -52,9 +63,9 @@ end
 
 # In a merge the last parameter should be prioritized since this is the way
 # the normal Julia merge() of dicts works.
-Base.merge{K,V}(p1::DictChain{K,V}, p2::Dict{K,V}) = DictChain([p2; p1.dicts])
-Base.merge{K,V}(p1::DictChain{K,V}, p2::DictChain{K,V}) = DictChain([p2.dicts; p1.dicts])
-Base.merge{K,V}(p1::Dict{K,V}, p2::DictChain{K,V}) = DictChain([p2.dicts; p1])
+Base.merge{K,V}(p1::DictChain{K,V}, p2::Dict{K,V}) = DictChain{K,V}([p2; p1.dicts])
+Base.merge{K,V}(p1::DictChain{K,V}, p2::DictChain{K,V}) = DictChain{K,V}([p2.dicts; p1.dicts])
+Base.merge{K,V}(p1::Dict{K,V}, p2::DictChain{K,V}) = DictChain{K,V}([p2.dicts; p1])
 
 function Base.merge!{K,V}(dc::DictChain{K,V}, d::Dict{K,V})
   insert!(dc.dicts, 1, d); dc
@@ -74,6 +85,7 @@ end
 # whereas chain() grows vertically
 # (references its two arguments in the new 2-element dicts vector)
 chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}) = DictChain(p2, p1)
+chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}...) = DictChain(chain(p2...), p1)
 
 # converts DictChain into Dict
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
@@ -86,4 +98,10 @@ function delete!{K,V}(p::DictChain{K,V}, key::K)
 end
 
 # The default parameters storage in BlackBoxOptim
-typealias Parameters DictChain{Symbol,Any}
+typealias Parameters Associative{Symbol,Any}
+
+typealias ParamsDict Dict{Symbol,Any}
+typealias ParamsDictChain DictChain{Symbol,Any}
+
+# Default place for parameters argument in many methods
+const EMPTY_PARAMS = @compat(Dict{Symbol, Any})

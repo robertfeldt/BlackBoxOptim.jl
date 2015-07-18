@@ -39,33 +39,48 @@ GSSDefaultParameters = @compat Dict{Symbol,Any}(
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
 type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
-  parameters::Parameters
   direction_gen::D
   evaluator::V
   embed::E
   search_space::SearchSpace
   n::Int
   k::Int
-  step_size::Float64
+  random_dir_order::Bool       # shuffle the order of directions?
+  step_size_factor::Float64    # initial step size factor
+  step_size_gamma::Float64
+  step_size_phi::Float64
+  step_size_max::Float64
+  step_tol::Float64            # step delta tolerance
+  step_size::Float64           # current step size
   x::Individual
   xfitness::Float64
 end
 
-function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E, parameters)
-    params = Parameters(parameters, GSSDefaultParameters)
+function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E,
+    random_dir_order::Bool, step_size_factor::Float64, step_size_gamma::Float64, step_size_phi::Float64, step_size_max::Float64,
+    step_tol::Float64)
+    # FIXME check parameters ranges
     n = numdims(evaluator)
     ss = search_space(evaluator)
-    step_size = calc_initial_step_size(ss, params[:InitialStepSizeFactor])
     x = rand_individual(ss)
-    GeneratingSetSearcher{V, D, E}(params, dgen, evaluator, embed, ss, n, 0, step_size,
+    GeneratingSetSearcher{V, D, E}(dgen, evaluator, embed, ss, n, 0,
+        random_dir_order, step_size_factor,
+        step_size_gamma, step_size_phi,
+        step_size_max, step_tol,
+        calc_initial_step_size(ss, step_size_factor),
       x, fitness(x, evaluator))
 end
 
 # by default use RandomBound embedder
-function GeneratingSetSearcher(problem::OptimizationProblem, parameters)
-  GeneratingSetSearcher(parameters[:Evaluator],
-                        get(parameters, :DirectionGenerator, compass_search_directions(numdims(parameters[:Evaluator]))),
-                        RandomBound(search_space(problem)), parameters)
+function GeneratingSetSearcher(problem::OptimizationProblem, parameters::Parameters)
+  params = chain(GSSDefaultParameters, parameters)
+  GeneratingSetSearcher(ProblemEvaluator(problem),
+                        get(params, :DirectionGenerator, compass_search_directions(numdims(problem))),
+                        RandomBound(search_space(problem)),
+                        params[:RandomDirectionOrder],
+                        params[:InitialStepSizeFactor], params[:StepSizeGamma],
+                        params[:StepSizePhi], params[:StepSizeMax],
+                        params[:DeltaTolerance])
 end
 
 # We also include the name of the direction generator.}
@@ -74,7 +89,7 @@ function name(opt::GeneratingSetSearcher)
 end
 
 function has_converged(gss::GeneratingSetSearcher)
-  gss.step_size < gss.parameters[:DeltaTolerance]
+  gss.step_size < gss.step_tol
 end
 
 function step!(gss::GeneratingSetSearcher)
@@ -82,7 +97,7 @@ function step!(gss::GeneratingSetSearcher)
     # Restart from a random point
     gss.x = rand_individual(gss.search_space)
     gss.xfitness = fitness(gss.x, gss.evaluator)
-    gss.step_size = calc_initial_step_size(gss.search_space, gss.parameters[:InitialStepSizeFactor])
+    gss.step_size = calc_initial_step_size(gss.search_space, gss.step_size_factor)
   end
 
   # Get the directions for this iteration
@@ -91,7 +106,7 @@ function step!(gss::GeneratingSetSearcher)
 
   # Set up order vector from which we will take the directions after possibly shuffling it
   order = collect(1:size(directions, 2))
-  if gss.parameters[:RandomDirectionOrder] == true
+  if gss.random_dir_order
     shuffle!(order)
   end
 
@@ -115,8 +130,8 @@ function step!(gss::GeneratingSetSearcher)
   if found_better
     gss.x = candidate
     gss.xfitness = last_fitness(gss.evaluator)
-    gss.step_size = min(gss.parameters[:StepSizeGamma] * gss.step_size, gss.parameters[:StepSizeMax])
+    gss.step_size = min(gss.step_size_gamma * gss.step_size, gss.step_size_max)
   else
-    gss.step_size *= gss.parameters[:StepSizePhi]
+    gss.step_size *= gss.step_size_phi
   end
 end

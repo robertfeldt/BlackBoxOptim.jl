@@ -7,7 +7,7 @@ abstract FitnessScheme{F}
 
 fitness_type{F}(::Type{FitnessScheme{F}}) = F
 fitness_type{F}(::FitnessScheme{F}) = F
-#fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
+fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
 if VERSION >= v"0.4.0-dev+1258" # FIXME remove version check once v0.4 is released
