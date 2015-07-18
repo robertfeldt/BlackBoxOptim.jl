@@ -165,30 +165,31 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem}; max_time =
   return ranks, fitnesses
 end
 
-function bboptimize(functionOrProblem; max_time::Number = 0,
-  search_space = false, search_range = (0.0, 1.0), dimensions = 2,
-  method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters::Parameters = EMPTY_PARAMS)
-
-  # We just pass the kw params along...
-  optimizer, problem, params = setup_bboptimize(functionOrProblem;
-    max_time = max_time,
-    search_space = search_space, search_range = search_range, dimensions = dimensions,
-    method = method, parameters = parameters)
-
-  run_optimizer(optimizer, problem, params)
-
-end
-
-function setup_bboptimize(functionOrProblem; max_time::Number = 0.0,
+function bboptimize(functionOrProblem; max_time::Number = 0.0,
   search_space = false, search_range = (0.0, 1.0), dimensions::Int = 2,
   method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
   parameters::Parameters = EMPTY_PARAMS)
-  # override dict parameters with arguments
-  parameters[:MaxTime] = max_time
-  parameters[:SearchSpace] = search_space
-  parameters[:SearchRange] = search_range
-  parameters[:NumDimensions] = dimensions
+
+  # override dict parameters with non-default arguments
+  if !haskey(parameters, :MaxTime) || max_time > 0.0
+    parameters[:MaxTime] = max_time
+  end
+  if !haskey(parameters, :SearchSpace) || !isa(search_space, boolean)
+    parameters[:SearchSpace] = search_space
+  end
+  if !haskey(parameters, :SearchRange) || search_range != (0.0, 1.0)
+    parameters[:SearchRange] = search_range
+  end
+  if !haskey(parameters, :NumDimensions) || dimensions != 2
+    parameters[:NumDimensions] = dimensions
+  end
+
+  run_optimizer(setup_bboptimize(functionOrProblem, method, parameters)...)
+end
+
+function setup_bboptimize(functionOrProblem,
+    method::Symbol,
+    parameters::Parameters = EMPTY_PARAMS)
 
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
 
