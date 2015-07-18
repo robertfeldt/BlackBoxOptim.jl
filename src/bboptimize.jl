@@ -27,7 +27,7 @@ DefaultParameters = @compat Dict{Symbol,Any}(
   :MaxTime        => false,   # Max time in seconds (takes precedence over the other budget-related params if specified)
   :MaxFuncEvals   => false,   # Max func evals (takes precedence over max iterations, but not max time)
   :MaxSteps       => 10000,   # Max iterations gives the least control since different optimizers have different "size" of their "iterations"
-  :MinDeltaFitnessTolerance => 1e-11, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
+  :MinDeltaFitnessTolerance => 1e-50, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
   :FitnessTolerance => 1e-8,  # Stop optimization when the best fitness found is within this distance of the actual optimum (if known)
 
   :MaxNumStepsWithoutFuncEvals => 100, # Stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
