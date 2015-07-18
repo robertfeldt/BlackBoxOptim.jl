@@ -16,7 +16,7 @@ context("mix_with_indices") do
 end
 
 function assign_weights{F}(fitnesses::Vector{F})
-  candidates = [BlackBoxOptim.Candidate{F}([0.0], -1, f) for f in fitnesses]
+  candidates = BlackBoxOptim.Candidate{F}[BlackBoxOptim.Candidate{F}([0.0], -1, f) for f in fitnesses]
   u = BlackBoxOptim.fitness_shaping_utilities_linear(length(candidates))
   BlackBoxOptim.assign_weights(candidates, u)
 end

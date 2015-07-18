@@ -23,7 +23,7 @@ type AdaptiveDiffEvoParameters
   function AdaptiveDiffEvoParameters(fdistr::BimodalCauchy = bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
                                      crdistr::BimodalCauchy = bimodal_cauchy(0.1, 0.1, 0.95, 0.1))
     new(fdistr, crdistr,
-        Vector{Float64}(), Vector{Float64}()) # start with empty arrays because the population size unknown
+        Array(Float64,0), Array(Float64,0)) # start with empty arrays because the population size unknown
   end
 end
 
@@ -72,7 +72,7 @@ function adaptive_diffevo(problem::OptimizationProblem,
                  options::Parameters, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
                  crossover::DiffEvoCrossoverOperator =
-                    AdaptiveDiffEvoRandBin1(chain(ADE_DefaultOptions, options)))
+                    convert(AdaptiveDiffEvoRandBin1, chain(ADE_DefaultOptions, options)))
   opts = chain(ADE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, select, crossover,
