@@ -50,7 +50,16 @@ fitness_type{F}(pop::FitPopulation{F}) = F
 candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 
 # get unitialized individual from a pool, or create one, if it's empty
-acquire_candi{F}(pop::FitPopulation{F}) = isempty(pop.candi_pool) ? Candidate{F}(@compat(Vector{Float64}(numdims(pop))), -1, pop.nafitness) : pop!(pop.candi_pool)
+function acquire_candi{F}(pop::FitPopulation{F})
+  if isempty(pop.candi_pool)
+    return Candidate{F}(@compat(Vector{Float64}(numdims(pop))), -1, pop.nafitness)
+  end
+  res = pop!(pop.candi_pool)
+  # reset reference to genetic operation
+  res.op = NO_GEN_OP
+  res.tag = 0
+  return res
+end
 
 # get an individual from a pool and set it to ix-th individual from population
 function acquire_candi(pop::FitPopulation, ix::Int)

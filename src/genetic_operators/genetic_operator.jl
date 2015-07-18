@@ -23,7 +23,10 @@ numchildren(o::EmbeddingOperator) = 1
 
 # mutation operator that does nothing
 immutable NoMutation <: MutationOperator end
-function apply!(mo::NoMutation, target) end
+apply!(mo::NoMutation, target) = target
+
+# placeholder for no-effect genetic operations
+const NO_GEN_OP = NoMutation()
 
 # adjust the internal parameters of the genetic operator
 # default implementation does nothing

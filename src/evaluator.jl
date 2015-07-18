@@ -64,16 +64,24 @@ type Candidate{F}
     index::Int           # index of individual in the population, -1 if unassigned
     fitness::F           # fitness
 
+    op::GeneticOperator  # genetic operator that was applied to the candidate
+    tag::Int             # additional information set by the genetic operator
+
     Candidate(params::Individual, index::Int = -1,
-              fitness::F = NaN) = new(params, index, fitness)
+              fitness::F = NaN,
+              op::GeneticOperator = NO_GEN_OP,
+              tag::Int = 0) =
+        new(params, index, fitness, op, tag)
 end
 
-Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness)
+Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness, c.op, c.tag)
 
 function Base.copy!{F}(c::Candidate{F}, o::Candidate{F})
   copy!(c.params, o.params)
   c.index = o.index
   c.fitness = o.fitness # FIXME if vector?
+  c.op = o.op
+  c.tag = o.tag
   return c
 end
 
