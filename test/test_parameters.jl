@@ -42,13 +42,13 @@ facts("DictChain") do
     end
 
     context("using merge()") do
-      dc = merge(merge(d1, d2), d3)
+      dc = merge(DictChain(d2, d1), d3)
       @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
 
-      dc = merge(d2, merge(d1, d3))
+      dc = merge(d2, DictChain(d3, d1))
       @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
 
-      dc = merge(merge(d3, d1), d2)
+      dc = merge(DictChain(d1, d3), d2)
       @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
     end
 

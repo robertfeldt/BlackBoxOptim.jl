@@ -52,9 +52,9 @@ end
 
 # In a merge the last parameter should be prioritized since this is the way
 # the normal Julia merge() of dicts works.
-Base.merge{K,V}(p1::DictChain{K,V}, p2::Dict{K,V}) = DictChain([p2; p1.dicts])
-Base.merge{K,V}(p1::DictChain{K,V}, p2::DictChain{K,V}) = DictChain([p2.dicts; p1.dicts])
-Base.merge{K,V}(p1::Dict{K,V}, p2::DictChain{K,V}) = DictChain([p2.dicts; p1])
+Base.merge{K,V}(p1::DictChain{K,V}, p2::Dict{K,V}) = DictChain{K,V}([p2; p1.dicts])
+Base.merge{K,V}(p1::DictChain{K,V}, p2::DictChain{K,V}) = DictChain{K,V}([p2.dicts; p1.dicts])
+Base.merge{K,V}(p1::Dict{K,V}, p2::DictChain{K,V}) = DictChain{K,V}([p2.dicts; p1])
 
 function Base.merge!{K,V}(dc::DictChain{K,V}, d::Dict{K,V})
   insert!(dc.dicts, 1, d); dc
