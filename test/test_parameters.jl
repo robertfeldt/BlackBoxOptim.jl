@@ -97,6 +97,15 @@ facts("DictChain") do
     @fact d123[:a] => 1
     @fact d123[:b] => 4
   end
+
+  context("show()") do
+    d1 = @compat Dict{Symbol,Int}(:a => 1)
+    d2 = @compat Dict{Symbol,Int}(:a => 2, :b => 4)
+    d3 = @compat Dict{Symbol,Int}(:a => 3, :b => 5)
+
+    dc = DictChain(d1, d2, d3)
+    show(dc) # should output to DevNull, but looks like it's broken currently
+  end
 end
 
 facts("Parameters") do
