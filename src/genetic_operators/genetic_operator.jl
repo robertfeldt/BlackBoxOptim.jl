@@ -25,6 +25,10 @@ numchildren(o::EmbeddingOperator) = 1
 immutable NoMutation <: MutationOperator end
 function apply!(mo::NoMutation, target) end
 
+# adjust the internal parameters of the genetic operator
+# default implementation does nothing
+function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
+
 # a mixture of genetic operators,
 # use next() to choose the next operator from the mixture
 abstract GeneticOperatorsMixture <: GeneticOperator

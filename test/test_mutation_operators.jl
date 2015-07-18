@@ -51,4 +51,27 @@ facts("Mutation operators") do
     @fact 200 < n_params_mutated/numdims(ss) < 500 => true
   end
 
+  context("FAGeneticOperatorsMixture") do
+    mx = FAGeneticOperatorsMixture(GeneticOperator[NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], pmin = 0.05, pmax = 20.0)
+
+    ref_ind = rand_individual(ss)
+    n_params_mutated = 0
+    for i in 1:10000
+      ind = copy(ref_ind)
+      sel_op, tag = BlackBoxOptim.next(mx)
+      BlackBoxOptim.apply!(sel_op, ind, 1)
+      @fact isinspace(ind, ss) => true
+      is_mutated = ind != ref_ind
+      n_params_mutated += is_mutated
+      is_improved = rand() < 0.25 && is_mutated
+      # fake improvement in 0.25 times mutation clock is applied
+      BlackBoxOptim.adjust!(mx, tag, 1, is_improved ? 1.0 : 0.0, 0.0, is_mutated)
+    end
+    # FA should adjust frequencies to [almost] always apply mutation clock
+    # the number of parameters changed should roughly match the MutationClock mutation probability
+    @fact 300 < n_params_mutated/numdims(ss) < 700 => true
+    @fact frequencies(mx)[1] => less_than(0.1)
+    @fact frequencies(mx)[2] => greater_than(0.9)
+  end
+
 end

@@ -58,10 +58,10 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
         NoMutation, MutationClock, GibbsMutationOperator, SimpleGibbsMutation,
-        FixedGeneticOperatorsMixture,
+        FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
-        apply!, next,
+        apply!, adjust!, next,
 
         # Utilities
         FrequencyAdapter, next, update!, frequencies,
@@ -92,11 +92,11 @@ include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
 
-# Genetic Operators
-include("genetic_operators/genetic_operator.jl")
-
 include("frequency_adaptation.jl")
 include("archive.jl")
+
+# Genetic Operators
+include("genetic_operators/genetic_operator.jl")
 
 include(joinpath("problems", "all_problems.jl"))
 include(joinpath("problems", "problem_family.jl"))
