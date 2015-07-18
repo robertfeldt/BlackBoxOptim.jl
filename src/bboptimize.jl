@@ -168,7 +168,15 @@ end
 function bboptimize(functionOrProblem; max_time::Number = 0.0,
   search_space = false, search_range = (0.0, 1.0), dimensions::Int = 2,
   method::Symbol = :adaptive_de_rand_1_bin_radiuslimited,
-  parameters::Parameters = EMPTY_PARAMS)
+  parameters::Associative = EMPTY_PARAMS) # FIXME use Parameters instead of Associative when v0.3 support removed
+
+  if isa(parameters, Dict{Any,Any})
+    Base.depwarn(string("bboptimize(f,..., parameters={:MaxTime => 5.0, ...}) is deprecated, ",
+            "use bboptimize(f,..., parameters=@compat(Dict{Symbol,Any}(:MaxTime => 5.0, ...))) instead"),
+            :bboptimize)
+    # convert into Dict{Symbol, Any}
+    parameters = Dict(@compat(Tuple{Symbol,Any})[(k::Symbol, v) for (k,v) in parameters])
+  end
 
   # override dict parameters with non-default arguments
   if !haskey(parameters, :MaxTime) || max_time > 0.0
