@@ -1,48 +1,30 @@
 using Distributions
 
-abstract DifferentialEvolutionOpt <: PopulationOptimizer
-
-name(de::DifferentialEvolutionOpt) = de.name
-
 DE_DefaultOptions = @compat Dict{Symbol,Any}(
   :f => 0.6,
   :cr => 0.7,
   :SamplerRadius => 8,
 )
 
-abstract DiffEvoParameters
-
-type FixedDiffEvoParameters <: DiffEvoParameters
-  f::Float64
-  cr::Float64
-
-  FixedDiffEvoParameters(options, popsize::Int) =  new(options[:f], options[:cr])
-end
-
-crossover_parameters(params::FixedDiffEvoParameters, index) = params.cr, params.f
-
-function adjust!( params::FixedDiffEvoParameters, index, is_improved::Bool )
-    # do nothing
-end
-
-type DiffEvoOpt{POP<:Population,P<:DiffEvoParameters,S<:IndividualsSelector,M<:GeneticOperator,E<:EmbeddingOperator} <: DifferentialEvolutionOpt
+# FIXME DifferentialEvolution is just a specific case of this optimizer,
+# should it be called EvolutionaryOptimizer?
+type DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperator,E<:EmbeddingOperator} <: PopulationOptimizer
   # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
   name::ASCIIString
 
-  population::POP
+  population::P
 
   # Set of operators that together define a specific DE strategy.
-  params::P        # adjust crossover parameters after fitness calculation
   select::S        # random individuals selector
   modify::M        # genetic operator
   embed::E         # embedding operator
 end
 
-function DiffEvoOpt{POP<:Population,P<:DiffEvoParameters, S<:IndividualsSelector,
+function DiffEvoOpt{P<:Population, S<:IndividualsSelector,
                     M<:GeneticOperator, E<:EmbeddingOperator}(
-    name::ASCIIString, pop::POP, params::P,
+    name::ASCIIString, pop::P,
     select::S = S(), modify::M = M(), embed::E = E())
-  DiffEvoOpt{POP,P,S,M,E}(name, pop, params, select, modify, embed)
+  DiffEvoOpt{P,S,M,E}(name, pop, select, modify, embed)
 end
 
 # Ask for a new candidate object to be evaluated, and a list of individuals
@@ -67,11 +49,11 @@ function evolve(de::DiffEvoOpt, mutate::MutationOperator)
   target_index = select(de.select, de.population, 1)[1]
   target = acquire_candi(de.population, target_index)
   trial = acquire_candi(de.population, target)
-  apply!(mutate, trial.params)
+  apply!(mutate, trial.params, target_index)
   return evolved_pair(de, target, trial, mutate, 0)
 end
 
-function evolve(de::DiffEvoOpt, crossover::DiffEvoCrossoverOperator)
+function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
   # Sample parents and target
   indices = select(de.select, de.population, 1 + numparents(crossover))
   parent_indices = indices[1:numparents(crossover)]
@@ -83,9 +65,8 @@ function evolve(de::DiffEvoOpt, crossover::DiffEvoCrossoverOperator)
   # Crossover parents and target
   @assert numchildren(crossover)==1
   trial = acquire_candi(de.population, target)
-  apply!(crossover,
-         crossover_parameters(de.params, target_index)...,
-         trial.params, de.population, parent_indices)
+  apply!(crossover, trial.params, target_index,
+         de.population, parent_indices)
   return evolved_pair(de, target, trial, crossover, 0)
 end
 
@@ -135,48 +116,49 @@ end
 
 # adjust the parameters of the method
 function adjust!(de::DiffEvoOpt, candi::Candidate, is_improved::Bool)
-  # adjust the DE parameters
-  adjust!(de.params, candi.index, is_improved)
   # adjust the parameters of the operation
   old_fitness = fitness(population(de), candi.index)
   if isnan(old_fitness)
     old_fitness = candi.fitness
   end
 
-  adjust!(candi.op, candi.tag, candi.index, candi.fitness, fitness(population(de), candi.index), is_improved)
+  adjust!(candi.op, candi.tag, candi.index, candi.fitness,
+          fitness(population(de), candi.index), is_improved)
 end
 
 # Now we can create specific DE optimizers that are commonly used in the
 # literature.
 
-function diffevo(problem::OptimizationProblem, name::ASCIIString,
+function diffevo(problem::OptimizationProblem, options::Parameters, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
-                 crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(),
-                 options::Parameters = EMPTY_PARAMS)
+                 crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(chain(DE_DefaultOptions, options)))
   opts = chain(DE_DefaultOptions, options)
   pop = population(problem, opts)
-  DiffEvoOpt(name, pop, FixedDiffEvoParameters(opts, popsize(pop)), select,
-             crossover, RandomBound(search_space(problem)))
+  DiffEvoOpt(name, pop, select, crossover,
+             RandomBound(search_space(problem)))
 end
 
 # The most used DE/rand/1/bin.
 de_rand_1_bin(problem::OptimizationProblem,
               options::Parameters = EMPTY_PARAMS,
-              name = "DE/rand/1/bin") = diffevo(problem, name, SimpleSelector(), DiffEvoRandBin1(), options)
+              name = "DE/rand/1/bin") = diffevo(problem, options, name)
 
 de_rand_2_bin(problem::OptimizationProblem,
               options::Parameters = EMPTY_PARAMS,
-              name = "DE/rand/2/bin") = diffevo(problem, name, SimpleSelector(), DiffEvoRandBin2(), options)
+              name = "DE/rand/2/bin") = diffevo(problem, options, name,
+                                                SimpleSelector(),
+                                                DiffEvoRandBin2(chain(DE_DefaultOptions, options)))
 
 # The most used DE/rand/1/bin with "local geography" via radius limited sampling.
 de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
                             options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/1/bin/radiuslimited") =
-    diffevo(problem, name, RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
-            DiffEvoRandBin1(), options)
+    diffevo(problem, options, name,
+            RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]))
 
 de_rand_2_bin_radiuslimited(problem::OptimizationProblem,
                             options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/2/bin/radiuslimited") =
-    diffevo(problem, name, RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
-            DiffEvoRandBin2(), options)
+    diffevo(problem, options, name,
+            RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
+            DiffEvoRandBin2(chain(DE_DefaultOptions, options)))

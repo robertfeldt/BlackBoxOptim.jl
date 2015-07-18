@@ -14,9 +14,9 @@ type FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
 end
 
 # default implementation of apply!() for operators mixture
-function apply!{T<:Real}(opmix::GeneticOperatorsMixture, v::Vector{T})
+function apply!{T<:Real}(opmix::GeneticOperatorsMixture, v::Vector{T}, target_index::Int)
   op, tag = next(opmix)
-  apply!(op, v)
+  apply!(op, v, target_index)
 end
 
 function next(opmix::FixedGeneticOperatorsMixture)

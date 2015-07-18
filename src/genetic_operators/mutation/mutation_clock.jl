@@ -18,7 +18,7 @@ end
 search_space(m::SimpleGibbsMutation) = m.ss
 
 # returns the mutated value of the specified dimension
-function apply(mut::SimpleGibbsMutation, cur::Number, dim::Int)
+function apply(mut::SimpleGibbsMutation, cur::Number, dim::Int, target_index::Int)
   min, max = range_for_dim(mut.ss, dim)
   return min + rand() * (max-min)
 end
@@ -34,11 +34,11 @@ function MutationClock{S<:GibbsMutationOperator}(inner::S, probMutation::Float64
 end
 
 # Mutate each variable in a vector with the probability of mutation.
-function apply!{T<:Real}(mc::MutationClock, v::Vector{T})
+function apply!{T<:Real}(mc::MutationClock, v::Vector{T}, target_index::Int)
   n = length(v)
   while mc.nextVarToMutate < n
     i = 1 + mc.nextVarToMutate
-    v[i] = apply(mc.inner, v[i], i)
+    v[i] = apply(mc.inner, v[i], i, target_index)
     mc.nextVarToMutate += num_vars_to_next_mutation_point(mc.probMutation)
   end
   mc.nextVarToMutate -= n

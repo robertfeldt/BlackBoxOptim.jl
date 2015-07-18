@@ -6,8 +6,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, compare_optimizers,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
-
-        AdaptConstantsDiffEvoOpt, adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
+        adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
 
         SeparableNESOpt, separable_nes,
         XNESOpt, xnes,
