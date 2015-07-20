@@ -2,13 +2,22 @@ abstract DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC}
 
 # FIXME is it possible somehow to do arithmetic operations with N?
 immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
+  cr::Float64   # probability to crossover the dimension
+  f::Float64    # scale parameter
+
+  DiffEvoRandBin(cr::Number, f::Number) = new(cr, f)
 end
+
+Base.convert{N}(::Type{DiffEvoRandBin{N}}, options::Associative{Symbol,Any}) = DiffEvoRandBin{N}(options[:cr], options[:f])
+
+crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover.f
 
 typealias DiffEvoRandBin1 DiffEvoRandBin{3}
 typealias DiffEvoRandBin2 DiffEvoRandBin{5}
 
-function apply!(xo::DiffEvoRandBin{3}, cr::Real, f::Number, target, pop, parentIndices)
+function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index, pop, parentIndices)
   @assert length(parentIndices) == 3
+  cr, f = crossover_parameters(xover, pop, target_index)
   p1ix, p2ix, p3ix = parentIndices
   # Always ensure at least one parameter is xovered
   mut_ix = rand(1:length(target))
@@ -20,8 +29,9 @@ function apply!(xo::DiffEvoRandBin{3}, cr::Real, f::Number, target, pop, parentI
   return target
 end
 
-function apply!(xo::DiffEvoRandBin{5}, cr::Real, f::Number, target, pop, parentIndices)
+function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index, pop, parentIndices)
   @assert length(parentIndices) == 5
+  cr, f = crossover_parameters(xover, pop, target_index)
   p1ix, p2ix, p3ix, p4ix, p5ix = parentIndices
   # Always ensure at least one parameter is xovered
   mut_ix = rand(1:length(target))

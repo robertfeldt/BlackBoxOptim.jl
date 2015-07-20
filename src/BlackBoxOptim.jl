@@ -6,8 +6,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, compare_optimizers,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
-
-        AdaptConstantsDiffEvoOpt, adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
+        adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
 
         SeparableNESOpt, separable_nes,
         XNESOpt, xnes,
@@ -57,10 +56,14 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
-        NoMutation, MutationClock, GibbsMutationOperator, SimpleGibbsMutation, MutationMixture,
+        NoMutation, MutationClock, GibbsMutationOperator, SimpleGibbsMutation,
+        FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
+        apply!, adjust!, next,
 
+        # Utilities
+        FrequencyAdapter, next, update!, frequencies,
         name
 
 # base abstract class for black-box optimization algorithms
@@ -88,11 +91,11 @@ include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
 
-# Genetic Operators
-include("genetic_operators/genetic_operator.jl")
-
 include("frequency_adaptation.jl")
 include("archive.jl")
+
+# Genetic Operators
+include("genetic_operators/genetic_operator.jl")
 
 include(joinpath("problems", "all_problems.jl"))
 include(joinpath("problems", "problem_family.jl"))

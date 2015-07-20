@@ -23,11 +23,22 @@ numchildren(o::EmbeddingOperator) = 1
 
 # mutation operator that does nothing
 immutable NoMutation <: MutationOperator end
-function apply!(mo::NoMutation, target) end
+apply!(mo::NoMutation, target, target_index) = target
 
+# placeholder for no-effect genetic operations
+const NO_GEN_OP = NoMutation()
+
+# adjust the internal parameters of the genetic operator
+# default implementation does nothing
+function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
+
+# a mixture of genetic operators,
+# use next() to choose the next operator from the mixture
+abstract GeneticOperatorsMixture <: GeneticOperator
+
+include("operators_mixture.jl")
 include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
-include("mutation/mutation_mixture.jl")
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
 include("embedding/random_bound.jl")
