@@ -24,7 +24,7 @@ facts("Top-level interface") do
       end
     end
     @fact parameters(res1)[:MaxTime] => 0.5
-    @fact parameters(res1)[:MaxTime] => 1.0
+    @fact parameters(res2)[:MaxTime] => 1.0
   end
 
   context("custom user termination decision") do
