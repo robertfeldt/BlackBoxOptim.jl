@@ -69,5 +69,8 @@ facts("Top-level interface") do
     numimprovs = length(tr)
     # Last fitness value in trace is the best fitness achieved
     @fact bestfitness(res) == tr[numimprovs] => true
+    if numimprovs > 1
+      @fact tr[numimprovs] < tr[numimprovs-1] => true
+    end
   end
 end
