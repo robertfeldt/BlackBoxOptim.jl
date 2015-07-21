@@ -9,13 +9,15 @@ facts("Top-level interface") do
   end
 
   context("continue running an optimization after it finished") do
-    res1 = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+    optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
       MaxTime = 0.5, ShowTrace = false)
-    res2 = bboptimize(res1; MaxTime = 1.0) # or should it be bboptimize(optcontroller(res1)...) ?
+    res1 = bboptimize(optctrl)
+    @fact numruns(optctrl) => 1
+
+    res2 = bboptimize(optctrl; MaxTime = 1.0)
+    @fact numruns(optctrl) => 2
 
     @fact bestfitness(res2) <= bestfitness(res1) => true
-    @fact numruns(res1) => 1
-    @fact numruns(res2) => 2
 
     # parameters should be the same except for MaxTime
     for p in keys(parameters(res1))
@@ -27,10 +29,45 @@ facts("Top-level interface") do
     @fact parameters(res2)[:MaxTime] => 1.0
   end
 
+  context("continue running an optimization after serializing to disc") do
+    optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+      MaxTime = 0.5, ShowTrace = false)
+    res1 = bboptimize(optctrl)
+
+    tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
+    open(tempfilename, "w") do fh
+      serialize(fh, optctrl)
+    end
+
+    # Try to make sure its not in mem:
+    opctrl = nothing; gc()
+
+    open(tempfilename, "w") do fh
+      ocloaded = deserialize(fh)
+    end
+
+    @fact numruns(ocloaded) => 1
+    res2 = bboptimize(ocloaded; MaxTime = 1.0)
+    @fact numruns(ocloaded) => 2
+
+    @fact bestfitness(res2) <= bestfitness(res1) => true
+  end
+
   context("custom user termination decision") do
-    terminate_func = (optctrl) -> numsteps(optctrl) >= 100 ? stop_optimization!(optctrl) : nothing
+    # You can implement your own termination condition by inserting a callback function that returns
+    # an OptimizationAction (such as, for example, StopOptimization) or just nothing for no action.
+    terminate_func = (optstate) -> numsteps(optstate) >= 100 ? BlackBoxOptim.StopOptimization : nothing
     res = bboptimize(rosenbrock; MaxSteps = 500, SearchRange = (-5.0, 5.0), NumDimensions = 2,
       ShowTrace = false, StepCallback => terminate_func)
     @fact numsteps(res) => 100
+  end
+
+  context("accessing the trace of the optimization") do
+    res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+      MaxTime = 0.5, ShowTrace = false)
+    tr = trace(res)
+    numimprovs = length(tr)
+    # Last fitness value in trace is the best fitness achieved
+    @fact bestfitness(res) == tr[numimprovs] => true
   end
 end
