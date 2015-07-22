@@ -3,7 +3,7 @@ module BlackBoxOptim
 using Distributions, StatsBase, Compat
 
 export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
-        bboptimize, compare_optimizers,
+        bboptimize, bbsetup, compare_optimizers,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
         adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
@@ -13,7 +13,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Parameters
         DictChain, Parameters, ParamsDictChain, ParamsDict,
-        chain,
+        chain, flatten,
 
         # Fitness
         FitnessScheme,
@@ -45,7 +45,10 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # OptimizationResults
-        minimum, f_minimum, iteration_converged,
+        minimum, f_minimum, iteration_converged, parameters,
+
+        # OptController
+        numruns,
 
         # Search spaces
         ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,

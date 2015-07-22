@@ -17,7 +17,7 @@ facts("Top-level interface") do
     res2 = bboptimize(optctrl; MaxTime = 1.0)
     @fact numruns(optctrl) => 2
 
-    @fact bestfitness(res2) <= bestfitness(res1) => true
+    @fact best_fitness(res2) <= best_fitness(res1) => true
 
     # parameters should be the same except for MaxTime
     for p in keys(parameters(res1))

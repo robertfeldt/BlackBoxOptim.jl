@@ -105,6 +105,7 @@ facts("DictChain") do
 
     dc = DictChain(d1, d2, d3)
     show(dc) # should output to DevNull, but looks like it's broken currently
+    println("") # Just so FactCheck reporting is not messed up for now... FIXME
   end
 end
 

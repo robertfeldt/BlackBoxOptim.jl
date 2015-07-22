@@ -45,6 +45,14 @@ function update_params!(parameters::Associative, kwargs)
   end
 end
 
+function bboptimize(optctrl::OptController; kwargs...)
+  if length(kwargs) > 0
+    kwargs = convert_to_dict_symbol_any(kwargs)
+    update_parameters!(optctrl, kwargs)
+  end
+  run!(optctrl)
+end
+
 function bboptimize(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}()); kwargs...)
   optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
   run!(optctrl)

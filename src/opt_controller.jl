@@ -235,8 +235,8 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
 
   # Add new params in front if any are specified and they are valid.
   if length(parameters) > 0
-    check_valid(parameters) # We must recheck that new param settings are valid
     oc.parameters = chain(oc.parameters, parameters)
+    check_valid(oc.parameters) # We must recheck that new param settings are valid
   end
 end
 
@@ -278,7 +278,7 @@ function run_optimization(ctrl::OptRunController, params::Associative)
     if isa(ex, InterruptException)
       return make_opt_result(ctrl)
     else
-      throw(ex)
+      rethrow(ex)
     end
   end
 end
