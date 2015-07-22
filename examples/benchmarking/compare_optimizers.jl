@@ -205,14 +205,14 @@ function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions::Int,
 
   problem = BlackBoxOptim.fixed_dim_problem(family, numDimensions)
 
-  best, fitness = bboptimize(problem; method = method, parameters = @compat(Dict{Symbol,Any}(
-    :NumDimensions => numDimensions,
-    :PopulationSize => populationSize,
-    :ShowTrace => showtrace,
-    :MaxFuncEvals => numFuncEvals
-    )))
+  res = bboptimize(problem; Method = method,
+    NumDimensions = numDimensions,
+    PopulationSize = populationSize,
+    ShowTrace = showtrace,
+    MaxFuncEvals = numFuncEvals
+  )
 
-  fitness
+  best_fitness(res)
 end
 
 function latest_git_id()
