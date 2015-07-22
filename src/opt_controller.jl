@@ -1,6 +1,6 @@
-# Optimization Controller
-# Applies specific optimizer to a given optimization problem.
-type OptController{O<:Optimizer, E<:Evaluator}
+# Optimization Run Controller
+# Applies specific optimizer to a given optimization problem in one run.
+type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
@@ -30,8 +30,8 @@ type OptController{O<:Optimizer, E<:Evaluator}
   stop_reason::ASCIIString # the reason for algorithm termination, empty if it's not terminated
 end
 
-function OptController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
-  OptController{O,E}(optimizer, evaluator,
+function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
+  OptRunController{O,E}(optimizer, evaluator,
         [params[key] for key in Symbol[:ShowTrace, :SaveTrace, :TraceInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
@@ -39,12 +39,12 @@ function OptController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, p
 end
 
 # stepping optimizer has it's own evaluator, get a reference
-OptController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) = OptController(optimizer, evaluator(optimizer), params)
+OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, evaluator(optimizer), params)
 # all other optimizers are using ProblemEvaluator by default
-OptController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptController(optimizer, ProblemEvaluator(problem), params)
+OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, ProblemEvaluator(problem), params)
 
 # logging/tracing
-function tr(ctrl::OptController, msg::AbstractString, obj = nothing)
+function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
   if ctrl.show_trace
     print(msg)
     if obj != nothing
@@ -56,21 +56,22 @@ function tr(ctrl::OptController, msg::AbstractString, obj = nothing)
   end
 end
 
-evaluator(ctrl::OptController) = ctrl.evaluator
-problem(ctrl::OptController) = problem(evaluator(ctrl))
-isstarted(ctrl::OptController) = ctrl.start_time > 0
-isrunning(ctrl::OptController) = isstarted(ctrl) && ctrl.stop_time == 0
-isstopped(ctrl::OptController) = ctrl.stop_time > 0
+evaluator(ctrl::OptRunController) = ctrl.evaluator
+problem(ctrl::OptRunController) = problem(evaluator(ctrl))
+isstarted(ctrl::OptRunController) = ctrl.start_time > 0
+isrunning(ctrl::OptRunController) = isstarted(ctrl) && ctrl.stop_time == 0
+isstopped(ctrl::OptRunController) = ctrl.stop_time > 0
 
-num_steps(ctrl::OptController) = ctrl.num_steps
-num_func_evals(ctrl::OptController) = num_evals(ctrl.evaluator)
-stop_reason(ctrl::OptController) = ctrl.stop_reason
+num_steps(ctrl::OptRunController) = ctrl.num_steps
+num_func_evals(ctrl::OptRunController) = num_evals(ctrl.evaluator)
+stop_reason(ctrl::OptRunController) = ctrl.stop_reason
+start_time(ctrl::OptRunController) = ctrl.start_time
 
-function elapsed_time(ctrl::OptController)
+function elapsed_time(ctrl::OptRunController)
   isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
 end
 
-function check_stop_condition(ctrl::OptController)
+function check_stop_condition(ctrl::OptRunController)
     if ctrl.max_time > 0 && elapsed_time(ctrl) > ctrl.max_time
       return "Max time ($(ctrl.max_time) s) reached"
     end
@@ -98,7 +99,7 @@ function check_stop_condition(ctrl::OptController)
     return "" # empty string, no termination
 end
 
-function trace_progress(ctrl::OptController)
+function trace_progress(ctrl::OptRunController)
   ctrl.num_better += ctrl.num_better_since_last_report
   ctrl.last_report_time = time()
 
@@ -126,22 +127,22 @@ end
 # The ask and tell interface is more general since you can mix and max
 # elements from several optimizers using it. However, in this top-level
 # execution function we do not make use of this flexibility...
-function step!{O<:AskTellOptimizer}(ctrl::OptController{O})
+function step!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
   candidates = ask(ctrl.optimizer)
   rank_by_fitness!(ctrl.evaluator, candidates)
   return tell!(ctrl.optimizer, candidates)
 end
 
 # step for SteppingOptimizers
-function step!{O<:SteppingOptimizer}(ctrl::OptController{O})
+function step!{O<:SteppingOptimizer}(ctrl::OptRunController{O})
   step!(ctrl.optimizer)
   return 0
 end
 
-function run!(ctrl::OptController)
+function run!(ctrl::OptRunController)
   tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
   setup!(ctrl.optimizer, evaluator(ctrl))
-  # FIXME all counters need to be reset if OptController could be run 2nd time
+
   ctrl.start_time = time()
   ctrl.num_steps = 0
   while isempty(ctrl.stop_reason)
@@ -169,10 +170,10 @@ function run!(ctrl::OptController)
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
 
-best_candidate(ctrl::OptController) = best_candidate(ctrl.evaluator.archive)
-best_fitness(ctrl::OptController) =  best_fitness(ctrl.evaluator.archive)
+best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
+best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
 
-function show_report(ctrl::OptController, population_stats=false)
+function show_report(ctrl::OptRunController, population_stats=false)
   final_elapsed_time = elapsed_time(ctrl)
   tr(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
   tr(ctrl, "Steps per second = $(num_steps(ctrl)/final_elapsed_time)\n")
@@ -190,7 +191,7 @@ function show_report(ctrl::OptController, population_stats=false)
   tr(ctrl, "\n\n")
 end
 
-function write_result(ctrl::OptController, filename = "")
+function write_result(ctrl::OptRunController, filename = "")
   if isempty(filename)
     timestamp = strftime("%y%m%d_%H%M%S", floor(Int, ctrl.start_time))
     filename = "$(timestamp)_$(problem_summary(ctrl.evaluator))_$(name(ctrl.optimizer)).csv"
@@ -200,4 +201,98 @@ function write_result(ctrl::OptController, filename = "")
       header_prefix = "Problem,Dimension,Optimizer",
       line_prefix = "$(name(problem(ctrl.evaluator))),$(numdims(ctrl.evaluator)),$(name(ctrl.optimizer))",
       bestfitness = opt_value(problem(ctrl.evaluator)))
+end
+
+# Optimization Controller
+# Applies specific optimizer to a given optimization problem over one or more
+# optimization runs.
+type OptController{O<:Optimizer, P<:OptimizationProblem}
+  optimizer::O   # optimization algorithm
+  problem::P     # opt problem
+  parameters::ParamsDictChain
+  runcontrollers::Vector{Any}
+end
+
+function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
+  params::ParamsDictChain)
+  OptController{O,P}(optimizer, problem, params, Any[])
+end
+
+numruns(oc::OptController) = length(oc.runcontrollers)
+
+function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
+  parameters::Associative = @compat(Dict{Any,Any}()))
+
+  parameters = convert_to_dict_symbol_any(parameters)
+
+  # Most parameters cannot be changed since the problem and optimizer has already
+  # been setup.
+  for k in keys(parameters)
+    if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :ShowTrace]
+      throw("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))")
+    end
+  end
+
+  # Add new params in front if any are specified and they are valid.
+  if length(parameters) > 0
+    check_valid(parameters) # We must recheck that new param settings are valid
+    oc.parameters = chain(oc.parameters, parameters)
+  end
+end
+
+# Start a new optimization run, possibly with new parameters.
+function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
+  ctrl = OptRunController(oc.optimizer, oc.problem, oc.parameters)
+  push!(oc.runcontrollers, ctrl)
+
+  # If this is the first run we might have to init the RNG.
+  if numruns(oc) == 1
+    init_rng!(oc.parameters)
+  end
+
+  run_optimization(ctrl, oc.parameters)
+end
+
+function init_rng!(parameters::Parameters)
+  if parameters[:RandomizeRngSeed]
+    parameters[:RngSeed] = rand(1:1_000_000)
+    srand(parameters[:RngSeed])
+  end
+end
+
+# Run one optimization run and report on results.
+function run_optimization(ctrl::OptRunController, params::Associative)
+  # Run the optimization. Try to return something sensible
+  # even if interrupted with Ctrl-C.
+  try
+    run!(ctrl)
+    show_report(ctrl)
+
+    if params[:SaveFitnessTraceToCsv]
+      write_results(ctrl)
+    end
+
+    return make_opt_result(ctrl, params)
+  catch ex
+    # If it was a ctrl-c interrupt we try to make a result and return it...
+    if isa(ex, InterruptException)
+      return make_opt_result(ctrl)
+    else
+      throw(ex)
+    end
+  end
+end
+
+function make_opt_result(ctrl::OptRunController, params::Associative)
+  SingleObjectiveOptimizationResults{Vector{Float64},Float64}(
+    string(params[:Method]),
+    best_candidate(ctrl),
+    best_fitness(ctrl),
+    stop_reason(ctrl),
+    num_steps(ctrl),
+    start_time(ctrl),
+    elapsed_time(ctrl),
+    params,
+    num_func_evals(ctrl)
+  )
 end
