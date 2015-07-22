@@ -220,3 +220,10 @@ end
 deceptive_cuccu2011_15_2 = deceptive_cuccu2011(15, 2)
 deceptive_cuccu2011_30_2 = deceptive_cuccu2011(30, 2)
 
+# From section 3, page 7, of Tsallis1996 paper:
+#  Tsallis and Stariolo, "Generalized simulated annealing", Physica A, 1996.
+# available from http://www.if.ufrgs.br/~stariolo/publications/TsSt96_PhysA233_395_1996.pdf
+# the original paper used this as a 4-dimensional problem but here it is generalized.
+function energy_tsallis1996(x::Array)
+  return sumabs2(x.^2 - 8.0) + 5.0*sum(x) + 57.3276
+end

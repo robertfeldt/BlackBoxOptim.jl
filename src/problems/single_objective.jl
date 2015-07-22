@@ -177,5 +177,6 @@ example_problems = @compat Dict{String,Any}( #FIXME use Union{Optimization,Funct
   "Shekel7" => Shekel7,
   "Shekel5" => Shekel5,
   "Hartman6" => Hartman6,
-  "Hartman3" => Hartman3
+  "Hartman3" => Hartman3,
+  "Tsallis1996" => MinimizationProblemFamily(energy_tsallis1996, "Tsallis1996", (-100.0, 100.0), 0.0),
 )
