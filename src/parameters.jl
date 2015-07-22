@@ -87,6 +87,15 @@ end
 chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}) = DictChain(p2, p1)
 chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}...) = DictChain(chain(p2...), p1)
 
+flatten(d::Associative) = d
+function flatten{K,V}(d::DictChain{K,V})
+  newdict = Dict{K,V}()
+  for d in reverse(d.dicts)
+    map(k -> newdict[k] = d[k], collect(keys(flatten(d))))
+  end
+  return newdict
+end
+
 # converts DictChain into Dict
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
 
