@@ -38,4 +38,36 @@ facts("Top-level interface") do
     @fact parameters(res1)[:MaxTime] => 0.5
     @fact parameters(res2)[:MaxTime] => 1.0
   end
+
+  context("continue running an optimization after serializing to disc") do
+    optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+      MaxTime = 0.5, ShowTrace = false)
+    res1 = bboptimize(optctrl)
+
+    local tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
+
+    try # To ensure we delete the temp file afterwards...
+      open(tempfilename, "w") do fh
+        serialize(fh, optctrl)
+      end
+
+      # Try to make sure its not in mem:
+      opctrl = nothing; gc()
+
+      local ocloaded
+      open(tempfilename, "r") do fh
+        ocloaded = deserialize(fh)
+      end
+
+      @fact numruns(ocloaded) => 1
+      res2 = bboptimize(ocloaded; MaxTime = 1.0)
+      @fact numruns(ocloaded) => 2
+
+      @fact best_fitness(res2) <= best_fitness(res1) => true
+    finally
+      if isfile(tempfilename)
+        rm(tempfilename)
+      end
+    end
+  end
 end
