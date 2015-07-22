@@ -107,6 +107,19 @@ facts("DictChain") do
     show(dc) # should output to DevNull, but looks like it's broken currently
     println("") # Just so FactCheck reporting is not messed up for now... FIXME
   end
+
+  context("flatten") do
+    d1 = @compat Dict{Symbol,Int}(:a => 1)
+    d2 = @compat Dict{Symbol,Int}(:a => 2, :b => 4)
+    d3 = @compat Dict{Symbol,Int}(:a => 3, :b => 5)
+
+    dc = DictChain(d1, d2, d3)
+
+    fd = flatten(dc)
+    @fact fd[:a] => 1
+    @fact fd[:b] => 4
+    @fact sort(collect(keys(fd))) => [:a, :b]
+  end
 end
 
 facts("Parameters") do
