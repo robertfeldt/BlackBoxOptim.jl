@@ -56,8 +56,7 @@ function check_and_create_search_space_from_parameters(params::Parameters)
 
 end
 
-function check_valid(params::Parameters)
-
+function check_valid!(params::Parameters)
   # Check that max_time is larger than zero if it has been specified.
   if haskey(params, :MaxTime)
     if !isa(params[:MaxTime], Number) || params[:MaxTime] < 0.0

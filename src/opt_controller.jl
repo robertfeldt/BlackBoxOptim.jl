@@ -236,7 +236,7 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
   # Add new params in front if any are specified and they are valid.
   if length(parameters) > 0
     oc.parameters = chain(oc.parameters, parameters)
-    check_valid(oc.parameters) # We must recheck that new param settings are valid
+    check_valid!(oc.parameters) # We must recheck that new param settings are valid
   end
 end
 

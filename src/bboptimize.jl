@@ -31,18 +31,11 @@ function setup_problem(func::Function, parameters::Parameters = EMPTY_PARAMS)
   # Create a random solution from the search space and ensure that the given function returns a Number.
   ind = rand_individual(BlackBoxOptim.search_space(problem))
   res = fitness(ind, problem)
-  if !isa(res, Number)
-    # FIXME when also supporting multi-objective opt it should not return a number
-    throw(ArgumentError("The supplied function does NOT return a number when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
+  if !isa(res, fitness_type(problem))
+    throw(ArgumentError("The supplied function does NOT return the expected fitness type when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 
   return problem, params
-end
-
-function update_params!(parameters::Associative, kwargs)
-  for (k,v) in kwargs
-    parameters[k] = v
-  end
 end
 
 function bboptimize(optctrl::OptController; kwargs...)
@@ -68,7 +61,7 @@ function bbsetup(functionOrProblem, parameters::Associative = @compat(Dict{Any,A
 
   parameters = convert_and_chain(parameters, kwargs)
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
-  check_valid(params)
+  check_valid!(params)
 
   optimizer_func = ValidMethods[params[:Method]]
   optimizer = optimizer_func(problem, params)

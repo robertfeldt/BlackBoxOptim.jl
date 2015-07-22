@@ -19,7 +19,7 @@ facts("Top-level interface") do
 
   context("continue running an optimization after it finished") do
     optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-      MaxTime = 0.5, ShowTrace = true)
+      MaxTime = 0.5, ShowTrace = false)
 
     res1 = bboptimize(optctrl)
     @fact numruns(optctrl) => 1
