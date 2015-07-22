@@ -44,6 +44,9 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         last_top_fitness, delta_fitness, capacity,
         width_of_confidence_interval, fitness_improvement_potential,
 
+        # OptimizationResults
+        minimum, f_minimum, iteration_converged,
+
         # Search spaces
         ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,
         RangePerDimSearchSpace, symmetric_search_space,
@@ -101,7 +104,6 @@ include(joinpath("problems", "all_problems.jl"))
 include(joinpath("problems", "problem_family.jl"))
 
 include("evaluator.jl")
-include("opt_controller.jl")
 
 function setup!(o::Optimizer, evaluator::Evaluator)
   # Do nothing, override if you need to setup prior to the optimization loop
@@ -155,7 +157,7 @@ include("population.jl")
 # An archive collects information about the pareto optimal set or some
 # approximation of it. Different archival strategies can be implemented.
 
-# Different optimization algorithms
+# Different optimization algorithms/methods
 include("random_search.jl")
 include("differential_evolution.jl")
 include("adaptive_differential_evolution.jl")
@@ -165,14 +167,19 @@ include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")
 include("direct_search_with_probabilistic_descent.jl")
 
-# End-user/interface functions
-include("bboptimize.jl")
-
 # Fitness
 # include("fitness/fitness_types.jl") FIXME merge it with fitness.jl
 include("fitness/pareto_dominance.jl")
 include("fitness/epsilon_pareto_dominance.jl")
 include("fitness/epsilon_box_dominance.jl")
+
+# End-user/top-level interface functions
+include("optimization_methods.jl")
+include("default_parameters.jl")
+include("optimization_result.jl")
+include("opt_controller.jl")
+include("bboptimize.jl")
+include("compare_optimizers.jl")
 
 # Problems for testing
 include(joinpath("problems", "single_objective.jl"))

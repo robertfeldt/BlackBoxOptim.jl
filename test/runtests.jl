@@ -18,6 +18,8 @@ my_tests = [
   "test_differential_evolution.jl",
   "test_adaptive_differential_evolution.jl",
   "test_natural_evolution_strategies.jl",
+
+  "test_toplevel_bboptimize.jl",
   "test_smoketest_bboptimize.jl",
 
   "problems/test_single_objective.jl",
