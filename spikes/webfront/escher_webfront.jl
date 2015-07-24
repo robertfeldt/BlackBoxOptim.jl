@@ -26,7 +26,7 @@ function rand_walk!(rw::RandWalker)
   while true
     print("."); flush(STDOUT);
     step!(rw)
-    sleep(1.0 * rand())
+    sleep(0.4 * rand())
   end
 end
 
@@ -36,6 +36,7 @@ function fitness_plot(iterations, fitnesses)
   plot(x = iterations, y = fitnesses,
     Geom.point, Geom.line,
     Guide.xlabel("Iteration"), Guide.ylabel("Fitness"),
+    Stat.step,
     #Scale.y_log10,
   ) |> drawing(10inch, 6inch)
 end
@@ -58,6 +59,7 @@ function main(window)
     t = @async rand_walk!(rw)
 
     task_local_storage(:fhistory, fitness_history)
+    task_local_storage(:rwtask, t)
   end
 
   local content
@@ -72,14 +74,23 @@ function main(window)
         hbox("Best fitness:       ", hskip(1em), @sprintf("%.3f", fits[end]) |> emph),
         hbox("Found at iteration: ", hskip(1em), string(its[end]) |> emph),
         fitness_plot(its, fits),
-      )
+      ) |> packacross(center)
     else
       content = hbox("No min found yet...")
     end
 
+    task_started = task_running = false
+    if haskey(task_local_storage(), :rwtask)
+      t = task_local_storage(:rwtask)
+      task_running = !istaskdone(t)
+      #task_started = istaskstarted(t) # Only in 0.4
+    end
+
     vbox(
       h1("Fitness progress") |> emph,
-      content
+      content,
+      #hbox("Task started: ", string(task_started)), # Only in 0.4
+      #hbox("Task running: ", hskip(1em), string(task_running)),
     ) |> packacross(center)
   end
 end
