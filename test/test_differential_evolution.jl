@@ -41,7 +41,7 @@ context("RadiusLimitedSelector") do
 
     mini, maxi = minimum(sampled), maximum(sampled)
     if (maxi - mini) > max(numSamples+2, sel.radius)
-      @fact mini + popsize(DE) <= maxi + sel.radius => true
+      @fact mini + popsize(DE) => less_than_or_equal(maxi + sel.radius)
     end
   end
 end
@@ -61,17 +61,18 @@ context("RandomBound") do
 
     res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(0.0, 1.0)]),
                                [-0.1], [0.5])
-    @fact 0.5 >= res[1] >= 0.0 => true
+    @fact res[1] => greater_than_or_equal(0.0)
+    @fact res[1] => less_than_or_equal(0.5)
 
     res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(-11.0, 1.0), (0.0, 1.0)]),
                                [-11.1, 0.5], [-10.8, 0.5])
-    @fact -10.8 >= res[1] >= -11.0 => true
+    @fact (-10.8 >= res[1] >= -11.0) => true
     @fact res[2] => 0.5
 
     res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(30.0, 60.0), (-102.0, -1.0)]),
                                [50.4, -103.1], [49.6, -101.4])
     @fact res[1] => 50.4
-    @fact -101.4 >= res[2] >= -102.0 => true
+    @fact (-101.4 >= res[2] >= -102.0) => true
   end
 
   context("bounds if higher than max bound") do
@@ -80,7 +81,7 @@ context("RandomBound") do
 
     res = BlackBoxOptim.apply!(BlackBoxOptim.RandomBound([(-10.0, 96.0)]),
                                [97.0], [95.0])
-    @fact 95.0 <= res[1] <= 96.0 => true
+    @fact (95.0 <= res[1] <= 96.0) => true
   end
 end
 
@@ -98,7 +99,7 @@ context("DiffEvoRandBin1") do
       saved_target = copy(target)
       res = BlackBoxOptim.apply!(BlackBoxOptim.DiffEvoRandBin1(0.0, 0.0),
                                 target, 1, pop, [2,3,4])
-      @fact res === target => true
+      @fact (res === target) => true
       @fact ndims( res ) => 1
       @fact length( res ) => len
       @fact sum(target .!= saved_target) => 1
@@ -149,14 +150,14 @@ context("ask()/tell!()") do
     trial, target = res
 
     @fact ndims(trial.params) => 1
-    @fact 1 <= trial.index <= popsize(DE.population) => true
+    @fact (1 <= trial.index <= popsize(DE.population)) => true
     @fact isinspace(trial.params, DE.embed.searchSpace) => true
 
     @fact ndims(target.params) => 1
-    @fact 1 <= target.index <= popsize(DE.population) => true
+    @fact (1 <= target.index <= popsize(DE.population)) => true
     @fact isinspace(target.params, DE.embed.searchSpace) => true
 
-    @fact trial.index == target.index => true
+    @fact trial.index => target.index
 
     BlackBoxOptim.tell!(DE, res)
     @fact BlackBoxOptim.candi_pool_size(BlackBoxOptim.population(DE)) => 2 # test that all candidates returned to the pool

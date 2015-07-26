@@ -2,10 +2,10 @@ facts("TopListArchive") do
   context("ArchivedIndividual") do
     # test equality
     @fact isequal(BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0), BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) => true
-    @fact BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) == BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => true
-    @fact BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => false
-    @fact BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 1.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => true
-    @fact BlackBoxOptim.ArchivedIndividual([1.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) => true
+    @fact (BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) == BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) => true
+    @fact (BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) => false
+    @fact (BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 1.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) => true
+    @fact (BlackBoxOptim.ArchivedIndividual([1.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) => true
   end
 
   context("Constructing a small archive and adding to it") do
@@ -124,8 +124,8 @@ facts("TopListArchive") do
     indiv = [0.0, 2.0]
     BlackBoxOptim.add_candidate!(a, 1.0, indiv)
     # equal but not identical
-    @fact best_candidate(a) == indiv => true
-    @fact best_candidate(a) === indiv => false
+    @fact (best_candidate(a) == indiv) => true
+    @fact (best_candidate(a) === indiv) => false
 
     # modify the vector
     indiv[1] = 5.0
