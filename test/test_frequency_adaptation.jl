@@ -7,7 +7,8 @@ facts("Frequency Adaptation") do
       block = Int64[]
       for(i in 1:n)
         mi = BlackBoxOptim.next(fa)
-        @fact (1  <= mi <= n) => true
+        @fact mi => greater_than_or_equal(1)
+        @fact mi => less_than_or_equal(n)
         push!(block, mi)
         BlackBoxOptim.update!(fa, mi, rand())
       end
@@ -28,10 +29,10 @@ facts("Frequency Adaptation") do
           up1(mi)
         end
       end
-      uprep(n) 
-      @fact counts == ones(Int64, n) => true
+      uprep(n)
+      @fact counts => ones(Int64, n)
       uprep(20*n)
-      @fact counts[1] > (sum(counts[2:end])/(n-1)) => true
+      @fact counts[1] => greater_than(sum(counts[2:end])/(n-1))
     end
   end
 end

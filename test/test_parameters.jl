@@ -32,24 +32,24 @@ facts("DictChain") do
     context("using constructor") do
       dc = DictChain(d1, d2, d3)
       @fact typeof(dc) => DictChain{Symbol,Int}
-      @fact dc[:a], dc[:b], dc[:c] => 1, 4, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (1, 4, 5)
 
       dc = DictChain(d2, d1, d3)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 4, 5)
 
       dc = DictChain(DictChain(d3, d1), d2)
-      @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (1, 3, 5)
     end
 
     context("using merge()") do
       dc = merge(DictChain(d2, d1), d3)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 3, 5)
 
       dc = merge(d2, DictChain(d3, d1))
-      @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (1, 3, 5)
 
       dc = merge(DictChain(d1, d3), d2)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 4, 5)
     end
 
     context("using merge!()") do
@@ -61,27 +61,27 @@ facts("DictChain") do
       @fact dc[:a] => 1
       @fact_throws dc[:b] KeyError
       merge!(dc, d2)
-      @fact dc[:a], dc[:b] => 2, 4
+      @fact (dc[:a], dc[:b]) => (2, 4)
       merge!(dc, d3)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 3, 5)
     end
 
     context("using chain()") do
       dc = chain(chain(d1, d2), d3)
       @fact typeof(dc) => DictChain{Symbol,Int}
-      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 3, 5)
 
       dc = chain(d2, chain(d1, d3))
-      @fact dc[:a], dc[:b], dc[:c] => 1, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (1, 3, 5)
 
       dc = chain(chain(d3, d1), d2)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 4, 5)
 
       dc = chain(d1, d2, d3)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 3, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 3, 5)
 
       dc = chain(d3, d1, d2)
-      @fact dc[:a], dc[:b], dc[:c] => 2, 4, 5
+      @fact (dc[:a], dc[:b], dc[:c]) => (2, 4, 5)
     end
   end
 

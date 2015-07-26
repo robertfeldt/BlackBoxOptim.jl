@@ -6,14 +6,14 @@ facts("Top-level interface") do
   context("run a simple optimization with mostly defaults") do
     res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
       MaxSteps = 2000, ShowTrace = false)
-    @fact best_fitness(res) < 0.1 => true
+    @fact best_fitness(res) => less_than(0.1)
     xbest = best_candidate(res)
     @fact typeof(xbest) => Vector{Float64}
     @fact length(xbest) => 2
 
     # We also mimic some of the Optim.jl api (although it is a bit strange...)
-    @fact f_minimum(res) < 0.1 => true
-    @fact minimum(res) == xbest => true
+    @fact f_minimum(res) => less_than(0.1)
+    @fact minimum(res) => xbest
     @fact iteration_converged(res) => true
   end
 
@@ -27,12 +27,12 @@ facts("Top-level interface") do
     res2 = bboptimize(optctrl; MaxTime = 1.0)
     @fact numruns(optctrl) => 2
 
-    @fact best_fitness(res2) <= best_fitness(res1) => true
+    @fact best_fitness(res2) => less_than_or_equal(best_fitness(res1))
 
     # parameters should be the same except for MaxTime
     for p in keys(flatten(parameters(res1)))
       if p != :MaxTime
-        @fact parameters(res1)[p] == parameters(res2)[p] => true
+        @fact parameters(res1)[p] => parameters(res2)[p]
       end
     end
     @fact parameters(res1)[:MaxTime] => 0.5
@@ -44,7 +44,7 @@ facts("Top-level interface") do
       MaxTime = 0.5, ShowTrace = false)
     res1 = bboptimize(optctrl)
 
-    local tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
+    local tempfilename = "./temp" * string(rand(1:10^8)) * ".tmp"
 
     try # To ensure we delete the temp file afterwards...
       open(tempfilename, "w") do fh
@@ -63,7 +63,7 @@ facts("Top-level interface") do
       res2 = bboptimize(ocloaded; MaxTime = 1.0)
       @fact numruns(ocloaded) => 2
 
-      @fact best_fitness(res2) <= best_fitness(res1) => true
+      @fact best_fitness(res2) => less_than_or_equal(best_fitness(res1))
     finally
       if isfile(tempfilename)
         rm(tempfilename)

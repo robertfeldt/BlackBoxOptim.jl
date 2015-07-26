@@ -6,8 +6,8 @@ facts("Bimodal Cauchy Distributions") do
     for(i in 1:100)
       v = BlackBoxOptim.sample_bimodal_cauchy(bc; truncateAbove1 = true, truncateBelow0 = false)
 
-      @fact v <= 1.0 => true
-      @fact v > 0.0 => true # Very unlikely to be 0.0!!?
+      @fact v => less_than_or_equal(1.0)
+      @fact v => greater_than(0.0) # Very unlikely to be 0.0!!?
     end
   end
 
@@ -17,8 +17,8 @@ facts("Bimodal Cauchy Distributions") do
     for(i in 1:100)
       v = BlackBoxOptim.sample_bimodal_cauchy(bc; truncateAbove1 = true, truncateBelow0 = true)
 
-      @fact v <= 1.0 => true
-      @fact v >= 0.0 => true
+      @fact v => less_than_or_equal(1.0)
+      @fact v => greater_than_or_equal(0.0)
     end
   end
 

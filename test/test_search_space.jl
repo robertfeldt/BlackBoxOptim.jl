@@ -122,14 +122,14 @@ facts("Search space") do
     @fact size(inds, 2) => 2
 
     sorted = sort(inds, 2) # Sort per row => in their ordered intervals
-    @fact 0.0 <= sorted[1,1] <= 0.5 => true
-    @fact 0.5 <= sorted[1,2] <= 1.0 => true
+    @fact (0.0 <= sorted[1,1] <= 0.5) => true
+    @fact (0.5 <= sorted[1,2] <= 1.0) => true
 
-    @fact 2.0 <= sorted[2,1] <= 2.5 => true
-    @fact 2.5 <= sorted[2,2] <= 3.0 => true
+    @fact (2.0 <= sorted[2,1] <= 2.5) => true
+    @fact (2.5 <= sorted[2,2] <= 3.0) => true
 
-    @fact 4.0 <= sorted[3,1] <= 4.5 => true
-    @fact 4.5 <= sorted[3,2] <= 5.0 => true
+    @fact (4.0 <= sorted[3,1] <= 4.5) => true
+    @fact (4.5 <= sorted[3,2] <= 5.0) => true
   end
 
   context("feasible finds feasible points in the search space") do
@@ -137,27 +137,27 @@ facts("Search space") do
 
     # We use the double transpose below to ensure the actual and expected
     # values have the same type (matrices, not vectors).
-    @fact BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) == [1.0, 2.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) == [1.0, 3.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([1.1, 2.0, 5.0], ss) == [1.0, 2.0, 5.0] => true
-    @fact BlackBoxOptim.feasible([1.1, 3.0, 5.0], ss) == [1.0, 3.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) => [1.0, 2.0, 4.0]
+    @fact BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) => [1.0, 3.0, 4.0]
+    @fact BlackBoxOptim.feasible([1.1, 2.0, 5.0], ss) => [1.0, 2.0, 5.0]
+    @fact BlackBoxOptim.feasible([1.1, 3.0, 5.0], ss) => [1.0, 3.0, 5.0]
 
-    @fact BlackBoxOptim.feasible([-0.1, 2.0, 4.0], ss) == [0.0, 2.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([-0.1, 3.0, 4.0], ss) == [0.0, 3.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([-0.1, 2.0, 5.0], ss) == [0.0, 2.0, 5.0] => true
-    @fact BlackBoxOptim.feasible([-0.1, 3.0, 5.0], ss) == [0.0, 3.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([-0.1, 2.0, 4.0], ss) => [0.0, 2.0, 4.0]
+    @fact BlackBoxOptim.feasible([-0.1, 3.0, 4.0], ss) => [0.0, 3.0, 4.0]
+    @fact BlackBoxOptim.feasible([-0.1, 2.0, 5.0], ss) => [0.0, 2.0, 5.0]
+    @fact BlackBoxOptim.feasible([-0.1, 3.0, 5.0], ss) => [0.0, 3.0, 5.0]
 
-    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0] => true
-    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) => [0.0, 2.0, 4.0]
+    @fact BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) => [0.0, 2.0, 4.0]
+    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) => [1.0, 2.0, 5.0]
+    @fact BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) => [1.0, 2.0, 5.0]
 
-    @fact BlackBoxOptim.feasible([0.0, 3.3, 4.0], ss) == [0.0, 3.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([0.0, 3.2, 4.0], ss) == [0.0, 3.0, 4.0] => true
-    @fact BlackBoxOptim.feasible([1.0, 3.1, 5.0], ss) == [1.0, 3.0, 5.0] => true
-    @fact BlackBoxOptim.feasible([1.0, 3.9, 5.0], ss) == [1.0, 3.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([0.0, 3.3, 4.0], ss) => [0.0, 3.0, 4.0]
+    @fact BlackBoxOptim.feasible([0.0, 3.2, 4.0], ss) => [0.0, 3.0, 4.0]
+    @fact BlackBoxOptim.feasible([1.0, 3.1, 5.0], ss) => [1.0, 3.0, 5.0]
+    @fact BlackBoxOptim.feasible([1.0, 3.9, 5.0], ss) => [1.0, 3.0, 5.0]
 
-    @fact BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0] => true
+    @fact BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) => [0.0, 3.0, 5.0]
   end
 
   context("diameters") do
