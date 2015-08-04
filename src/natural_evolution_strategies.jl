@@ -43,7 +43,7 @@ end
 # We use a different ordering of the dimensions than other optimizers, so transpose.
 population(o::NaturalEvolutionStrategyOpt) = o.population
 
-NES_DefaultOptions = @compat Dict{Symbol,Any}(
+const NES_DefaultOptions = @compat Dict{Symbol,Any}(
   :lambda => 0,              # If 0.0 it will be set based on the number of dimensions
   :mu_learnrate => 1.0,
   :sigma_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions

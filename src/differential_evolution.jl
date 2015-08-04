@@ -1,6 +1,6 @@
 using Distributions
 
-DE_DefaultOptions = @compat Dict{Symbol,Any}(
+const DE_DefaultOptions = @compat Dict{Symbol,Any}(
   :f => 0.6,
   :cr => 0.7,
   :SamplerRadius => 8,

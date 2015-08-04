@@ -1,5 +1,5 @@
 # Default parameters for all convenience methods that are exported to the end user.
-DefaultParameters = @compat Dict{Symbol,Any}(
+const DefaultParameters = @compat Dict{Symbol,Any}(
   :NumDimensions  => :NotSpecified, # Dimension of problem to be optimized
   :SearchRange    => (-1.0, 1.0), # Default search range to use per dimension unless specified
   :SearchSpace    => false, # Search space can be directly specified and will then take precedence over NumDimensions and SearchRange.
