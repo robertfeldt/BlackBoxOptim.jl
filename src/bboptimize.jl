@@ -1,28 +1,24 @@
 # Setup a fixed-dimensional problem
-function setup_problem(problem::OptimizationProblem, parameters::Parameters = EMPTY_PARAMS)
-  return problem, chain(DefaultParameters, parameters)
+function setup_problem(problem::OptimizationProblem, parameters::Parameters)
+  return problem, parameters
 end
 
 # Create a fixed-dimensional problem given
 #   any-dimensional problem and a number of dimensions as a parameter
-function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters = EMPTY_PARAMS)
-  params = chain(DefaultParameters, parameters)
-
+function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters)
   # If an anydim problem was given the dimension param must have been specified.
   if params[:NumDimensions] == :NotSpecified
     throw(ArgumentError("You MUST specify NumDimensions= when a problem family is given"))
   end
   problem = fixed_dim_problem(family, parameters[:NumDimensions])
 
-  return problem, params
+  return problem, parameters
 end
 
 # Create a fixed-dimensional problem given
 #   a function and a search range + number of dimensions.
-function setup_problem(func::Function, parameters::Parameters = EMPTY_PARAMS)
-  params = chain(DefaultParameters, parameters)
-
-  ss = check_and_create_search_space(params)
+function setup_problem(func::Function, parameters::Parameters)
+  ss = check_and_create_search_space(parameters)
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
@@ -37,7 +33,7 @@ function setup_problem(func::Function, parameters::Parameters = EMPTY_PARAMS)
                         "(when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 
-  return problem, params
+  return problem, parameters
 end
 
 function bboptimize(optctrl::OptController; kwargs...)
