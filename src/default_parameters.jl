@@ -28,32 +28,45 @@ DefaultParameters = @compat Dict{Symbol,Any}(
   :PopulationSize => 50
 )
 
-function check_and_create_search_space_from_parameters(params::Parameters)
+function check_and_create_search_space(params::Parameters)
   # If an explicit SearchSpace has been given we use that. It takes precedence.
-  if haskey(params, :SearchSpace) && typeof(params[:SearchSpace]) <: FixedDimensionSearchSpace
-    return params[:SearchSpace]
+  if haskey(params, :SearchSpace)
+    ss = params[:SearchSpace]
+    if isa(ss, SearchSpace)
+      return ss
+    elseif isa(ss, typeof([(0.0, 1.0)]))
+      return RangePerDimSearchSpace(ss)
+    elseif ss == false
+      # silently fallthrough to the other means of search space specification
+    else
+      throw(ArgumentError("Using $(typeof(ss)) for SearchSpace is not supported"))
+    end
   end
 
   # If no explicit search space has been given we must create one from the
   # other related parameters.
-  if !haskey(params, :SearchSpace) || params[:SearchSpace] == false
-    # Check that a valid search space has been stated and create the search_space
+  if haskey(params, :SearchRange)
+    sr = params[:SearchRange]
+    # Check that a valid search range has been stated and create the search_space
     # based on it, or bail out.
-    if typeof(params[:SearchRange]) == typeof((0.0, 1.0))
-      if params[:NumDimensions] == :NotSpecified
-          throw(ArgumentError("You MUST specify the number of dimensions in a solution when giving a search range $(params[:SearchRange])"))
+    if isa(sr, typeof((0.0, 1.0)))
+      ndim = params[:NumDimensions]
+      if ndim == :NotSpecified
+          throw(ArgumentError("You MUST specify NumDimensions= in a solution when giving a SearchRange=$(sr)"))
       end
-      return symmetric_search_space(params[:NumDimensions], params[:SearchRange])
-    elseif typeof(params[:SearchRange]) <: typeof([(0.0, 1.0)])
-      return RangePerDimSearchSpace(params[:SearchRange])
+      return symmetric_search_space(params[:NumDimensions], sr)
+    elseif isa(sr, typeof([(0.0, 1.0)]))
+      return RangePerDimSearchSpace(sr)
     else
-      throw(ArgumentError("Invalid search range specification."))
+      throw(ArgumentError("Using $(typeof(sr)) for SearchRange is not supported."))
     end
   end
 
   # No valid search space have been specified => bail.
-  throw("Invalid SearchSpace given (SearchSpace = $(params[:SearchSpace]), SearchRange = $(params[:SearchRange]), NumDimensions = $(params[:NumDimensions]))")
-
+  throw(ArgumentError("Invalid search space specification ("*
+                      "SearchSpace = $(params[:SearchSpace]), "*
+                      "SearchRange = $(params[:SearchRange]), "*
+                      "NumDimensions = $(params[:NumDimensions]))"))
 end
 
 function check_valid!(params::Parameters)
