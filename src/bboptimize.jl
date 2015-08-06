@@ -1,41 +1,39 @@
 # Setup a fixed-dimensional problem
-function setup_problem(problem::OptimizationProblem, parameters::Parameters = EMPTY_PARAMS)
-  return problem, chain(DefaultParameters, parameters)
+function setup_problem(problem::OptimizationProblem, parameters::Parameters)
+  return problem, parameters
 end
 
 # Create a fixed-dimensional problem given
 #   any-dimensional problem and a number of dimensions as a parameter
-function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters = EMPTY_PARAMS)
-  params = chain(DefaultParameters, parameters)
-
+function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters)
   # If an anydim problem was given the dimension param must have been specified.
   if params[:NumDimensions] == :NotSpecified
-    throw(ArgumentError("You MUST specify the number of dimensions in a solution when a problem family is given"))
+    throw(ArgumentError("You MUST specify NumDimensions= when a problem family is given"))
   end
   problem = fixed_dim_problem(family, parameters[:NumDimensions])
 
-  return problem, params
+  return problem, parameters
 end
 
 # Create a fixed-dimensional problem given
 #   a function and a search range + number of dimensions.
-function setup_problem(func::Function, parameters::Parameters = EMPTY_PARAMS)
-  params = chain(DefaultParameters, parameters)
-
-  ss = check_and_create_search_space_from_parameters(params)
+function setup_problem(func::Function, parameters::Parameters)
+  ss = check_and_create_search_space(parameters)
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
   problem = convert(FunctionBasedProblem, func, "", MinimizingFitnessScheme, ss) # FIXME v0.3 workaround
 
-  # Create a random solution from the search space and ensure that the given function returns a Number.
-  ind = rand_individual(BlackBoxOptim.search_space(problem))
+  # validate fitness: create a random solution from the search space and ensure that fitness(problem) returns fitness_type(problem).
+  ind = rand_individual(search_space(problem))
   res = fitness(ind, problem)
   if !isa(res, fitness_type(problem))
-    throw(ArgumentError("The supplied function does NOT return the expected fitness type when called with a potential solution (when called with $(ind) it returned $(res)) so we cannot optimize it!"))
+    throw(ArgumentError("The supplied fitness function does NOT return the expected fitness type "*
+                        "when called with a potential solution "*
+                        "(when called with $(ind) it returned $(res)) so we cannot optimize it!"))
   end
 
-  return problem, params
+  return problem, parameters
 end
 
 function bboptimize(optctrl::OptController; kwargs...)
