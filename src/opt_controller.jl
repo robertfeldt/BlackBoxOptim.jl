@@ -286,6 +286,7 @@ function run_optimization(ctrl::OptRunController, params::Associative)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
     if isa(ex, InterruptException)
+      warn("Optimization interrupted, recovering intermediate results...")
       return make_opt_result(ctrl, params)
     else
       rethrow(ex)
