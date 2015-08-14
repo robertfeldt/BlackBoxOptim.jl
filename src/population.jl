@@ -46,6 +46,16 @@ Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 Base.getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
+function Base.append!{F}(pop::FitPopulation{F}, extra_pop::FitPopulation{F})
+  numdims(pop) == numdims(extra_pop) ||
+    throw(DimensionMismatch("Cannot append population, "*
+                            "the number of parameters differs "*
+                            "($(numdims(pop)) vs $(numdims(extra_pop)))"))
+  pop.individuals = hcat(pop.individuals, extra_pop.individuals)
+  append!(pop.fitness, extra_pop.fitness)
+  return pop
+end
+
 fitness_type{F}(pop::FitPopulation{F}) = F
 candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 
