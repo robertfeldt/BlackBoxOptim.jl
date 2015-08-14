@@ -42,9 +42,9 @@ params_std(pop::FitPopulation) = std(pop.individuals, 1)
 
 fitness(pop::FitPopulation, ix::Int) = pop.fitness[ix]
 
-getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
-getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
-getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
+Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
+Base.getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
+Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
 fitness_type{F}(pop::FitPopulation{F}) = F
 candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
