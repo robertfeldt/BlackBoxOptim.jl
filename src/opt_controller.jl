@@ -250,7 +250,14 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
   end
 end
 
-# Start a new optimization run, possibly with new parameters.
+function init_rng!(parameters::Parameters)
+  if parameters[:RandomizeRngSeed]
+    parameters[:RngSeed] = rand(1:1_000_000)
+    srand(parameters[:RngSeed])
+  end
+end
+
+# Start a new optimization run, possibly with new parameters and report on results.
 function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
   ctrl = OptRunController(oc.optimizer, oc.problem, oc.parameters)
   push!(oc.runcontrollers, ctrl)
@@ -260,50 +267,36 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
     init_rng!(oc.parameters)
   end
 
-  run_optimization(ctrl, oc.parameters)
-end
-
-function init_rng!(parameters::Parameters)
-  if parameters[:RandomizeRngSeed]
-    parameters[:RngSeed] = rand(1:1_000_000)
-    srand(parameters[:RngSeed])
-  end
-end
-
-# Run one optimization run and report on results.
-function run_optimization(ctrl::OptRunController, params::Associative)
-  # Run the optimization. Try to return something sensible
-  # even if interrupted with Ctrl-C.
   try
     run!(ctrl)
     show_report(ctrl)
 
-    if params[:SaveFitnessTraceToCsv]
+    if oc.parameters[:SaveFitnessTraceToCsv]
       write_results(ctrl)
     end
 
-    return make_opt_result(ctrl, params)
+    return make_opt_results(ctrl, oc)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
     if isa(ex, InterruptException)
       warn("Optimization interrupted, recovering intermediate results...")
-      return make_opt_result(ctrl, params)
+      return make_opt_results(ctrl, oc)
     else
       rethrow(ex)
     end
   end
 end
 
-function make_opt_result(ctrl::OptRunController, params::Associative)
-  SingleObjectiveOptimizationResults{Vector{Float64},Float64}(
-    string(params[:Method]),
-    best_candidate(ctrl),
+make_opt_results{O<:Optimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
+  SimpleOptimizationResults{fitness_type(problem(ctrl)), Individual}(
+    string(oc.parameters[:Method]),
     best_fitness(ctrl),
+    best_candidate(ctrl),
     stop_reason(ctrl),
     num_steps(ctrl),
     start_time(ctrl),
     elapsed_time(ctrl),
-    params,
+    oc.parameters,
     num_func_evals(ctrl)
   )
-end
+

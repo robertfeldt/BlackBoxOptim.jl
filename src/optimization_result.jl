@@ -1,9 +1,9 @@
-abstract OptimizationResults
+abstract OptimizationResults{F}
 
-immutable SingleObjectiveOptimizationResults{RT,FT} <: OptimizationResults
+immutable SimpleOptimizationResults{F,RT} <: OptimizationResults{F}
   method::ASCIIString # Symbol instead or flexible?
+  best_fitness::F
   best_candidate::RT
-  best_fitness::FT
   stop_reason::ASCIIString # FIXME turn into type hierarchy of immutable reasons with their attached info
   iterations::Int
   start_time::Float64
@@ -22,6 +22,7 @@ parameters(or::OptimizationResults) = or.parameters
 f_calls(or::OptimizationResults) = or.f_calls
 
 # Alternative nomenclature that mimics Optim.jl more closely.
+# FIXME should be it be enabled only for MinimizingFitnessScheme?
 Base.minimum(or::OptimizationResults) = best_candidate(or)
 f_minimum(or::OptimizationResults) = best_fitness(or)
 # FIXME lookup stop_reason
