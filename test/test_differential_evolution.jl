@@ -17,7 +17,7 @@ context("SimpleSelector") do
     @fact length(sampled) => numSamples
 
     # All sampled indices are indices into the population
-    @fact all([in(index, 1:popsize(DE)) for index in sampled]) => true
+    @fact all(index -> in(index, 1:popsize(DE)), sampled) => true
   end
 end
 
@@ -37,7 +37,7 @@ context("RadiusLimitedSelector") do
     @fact length(sampled) => numSamples
 
     # All sampled indices are indices into the population
-    @fact all([in(index, 1:popsize(DE)) for index in sampled]) => true
+    @fact all(index -> in(index, 1:popsize(DE)), sampled) => true
 
     mini, maxi = minimum(sampled), maximum(sampled)
     if (maxi - mini) > max(numSamples+2, sel.radius)
