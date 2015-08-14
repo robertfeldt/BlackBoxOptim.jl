@@ -220,12 +220,12 @@ type OptController{O<:Optimizer, P<:OptimizationProblem}
   optimizer::O   # optimization algorithm
   problem::P     # opt problem
   parameters::ParamsDictChain
-  runcontrollers::Vector{Any}
+  runcontrollers::Vector{OptRunController{O}}
 end
 
 function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
   params::ParamsDictChain)
-  OptController{O,P}(optimizer, problem, params, Any[])
+  OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
 end
 
 numruns(oc::OptController) = length(oc.runcontrollers)
