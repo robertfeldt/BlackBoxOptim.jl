@@ -239,7 +239,7 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
   # been setup.
   for k in keys(parameters)
     if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :ShowTrace]
-      throw("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))")
+      throw(ArgumentError("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))"))
     end
   end
 
