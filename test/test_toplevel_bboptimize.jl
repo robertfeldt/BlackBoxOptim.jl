@@ -3,18 +3,44 @@ facts("Top-level interface") do
     return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
   end
 
-  context("run a simple optimization with mostly defaults") do
-    res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      MaxSteps = 2000, ShowTrace = false)
-    @fact best_fitness(res) => less_than(0.1)
-    xbest = best_candidate(res)
-    @fact typeof(xbest) => Vector{Float64}
-    @fact length(xbest) => 2
+  context("run a simple optimization") do
+    context("with mostly defaults") do
+      res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+        MaxSteps = 2000, ShowTrace = false)
+      @fact best_fitness(res) => less_than(0.1)
+      xbest = best_candidate(res)
+      @fact typeof(xbest) => Vector{Float64}
+      @fact length(xbest) => 2
 
-    # We also mimic some of the Optim.jl api (although it is a bit strange...)
-    @fact f_minimum(res) => less_than(0.1)
-    @fact minimum(res) => xbest
-    @fact iteration_converged(res) => true
+      # We also mimic some of the Optim.jl api (although it is a bit strange...)
+      @fact f_minimum(res) => less_than(0.1)
+      @fact minimum(res) => xbest
+      @fact iteration_converged(res) => true
+    end
+
+    context("using non-population optimizer") do
+      res = bboptimize(rosenbrock; Method=:generating_set_search,
+                       SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                       MaxSteps = 2000, ShowTrace = false)
+      @fact isa(res, BlackBoxOptim.SimpleOptimizationResults) --> true
+      @fact best_fitness(res) => less_than(1.0)
+      xbest = best_candidate(res)
+      @fact typeof(xbest) => Vector{Float64}
+    end
+
+    context("using population optimizer") do
+      res = bboptimize(rosenbrock; Method=:adaptive_de_rand_1_bin,
+                       SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                       MaxSteps = 2000, ShowTrace = false)
+      @fact isa(res, BlackBoxOptim.PopulationOptimizationResults) --> true
+      @fact best_fitness(res) => less_than(0.1)
+      xbest = best_candidate(res)
+      @fact typeof(xbest) => Vector{Float64}
+      xpop = population(res)
+      @fact isa(xpop, BlackBoxOptim.Population) --> true
+      @fact popsize(xpop) --> greater_than(0)
+      @fact numdims(xpop) --> 2
+    end
   end
 
   context("continue running an optimization after it finished") do

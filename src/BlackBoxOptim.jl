@@ -45,7 +45,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # OptimizationResults
-        minimum, f_minimum, iteration_converged, parameters,
+        minimum, f_minimum, iteration_converged, parameters, population,
 
         # OptController
         numruns,

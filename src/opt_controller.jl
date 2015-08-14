@@ -300,3 +300,17 @@ make_opt_results{O<:Optimizer}(ctrl::OptRunController{O}, oc::OptController{O}) 
     num_func_evals(ctrl)
   )
 
+make_opt_results{O<:PopulationOptimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
+  PopulationOptimizationResults{fitness_type(problem(ctrl)), Individual,
+                                typeof(population(ctrl.optimizer))}(
+    string(oc.parameters[:Method]),
+    best_fitness(ctrl),
+    best_candidate(ctrl),
+    stop_reason(ctrl),
+    num_steps(ctrl),
+    start_time(ctrl),
+    elapsed_time(ctrl),
+    oc.parameters,
+    num_func_evals(ctrl),
+    population(ctrl.optimizer)
+  )
