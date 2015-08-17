@@ -22,7 +22,7 @@ parameters(or::OptimizationResults) = or.parameters
 f_calls(or::OptimizationResults) = or.f_calls
 
 # Alternative nomenclature that mimics Optim.jl more closely.
-import Base.minimum
-Base.minimum(or::OptimizationResults) = or.best_candidate
-f_minimum(or::OptimizationResults) = or.best_fitness
+Base.minimum(or::OptimizationResults) = best_candidate(or)
+f_minimum(or::OptimizationResults) = best_fitness(or)
+# FIXME lookup stop_reason
 iteration_converged(or::OptimizationResults) = iterations(or) >= parameters(or)[:MaxSteps]
