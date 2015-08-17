@@ -4,7 +4,7 @@ facts("Top-level interface") do
   end
 
   context("run a simple optimization") do
-    context("with mostly defaults") do
+    context("using bboptimize() with mostly defaults") do
       res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
         MaxSteps = 2000, ShowTrace = false)
       @fact best_fitness(res) => less_than(0.1)
@@ -16,6 +16,19 @@ facts("Top-level interface") do
       @fact f_minimum(res) => less_than(0.1)
       @fact minimum(res) => xbest
       @fact iteration_converged(res) => true
+    end
+
+    context("using bbsetup()/bboptimize() with mostly defaults") do
+      opt = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+        MaxSteps = 2000, ShowTrace = false)
+      @fact numruns(opt) --> 0
+      @fact isa(problem(opt), BlackBoxOptim.FunctionBasedProblem) --> true
+      res = bboptimize(opt)
+      @fact numruns(opt) --> 1
+      @fact isa(lastrun(opt), BlackBoxOptim.OptRunController) --> true
+
+      @fact best_fitness(res) => less_than(0.1)
+      xbest = best_candidate(res)
     end
 
     context("using non-population optimizer") do

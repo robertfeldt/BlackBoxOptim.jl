@@ -48,7 +48,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         minimum, f_minimum, iteration_converged, parameters, population,
 
         # OptController
-        numruns,
+        numruns, lastrun, problem,
 
         # Search spaces
         ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace, ContinuousSearchSpace,

@@ -228,7 +228,9 @@ function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, probl
   OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
 end
 
+problem(oc::OptController) = oc.problem
 numruns(oc::OptController) = length(oc.runcontrollers)
+lastrun(oc::OptController) = oc.runcontrollers[end]
 
 function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
   parameters::Associative = @compat(Dict{Any,Any}()))
