@@ -139,9 +139,19 @@ function step!{O<:SteppingOptimizer}(ctrl::OptRunController{O})
   return 0
 end
 
+setup_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
+  setup!(ctrl.optimizer)
+setup_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
+  setup!(ctrl.optimizer, ctrl.evaluator)
+
+finalize_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
+  finalize!(ctrl.optimizer)
+finalize_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
+  finalize!(ctrl.optimizer, ctrl.evaluator)
+
 function run!(ctrl::OptRunController)
   tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
-  setup!(ctrl.optimizer, evaluator(ctrl))
+  setup_optimizer!(ctrl)
 
   ctrl.start_time = time()
   ctrl.num_steps = 0
@@ -166,7 +176,7 @@ function run!(ctrl::OptRunController)
   ctrl.stop_time = time()
   ctrl.num_better += ctrl.num_better_since_last_report
   ctrl.num_better_since_last_report = 0
-  finalize!(ctrl.optimizer, evaluator(ctrl))
+  finalize_optimizer!(ctrl)
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
 
@@ -210,15 +220,17 @@ type OptController{O<:Optimizer, P<:OptimizationProblem}
   optimizer::O   # optimization algorithm
   problem::P     # opt problem
   parameters::ParamsDictChain
-  runcontrollers::Vector{Any}
+  runcontrollers::Vector{OptRunController{O}}
 end
 
 function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
   params::ParamsDictChain)
-  OptController{O,P}(optimizer, problem, params, Any[])
+  OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
 end
 
+problem(oc::OptController) = oc.problem
 numruns(oc::OptController) = length(oc.runcontrollers)
+lastrun(oc::OptController) = oc.runcontrollers[end]
 
 function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
   parameters::Associative = @compat(Dict{Any,Any}()))
@@ -229,7 +241,7 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
   # been setup.
   for k in keys(parameters)
     if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :ShowTrace]
-      throw("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))")
+      throw(ArgumentError("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))"))
     end
   end
 
@@ -240,7 +252,14 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
   end
 end
 
-# Start a new optimization run, possibly with new parameters.
+function init_rng!(parameters::Parameters)
+  if parameters[:RandomizeRngSeed]
+    parameters[:RngSeed] = rand(1:1_000_000)
+    srand(parameters[:RngSeed])
+  end
+end
+
+# Start a new optimization run, possibly with new parameters and report on results.
 function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
   ctrl = OptRunController(oc.optimizer, oc.problem, oc.parameters)
   push!(oc.runcontrollers, ctrl)
@@ -250,49 +269,50 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
     init_rng!(oc.parameters)
   end
 
-  run_optimization(ctrl, oc.parameters)
-end
-
-function init_rng!(parameters::Parameters)
-  if parameters[:RandomizeRngSeed]
-    parameters[:RngSeed] = rand(1:1_000_000)
-    srand(parameters[:RngSeed])
-  end
-end
-
-# Run one optimization run and report on results.
-function run_optimization(ctrl::OptRunController, params::Associative)
-  # Run the optimization. Try to return something sensible
-  # even if interrupted with Ctrl-C.
   try
     run!(ctrl)
     show_report(ctrl)
 
-    if params[:SaveFitnessTraceToCsv]
+    if oc.parameters[:SaveFitnessTraceToCsv]
       write_results(ctrl)
     end
 
-    return make_opt_result(ctrl, params)
+    return make_opt_results(ctrl, oc)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
     if isa(ex, InterruptException)
-      return make_opt_result(ctrl, params)
+      warn("Optimization interrupted, recovering intermediate results...")
+      return make_opt_results(ctrl, oc)
     else
       rethrow(ex)
     end
   end
 end
 
-function make_opt_result(ctrl::OptRunController, params::Associative)
-  SingleObjectiveOptimizationResults{Vector{Float64},Float64}(
-    string(params[:Method]),
-    best_candidate(ctrl),
+make_opt_results{O<:Optimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
+  SimpleOptimizationResults{fitness_type(problem(ctrl)), Individual}(
+    string(oc.parameters[:Method]),
     best_fitness(ctrl),
+    best_candidate(ctrl),
     stop_reason(ctrl),
     num_steps(ctrl),
     start_time(ctrl),
     elapsed_time(ctrl),
-    params,
+    oc.parameters,
     num_func_evals(ctrl)
   )
-end
+
+make_opt_results{O<:PopulationOptimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
+  PopulationOptimizationResults{fitness_type(problem(ctrl)), Individual,
+                                typeof(population(ctrl.optimizer))}(
+    string(oc.parameters[:Method]),
+    best_fitness(ctrl),
+    best_candidate(ctrl),
+    stop_reason(ctrl),
+    num_steps(ctrl),
+    start_time(ctrl),
+    elapsed_time(ctrl),
+    oc.parameters,
+    num_func_evals(ctrl),
+    population(ctrl.optimizer)
+  )

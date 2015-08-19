@@ -1,6 +1,6 @@
 abstract StochasticApproximationOptimizer <: AskTellOptimizer
 
-SPSADefaultParameters = @compat Dict{Symbol,Any}(
+const SPSADefaultParameters = @compat Dict{Symbol,Any}(
   :Alpha => 0.602,  # The optimal value is 1.0 but values down to 0.602 often can give faster convergence
   :Gamma => 0.101,  # The optimal value is 1/6 but values down to 0.101 often can give faster convergence
   :a     => 0.0017,
