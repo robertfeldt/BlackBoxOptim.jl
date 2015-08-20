@@ -6,6 +6,7 @@ using Distributions, StatsBase, Compat
 
 export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, bbsetup, compare_optimizers,
+        ParallelPopulationOptimizer,
 
         DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
         adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
@@ -179,6 +180,7 @@ include("resampling_memetic_search.jl")
 include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")
 include("direct_search_with_probabilistic_descent.jl")
+include("parallel_population_optimizer.jl")
 
 # Fitness
 # include("fitness/fitness_types.jl") FIXME merge it with fitness.jl
