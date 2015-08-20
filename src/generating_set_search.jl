@@ -11,7 +11,7 @@ abstract DirectSearcher <: SteppingOptimizer
 # a GSS search.
 abstract DirectionGenerator
 
-type ConstantDirectionGen <: DirectionGenerator
+immutable ConstantDirectionGen <: DirectionGenerator
   directions::Array{Float64, 2}
 
   ConstantDirectionGen(directions) = begin
