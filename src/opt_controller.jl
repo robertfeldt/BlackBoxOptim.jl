@@ -19,7 +19,10 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
 
   num_steps::Int       # optimization steps done
   num_better::Int      # number of steps that improved best fitness
+
   num_better_since_last_report::Int # ditto, since last call to trace_progress()
+  num_steps_since_last_report::Int # number of steps since last call to trace_progress()
+
   last_num_fevals::Int # the number of function evals on the previous step
   num_steps_without_fevals::Int # the number of steps without the function evals
 
@@ -35,7 +38,7 @@ function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E
         [params[key] for key in Symbol[:ShowTrace, :SaveTrace, :TraceInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
-        0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
+        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
 
 # stepping optimizer has it's own evaluator, get a reference
@@ -100,7 +103,6 @@ function check_stop_condition(ctrl::OptRunController)
 end
 
 function trace_progress(ctrl::OptRunController)
-  ctrl.num_better += ctrl.num_better_since_last_report
   ctrl.last_report_time = time()
 
   # Always print step number, num fevals and elapsed time
@@ -112,8 +114,9 @@ function trace_progress(ctrl::OptRunController)
   if ctrl.num_better_since_last_report > 0
     tr(ctrl, @sprintf(", improv/step: %.3f (last = %.4f)",
         ctrl.num_better/num_steps(ctrl),
-        ctrl.num_better_since_last_report/num_steps(ctrl)))
+        ctrl.num_better_since_last_report/ctrl.num_steps_since_last_report))
     ctrl.num_better_since_last_report = 0
+    ctrl.num_steps_since_last_report = 0
   end
 
   # Always print fitness if num_evals > 0
@@ -162,8 +165,11 @@ function run!(ctrl::OptRunController)
     end
 
     # update the counters
-    ctrl.num_better_since_last_report += step!(ctrl)
+    nstep_better = step!(ctrl)
+    ctrl.num_better += nstep_better
+    ctrl.num_better_since_last_report += nstep_better
     ctrl.num_steps += 1
+    ctrl.num_steps_since_last_report += 1
     if num_evals(ctrl.evaluator) == ctrl.last_num_fevals
         ctrl.num_steps_without_fevals += 1
     else
@@ -174,8 +180,6 @@ function run!(ctrl::OptRunController)
     ctrl.stop_reason = check_stop_condition(ctrl)
   end
   ctrl.stop_time = time()
-  ctrl.num_better += ctrl.num_better_since_last_report
-  ctrl.num_better_since_last_report = 0
   finalize_optimizer!(ctrl)
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
