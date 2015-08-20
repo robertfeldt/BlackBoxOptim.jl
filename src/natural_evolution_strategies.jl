@@ -16,11 +16,10 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
   utilities::Vector{Float64}      # The fitness shaping utility vector
 
   function SeparableNESOpt(searchSpace; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
-    sigma_learnrate::Float64 = 0.0)
+    sigma_learnrate::Float64 = 0.0, ini_x = nothing)
 
     numDimensions = numdims(searchSpace)
 
-    mu = rand(numDimensions)
     sigma = ones(numDimensions)
     distr = Normal(0, 1)
 
@@ -30,8 +29,13 @@ type SeparableNESOpt <: NaturalEvolutionStrategyOpt
     if sigma_learnrate == 0.0
       sigma_learnrate = calc_sigma_learnrate_for_snes(numDimensions) # default sigma learn rate
     end
+    if ini_x === nothing
+      ini_x = rand(numDimensions)
+    else
+      ini_x = copy(ini_x::Individual)
+    end
 
-    new(numDimensions, lambda, mu, sigma, distr,
+    new(numDimensions, lambda, ini_x, sigma, distr,
       mu_learnrate, sigma_learnrate,
       zeros(numDimensions, lambda), zeros(numDimensions, lambda),
       # Most modern NES papers use log rather than linear fitness shaping.
@@ -44,7 +48,8 @@ end
 population(o::NaturalEvolutionStrategyOpt) = o.population
 
 const NES_DefaultOptions = @compat Dict{Symbol,Any}(
-  :lambda => 0,              # If 0.0 it will be set based on the number of dimensions
+  :lambda => 0,              # If 0 it will be set based on the number of dimensions
+  :ini_x => nothing,         # starting point, "nothing" generates random point in a search space
   :mu_learnrate => 1.0,
   :sigma_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
 )
@@ -54,7 +59,8 @@ function separable_nes(problem::OptimizationProblem, parameters)
   SeparableNESOpt(search_space(problem),
     lambda = params[:lambda],
     mu_learnrate = params[:mu_learnrate],
-    sigma_learnrate = params[:sigma_learnrate])
+    sigma_learnrate = params[:sigma_learnrate],
+    ini_x = params[:ini_x])
 end
 
 calc_sigma_learnrate_for_snes(d) = (3 + log(d)) / (5 * sqrt(d))
@@ -119,24 +125,28 @@ type XNESOpt <: NaturalEvolutionStrategyOpt
   x::Individual                   # The current incumbent (aka most likely value, mu etc)
   Z::Array{Float64,2}
 
-  XNESOpt(searchSpace; lambda::Int = 0) = begin
+  XNESOpt(searchSpace; lambda::Int = 0, ini_x = nothing) = begin
     d = numdims(searchSpace)
     if lambda == 0
       lambda = 4 + 3*floor(Int, log(d))
     end
+    if ini_x === nothing
+      ini_x = rand_individual(searchSpace)
+    else
+      ini_x = copy(ini_x::Individual)
+    end
     x_learnrate = 1
     a_learnrate = 0.5 * minimum([1.0 / d, 0.25])
-    x = rand_individual(searchSpace)
 
     new(d, lambda, fitness_shaping_utilities_log(lambda),
       x_learnrate, a_learnrate,
-      zeros(d, d), zeros(d, d), zeros(d, lambda), x, zeros(d, lambda))
+      zeros(d, d), zeros(d, d), zeros(d, lambda), ini_x, zeros(d, lambda))
   end
 end
 
 function xnes(problem::OptimizationProblem, parameters)
   params = chain(NES_DefaultOptions, parameters)
-  XNESOpt(search_space(problem); lambda = params[:lambda])
+  XNESOpt(search_space(problem); lambda = params[:lambda], ini_x = params[:ini_x])
 end
 
 function ask(xnes::XNESOpt)
