@@ -103,7 +103,7 @@ function assign_weights{F}(candidates::Vector{Candidate{F}}, u::Vector{Float64})
   # candidates!!! Or we must reorder the utilities accordingly. The latter
   # is the preferred method and we can use the indices in candidates to
   # accomplish it.
-  u[sortperm(candidates, by = x->x.fitness)]
+  u[sortperm(candidates, by = fitness)]
 end
 
 # xNES is nice but scales badly with increasing dimension.
