@@ -121,7 +121,7 @@ function trace_progress(ctrl::OptRunController)
 
   # Always print fitness if num_evals > 0
   if num_func_evals(ctrl) > 0
-    tr(ctrl, @sprintf(", %.9f", best_fitness(ctrl)))
+    tr(ctrl, @sprintf(", fitness=%.9f", best_fitness(ctrl)))
   end
 
   tr(ctrl, "\n")
