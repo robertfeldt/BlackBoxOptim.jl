@@ -47,9 +47,9 @@ type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOper
   k::Int
   random_dir_order::Bool       # shuffle the order of directions?
   step_size_factor::Float64    # initial step size factor
-  step_size_gamma::Float64
-  step_size_phi::Float64
-  step_size_max::Float64
+  step_size_gamma::Float64     # step size factor if improved
+  step_size_phi::Float64       # step size factor if no improvement
+  step_size_max::Float64       # maximal step size
   step_tol::Float64            # step delta tolerance
   step_size::Float64           # current step size
   x::Individual
@@ -68,7 +68,7 @@ function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Embedding
         step_size_gamma, step_size_phi,
         step_size_max, step_tol,
         calc_initial_step_size(ss, step_size_factor),
-      x, fitness(x, evaluator))
+        x, fitness(x, evaluator))
 end
 
 # by default use RandomBound embedder
