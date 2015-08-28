@@ -24,7 +24,7 @@ function apply!(eo::RandomBound, target::Individual, pop, parentIndices)
     elseif target[i] > u
       target[i] = u + rand() * (pop[i, parentIx] - u)
     end
-    @assert l <= target[i] <= u
+    @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
   end
   return target
 end
