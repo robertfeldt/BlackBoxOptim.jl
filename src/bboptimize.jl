@@ -7,7 +7,7 @@ end
 #   any-dimensional problem and a number of dimensions as a parameter
 function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters)
   # If an anydim problem was given the dimension param must have been specified.
-  if params[:NumDimensions] == :NotSpecified
+  if parameters[:NumDimensions] == :NotSpecified
     throw(ArgumentError("You MUST specify NumDimensions= when a problem family is given"))
   end
   problem = fixed_dim_problem(family, parameters[:NumDimensions])
