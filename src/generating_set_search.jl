@@ -33,7 +33,7 @@ const GSSDefaultParameters = @compat Dict{Symbol,Any}(
   :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
   :StepSizeGamma => 2.0,          # Factor by which step size is multiplied if improved point is found. Should be >= 1.0.
   :StepSizePhi => 0.5,            # Factor by which step size is multiplied if NO improved point is found. Should be < 1.0.
-  :StepSizeMax => Inf,            # A limit on the step size can be set but is typically not => Inf.
+  :StepSizeMax => prevfloat(typemax(Float64)) # A limit on the step size can be set but is typically not => Inf.
 )
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
@@ -130,8 +130,10 @@ function step!(gss::GeneratingSetSearcher)
   if found_better
     gss.x = candidate
     gss.xfitness = last_fitness(gss.evaluator)
-    gss.step_size = min(gss.step_size_gamma * gss.step_size, gss.step_size_max)
+    gss.step_size *= gss.step_size_gamma
   else
     gss.step_size *= gss.step_size_phi
   end
+  gss.step_size = min(gss.step_size, gss.step_size_max)
+  gss
 end
