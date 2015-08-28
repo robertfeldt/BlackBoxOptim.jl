@@ -28,7 +28,7 @@ facts("Mutation operators") do
       ref_ind = rand_individual(ss)
       ind = copy(ref_ind)
       BlackBoxOptim.apply!(mc, ind, 1)
-      @fact isinspace(ind, ss) => true
+      @fact in(ind, ss) => true
       mutations_per_param[ind .!= ref_ind] += 1
     end
     mut_frequencies = mutations_per_param ./ NumReps
@@ -46,7 +46,7 @@ facts("Mutation operators") do
     for i in 1:10000
       ind = copy(ref_ind)
       BlackBoxOptim.apply!(mx, ind, 1)
-      @fact isinspace(ind, ss) => true
+      @fact in(ind, ss) => true
       n_params_mutated += ind != ref_ind
     end
     # the number of parameters changed should roughly match the weight of MutationClock multiplied by its mutation probability
@@ -63,7 +63,7 @@ facts("Mutation operators") do
       ind = copy(ref_ind)
       sel_op, tag = BlackBoxOptim.next(mx)
       BlackBoxOptim.apply!(sel_op, ind, 1)
-      @fact isinspace(ind, ss) => true
+      @fact in(ind, ss) => true
       is_mutated = ind != ref_ind
       n_params_mutated += is_mutated
       is_improved = rand() < 0.25 && is_mutated

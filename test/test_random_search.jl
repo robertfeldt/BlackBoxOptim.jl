@@ -14,7 +14,7 @@ context("ask()") do
     @fact length(res1) => 1
     candidate = res1[1]
     @fact length(candidate.params) => dims
-    @fact isinspace(candidate.params, ss) => true
+    @fact in(candidate.params, ss) => true
 
     # Fake fitness
     candidate.fitness = 1.0
@@ -29,7 +29,7 @@ context("ask()") do
     @fact length(res2) => 1
     candidate2 = res2[1]
     @fact length(candidate2.params) => dims
-    @fact isinspace(candidate2.params, ss) => true
+    @fact in(candidate2.params, ss) => true
     candidate2.fitness = 0.5
     better2 = BlackBoxOptim.tell!(opt, [candidate2])
   end

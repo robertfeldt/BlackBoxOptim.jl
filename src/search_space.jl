@@ -38,7 +38,7 @@ function rand_individual(css::ContinuousSearchSpace)
 end
 
 # True iff ind is within the search space.
-function isinspace(ind, css::ContinuousSearchSpace)
+function Base.in(ind, css::ContinuousSearchSpace)
   @assert length(ind) == numdims(css)
   for i in eachindex(ind)
       if !(mins(css)[i] <= ind[i] <= maxs(css)[i])
