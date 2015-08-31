@@ -11,7 +11,7 @@ abstract DirectSearcher <: SteppingOptimizer
 # a GSS search.
 abstract DirectionGenerator
 
-type ConstantDirectionGen <: DirectionGenerator
+immutable ConstantDirectionGen <: DirectionGenerator
   directions::Array{Float64, 2}
 
   ConstantDirectionGen(directions) = begin
@@ -33,7 +33,7 @@ const GSSDefaultParameters = @compat Dict{Symbol,Any}(
   :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
   :StepSizeGamma => 2.0,          # Factor by which step size is multiplied if improved point is found. Should be >= 1.0.
   :StepSizePhi => 0.5,            # Factor by which step size is multiplied if NO improved point is found. Should be < 1.0.
-  :StepSizeMax => Inf,            # A limit on the step size can be set but is typically not => Inf.
+  :StepSizeMax => prevfloat(typemax(Float64)) # A limit on the step size can be set but is typically not => Inf.
 )
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
@@ -47,9 +47,9 @@ type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOper
   k::Int
   random_dir_order::Bool       # shuffle the order of directions?
   step_size_factor::Float64    # initial step size factor
-  step_size_gamma::Float64
-  step_size_phi::Float64
-  step_size_max::Float64
+  step_size_gamma::Float64     # step size factor if improved
+  step_size_phi::Float64       # step size factor if no improvement
+  step_size_max::Float64       # maximal step size
   step_tol::Float64            # step delta tolerance
   step_size::Float64           # current step size
   x::Individual
@@ -68,7 +68,7 @@ function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Embedding
         step_size_gamma, step_size_phi,
         step_size_max, step_tol,
         calc_initial_step_size(ss, step_size_factor),
-      x, fitness(x, evaluator))
+        x, fitness(x, evaluator))
 end
 
 # by default use RandomBound embedder
@@ -130,8 +130,10 @@ function step!(gss::GeneratingSetSearcher)
   if found_better
     gss.x = candidate
     gss.xfitness = last_fitness(gss.evaluator)
-    gss.step_size = min(gss.step_size_gamma * gss.step_size, gss.step_size_max)
+    gss.step_size *= gss.step_size_gamma
   else
     gss.step_size *= gss.step_size_phi
   end
+  gss.step_size = min(gss.step_size, gss.step_size_max)
+  gss
 end

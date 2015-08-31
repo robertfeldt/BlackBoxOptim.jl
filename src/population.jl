@@ -9,6 +9,9 @@ numdims(pop::PopulationMatrix) = size(pop, 1)
 params_mean(pop::PopulationMatrix) = mean(pop, 1)
 params_std(pop::PopulationMatrix) = std(pop, 1)
 
+popsize{F}(pop::Vector{Candidate{F}}) = length(pop)
+numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
+
 type FitPopulation{F} <: PopulationWithFitness{F}
   # The population is a matrix of floats, each column being an individual.
   individuals::PopulationMatrix

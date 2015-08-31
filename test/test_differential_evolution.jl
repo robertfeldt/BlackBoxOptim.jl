@@ -151,11 +151,11 @@ context("ask()/tell!()") do
 
     @fact ndims(trial.params) => 1
     @fact (1 <= trial.index <= popsize(DE.population)) => true
-    @fact isinspace(trial.params, DE.embed.searchSpace) => true
+    @fact in(trial.params, DE.embed.searchSpace) => true
 
     @fact ndims(target.params) => 1
     @fact (1 <= target.index <= popsize(DE.population)) => true
-    @fact isinspace(target.params, DE.embed.searchSpace) => true
+    @fact in(target.params, DE.embed.searchSpace) => true
 
     @fact trial.index => target.index
 

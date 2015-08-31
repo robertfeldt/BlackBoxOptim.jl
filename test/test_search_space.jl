@@ -1,5 +1,5 @@
 facts("Search space") do
-  context("isinspace") do
+  context("in()") do
     for(i in 1:NumTestRepetitions)
       reps = rand(1:10)
       ss1 = symmetric_search_space(reps, (0.0, 1.0))
@@ -19,7 +19,7 @@ facts("Search space") do
     for(i in 1:NumTestRepetitions)
       ind = rand_individual(ss1)
       @fact size(ind) => (1,)
-      @fact isinspace(ind, ss1) => true
+      @fact in(ind, ss1) => true
     end
 
     ss3 = symmetric_search_space(3)
@@ -32,7 +32,7 @@ facts("Search space") do
     for(i in 1:NumTestRepetitions)
       ind = rand_individual(ss3)
       @fact size(ind) => (3,)
-      @fact isinspace(ind, ss3) => true
+      @fact in(ind, ss3) => true
     end
   end
 
@@ -59,7 +59,7 @@ facts("Search space") do
       ss = symmetric_search_space(reps, range)
       ind = rand_individual(ss)
       @fact length(ind) => numdims(ss)
-      @fact isinspace(ind, ss) => true
+      @fact in(ind, ss) => true
     end
   end
 
@@ -74,7 +74,7 @@ facts("Search space") do
       @fact size(inds,1) => numdims(ss)
       @fact size(inds,2) => numinds
       for(j in 1:numinds)
-        @fact isinspace(inds[:,j], ss) => true
+        @fact in(inds[:,j], ss) => true
       end
     end
   end
