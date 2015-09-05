@@ -2,20 +2,20 @@ using FactCheck
 
 facts("sNES") do
 
-function assign_weights_wrapper{F}(fitnesses::Vector{F})
-  candidates = BlackBoxOptim.Candidate{F}[BlackBoxOptim.Candidate{F}([0.0], -1, f) for f in fitnesses]
-  u = BlackBoxOptim.fitness_shaping_utilities_linear(length(candidates))
-  BlackBoxOptim.assign_weights(candidates, u)
+function assign_weights_wrapper(candi_ixs::Vector{Int})
+  candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}([0.0], i, NaN) for i in candi_ixs]
+  u = BlackBoxOptim.fitness_shaping_utilities_linear(length(candi_ixs))
+  BlackBoxOptim.assign_weights!(similar(u), candidates, u)
 end
 
 context("assign_weights") do
   context("when indices are already ordered") do
-    u = assign_weights_wrapper([1.0, 2.0])
+    u = assign_weights_wrapper([1, 2])
     @fact length(u) => 2
     @fact u[1] => 1.0
     @fact u[2] => 0.0
 
-    u = assign_weights_wrapper([1.0, 2.0, 3.0])
+    u = assign_weights_wrapper([1, 2, 3])
     @fact length(u) => 3
     @fact u[1] => 1.0
     @fact u[2] => 0.0

@@ -10,7 +10,8 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   sigma_learnrate::Float64
   last_s::Array{Float64,2}        # The s values sampled in the last call to ask
   candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
-  utilities::Vector{Float64}      # The fitness shaping utility vector
+  sortedUtilities::Vector{Float64}# The fitness shaping utility vector
+  tmpUtilities::Vector{Float64}   # The fitness shaping utility vector sorted by current population fitness
 
   function SeparableNESOpt(embed::E;
     lambda::Int = 0,
@@ -38,7 +39,8 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
       zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # Most modern NES papers use log rather than linear fitness shaping.
-      fitness_shaping_utilities_log(lambda))
+      fitness_shaping_utilities_log(lambda),
+      @compat(Vector{Float64}(lambda)))
   end
 end
 
@@ -84,12 +86,11 @@ end
 
 # Tell the sNES the ranking of a set of candidates.
 function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
-  u = assign_weights(rankedCandidates, snes.utilities)
+  u = assign_weights!(snes.tmpUtilities, rankedCandidates, snes.sortedUtilities)
 
   # Calc gradient
   gradient_mu = snes.last_s * u
-  sq_s_minus1 = snes.last_s.^2 - 1
-  gradient_sigma = sq_s_minus1 * u
+  gradient_sigma = (snes.last_s.^2 - 1) * u
 
   # Update the mean and sigma vectors based on the gradient
   old_mu = copy(snes.mu)
@@ -101,18 +102,22 @@ function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F
   return 0
 end
 
-# We must reorder the samples according to the order of the fitness in
-# candidates!!! Or we must reorder the utilities accordingly. The latter
-# is the preferred method and we can use the indices in candidates to
-# accomplish it.
-assign_weights{F}(candidates::Vector{Candidate{F}}, u::Vector{Float64}) =
-  u[sortperm(candidates, by = fitness)]
+# given the candidates ranked by their fitness,
+# the procedure returns weights sorted by the individual's index in the population
+function assign_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{Candidate{F}}, sortedWeights::Vector{Float64})
+  @assert length(weights) == length(sortedWeights) && length(rankedCandidates) == length(weights)
+  for i in eachindex(rankedCandidates)
+    weights[rankedCandidates[i].index] = sortedWeights[i]
+  end
+  return weights
+end
 
 # xNES is nice but scales badly with increasing dimension.
 type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
   lambda::Int                     # Number of samples to take per iteration
-  utilities::Vector{Float64}      # Fitness utility to give to each rank
+  sortedUtilities::Vector{Float64}# Fitness utility to give to each rank
+  tmpUtilities::Vector{Float64}   # Fitness utilities assigned to current population
   x_learnrate::Float64
   a_learnrate::Float64
   A::Array{Float64,2}
@@ -132,7 +137,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
       ini_x = copy(ini_x::Individual)
     end
 
-    new(embed, lambda, fitness_shaping_utilities_log(lambda),
+    new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
       1.0, 0.5 * min(1.0 / d, 0.25),
       zeros(d, d), zeros(d, d),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
@@ -165,10 +170,10 @@ function ask(xnes::XNESOpt)
 end
 
 function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
-  u = assign_weights(rankedCandidates, xnes.utilities)
+  u = assign_weights!(xnes.tmpUtilities, rankedCandidates, xnes.sortedUtilities)
 
   # fixme improve memory footprint by using A_mul_B!() etc
-  dA = A_mul_Bt(broadcast(*, u', xnes.Z), xnes.Z)
+  dA = A_mul_Bt(scale(xnes.Z, u), xnes.Z)
   for i in 1:numdims(population(xnes))
     dA[i,i] -= 1.0
   end
