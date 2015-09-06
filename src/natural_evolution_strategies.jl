@@ -44,7 +44,6 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   end
 end
 
-# We use a different ordering of the dimensions than other optimizers, so transpose.
 population(o::NaturalEvolutionStrategyOpt) = o.candidates
 
 const NES_DefaultOptions = @compat Dict{Symbol,Any}(
@@ -120,11 +119,14 @@ type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   tmpUtilities::Vector{Float64}   # Fitness utilities assigned to current population
   x_learnrate::Float64
   A_learnrate::Float64
+  # TODO use Symmetric{Float64} to inmprove exponent etc calculation
   A::Array{Float64,2}
-  expA::Array{Float64,2}
+  dA::Array{Float64,2}            # temporary for A update
+  expA::Array{Float64,2}          # exponential of A
   candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
   x::Individual                   # The current incumbent (aka most likely value, mu etc)
-  Z::Array{Float64,2}
+  Z::Array{Float64,2}             # current N(0,I) samples
+  Zu::Array{Float64,2}            # temporary for scaled Z
 
   function XNESOpt(embed::E; lambda::Int = 0,
                    mu_learnrate::Float64 = 1.0, A_learnrate::Float64 = 0.0,
@@ -144,9 +146,9 @@ type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
 
     new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
       mu_learnrate, A_learnrate,
-      zeros(d, d), zeros(d, d),
+      zeros(d, d), zeros(d, d), zeros(d, d),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
-      ini_x, zeros(d, lambda))
+      ini_x, zeros(d, lambda), zeros(d, lambda))
   end
 end
 
@@ -180,12 +182,14 @@ end
 function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   u = assign_weights!(xnes.tmpUtilities, rankedCandidates, xnes.sortedUtilities)
 
-  # fixme improve memory footprint by using A_mul_B!() etc
-  dA = A_mul_Bt(scale(xnes.Z, u), xnes.Z)
-  for i in 1:numdims(population(xnes))
-    dA[i,i] -= 1.0
+  # TODO use syrk(Z,dA) to speed-up multiplication
+  Zu = scale!(xnes.Zu, xnes.Z, u)
+  dA = A_mul_Bt!(xnes.dA, Zu, xnes.Z)
+  sumU = sum(u)
+  @inbounds for i in 1:size(dA, 1)
+    dA[i, i] -= sumU
   end
-  dA *= xnes.A_learnrate
+  scale!(dA, dA, 0.5 * xnes.A_learnrate)
   xnes.A += dA
 
   old_x = copy(xnes.x)
@@ -199,7 +203,7 @@ end
 # Calculate the fitness shaping utilities vector using the log method.
 function fitness_shaping_utilities_log(n::Int)
   u = [max(0.0, log(n / 2 + 1.0) - log(i)) for i in 1:n]
-  u / sum(u)
+  u/sum(u) - 1/n
 end
 
 # Calculate the fitness shaping utilities vector using the steps method.
@@ -212,7 +216,7 @@ function fitness_shaping_utilities_linear(n::Int)
   step_size = 1 / treshold
   first_half = linspace(1.0, step_size, treshold)
 
-  # But the utilities should sum to 1 so we normalize, then return
+  # But the utilities should sum to 0, so we normalize and return
   u = vcat(first_half, second_half)
-  u / sum(u)
+  u/sum(u) - 1/n
 end
