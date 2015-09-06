@@ -119,17 +119,22 @@ type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   sortedUtilities::Vector{Float64}# Fitness utility to give to each rank
   tmpUtilities::Vector{Float64}   # Fitness utilities assigned to current population
   x_learnrate::Float64
-  a_learnrate::Float64
+  A_learnrate::Float64
   A::Array{Float64,2}
   expA::Array{Float64,2}
   candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
   x::Individual                   # The current incumbent (aka most likely value, mu etc)
   Z::Array{Float64,2}
 
-  function XNESOpt(embed::E; lambda::Int = 0, ini_x = nothing)
+  function XNESOpt(embed::E; lambda::Int = 0,
+                   mu_learnrate::Float64 = 1.0, A_learnrate::Float64 = 0.0,
+                   ini_x = nothing)
     d = numdims(search_space(embed))
     if lambda == 0
       lambda = 4 + 3*floor(Int, log(d))
+    end
+    if A_learnrate == 0.0
+      A_learnrate = 0.5 * min(1.0 / d, 0.25)
     end
     if ini_x === nothing
       ini_x = rand_individual(search_space(embed))
@@ -138,7 +143,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
     end
 
     new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
-      1.0, 0.5 * min(1.0 / d, 0.25),
+      mu_learnrate, A_learnrate,
       zeros(d, d), zeros(d, d),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       ini_x, zeros(d, lambda))
@@ -148,7 +153,10 @@ end
 function xnes(problem::OptimizationProblem, parameters)
   params = chain(NES_DefaultOptions, parameters)
   embed = RandomBound(search_space(problem))
-  XNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda], ini_x = params[:ini_x])
+  XNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
+                                                mu_learnrate = params[:mu_learnrate],
+                                                A_learnrate = params[:sigma_learnrate], # note using SNES-specific param name
+                                                ini_x = params[:ini_x])
 end
 
 function ask(xnes::XNESOpt)
@@ -177,7 +185,7 @@ function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   for i in 1:numdims(population(xnes))
     dA[i,i] -= 1.0
   end
-  dA *= xnes.a_learnrate
+  dA *= xnes.A_learnrate
   xnes.A += dA
 
   old_x = copy(xnes.x)
