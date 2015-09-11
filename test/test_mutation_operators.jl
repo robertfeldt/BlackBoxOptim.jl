@@ -4,7 +4,7 @@ facts("Mutation operators") do
   context("SimpleGibbsMutation") do
     gibbs = SimpleGibbsMutation(ss)
 
-    @fact search_space(gibbs) => ss
+    @fact search_space(gibbs) --> ss
     # incorrect dimensions
     @fact_throws BoundsError BlackBoxOptim.apply(gibbs, 2.0, 0, 1)
     @fact_throws BoundsError BlackBoxOptim.apply(gibbs, 2.0, 4, 1)
@@ -13,8 +13,8 @@ facts("Mutation operators") do
       dim_range = range_for_dim(ss, dim)
       for i in 1:NumTestRepetitions
         t = BlackBoxOptim.apply(gibbs, 0.0, dim, 1)
-        @fact t => greater_than_or_equal(dim_range[1])
-        @fact t => less_than_or_equal(dim_range[2])
+        @fact t --> greater_than_or_equal(dim_range[1])
+        @fact t --> less_than_or_equal(dim_range[2])
       end
     end
   end
@@ -28,13 +28,13 @@ facts("Mutation operators") do
       ref_ind = rand_individual(ss)
       ind = copy(ref_ind)
       BlackBoxOptim.apply!(mc, ind, 1)
-      @fact in(ind, ss) => true
+      @fact in(ind, ss) --> true
       mutations_per_param[ind .!= ref_ind] += 1
     end
     mut_frequencies = mutations_per_param ./ NumReps
     for p in 1:numdims(ss)
-      @fact mut_frequencies[p] => greater_than(0.03)
-      @fact mut_frequencies[p] => less_than(0.07) # roughly matches the probability
+      @fact mut_frequencies[p] --> greater_than(0.03)
+      @fact mut_frequencies[p] --> less_than(0.07) # roughly matches the probability
     end
   end
 
@@ -46,12 +46,12 @@ facts("Mutation operators") do
     for i in 1:10000
       ind = copy(ref_ind)
       BlackBoxOptim.apply!(mx, ind, 1)
-      @fact in(ind, ss) => true
+      @fact in(ind, ss) --> true
       n_params_mutated += ind != ref_ind
     end
     # the number of parameters changed should roughly match the weight of MutationClock multiplied by its mutation probability
-    @fact n_params_mutated/numdims(ss) => greater_than(200)
-    @fact n_params_mutated/numdims(ss) => less_than(500)
+    @fact n_params_mutated/numdims(ss) --> greater_than(200)
+    @fact n_params_mutated/numdims(ss) --> less_than(500)
   end
 
   context("FAGeneticOperatorsMixture") do
@@ -63,7 +63,7 @@ facts("Mutation operators") do
       ind = copy(ref_ind)
       sel_op, tag = BlackBoxOptim.next(mx)
       BlackBoxOptim.apply!(sel_op, ind, 1)
-      @fact in(ind, ss) => true
+      @fact in(ind, ss) --> true
       is_mutated = ind != ref_ind
       n_params_mutated += is_mutated
       is_improved = rand() < 0.25 && is_mutated
@@ -72,10 +72,10 @@ facts("Mutation operators") do
     end
     # FA should adjust frequencies to [almost] always apply mutation clock
     # the number of parameters changed should roughly match the MutationClock mutation probability
-    @fact n_params_mutated/numdims(ss) => greater_than(300)
-    @fact n_params_mutated/numdims(ss) => less_than(700)
-    @fact frequencies(mx)[1] => less_than(0.1)
-    @fact frequencies(mx)[2] => greater_than(0.9)
+    @fact n_params_mutated/numdims(ss) --> greater_than(300)
+    @fact n_params_mutated/numdims(ss) --> less_than(700)
+    @fact frequencies(mx)[1] --> less_than(0.1)
+    @fact frequencies(mx)[2] --> greater_than(0.9)
   end
 
 end

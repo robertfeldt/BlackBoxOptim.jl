@@ -16,11 +16,11 @@ facts("Halton numbers and sequence") do
   context("Halton numbers") do
 
     map(1:length(HaltonSequence2)) do i
-      @fact isapprox(haltonnumber(2, i), HaltonSequence2[i]) => true
+      @fact isapprox(haltonnumber(2, i), HaltonSequence2[i]) --> true
     end
  
     map(1:length(HaltonSequence3)) do i
-      @fact isapprox(haltonnumber(3, i), HaltonSequence3[i]) => true
+      @fact isapprox(haltonnumber(3, i), HaltonSequence3[i]) --> true
     end
   
   end
@@ -28,15 +28,15 @@ facts("Halton numbers and sequence") do
   context("Halton sequences") do
 
     hseq2 = haltonsequence(2, length(HaltonSequence2))
-    @fact length(hseq2) => length(HaltonSequence2)
+    @fact length(hseq2) --> length(HaltonSequence2)
     map(1:length(HaltonSequence2)) do i
-      @fact isapprox(hseq2[i], HaltonSequence2[i]) => true
+      @fact isapprox(hseq2[i], HaltonSequence2[i]) --> true
     end
 
     hseq3 = haltonsequence(3, length(HaltonSequence3))
-    @fact length(hseq3) => length(HaltonSequence3)
+    @fact length(hseq3) --> length(HaltonSequence3)
     map(1:length(HaltonSequence3)) do i
-      @fact isapprox(hseq3[i], HaltonSequence3[i]) => true
+      @fact isapprox(hseq3[i], HaltonSequence3[i]) --> true
     end
 
   end

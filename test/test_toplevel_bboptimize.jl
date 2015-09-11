@@ -7,15 +7,15 @@ facts("Top-level interface") do
     context("using bboptimize() with mostly defaults") do
       res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
         MaxSteps = 2000, TraceMode = :silent)
-      @fact best_fitness(res) => less_than(0.1)
+      @fact best_fitness(res) --> less_than(0.1)
       xbest = best_candidate(res)
-      @fact typeof(xbest) => Vector{Float64}
-      @fact length(xbest) => 2
+      @fact typeof(xbest) --> Vector{Float64}
+      @fact length(xbest) --> 2
 
       # We also mimic some of the Optim.jl api (although it is a bit strange...)
-      @fact f_minimum(res) => less_than(0.1)
-      @fact minimum(res) => xbest
-      @fact iteration_converged(res) => true
+      @fact f_minimum(res) --> less_than(0.1)
+      @fact minimum(res) --> xbest
+      @fact iteration_converged(res) --> true
     end
 
     context("using bbsetup()/bboptimize() with mostly defaults") do
@@ -27,7 +27,7 @@ facts("Top-level interface") do
       @fact numruns(opt) --> 1
       @fact isa(lastrun(opt), BlackBoxOptim.OptRunController) --> true
 
-      @fact best_fitness(res) => less_than(0.1)
+      @fact best_fitness(res) --> less_than(0.1)
       xbest = best_candidate(res)
     end
 
@@ -36,9 +36,9 @@ facts("Top-level interface") do
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
                        MaxSteps = 2000, TraceMode = :silent)
       @fact isa(res, BlackBoxOptim.SimpleOptimizationResults) --> true
-      @fact best_fitness(res) => less_than(1.0)
+      @fact best_fitness(res) --> less_than(1.0)
       xbest = best_candidate(res)
-      @fact typeof(xbest) => Vector{Float64}
+      @fact typeof(xbest) --> Vector{Float64}
     end
 
     context("using population optimizer") do
@@ -46,9 +46,9 @@ facts("Top-level interface") do
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
                        MaxSteps = 2000, TraceMode = :silent)
       @fact isa(res, BlackBoxOptim.PopulationOptimizationResults) --> true
-      @fact best_fitness(res) => less_than(0.1)
+      @fact best_fitness(res) --> less_than(0.1)
       xbest = best_candidate(res)
-      @fact typeof(xbest) => Vector{Float64}
+      @fact typeof(xbest) --> Vector{Float64}
       xpop = population(res)
       @fact isa(xpop, BlackBoxOptim.Population) --> true
       @fact popsize(xpop) --> greater_than(0)
@@ -61,21 +61,21 @@ facts("Top-level interface") do
       MaxTime = 0.5, TraceMode = :silent)
 
     res1 = bboptimize(optctrl)
-    @fact numruns(optctrl) => 1
+    @fact numruns(optctrl) --> 1
 
     res2 = bboptimize(optctrl; MaxTime = 1.0)
-    @fact numruns(optctrl) => 2
+    @fact numruns(optctrl) --> 2
 
-    @fact best_fitness(res2) => less_than_or_equal(best_fitness(res1))
+    @fact best_fitness(res2) --> less_than_or_equal(best_fitness(res1))
 
     # parameters should be the same except for MaxTime
     for p in keys(flatten(parameters(res1)))
       if p != :MaxTime
-        @fact parameters(res1)[p] => parameters(res2)[p]
+        @fact parameters(res1)[p] --> parameters(res2)[p]
       end
     end
-    @fact parameters(res1)[:MaxTime] => 0.5
-    @fact parameters(res2)[:MaxTime] => 1.0
+    @fact parameters(res1)[:MaxTime] --> 0.5
+    @fact parameters(res2)[:MaxTime] --> 1.0
   end
 
   context("continue running an optimization after serializing to disc") do
@@ -98,11 +98,11 @@ facts("Top-level interface") do
         ocloaded = deserialize(fh)
       end
 
-      @fact numruns(ocloaded) => 1
+      @fact numruns(ocloaded) --> 1
       res2 = bboptimize(ocloaded; MaxTime = 1.0)
-      @fact numruns(ocloaded) => 2
+      @fact numruns(ocloaded) --> 2
 
-      @fact best_fitness(res2) => less_than_or_equal(best_fitness(res1))
+      @fact best_fitness(res2) --> less_than_or_equal(best_fitness(res1))
     finally
       if isfile(tempfilename)
         rm(tempfilename)
