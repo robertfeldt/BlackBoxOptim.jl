@@ -73,6 +73,7 @@ function ask(snes::SeparableNESOpt)
 
   for i in eachindex(snes.candidates)
     candi = snes.candidates[i]
+    candi.index = i # reset ordering
     @inbounds for j in 1:length(candi.params)
       candi.params[j] = snes.mu[j] + snes.sigma[j] * snes.last_s[j, i]
     end
@@ -169,6 +170,7 @@ function ask(xnes::XNESOpt)
 
   for i in eachindex(xnes.candidates)
     candi = xnes.candidates[i]
+    candi.index = i # reset ordering
     @inbounds for j in 1:length(candi.params)
       candi.params[j] = xnes.x[j] + expAZ[j, i]
     end
