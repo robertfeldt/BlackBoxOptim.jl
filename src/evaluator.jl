@@ -75,6 +75,7 @@ type Candidate{F}
 end
 
 fitness(cand::Candidate) = cand.fitness
+index(cand::Candidate) = cand.index
 
 Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness, c.op, c.tag)
 
