@@ -11,7 +11,7 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   last_s::Array{Float64,2}        # The s values sampled in the last call to ask
   candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
   sortedUtilities::Vector{Float64}# The fitness shaping utility vector
-  tmpUtilities::Vector{Float64}   # The fitness shaping utility vector sorted by current population fitness
+  tmp_Utilities::Vector{Float64}   # The fitness shaping utility vector sorted by current population fitness
 
   function SeparableNESOpt(embed::E;
     lambda::Int = 0,
@@ -45,6 +45,7 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
 end
 
 population(o::NaturalEvolutionStrategyOpt) = o.candidates
+numdims(o::NaturalEvolutionStrategyOpt) = numdims(search_space(o.embed))
 
 const NES_DefaultOptions = @compat Dict{Symbol,Any}(
   :lambda => 0,              # If 0 it will be set based on the number of dimensions
@@ -86,7 +87,7 @@ end
 
 # Tell the sNES the ranking of a set of candidates.
 function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
-  u = assign_weights!(snes.tmpUtilities, rankedCandidates, snes.sortedUtilities)
+  u = assign_weights!(snes.tmp_Utilities, rankedCandidates, snes.sortedUtilities)
 
   # Calc gradient
   gradient_mu = snes.last_s * u
@@ -112,32 +113,92 @@ function assign_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{C
   return weights
 end
 
+# Abstract type for a family of NES methods that represent population as
+# x = μ + σ B⋅Z,
+# where B is an exponential of some symmetric matrix lnB, tr(lnB)==0.0
+abstract ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt
+
+function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Matrix)
+  B = expm(exnes.ln_B)
+  sBZ = A_mul_B!(exnes.tmp_sBZ, B, Z)
+  scale!(sBZ, exnes.sigma)
+  for i in eachindex(exnes.candidates)
+    candi = exnes.candidates[i]
+    candi.index = i # reset ordering
+    @inbounds for j in 1:length(candi.params)
+      candi.params[j] = exnes.x[j] + sBZ[j, i]
+    end
+    apply!(exnes.embed, candi.params, exnes.x)
+    candi.fitness = NaN # FIXME: use nafitness()
+  end
+
+  return exnes.candidates
+end
+
+function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::Vector)
+  # TODO use syrk(Z,dA) to speed-up multiplication
+  Zu = scale!(exnes.tmp_Zu, exnes.Z, u)
+  ln_dB = A_mul_Bt!(exnes.tmp_lndB, Zu, exnes.Z)
+  sumU = sum(u)
+  dSigma = 0.0
+  @inbounds for i in 1:size(ln_dB, 1)
+    ln_dB[i, i] -= sumU
+    dSigma += ln_dB[i, i]
+  end
+  dSigma /= size(ln_dB, 1)
+  @inbounds for i in 1:size(ln_dB, 1)
+    ln_dB[i, i] -= dSigma
+  end
+  scale!(ln_dB, 0.5 * exnes.B_learnrate)
+
+  prev_x = copy!(exnes.tmp_x, exnes.x)
+  dx = A_mul_B!(exnes.tmp_dx, exnes.tmp_sBZ, u)
+  scale!(dx, exnes.x_learnrate)
+  exnes.x += dx
+  apply!(exnes.embed, exnes.x, prev_x)
+
+  exnes.ln_B += ln_dB
+
+  exnes.sigma *= exp(0.5 * exnes.sigma_learnrate * dSigma)
+  exnes
+end
+
 # xNES is nice but scales badly with increasing dimension.
-type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
+type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
   lambda::Int                     # Number of samples to take per iteration
   sortedUtilities::Vector{Float64}# Fitness utility to give to each rank
-  tmpUtilities::Vector{Float64}   # Fitness utilities assigned to current population
+  tmp_Utilities::Vector{Float64}   # Fitness utilities assigned to current population
   x_learnrate::Float64
-  A_learnrate::Float64
-  # TODO use Symmetric{Float64} to inmprove exponent etc calculation
-  A::Array{Float64,2}
-  dA::Array{Float64,2}            # temporary for A update
-  expA::Array{Float64,2}          # exponential of A
-  candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
+  sigma_learnrate::Float64
+  B_learnrate::Float64
+  # TODO use Symmetric{Float64} to improve exponent etc calculation
+  ln_B::Array{Float64,2}          # log of "covariation" matrix
+  sigma::Float64                  # step size
   x::Individual                   # The current incumbent (aka most likely value, mu etc)
   Z::Array{Float64,2}             # current N(0,I) samples
-  Zu::Array{Float64,2}            # temporary for scaled Z
+  candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
 
-  function XNESOpt(embed::E; lambda::Int = 0,
-                   mu_learnrate::Float64 = 1.0, A_learnrate::Float64 = 0.0,
+  # temporary variables to minimize GC overhead
+  tmp_x::Individual
+  tmp_dz::Individual
+  tmp_dx::Individual
+  tmp_lndB::Matrix{Float64}
+  tmp_Zu::Matrix{Float64}
+  tmp_sBZ::Matrix{Float64}
+
+  function XNESOpt(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
+                   sigma_learnrate = 0.0, B_learnrate::Float64 = 0.0,
                    ini_x = nothing)
     d = numdims(search_space(embed))
     if lambda == 0
       lambda = 4 + 3*floor(Int, log(d))
     end
-    if A_learnrate == 0.0
-      A_learnrate = 0.5 * min(1.0 / d, 0.25)
+    if sigma_learnrate == 0.0
+      sigma_learnrate = 0.5 * min(1.0 / d, 0.25) # 0.6 * (3+log(d))/(d*sqrt(d)) in other literature
+    end
+    if B_learnrate == 0.0
+      B_learnrate = 0.6 * (3+log(d))/(d*sqrt(d)) # 0.5 * min(1.0 / d, 0.25)
     end
     if ini_x === nothing
       ini_x = rand_individual(search_space(embed))
@@ -146,59 +207,40 @@ type XNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
     end
 
     new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
-      mu_learnrate, A_learnrate,
-      zeros(d, d), zeros(d, d), zeros(d, d),
+      mu_learnrate, sigma_learnrate, B_learnrate,
+      zeros(d, d), 1.0, ini_x, zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
-      ini_x, zeros(d, lambda), zeros(d, lambda))
+      # temporaries
+      zeros(d), zeros(d), zeros(d),
+      zeros(d, d),
+      zeros(d, lambda), zeros(d, lambda)
+    )
   end
 end
 
+const XNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
+  :B_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
+))
+
 function xnes(problem::OptimizationProblem, parameters)
-  params = chain(NES_DefaultOptions, parameters)
+  params = chain(XNES_DefaultOptions, parameters)
   embed = RandomBound(search_space(problem))
   XNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
                                                 mu_learnrate = params[:mu_learnrate],
-                                                A_learnrate = params[:sigma_learnrate], # note using SNES-specific param name
+                                                sigma_learnrate = params[:sigma_learnrate],
+                                                B_learnrate = params[:B_learnrate],
                                                 ini_x = params[:ini_x])
 end
 
 function ask(xnes::XNESOpt)
-  copy!(xnes.expA, xnes.A)
-  Base.LinAlg.expm!(xnes.expA)
   randn!(xnes.Z)
-  expAZ = xnes.expA * xnes.Z
-
-  for i in eachindex(xnes.candidates)
-    candi = xnes.candidates[i]
-    candi.index = i # reset ordering
-    @inbounds for j in 1:length(candi.params)
-      candi.params[j] = xnes.x[j] + expAZ[j, i]
-    end
-    apply!(xnes.embed, candi.params, xnes.x)
-    candi.fitness = NaN # FIXME: use nafitness()
-  end
-
-  return xnes.candidates
+  update_candidates!(xnes, xnes.Z)
 end
 
 function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
-  u = assign_weights!(xnes.tmpUtilities, rankedCandidates, xnes.sortedUtilities)
+  u = assign_weights!(xnes.tmp_Utilities, rankedCandidates, xnes.sortedUtilities)
 
-  # TODO use syrk(Z,dA) to speed-up multiplication
-  Zu = scale!(xnes.Zu, xnes.Z, u)
-  dA = A_mul_Bt!(xnes.dA, Zu, xnes.Z)
-  sumU = sum(u)
-  @inbounds for i in 1:size(dA, 1)
-    dA[i, i] -= sumU
-  end
-  scale!(dA, dA, 0.5 * xnes.A_learnrate)
-  xnes.A += dA
-
-  old_x = copy(xnes.x)
-  dx = xnes.x_learnrate * xnes.expA * (xnes.Z*u)
-  xnes.x += dx
-  apply!(xnes.embed, xnes.x, old_x)
-
+  update_parameters!(xnes, u)
   return 0
 end
 
