@@ -6,7 +6,7 @@ facts("Top-level interface") do
   context("run a simple optimization") do
     context("using bboptimize() with mostly defaults") do
       res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-        MaxSteps = 2000, ShowTrace = false)
+        MaxSteps = 2000, TraceMode = :silent)
       @fact best_fitness(res) => less_than(0.1)
       xbest = best_candidate(res)
       @fact typeof(xbest) => Vector{Float64}
@@ -20,7 +20,7 @@ facts("Top-level interface") do
 
     context("using bbsetup()/bboptimize() with mostly defaults") do
       opt = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-        MaxSteps = 2000, ShowTrace = false)
+        MaxSteps = 2000, TraceMode = :silent)
       @fact numruns(opt) --> 0
       @fact isa(problem(opt), BlackBoxOptim.FunctionBasedProblem) --> true
       res = bboptimize(opt)
@@ -34,7 +34,7 @@ facts("Top-level interface") do
     context("using non-population optimizer") do
       res = bboptimize(rosenbrock; Method=:generating_set_search,
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
-                       MaxSteps = 2000, ShowTrace = false)
+                       MaxSteps = 2000, TraceMode = :silent)
       @fact isa(res, BlackBoxOptim.SimpleOptimizationResults) --> true
       @fact best_fitness(res) => less_than(1.0)
       xbest = best_candidate(res)
@@ -44,7 +44,7 @@ facts("Top-level interface") do
     context("using population optimizer") do
       res = bboptimize(rosenbrock; Method=:adaptive_de_rand_1_bin,
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
-                       MaxSteps = 2000, ShowTrace = false)
+                       MaxSteps = 2000, TraceMode = :silent)
       @fact isa(res, BlackBoxOptim.PopulationOptimizationResults) --> true
       @fact best_fitness(res) => less_than(0.1)
       xbest = best_candidate(res)
@@ -58,7 +58,7 @@ facts("Top-level interface") do
 
   context("continue running an optimization after it finished") do
     optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-      MaxTime = 0.5, ShowTrace = false)
+      MaxTime = 0.5, TraceMode = :silent)
 
     res1 = bboptimize(optctrl)
     @fact numruns(optctrl) => 1
@@ -80,7 +80,7 @@ facts("Top-level interface") do
 
   context("continue running an optimization after serializing to disc") do
     optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-      MaxTime = 0.5, ShowTrace = false)
+      MaxTime = 0.5, TraceMode = :silent)
     res1 = bboptimize(optctrl)
 
     local tempfilename = "./temp" * string(rand(1:10^8)) * ".tmp"

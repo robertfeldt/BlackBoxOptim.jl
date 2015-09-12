@@ -12,7 +12,7 @@ function compare_optimizers(functionOrProblem, parameters::Associative = @compat
 
   sorted = sort( results, by = (t) -> t[3] )
 
-  if parameters[:ShowTrace]
+  if parameters[:TraceMode] != :silent
     println("\n********************************************************************************")
     #println(describe(evaluator))
     for(i in 1:length(sorted))

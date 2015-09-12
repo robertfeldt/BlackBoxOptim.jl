@@ -77,7 +77,7 @@ The section above described the basic API for the BlackBoxOptim package. We empl
 In addition to the `Method` parameters, there are many other parameters you can change.
 
 * `MaxTime`: For how long can the optimization run? Defaults to false which means that number of iterations is the given budget, rather than time.
-* `ShowTrace`: Should a trace of the optimization be shown on `STDOUT`? Defaults to `false`.
+* `TraceMode`: How optimization progress should be displayed. Defaults to `:compact` that outputs current number of fitness evaluations and best value each `TraceInterval` seconds.
 * `PopulationSize`: How large is the initial population for population-based optimizers? Defaults to `50`.
 
 You can also have detailed control over the optimization byt giving a Dict mapping named parameters to their values. Most optimizers have specific options that can be specified in the `parameters` dict.

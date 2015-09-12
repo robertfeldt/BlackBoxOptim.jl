@@ -16,7 +16,7 @@ const DefaultParameters = @compat Dict{Symbol,Any}(
 
   :NumRepetitions => 1,     # Number of repetitions to run for each optimizer for each problem
 
-  :ShowTrace      => true,  # Print tracing information during the optimization
+  :TraceMode      => :compact,  # Print tracing information during the optimization
   :TraceInterval  => 0.50,  # Minimum number of seconds between consecutive trace messages printed to STDOUT
   :SaveTrace      => false,
   :SaveFitnessTraceToCsv => false, # Save a csv file with information about the major fitness improvement events (only the first event in each fitness magnitude class is saved)

@@ -4,7 +4,8 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
-  show_trace::Bool # if controller should trace its execution (false makes tr() generate no output)
+  trace_mode::Symbol # controller state trace mode (:verbose, :compact, :silent)
+                     # :silent makes tr() generate no output, :verbose calls trace_state(optimizer) within trace_progress())
   save_trace::Bool # FIXME if traces should be saved to a file
   trace_interval::Float64 # periodicity of calling trace_progress()
 
@@ -35,7 +36,7 @@ end
 
 function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
   OptRunController{O,E}(optimizer, evaluator,
-        [params[key] for key in Symbol[:ShowTrace, :SaveTrace, :TraceInterval,
+        [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
@@ -48,7 +49,7 @@ OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = O
 
 # logging/tracing
 function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
-  if ctrl.show_trace
+  if ctrl.trace_mode != :silent
     print(msg)
     if obj != nothing
       showcompact(obj)
@@ -244,7 +245,7 @@ function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptControl
   # Most parameters cannot be changed since the problem and optimizer has already
   # been setup.
   for k in keys(parameters)
-    if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :ShowTrace]
+    if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :TraceMode]
       throw(ArgumentError("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))"))
     end
   end

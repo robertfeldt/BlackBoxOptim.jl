@@ -1,7 +1,7 @@
 facts("Top-level interface") do
   context("run a simple optimization with mostly defaults") do
     res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      MaxTime = 0.5, ShowTrace = false)
+      MaxTime = 0.5, TraceMode = :silent)
     @fact bestfitness(res) < 0.01 => true
     xbest = best(res)
     @fact typeof(xbest) => Vector{Float64}
@@ -10,7 +10,7 @@ facts("Top-level interface") do
 
   context("continue running an optimization after it finished") do
     optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      MaxTime = 0.5, ShowTrace = false)
+      MaxTime = 0.5, TraceMode = :silent)
     res1 = bboptimize(optctrl)
     @fact numruns(optctrl) => 1
 
@@ -31,7 +31,7 @@ facts("Top-level interface") do
 
   context("continue running an optimization after serializing to disc") do
     optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      MaxTime = 0.5, ShowTrace = false)
+      MaxTime = 0.5, TraceMode = :silent)
     res1 = bboptimize(optctrl)
 
     tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
@@ -58,13 +58,13 @@ facts("Top-level interface") do
     # an OptimizationAction (such as, for example, StopOptimization) or just nothing for no action.
     terminate_func = (optstate) -> numsteps(optstate) >= 100 ? BlackBoxOptim.StopOptimization : nothing
     res = bboptimize(rosenbrock; MaxSteps = 500, SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      ShowTrace = false, StepCallback => terminate_func)
+      TraceMode = :silent, StepCallback => terminate_func)
     @fact numsteps(res) => 100
   end
 
   context("accessing the trace of the optimization") do
     res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      MaxTime = 0.5, ShowTrace = false)
+      MaxTime = 0.5, TraceMode = :silent)
     tr = trace(res)
     numimprovs = length(tr)
     # Last fitness value in trace is the best fitness achieved

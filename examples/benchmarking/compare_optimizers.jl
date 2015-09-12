@@ -200,16 +200,16 @@ increase_runs_per_problem(problemname, numdims) = begin
   RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
 end
 
-function fitness_for_opt(family::FunctionBasedProblemFamily, numDimensions::Int, populationSize::Int, numFuncEvals::Int,
-    method::Symbol, showtrace::Bool = true)
+function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int, PopulationSize::Int, MaxFuncEvals::Int,
+    Method::Symbol, TraceMode::Symbol = :compact)
 
-  problem = BlackBoxOptim.fixed_dim_problem(family, numDimensions)
+  problem = BlackBoxOptim.fixed_dim_problem(family, NumDimensions)
 
-  res = bboptimize(problem; Method = method,
-    NumDimensions = numDimensions,
-    PopulationSize = populationSize,
-    ShowTrace = showtrace,
-    MaxFuncEvals = numFuncEvals
+  res = bboptimize(problem; Method = Method,
+    NumDimensions = NumDimensions,
+    PopulationSize = PopulationSize,
+    TraceMode = TraceMode,
+    MaxFuncEvals = MaxFuncEvals
   )
 
   best_fitness(res)
@@ -234,7 +234,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
 
       # Ensure everything is compiled before we start measuring the 1st time.
       if runs_per_problem(probname, numdims) == 0
-        fitness_for_opt(prob, numdims, popsize, 100, method, false)
+        fitness_for_opt(prob, numdims, popsize, 100, method, :silent)
         increase_runs_per_problem(probname, numdims)
       end
 

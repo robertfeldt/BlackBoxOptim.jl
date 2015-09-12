@@ -1,7 +1,7 @@
 using BlackBoxOptim
 
 # Lets start an optimization of 2D rosenbrock
-# as in the README, then save its state to disc, 
+# as in the README, then save its state to disc,
 # read it back in and continue optimization.
 function rosenbrock2d(x)
   return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
@@ -11,9 +11,9 @@ end
 # to the optimizer, problem and params. Use the function
 # setup_bboptimize instead of bboptimize, but with the same
 # parameters. We just run it for 10 steps though:
-optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d; 
-  search_range = (-5.0, 5.0), dimensions = 2, 
-  parameters = {:MaxSteps => 100, :ShowTrace => false});
+optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d;
+  search_range = (-5.0, 5.0), dimensions = 2,
+  parameters = {:MaxSteps => 100, :TraceMode => :silent});
 
 # Now we can run it:
 b100, f100, tr100, time100, params, ne100 = BlackBoxOptim.run_optimizer_on_problem(
