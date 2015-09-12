@@ -113,6 +113,12 @@ function assign_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{C
   return weights
 end
 
+# trace current optimization state,
+# Called by OptRunController trace_progress()
+function trace_state(io::IO, snes::SeparableNESOpt)
+    println(io, "|σ|=", norm(snes.sigma))
+end
+
 # Abstract type for a family of NES methods that represent population as
 # x = μ + σ B⋅Z,
 # where B is an exponential of some symmetric matrix lnB, tr(lnB)==0.0
@@ -254,6 +260,13 @@ function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
 
   update_parameters!(xnes, u)
   return 0
+end
+
+# trace current optimization state,
+# Called by OptRunController trace_progress()
+function trace_state(io::IO, xnes::XNESOpt)
+    println(io, "sigma=", xnes.sigma,
+                " |trace(ln_B)|=", trace(xnes.ln_B))
 end
 
 # Calculate the fitness shaping utilities vector using the log method.

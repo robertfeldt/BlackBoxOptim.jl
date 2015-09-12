@@ -52,6 +52,18 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   end
 end
 
+# trace current optimization state,
+# Called by OptRunController trace_progress()
+function trace_state(io::IO, dxnes::DXNESOpt)
+    println(io,
+            "σ=", dxnes.sigma,
+            " η[x]=", dxnes.x_learnrate,
+            " η[σ]=", dxnes.sigma_learnrate,
+            " η[B]=", dxnes.B_learnrate,
+            " |tr(ln_B)|=", abs(trace(dxnes.ln_B)),
+            " |path|=", norm(dxnes.evol_path),
+            " (", is_moving(dxnes) ? "moving" : "stopped", ")")
+end
 
 const DXNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
   :ini_sigma => 1.0      # Initial sigma (step size)
