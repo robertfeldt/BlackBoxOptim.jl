@@ -9,6 +9,7 @@ const ValidMethods = @compat Dict{Symbol,Union(Any,Function)}(
   :adaptive_de_rand_1_bin_radiuslimited => adaptive_de_rand_1_bin_radiuslimited,
   :separable_nes => separable_nes,
   :xnes => xnes,
+  :dxnes => dxnes,
   :resampling_memetic_search => resampling_memetic_searcher,
   :resampling_inheritance_memetic_search => resampling_inheritance_memetic_searcher,
   :simultaneous_perturbation_stochastic_approximation => SimultaneousPerturbationSA2,
