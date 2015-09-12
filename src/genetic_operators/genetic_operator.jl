@@ -32,6 +32,11 @@ const NO_GEN_OP = NoMutation()
 # default implementation does nothing
 function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
 
+# trace the state of the operator, called by trace_progress()
+# of the OptRunController by some of the genetic optimizers
+# override if you need to trace the state of your genetic operator
+function trace_state(io::IO, op::GeneticOperator) end
+
 # a mixture of genetic operators,
 # use next() to choose the next operator from the mixture
 abstract GeneticOperatorsMixture <: GeneticOperator

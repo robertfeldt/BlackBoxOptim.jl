@@ -137,6 +137,11 @@ function name(o::Optimizer)
   end
 end
 
+# trace current optimization state,
+# Called by OptRunController trace_progress()
+function trace_state(io::IO, optimizer::Optimizer)
+end
+
 # Population
 include("population.jl")
 

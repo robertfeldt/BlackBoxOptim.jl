@@ -4,8 +4,8 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
-  trace_mode::Symbol # controller state trace mode (:verbose, :compact, :silent)
-                     # :silent makes tr() generate no output, :verbose calls trace_state(optimizer) within trace_progress())
+  trace_mode::Symbol # controller state trace mode (:compact, :silent)
+                     # :silent makes tr() generate no output)
   save_trace::Bool # FIXME if traces should be saved to a file
   trace_interval::Float64 # periodicity of calling trace_progress()
 
@@ -126,6 +126,10 @@ function trace_progress(ctrl::OptRunController)
   end
 
   tr(ctrl, "\n")
+
+  if ctrl.trace_mode == :verbose
+    trace_state(STDOUT, ctrl.optimizer)
+  end
 end
 
 # The ask and tell interface is more general since you can mix and max
