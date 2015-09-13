@@ -165,7 +165,10 @@ function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::Ve
 
   exnes.ln_B += ln_dB
 
-  exnes.sigma *= exp(0.5 * exnes.sigma_learnrate * dSigma)
+  new_sigma = exnes.sigma * exp(0.5 * exnes.sigma_learnrate * dSigma)
+  if isfinite(new_sigma) && new_sigma > 0
+    exnes.sigma = new_sigma
+  end
   exnes
 end
 
