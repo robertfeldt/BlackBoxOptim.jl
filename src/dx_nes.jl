@@ -8,6 +8,8 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   B_learnrate::Float64
   sigma_learnrate::Float64
   moving_threshold::Float64       # threshold of evolutionary path movement
+  evol_discount::Float64
+  evol_Zscale::Float64
   evol_path::Vector{Float64}      # evolution path, discounted coordinates of population center
   # TODO use Symmetric{Float64} to inmprove exponent etc calculation
   ln_B::Array{Float64,2}          # exponential of lnB
@@ -37,10 +39,12 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     else
       ini_x = copy(ini_x::Individual)
     end
+    u = fitness_shaping_utilities_log(lambda)
+    evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
-    new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
+    new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
       mu_learnrate, 0.0, 0.0,
-      mean(Chi(d)), zeros(d),
+      mean(Chi(d)), evol_discount, evol_Zscale, zeros(d),
       ini_xnes_B(search_space(embed)), ini_sigma, ini_x,
       zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
@@ -90,7 +94,8 @@ end
 
 function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   u = assign_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.sortedUtilities)
-  update_evol_path!(dxnes, u)
+  dxnes.evol_path *= dxnes.evol_discount
+  dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
   if is_moving(dxnes)
     u = assign_distance_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.Z)
   end
@@ -102,19 +107,11 @@ end
 
 is_moving(dxnes::DXNESOpt) = norm(dxnes.evol_path) > dxnes.moving_threshold
 
-function update_evol_path!(dxnes::DXNESOpt, u::Vector{Float64})
-  mu = sum(i -> (u[i]+1/dxnes.lambda)^2, 1:(length(u)÷2))
-  n = numdims(dxnes)
-  if mu > eps()
-    mu = 1/mu
-    c = (mu + 2.0)/(sqrt(n)*(n+mu+5.0))
-  else
-    c = 0.4/sqrt(n)
-    mu = 0.0
-  end
-  dxnes.evol_path *= (1-c)
-  dxnes.evol_path += sqrt(c*(2-c)*mu)*squeeze(wsum(dxnes.Z, u, 2), 2)
-  dxnes
+function calculate_evol_path_params(n::Int64, u::Vector{Float64})
+  lambda = length(u)
+  mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))
+  c = (mu + 2.0)/(sqrt(n)*(n+mu+5.0))
+  return (1-c), sqrt(c*(2-c)*mu)
 end
 
 function assign_distance_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{Candidate{F}}, Z::Matrix{Float64})
