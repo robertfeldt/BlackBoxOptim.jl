@@ -185,10 +185,10 @@ ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 OptimizerSets = @compat Dict{ASCIIString,Any}(
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
   "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
-  "nes" => [:xnes, :separable_nes],
+  "nes" => [:xnes, :separable_nes, :dxnes],
   "test" => [:de_rand_1_bin],
 )
-OptimizerSets["all"] = collect(keys(BlackBoxOptim.ValidMethods))
+OptimizerSets["all"] = unique(collect(keys(BlackBoxOptim.ValidMethods)))
 OptimizerSets["stable"] = vcat(OptimizerSets["de"], OptimizerSets["stable_non_de"])
 
 # Keep track of how many times we have executed each problem for this run of the script,
@@ -201,7 +201,7 @@ increase_runs_per_problem(problemname, numdims) = begin
 end
 
 function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int, PopulationSize::Int, MaxFuncEvals::Int,
-    Method::Symbol, TraceMode::Symbol = :compact)
+    Method::Symbol, TraceMode::Symbol = :verbose)
 
   problem = BlackBoxOptim.fixed_dim_problem(family, NumDimensions)
 
