@@ -17,7 +17,7 @@ function compare_algs(funcToOpt, dim;
   HighBound = 10.0,
   NumReps = 3,
   NumIterations = 2000,
-  ShowTrace = true,
+  TraceMode = :compact,
   Algs = OptimAlgs)
 
   global tf
@@ -35,14 +35,14 @@ function compare_algs(funcToOpt, dim;
     for rep in 1:NumReps
       global tf = xrotatedandshifted(dim, funcToOpt)
       global numfevals = 0
-      if ShowTrace
+      if TraceMode != :silent
         println("\nSolving...")
       end
       try
         tic()
         res = optimize(objfunc, randn(dim), method = alg, iterations = NumIterations)
         t = toq()
-        if ShowTrace
+        if TraceMode != :silent
           println("  Dims = ", dim)
           println("  Alg = ", alg)
           println("  time taken = ", t, " seconds")
@@ -60,7 +60,7 @@ function compare_algs(funcToOpt, dim;
 end
 
 # Short one so things are compiled
-compare_algs(rastrigin, 2; NumReps = 1, ShowTrace = false);
+compare_algs(rastrigin, 2; NumReps = 1, TraceMode = :silent);
 
 # They use a very uneven num of fevals though...
 BestAlgs = [:bfgs, :nelder_mead, :simulated_annealing]

@@ -10,9 +10,9 @@ end
 # to the optimizer, problem and params. Use the function
 # setup_bboptimize instead of bboptimize, but with the same
 # parameters. We just run it for 10 steps though:
-optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d; 
-  search_range = (-5.0, 5.0), dimensions = 2, 
-  parameters = {:MaxSteps => 10, :ShowTrace => false});
+optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d;
+  search_range = (-5.0, 5.0), dimensions = 2,
+  parameters = {:MaxSteps => 10, :TraceMode => :silent});
 
 # Now we can run it:
 best10, fitness10, termination_reason10, elapsed_time10, params, num_evals10 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);

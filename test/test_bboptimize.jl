@@ -8,40 +8,40 @@ end
 
 facts("bboptimize") do
   context("example 1 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, ShowTrace = false)
+    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
     @fact best_fitness(res) < 0.001 => true
   end
 
   context("example 2 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], ShowTrace = false)
+    res = bboptimize(rosenbrock2d; SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
     @fact best_fitness(res) < 0.001 => true
   end
 
   context("example 3 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, ShowTrace = false)
+    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, TraceMode = :silent)
     @fact best_fitness(res) < 0.001 => true
   end
 
   context("example 4 from README") do
     res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      Method = :random_search, MaxTime = 10.0, ShowTrace = false)
+      Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
     @fact best_fitness(res) < 0.2 => true
   end
 
   context("example 5 from README") do
     BlackBoxOptim.compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 3,
-      MaxTime = 2.0, ShowTrace = true)
+      MaxTime = 2.0, TraceMode = :compact)
   end
 
   context("run one longer example in case there is problem with the reporting in long runs") do
     res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      Method = :de_rand_1_bin, ShowTrace = false, MaxSteps = 25001)
+      Method = :de_rand_1_bin, TraceMode = :silent, MaxSteps = 25001)
     @fact best_fitness(res) < 0.001 => true
   end
 
   context("Fixed-dimensional problem takes precedence over search range and related params") do
     prob = BlackBoxOptim.minimization_problem((x) -> sum(x), "no name", (10.0, 20.0), 3)
-    res = bboptimize(prob; SearchRange = (0.0, 2.0), NumDimensions = 2, ShowTrace = false)
+    res = bboptimize(prob; SearchRange = (0.0, 2.0), NumDimensions = 2, TraceMode = :silent)
     xbest = best_candidate(res)
     @fact length(xbest) => 3
     @fact xbest[1] >= 10.0 => true
@@ -60,7 +60,7 @@ facts("bboptimize") do
 #  context("restarting an optimizer again and again should gradually improve") do
 #    optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d,
 #      {:SearchRange => (-5.0, 5.0), :NumDimensions => 2,
-#        :MaxSteps => 10, :ShowTrace => false})
+#        :MaxSteps => 10, :TraceMode => :silent})
 #    best10, fitness10, termination_reason10, elapsed_time10, params, num_evals10 = #BlackBoxOptim.run_optimizer(optimizer, problem, params);
 #    best20, fitness20, termination_reason20, elapsed_time20, params, num_evals20 = #BlackBoxOptim.run_optimizer(optimizer, problem, params);
 #    params[:MaxSteps] = 980

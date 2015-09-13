@@ -11,7 +11,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
 
         SeparableNESOpt, separable_nes,
-        XNESOpt, xnes,
+        XNESOpt, xnes, dxnes,
 
         # Parameters
         DictChain, Parameters, ParamsDictChain, ParamsDict,
@@ -137,6 +137,11 @@ function name(o::Optimizer)
   end
 end
 
+# trace current optimization state,
+# Called by OptRunController trace_progress()
+function trace_state(io::IO, optimizer::Optimizer)
+end
+
 # Population
 include("population.jl")
 
@@ -175,6 +180,7 @@ include("random_search.jl")
 include("differential_evolution.jl")
 include("adaptive_differential_evolution.jl")
 include("natural_evolution_strategies.jl")
+include("dx_nes.jl")
 include("resampling_memetic_search.jl")
 include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")

@@ -27,6 +27,13 @@ function DiffEvoOpt{P<:Population, S<:IndividualsSelector,
   DiffEvoOpt{P,S,M,E}(name, pop, select, modify, embed)
 end
 
+# trace current optimization state,
+# Called by OptRunController trace_progress()
+function trace_state(io::IO, de::DiffEvoOpt)
+    println(io, "DE modify state:")
+    trace_state(io, de.modify)
+end
+
 # Ask for a new candidate object to be evaluated, and a list of individuals
 # it should be ranked with. The individuals are supplied as an array of tuples
 # with the individual and its index.

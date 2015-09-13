@@ -49,3 +49,11 @@ function adjust!{F}(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index
   # also adjust the actual operator
   adjust!(opmix.operators[op_index], 0, candi_index, new_fitness, old_fitness, is_improved)
 end
+
+function trace_state(io::IO, fa::FAGeneticOperatorsMixture)
+  println(io, "FrequencyAdapting mixture rates:")
+  for i in eachindex(fa.operators)
+    @printf(io, " %s=%.2f", typeof(fa.operators[i]), fa.fa.p[i])
+  end
+  println(io)
+end

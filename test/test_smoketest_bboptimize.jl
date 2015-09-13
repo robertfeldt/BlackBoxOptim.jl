@@ -6,7 +6,7 @@ facts("bboptimize smoketest") do
   for(m in keys(BlackBoxOptim.ValidMethods))
     context("testing $(m) method to ensure it works") do
       ctrl = bbsetup(rosenbrock2d; Method = m,
-        SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], ShowTrace = false)
+        SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
       # run first iteration before the main run to exclude compilation from timing
       bboptimize(ctrl, MaxSteps = 1)
       res = bboptimize(ctrl, MaxTime = 0.3)
