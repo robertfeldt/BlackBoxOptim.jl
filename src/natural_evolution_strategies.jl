@@ -163,6 +163,16 @@ function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::Ve
   exnes
 end
 
+# identity for generic search space
+ini_xnes_B(ss::SearchSpace) = eye(numdims(ss), numdims(ss))
+
+# set B to deltas of each dimension
+function ini_xnes_B(ss::RangePerDimSearchSpace)
+  diag = map(log, deltas(ss))
+  diag -= mean(diag)
+  return full(Diagonal(diag))
+end
+
 # xNES is nice but scales badly with increasing dimension.
 type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
@@ -189,7 +199,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
   function XNESOpt(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
                    sigma_learnrate = 0.0, B_learnrate::Float64 = 0.0,
-                   ini_x = nothing)
+                   ini_x = nothing, ini_sigma::Float64 = 1.0)
     d = numdims(search_space(embed))
     if lambda == 0
       lambda = 4 + 3*floor(Int, log(d))
@@ -208,7 +218,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
     new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
       mu_learnrate, sigma_learnrate, B_learnrate,
-      zeros(d, d), 1.0, ini_x, zeros(d, lambda),
+      ini_xnes_B(search_space(embed)), ini_sigma, ini_x, zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # temporaries
       zeros(d), zeros(d), zeros(d),
@@ -220,6 +230,7 @@ end
 
 const XNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
   :B_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
+  :ini_sigma => 1.0      # Initial sigma (step size)
 ))
 
 function xnes(problem::OptimizationProblem, parameters)
@@ -229,7 +240,8 @@ function xnes(problem::OptimizationProblem, parameters)
                                                 mu_learnrate = params[:mu_learnrate],
                                                 sigma_learnrate = params[:sigma_learnrate],
                                                 B_learnrate = params[:B_learnrate],
-                                                ini_x = params[:ini_x])
+                                                ini_x = params[:ini_x],
+                                                ini_sigma = params[:ini_sigma])
 end
 
 function ask(xnes::XNESOpt)
