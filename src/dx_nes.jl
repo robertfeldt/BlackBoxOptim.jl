@@ -7,6 +7,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   x_learnrate::Float64
   B_learnrate::Float64
   sigma_learnrate::Float64
+  max_sigma::Float64
   moving_threshold::Float64       # threshold of evolutionary path movement
   evol_discount::Float64
   evol_Zscale::Float64
@@ -28,7 +29,8 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
   function DXNESOpt(embed::E; lambda::Int = 0,
                    mu_learnrate::Float64 = 1.0,
-                   ini_x = nothing, ini_sigma::Float64 = 1.0)
+                   ini_x = nothing, ini_sigma::Float64 = 1.0,
+                   max_sigma::Float64 = 1.0E+10)
     iseven(lambda) || throw(ArgumentError("lambda needs to be even"))
     d = numdims(search_space(embed))
     if lambda == 0
@@ -43,7 +45,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
     new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
-      mu_learnrate, 0.0, 0.0,
+      mu_learnrate, 0.0, 0.0, max_sigma,
       mean(Chi(d)), evol_discount, evol_Zscale, zeros(d),
       ini_xnes_B(search_space(embed)), ini_sigma, ini_x,
       zeros(d, lambda),
@@ -78,7 +80,8 @@ function dxnes(problem::OptimizationProblem, parameters)
   embed = RandomBound(search_space(problem))
   DXNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
                                                  ini_x = params[:ini_x],
-                                                 ini_sigma = params[:ini_sigma])
+                                                 ini_sigma = params[:ini_sigma],
+                                                 max_sigma = params[:max_sigma])
 end
 
 function ask(dxnes::DXNESOpt)
