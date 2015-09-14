@@ -62,6 +62,19 @@ facts("Evaluator") do
     evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
   end
 
+  context("rank_by_fitness!()") do
+    e = BlackBoxOptim.ProblemEvaluator(p)
+
+    candidates = [BlackBoxOptim.Candidate{Float64}(clamp!(randn(2), -1.0, 1.0)) for i in 1:10]
+    # partially evaluate fitness
+    BlackBoxOptim.update_fitness!(e, candidates[1:5])
+    @fact BlackBoxOptim.num_evals(e) --> 5
+    # complete fitness evaluation and sort by it
+    BlackBoxOptim.rank_by_fitness!(e, candidates)
+    @fact BlackBoxOptim.num_evals(e) --> 10
+    @fact sortperm(candidates, by = fitness) --> collect(1:10)
+  end
+
 if BlackBoxOptim.enable_parallel_methods
   context("ParallelEvaluator") do
     evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
