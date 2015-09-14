@@ -54,6 +54,14 @@ facts("Top-level interface") do
       @fact popsize(xpop) --> greater_than(0)
       @fact numdims(xpop) --> 2
     end
+
+    context("using population optimizer and parallel evaluator") do
+      opt = bbsetup(rosenbrock; Method=:adaptive_de_rand_1_bin,
+                    SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                    MaxSteps = 2000, TraceMode = :silent, Workers=workers())
+      res = bboptimize(opt)
+      @fact isa(BlackBoxOptim.evaluator(lastrun(opt)), BlackBoxOptim.ParallelEvaluator) --> true
+    end
   end
 
   context("continue running an optimization after it finished") do
