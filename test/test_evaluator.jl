@@ -1,11 +1,6 @@
-facts("Evaluator") do
-
-  # Set up a small example problem
-  f(x) = sum(x.^2)
-  p = minimization_problem(f, "", (-1.0, 1.0), 2)
-
+function evaluator_tests(make_eval::Function)
   context("Basic evaluation with a single-objective function to be minimized") do
-    e = BlackBoxOptim.ProblemEvaluator(p)
+    e = make_eval()
     @fact BlackBoxOptim.num_evals(e) --> 0
 
     fit1 = fitness([0.0, 1.0], e)
@@ -35,7 +30,7 @@ facts("Evaluator") do
   end
 
   context("update_fitness!()") do
-    e = BlackBoxOptim.ProblemEvaluator(p)
+    e = make_eval()
 
     candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
     BlackBoxOptim.update_fitness!(e, candidates)
@@ -44,7 +39,7 @@ facts("Evaluator") do
   end
 
   context("rank_by_fitness!()") do
-    e = BlackBoxOptim.ProblemEvaluator(p)
+    e = make_eval()
 
     candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
     # partially evaluate fitness
@@ -54,5 +49,17 @@ facts("Evaluator") do
     BlackBoxOptim.rank_by_fitness!(e, candidates)
     @fact BlackBoxOptim.num_evals(e) --> 10
     @fact sortperm(candidates, by = fitness) --> collect(1:10)
+  end
+end
+
+facts("Evaluator") do
+  # Set up a small example problem
+  f(x) = sum(x.^2)
+  p = minimization_problem(f, "", (-1.0, 1.0), 2)
+  context("ProblemEvaluator") do
+    evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
+  end
+  context("ParallelEvaluator") do
+    evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, workers()))
   end
 end
