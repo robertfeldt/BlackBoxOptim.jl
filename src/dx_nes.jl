@@ -11,6 +11,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   moving_threshold::Float64       # threshold of evolutionary path movement
   evol_discount::Float64
   evol_Zscale::Float64
+  uZscale::Float64                # distance scale for the weights
   evol_path::Vector{Float64}      # evolution path, discounted coordinates of population center
   # TODO use Symmetric{Float64} to inmprove exponent etc calculation
   ln_B::Array{Float64,2}          # exponential of lnB
@@ -46,8 +47,8 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
     new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
       mu_learnrate, 0.0, 0.0, max_sigma,
-      mean(Chi(d)), evol_discount, evol_Zscale, zeros(d),
-      ini_xnes_B(search_space(embed)), ini_sigma, ini_x,
+      mean(Chi(d)), evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
+      zeros(d), ini_xnes_B(search_space(embed)), ini_sigma, ini_x,
       zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # temporaries
@@ -101,7 +102,7 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
   if is_moving(dxnes)
     # the center is moving, adjust weights
-    u = assign_distance_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.Z)
+    u = assign_distance_weights!(dxnes.tmp_Utilities, dxnes.uZscale, rankedCandidates, dxnes.Z)
   end
   update_learning_rates!(dxnes)
   update_parameters!(dxnes, u)
@@ -118,13 +119,15 @@ function calculate_evol_path_params(n::Int64, u::Vector{Float64})
   return (1-c), sqrt(c*(2-c)*mu)
 end
 
-function assign_distance_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{Candidate{F}}, Z::Matrix{Float64})
+function assign_distance_weights!{F}(weights::Vector{Float64}, scale::Float64,
+                                     rankedCandidates::Vector{Candidate{F}},
+                                     Z::Matrix{Float64})
   @assert length(weights) == length(rankedCandidates) == size(Z, 2)
   lambda = size(Z, 2)
   u0 = log(0.5*lambda+1)
   for i in 1:lambda
     cand_ix = rankedCandidates[i].index
-    weights[cand_ix] = max(u0-log(i), 0) * exp(norm(Z[:,cand_ix]))
+    weights[cand_ix] = max(u0-log(i), 0) * exp(scale*norm(Z[:,cand_ix]))
   end
   wsum = sum(weights)
   for i in 1:lambda
