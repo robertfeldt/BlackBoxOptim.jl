@@ -11,25 +11,25 @@ context("ask()") do
 
     res1 = BlackBoxOptim.ask(opt)
 
-    @fact length(res1) => 1
+    @fact length(res1) --> 1
     candidate = res1[1]
-    @fact length(candidate.params) => dims
-    @fact in(candidate.params, ss) => true
+    @fact length(candidate.params) --> dims
+    @fact in(candidate.params, ss) --> true
 
     # Fake fitness
     candidate.fitness = 1.0
     better = BlackBoxOptim.tell!(opt, [candidate])
 
-    @fact better => 1
-    @fact opt.best => candidate.params
-    @fact opt.best_fitness => 1.0
+    @fact better --> 1
+    @fact opt.best --> candidate.params
+    @fact opt.best_fitness --> 1.0
 
     # Get one more and fake that it has better fitness.
     res2 = BlackBoxOptim.ask(opt)
-    @fact length(res2) => 1
+    @fact length(res2) --> 1
     candidate2 = res2[1]
-    @fact length(candidate2.params) => dims
-    @fact in(candidate2.params, ss) => true
+    @fact length(candidate2.params) --> dims
+    @fact in(candidate2.params, ss) --> true
     candidate2.fitness = 0.5
     better2 = BlackBoxOptim.tell!(opt, [candidate2])
   end

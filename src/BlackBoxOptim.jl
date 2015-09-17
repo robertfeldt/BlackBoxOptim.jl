@@ -32,6 +32,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         # Problems
         Problems,
         OptimizationProblem, FunctionBasedProblem,
+        minimization_problem,
         name, fitness_scheme, search_space, numdims, opt_value,
         fitness_is_within_ftol, objfunc, fitness,
 

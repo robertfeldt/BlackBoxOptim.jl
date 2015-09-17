@@ -10,10 +10,10 @@ facts("bboptimize smoketest") do
       # run first iteration before the main run to exclude compilation from timing
       bboptimize(ctrl, MaxSteps = 1)
       res = bboptimize(ctrl, MaxTime = 0.3)
-      @fact length(best_candidate(res)) => 2
+      @fact length(best_candidate(res)) --> 2
       f = best_fitness(res)
-      @fact typeof(f) => Float64
-      @fact f => less_than(100.0) # this can't be very tight since we give very little time for optimization...
+      @fact typeof(f) --> Float64
+      @fact f --> less_than(100.0) # this can't be very tight since we give very little time for optimization...
     end
   end
 end

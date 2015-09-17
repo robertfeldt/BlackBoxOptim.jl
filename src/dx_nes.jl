@@ -97,6 +97,7 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   dxnes.evol_path *= dxnes.evol_discount
   dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
   if is_moving(dxnes)
+    # the center is moving, adjust weights
     u = assign_distance_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.Z)
   end
   update_learning_rates!(dxnes)
@@ -116,7 +117,6 @@ end
 
 function assign_distance_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{Candidate{F}}, Z::Matrix{Float64})
   @assert length(weights) == length(rankedCandidates) == size(Z, 2)
-  # the center is moving, adjust weights
   lambda = size(Z, 2)
   u0 = log(0.5*lambda+1)
   for i in 1:lambda

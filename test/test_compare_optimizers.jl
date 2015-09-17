@@ -7,6 +7,6 @@ facts("compare_optimizers") do
     ]
     problems = BlackBoxOptim.as_fixed_dim_problem_set(BlackBoxOptim.example_problems, [50, 500])
     ranks, fitnesses = BlackBoxOptim.compare_optimizers(problems; max_time = 60.0, methods = methods)
-    @fact size(ranks, 2) => length(problems)
+    @fact size(ranks, 2) --> length(problems)
   end
 end
