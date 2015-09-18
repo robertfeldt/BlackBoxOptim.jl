@@ -31,6 +31,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   function DXNESOpt(embed::E; lambda::Int = 0,
                    mu_learnrate::Float64 = 1.0,
                    ini_x = nothing, ini_sigma::Float64 = 1.0,
+                   ini_lnB = nothing,
                    max_sigma::Float64 = 1.0E+10)
     iseven(lambda) || throw(ArgumentError("lambda needs to be even"))
     d = numdims(search_space(embed))
@@ -48,7 +49,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
       mu_learnrate, 0.0, 0.0, max_sigma,
       mean(Chi(d)), evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
-      zeros(d), ini_xnes_B(search_space(embed)), ini_sigma, ini_x,
+      zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
       zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # temporaries
@@ -73,7 +74,8 @@ function trace_state(io::IO, dxnes::DXNESOpt)
 end
 
 const DXNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
-  :ini_sigma => 1.0      # Initial sigma (step size)
+  :ini_sigma => 1.0,      # Initial sigma (step size)
+  :ini_lnB => nothing     # Initial log(B) (log of parameters covariation)
 ))
 
 function dxnes(problem::OptimizationProblem, parameters)
@@ -82,6 +84,7 @@ function dxnes(problem::OptimizationProblem, parameters)
   DXNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
                                                  ini_x = params[:ini_x],
                                                  ini_sigma = params[:ini_sigma],
+                                                 ini_lnB = params[:ini_lnB],
                                                  max_sigma = params[:max_sigma])
 end
 

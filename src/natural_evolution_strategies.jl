@@ -215,7 +215,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
   function XNESOpt(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
                    sigma_learnrate = 0.0, B_learnrate::Float64 = 0.0,
-                   ini_x = nothing, ini_sigma::Float64 = 1.0,
+                   ini_x = nothing, ini_sigma::Float64 = 1.0, ini_lnB = nothing,
                    max_sigma::Float64 = 1.0E+10)
     d = numdims(search_space(embed))
     if lambda == 0
@@ -235,7 +235,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
     new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
       mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
-      ini_xnes_B(search_space(embed)), ini_sigma, ini_x, zeros(d, lambda),
+      ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # temporaries
       zeros(d), zeros(d), zeros(d),
@@ -247,7 +247,8 @@ end
 
 const XNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
   :B_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
-  :ini_sigma => 1.0      # Initial sigma (step size)
+  :ini_sigma => 1.0,     # Initial sigma (step size)
+  :ini_lnB => nothing    # Initial log(B)
 ))
 
 function xnes(problem::OptimizationProblem, parameters)
@@ -259,6 +260,7 @@ function xnes(problem::OptimizationProblem, parameters)
                                                 B_learnrate = params[:B_learnrate],
                                                 ini_x = params[:ini_x],
                                                 ini_sigma = params[:ini_sigma],
+                                                ini_lnB = params[:ini_lnB],
                                                 max_sigma = params[:max_sigma])
 end
 
