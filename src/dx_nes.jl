@@ -8,7 +8,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   B_learnrate::Float64
   sigma_learnrate::Float64
   max_sigma::Float64
-  moving_threshold::Float64       # threshold of evolutionary path movement
+  moving_threshold::Float64       # threshold of |evolutionary path| to detect movement
   evol_discount::Float64
   evol_Zscale::Float64
   uZscale::Float64                # distance scale for the weights
@@ -64,14 +64,15 @@ end
 # trace current optimization state,
 # Called by OptRunController trace_progress()
 function trace_state(io::IO, dxnes::DXNESOpt)
+    evol_path_norm = norm(dxnes.evol_path)
     println(io,
             "σ=", dxnes.sigma,
             " η[x]=", dxnes.x_learnrate,
             " η[σ]=", dxnes.sigma_learnrate,
             " η[B]=", dxnes.B_learnrate,
             " |tr(ln_B)|=", abs(trace(dxnes.ln_B)),
-            " |path|=", norm(dxnes.evol_path),
-            " (", is_moving(dxnes) ? "moving" : "stopped", ")")
+            " |path|=", evol_path_norm,
+            " speed=", evol_path_norm/dxnes.moving_threshold)
 end
 
 const DXNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
@@ -104,17 +105,16 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   u = assign_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.sortedUtilities)
   dxnes.evol_path *= dxnes.evol_discount
   dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
-  if is_moving(dxnes)
+  evol_speed = norm(dxnes.evol_path)/dxnes.moving_threshold
+  if evol_speed > 1.0
     # the center is moving, adjust weights
     u = assign_distance_weights!(dxnes.tmp_Utilities, dxnes.uZscale, rankedCandidates, dxnes.Z)
   end
-  update_learning_rates!(dxnes)
+  update_learning_rates!(dxnes, evol_speed)
   update_parameters!(dxnes, u)
 
   return 0
 end
-
-is_moving(dxnes::DXNESOpt) = norm(dxnes.evol_path) > dxnes.moving_threshold
 
 #=
 Calculates the parameters for evolutionary path.
@@ -153,15 +153,15 @@ function assign_distance_weights!{F}(weights::Vector{Float64}, scale::Float64,
   return weights
 end
 
-function update_learning_rates!(dxnes::DXNESOpt)
+function update_learning_rates!(dxnes::DXNESOpt, evol_speed::Float64)
   n = numdims(dxnes)
-  if is_moving(dxnes)
+  if evol_speed > 1.0
     dxnes.sigma_learnrate = 1.0
     dxnes.B_learnrate = (dxnes.lambda + 2n)/(dxnes.lambda+2*n^2+100) *
-                        min(1, sqrt(dxnes.lambda/numdims(dxnes)))
+                        min(1.0, sqrt(dxnes.lambda/numdims(dxnes)))
   else
     dxnes.sigma_learnrate = 1.0 + dxnes.lambda/(dxnes.lambda+2*n)
-    if norm(dxnes.evol_path) > 0.1*dxnes.moving_threshold
+    if evol_speed > 0.1
       dxnes.sigma_learnrate *= 0.5
     end
     dxnes.B_learnrate = dxnes.lambda/(dxnes.lambda+2*n^2+100)
