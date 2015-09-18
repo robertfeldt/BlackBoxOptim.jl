@@ -42,6 +42,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
       ini_x = rand_individual(search_space(embed))
     else
       ini_x = copy(ini_x::Individual)
+      apply!(embed, ini_x, rand_individual(search_space(embed)))
     end
     u = fitness_shaping_utilities_log(lambda)
     evol_discount, evol_Zscale = calculate_evol_path_params(d, u)

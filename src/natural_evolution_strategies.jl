@@ -231,6 +231,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
       ini_x = rand_individual(search_space(embed))
     else
       ini_x = copy(ini_x::Individual)
+      apply!(embed, ini_x, rand_individual(search_space(embed)))
     end
 
     new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
