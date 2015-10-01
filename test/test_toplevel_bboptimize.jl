@@ -34,7 +34,7 @@ facts("Top-level interface") do
     context("using non-population optimizer") do
       res = bboptimize(rosenbrock; Method=:generating_set_search,
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
-                       MaxSteps = 2000, TraceMode = :silent)
+                       MaxSteps = 5000, TraceMode = :silent)
       @fact isa(res, BlackBoxOptim.SimpleOptimizationResults) --> true
       @fact best_fitness(res) --> less_than(1.0)
       xbest = best_candidate(res)
@@ -44,7 +44,7 @@ facts("Top-level interface") do
     context("using population optimizer") do
       res = bboptimize(rosenbrock; Method=:adaptive_de_rand_1_bin,
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
-                       MaxSteps = 2000, TraceMode = :silent)
+                       MaxSteps = 5000, TraceMode = :silent)
       @fact isa(res, BlackBoxOptim.PopulationOptimizationResults) --> true
       @fact best_fitness(res) --> less_than(0.1)
       xbest = best_candidate(res)
