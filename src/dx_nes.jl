@@ -128,9 +128,13 @@ function calculate_evol_path_params(n::Int64, u::Vector{Float64})
   lambda = length(u)
   mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))
   c = (mu + 2.0)/(sqrt(n)*(n+mu+5.0))
-  threshold = mean(Chi(n))
   discount = 1-c
   Zscale = sqrt(c*(2-c)*mu)
+  # Expected length of evol.path, if uZ ~ α N(0,I), based on AR model:
+  # E|path|^2 = α*Zscale^2 / (1-discount^2),
+  # where α ≈ 1 if the population does not cover the minimum and lies on the slope
+  # (so that |uZ| is large), but σ is too large and the method is diverging
+  threshold = Zscale*sqrt(n/(1-discount^2))
   #info("DX-NES params: moving_threshold=", threshold,
   #     " μ=", mu, " c=", c, " discount=", discount, " Zscale=", Zscale)
   return threshold, discount, Zscale
