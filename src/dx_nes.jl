@@ -45,11 +45,11 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
       apply!(embed, ini_x, rand_individual(search_space(embed)))
     end
     u = fitness_shaping_utilities_log(lambda)
-    evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
+    moving_threshold, evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
     new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
       mu_learnrate, 0.0, 0.0, max_sigma,
-      mean(Chi(d)), evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
+      moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
       zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
       zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
@@ -116,12 +116,24 @@ end
 
 is_moving(dxnes::DXNESOpt) = norm(dxnes.evol_path) > dxnes.moving_threshold
 
+#=
+Calculates the parameters for evolutionary path.
+
+Returns the tuple:
+ * moving threshold
+ * path discount
+ * current Z scale
+=#
 function calculate_evol_path_params(n::Int64, u::Vector{Float64})
   lambda = length(u)
   mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))
   c = (mu + 2.0)/(sqrt(n)*(n+mu+5.0))
-  #info("DX-NES params: μ=", mu, " c=", c, " discount=", 1-c, " Zscale=", sqrt(c*(2-c)*mu))
-  return (1-c), sqrt(c*(2-c)*mu)
+  threshold = mean(Chi(n))
+  discount = 1-c
+  Zscale = sqrt(c*(2-c)*mu)
+  #info("DX-NES params: moving_threshold=", threshold,
+  #     " μ=", mu, " c=", c, " discount=", discount, " Zscale=", Zscale)
+  return threshold, discount, Zscale
 end
 
 function assign_distance_weights!{F}(weights::Vector{Float64}, scale::Float64,
