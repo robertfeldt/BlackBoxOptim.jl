@@ -7,9 +7,11 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   x_learnrate::Float64
   B_learnrate::Float64
   sigma_learnrate::Float64
-  moving_threshold::Float64       # threshold of evolutionary path movement
+  max_sigma::Float64
+  moving_threshold::Float64       # threshold of |evolutionary path| to detect movement
   evol_discount::Float64
   evol_Zscale::Float64
+  uZscale::Float64                # distance scale for the weights
   evol_path::Vector{Float64}      # evolution path, discounted coordinates of population center
   # TODO use Symmetric{Float64} to inmprove exponent etc calculation
   ln_B::Array{Float64,2}          # exponential of lnB
@@ -28,7 +30,9 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
 
   function DXNESOpt(embed::E; lambda::Int = 0,
                    mu_learnrate::Float64 = 1.0,
-                   ini_x = nothing, ini_sigma::Float64 = 1.0)
+                   ini_x = nothing, ini_sigma::Float64 = 1.0,
+                   ini_lnB = nothing,
+                   max_sigma::Float64 = 1.0E+10)
     iseven(lambda) || throw(ArgumentError("lambda needs to be even"))
     d = numdims(search_space(embed))
     if lambda == 0
@@ -38,14 +42,15 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
       ini_x = rand_individual(search_space(embed))
     else
       ini_x = copy(ini_x::Individual)
+      apply!(embed, ini_x, rand_individual(search_space(embed)))
     end
     u = fitness_shaping_utilities_log(lambda)
-    evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
+    moving_threshold, evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
     new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
-      mu_learnrate, 0.0, 0.0,
-      mean(Chi(d)), evol_discount, evol_Zscale, zeros(d),
-      ini_xnes_B(search_space(embed)), ini_sigma, ini_x,
+      mu_learnrate, 0.0, 0.0, max_sigma,
+      moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
+      zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
       zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # temporaries
@@ -59,18 +64,20 @@ end
 # trace current optimization state,
 # Called by OptRunController trace_progress()
 function trace_state(io::IO, dxnes::DXNESOpt)
+    evol_path_norm = norm(dxnes.evol_path)
     println(io,
             "σ=", dxnes.sigma,
             " η[x]=", dxnes.x_learnrate,
             " η[σ]=", dxnes.sigma_learnrate,
             " η[B]=", dxnes.B_learnrate,
             " |tr(ln_B)|=", abs(trace(dxnes.ln_B)),
-            " |path|=", norm(dxnes.evol_path),
-            " (", is_moving(dxnes) ? "moving" : "stopped", ")")
+            " |path|=", evol_path_norm,
+            " speed=", evol_path_norm/dxnes.moving_threshold)
 end
 
 const DXNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
-  :ini_sigma => 1.0      # Initial sigma (step size)
+  :ini_sigma => 1.0,      # Initial sigma (step size)
+  :ini_lnB => nothing     # Initial log(B) (log of parameters covariation)
 ))
 
 function dxnes(problem::OptimizationProblem, parameters)
@@ -78,7 +85,9 @@ function dxnes(problem::OptimizationProblem, parameters)
   embed = RandomBound(search_space(problem))
   DXNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
                                                  ini_x = params[:ini_x],
-                                                 ini_sigma = params[:ini_sigma])
+                                                 ini_sigma = params[:ini_sigma],
+                                                 ini_lnB = params[:ini_lnB],
+                                                 max_sigma = params[:max_sigma])
 end
 
 function ask(dxnes::DXNESOpt)
@@ -96,32 +105,50 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   u = assign_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.sortedUtilities)
   dxnes.evol_path *= dxnes.evol_discount
   dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
-  if is_moving(dxnes)
+  evol_speed = norm(dxnes.evol_path)/dxnes.moving_threshold
+  if evol_speed > 1.0
     # the center is moving, adjust weights
-    u = assign_distance_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.Z)
+    u = assign_distance_weights!(dxnes.tmp_Utilities, dxnes.uZscale, rankedCandidates, dxnes.Z)
   end
-  update_learning_rates!(dxnes)
+  update_learning_rates!(dxnes, evol_speed)
   update_parameters!(dxnes, u)
 
   return 0
 end
 
-is_moving(dxnes::DXNESOpt) = norm(dxnes.evol_path) > dxnes.moving_threshold
+#=
+Calculates the parameters for evolutionary path.
 
+Returns the tuple:
+ * moving threshold
+ * path discount
+ * current Z scale
+=#
 function calculate_evol_path_params(n::Int64, u::Vector{Float64})
   lambda = length(u)
   mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))
   c = (mu + 2.0)/(sqrt(n)*(n+mu+5.0))
-  return (1-c), sqrt(c*(2-c)*mu)
+  discount = 1-c
+  Zscale = sqrt(c*(2-c)*mu)
+  # Expected length of evol.path, if uZ ~ α N(0,I), based on AR model:
+  # E|path|^2 = α*Zscale^2 / (1-discount^2),
+  # where α ≈ 1 if the population does not cover the minimum and lies on the slope
+  # (so that |uZ| is large), but σ is too large and the method is diverging
+  threshold = Zscale*sqrt(n/(1-discount^2))
+  #info("DX-NES params: moving_threshold=", threshold,
+  #     " μ=", mu, " c=", c, " discount=", discount, " Zscale=", Zscale)
+  return threshold, discount, Zscale
 end
 
-function assign_distance_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{Candidate{F}}, Z::Matrix{Float64})
+function assign_distance_weights!{F}(weights::Vector{Float64}, scale::Float64,
+                                     rankedCandidates::Vector{Candidate{F}},
+                                     Z::Matrix{Float64})
   @assert length(weights) == length(rankedCandidates) == size(Z, 2)
   lambda = size(Z, 2)
   u0 = log(0.5*lambda+1)
   for i in 1:lambda
     cand_ix = rankedCandidates[i].index
-    weights[cand_ix] = max(u0-log(i), 0) * exp(norm(Z[:,cand_ix]))
+    weights[cand_ix] = max(u0-log(i), 0) * exp(scale*norm(Z[:,cand_ix]))
   end
   wsum = sum(weights)
   for i in 1:lambda
@@ -130,15 +157,15 @@ function assign_distance_weights!{F}(weights::Vector{Float64}, rankedCandidates:
   return weights
 end
 
-function update_learning_rates!(dxnes::DXNESOpt)
+function update_learning_rates!(dxnes::DXNESOpt, evol_speed::Float64)
   n = numdims(dxnes)
-  if is_moving(dxnes)
+  if evol_speed > 1.0
     dxnes.sigma_learnrate = 1.0
     dxnes.B_learnrate = (dxnes.lambda + 2n)/(dxnes.lambda+2*n^2+100) *
-                        min(1, sqrt(dxnes.lambda/numdims(dxnes)))
+                        min(1.0, sqrt(dxnes.lambda/numdims(dxnes)))
   else
     dxnes.sigma_learnrate = 1.0 + dxnes.lambda/(dxnes.lambda+2*n)
-    if norm(dxnes.evol_path) > 0.1*dxnes.moving_threshold
+    if evol_speed > 0.1
       dxnes.sigma_learnrate *= 0.5
     end
     dxnes.B_learnrate = dxnes.lambda/(dxnes.lambda+2*n^2+100)
