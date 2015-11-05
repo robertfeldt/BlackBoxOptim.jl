@@ -13,13 +13,13 @@ function log(color::Symbol, str)
         flush(logfilehandle)
     end
 end
-log(str::String) = log(:white, str)
+log(str::AbstractString) = log(:white, str)
 
 function main(args)
 
     start_time = time()
     global logfilehandle
-    logfilehandle = open(strftime("%Y%m%d_%H%M%S.log", start_time), "a+")
+    logfilehandle = open(Libc.strftime("%Y%m%d_%H%M%S.log", start_time), "a+")
 
   s = ArgParseSettings(description = "comparing optimizers to benchmark runs",
     commands_are_required = true,
@@ -63,7 +63,7 @@ function main(args)
         help = "name of optimizer or optimizer set"
 
       "--numreps", "-n"
-        arg_type = Integer
+        arg_type = Int64
         default = 10
         help = "number of repetitions per problem and optimizer"
 
