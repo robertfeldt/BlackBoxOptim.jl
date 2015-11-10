@@ -1,5 +1,5 @@
 # FIXME replace Any with Type{Optimizer} when the support for Julia v0.3 would be dropped
-const ValidMethods = @compat Dict{Symbol,Union(Any,Function)}(
+const ValidMethods = @compat Dict{Symbol,Union{Any,Function}}(
   :random_search => random_search,
   :de_rand_1_bin => de_rand_1_bin,
   :de_rand_2_bin => de_rand_2_bin,

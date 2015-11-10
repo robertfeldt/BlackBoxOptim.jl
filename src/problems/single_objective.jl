@@ -160,7 +160,7 @@ function xrotatedandshifted(n, f, shiftAmplitude = 1.0, rotateAmplitude = 1.0)
   transformed_f(x) = f(rotmatrix * (x .- shift))
 end
 
-const example_problems = @compat Dict{String,Any}( #FIXME use Union{Optimization,FunctionBasedProblemFamily}
+const example_problems = @compat Dict{AbstractString,Any}( #FIXME use Union{Optimization,FunctionBasedProblemFamily}
   "Sphere" => JadeFunctionSet[1],
   "Rosenbrock" => JadeFunctionSet[5],
   "Schwefel2.22" => JadeFunctionSet[2],
