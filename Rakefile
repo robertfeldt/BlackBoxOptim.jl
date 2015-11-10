@@ -21,10 +21,16 @@ task :atest do
 end
 
 Command = "#{Julia} --color=yes -L src/BlackBoxOptim.jl"
+Command03 = "julia03 --color=yes -L src/BlackBoxOptim.jl"
 
 desc "Run normal (fast) tests"
 task :runtest do
   sh "#{Command} test/runtests.jl"
+end
+
+desc "Run normal (fast) tests on julia 0.3"
+task :runtest03 do
+  sh "#{Command03} test/runtests.jl"
 end
 
 desc "Run slow tests"
@@ -57,7 +63,7 @@ end
 
 desc "Clear build files etc"
 task :clobber do
-  Dir['**/*.jl.cov'].each do |f| 
+  Dir['**/*.jl.cov'].each do |f|
     puts "Deleting #{f}"
     File.delete(f)
   end

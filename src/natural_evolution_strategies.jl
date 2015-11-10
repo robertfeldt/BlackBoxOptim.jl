@@ -101,7 +101,7 @@ function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F
   old_mu = copy(snes.mu)
   snes.mu += snes.mu_learnrate * (snes.sigma .* gradient_mu)
   snes.sigma .*= exp(snes.sigma_learnrate / 2 * gradient_sigma)
-  clamp!(snes.sigma, 0.0, snes.max_sigma)
+  snes.sigma = clamp(snes.sigma, 0.0, snes.max_sigma)
   apply!(snes.embed, snes.mu, old_mu)
 
   # There is no notion of how many was better in NES so return 0
