@@ -45,7 +45,11 @@ end
 function make_evaluator(problem::OptimizationProblem, params)
   workers = get(params, :Workers, Vector{Int}())
   if length(workers) > 0
-    return ParallelEvaluator(problem, workers)
+    if BlackBoxOptim.enable_parallel_methods
+      return ParallelEvaluator(problem, workers)
+    else
+      throw(SystemError("Parallel evaluation disabled"))
+    end
   else
     return ProblemEvaluator(problem)
   end

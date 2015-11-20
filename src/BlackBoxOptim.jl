@@ -4,6 +4,12 @@ module BlackBoxOptim
 
 using Distributions, StatsBase, Compat
 
+# selectively enable parallel evaluation:
+# - Julia v0.3: no RemoteChannel
+# + Julia v0.4
+# - Julia v0.5: incompatible changes in parallel API
+enable_parallel_methods = VERSION >= v"0.4.0" && VERSION < v"0.5.0-"
+
 export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, bbsetup, compare_optimizers,
 
@@ -110,7 +116,9 @@ include(joinpath("problems", "all_problems.jl"))
 include(joinpath("problems", "problem_family.jl"))
 
 include("evaluator.jl")
+if enable_parallel_methods
 include("parallel_evaluator.jl")
+end
 
 function setup!(o::SteppingOptimizer)
   # Do nothing, override if you need to setup prior to the optimization loop

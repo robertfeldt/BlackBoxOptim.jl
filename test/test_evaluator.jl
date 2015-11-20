@@ -59,7 +59,11 @@ facts("Evaluator") do
   context("ProblemEvaluator") do
     evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
   end
+
+if BlackBoxOptim.enable_parallel_methods
   context("ParallelEvaluator") do
     evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, workers()))
   end
+end
+
 end
