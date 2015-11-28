@@ -140,7 +140,9 @@ for details.
 # Parallel Function Evaluation
 
 For some (slow) functions being optimized and if you have a multi-core CPU you can gain performance by using parallel evaluation. This typically requires an optimization algorithm that evaluates many candidate points in one batch. The NES family (xnes, dxnes etc) is one such example. See the file
+
 https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/examples/rosenbrock_parallel.jl
+
 for one example of this.
 
 # Guide to selecting an optimizer
