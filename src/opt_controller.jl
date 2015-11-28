@@ -42,10 +42,23 @@ function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
 
+function make_evaluator(problem::OptimizationProblem, params)
+  workers = get(params, :Workers, Vector{Int}())
+  if length(workers) > 0
+    if BlackBoxOptim.enable_parallel_methods
+      return ParallelEvaluator(problem, workers)
+    else
+      throw(SystemError("Parallel evaluation disabled"))
+    end
+  else
+    return ProblemEvaluator(problem)
+  end
+end
+
 # stepping optimizer has it's own evaluator, get a reference
 OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, evaluator(optimizer), params)
 # all other optimizers are using ProblemEvaluator by default
-OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, ProblemEvaluator(problem), params)
+OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, make_evaluator(problem, params), params)
 
 # logging/tracing
 function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)

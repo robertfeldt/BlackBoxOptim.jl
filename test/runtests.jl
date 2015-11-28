@@ -7,6 +7,7 @@ my_tests = [
 
   "test_parameters.jl",
   "test_fitness.jl",
+  "test_evaluator.jl",
   "test_population.jl",
   "test_bimodal_cauchy_distribution.jl",
   "test_search_space.jl",

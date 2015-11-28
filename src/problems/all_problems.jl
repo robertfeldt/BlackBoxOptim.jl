@@ -34,6 +34,9 @@ type UnboundedProblem{FS<:FitnessScheme, SS<:SearchSpace} <: FunctionBasedProble
   end
 end
 
+Base.copy{FS,SS}(p::UnboundedProblem{FS,SS}) =
+  UnboundedProblem{FS,SS}(p.objfunc, copy(p.name), p.fitness_scheme, p.ss)
+
 # problem with known global optimum,
 # a wrapper around Julia objective function
 type BoundedProblem{F, FS<:FitnessScheme, SS<:SearchSpace} <: FunctionBasedProblem{FS}
@@ -50,6 +53,9 @@ type BoundedProblem{F, FS<:FitnessScheme, SS<:SearchSpace} <: FunctionBasedProbl
     new(objfunc, name, fitness_scheme, ss, opt_value)
   end
 end
+
+Base.copy{F,FS,SS}(p::BoundedProblem{F,FS,SS}) =
+  BoundedProblem{F,FS,SS}(p.objfunc, copy(p.name), p.fitness_scheme, p.ss, p.opt_value)
 
 opt_value(p::BoundedProblem) = p.opt_value
 fitness_is_within_ftol(p::BoundedProblem, fitness, atol::Number) = norm(opt_value(p) - fitness) < atol

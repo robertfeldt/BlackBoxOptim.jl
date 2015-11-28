@@ -75,6 +75,7 @@ type Candidate{F}
 end
 
 fitness(cand::Candidate) = cand.fitness
+index(cand::Candidate) = cand.index
 
 Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness, c.op, c.tag)
 
@@ -87,7 +88,7 @@ function Base.copy!{F}(c::Candidate{F}, o::Candidate{F})
   return c
 end
 
-function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates::Vector{Candidate{F}})
+function update_fitness!{F}(e::ProblemEvaluator{F}, candidates::Vector{Candidate{F}})
   fs = fitness_scheme(e)
   for i in eachindex(candidates)
       # evaluate fitness if not known yet
@@ -95,8 +96,13 @@ function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates:
           candidates[i].fitness = fitness(candidates[i].params, e)
       end
   end
+  candidates
+end
 
-  sort!(candidates; by = fitness, lt = (x, y) -> is_better(x, y, fs))
+function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates::Vector{Candidate{F}})
+  fs = fitness_scheme(e)
+  sort!(update_fitness!(e, candidates);
+        by = fitness, lt = (x, y) -> is_better(x, y, fs))
 end
 
 fitness_is_within_ftol(e::Evaluator, atol) = fitness_is_within_ftol(problem(e), best_fitness(e.archive), atol)
