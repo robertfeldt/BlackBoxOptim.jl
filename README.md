@@ -1,7 +1,7 @@
 BlackBoxOptim.jl
 ==============
 
-BlackBoxOptim is a (work-in-progress) global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES, CMA-ES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability.
+BlackBoxOptim is a global optimization framework for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability. It also supports parallel evaluation to speed up optimization for functions that are slow to evaluate.
 
 [![Build Status](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl.svg?branch=master)](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl)
 
@@ -136,6 +136,12 @@ You can also have detailed control over the optimization byt giving a Dict mappi
 
 ...and more, see https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/src/problems/single_objective.jl
 for details.
+
+# Parallel Function Evaluation
+
+For some (slow) functions being optimized and if you have a multi-core CPU you can gain performance by using parallel evaluation. This typically requires an optimization algorithm that evaluates many candidate points in one batch. The NES family (xnes, dxnes etc) is one such example. See the file
+https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/examples/rosenbrock_parallel.jl
+for one example of this.
 
 # Guide to selecting an optimizer
 
