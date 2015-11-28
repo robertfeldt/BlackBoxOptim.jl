@@ -10,9 +10,7 @@ BlackBoxOptim is a (work-in-progress) global optimization framework for Julia (h
 
 # Installation
 
-Just install by cloning:
-
-    Pkg.clone("BlackBoxOptim")
+    Pkg.add("BlackBoxOptim")
 
 or directly from github:
 
