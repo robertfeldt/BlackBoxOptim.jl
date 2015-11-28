@@ -87,6 +87,7 @@ You can also have detailed control over the optimization byt giving a Dict mappi
 * Natural Evolution Strategies:
   - Separable NES: `separable_nes`
   - Exponential NES: `xnes`
+  - Distance-weighted Exponential NES: `dxnes`
 * Differential Evolution optimizers, 5 different:
   - Adaptive DE/rand/1/bin: `de_rand_1_bin`
   - Adaptive DE/rand/1/bin with radius limited sampling: `adaptive_de_rand_1_bin_radiuslimited`
@@ -96,8 +97,8 @@ You can also have detailed control over the optimization byt giving a Dict mappi
   - DE/rand/2/bin with radius limited sampling (a type of trivial geography): `de_rand_2_bin_radiuslimited`
 * Direct search:
   - Generating set search:
-    - Compass/coordinate search: generating_set_search
-    - Direct search through probabilistic descent: probabilistic_descent
+    - Compass/coordinate search: `generating_set_search`
+    - Direct search through probabilistic descent: `probabilistic_descent`
 * Resampling Memetic Searchers:
   - Resampling Memetic Search (RS): `resampling_memetic_search`
   - Resampling Inheritance Memetic Search (RIS): `resampling_inheritance_memetic_search`
