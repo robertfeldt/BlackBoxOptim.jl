@@ -9,7 +9,7 @@ using BlackBoxOptim
 # if function to optimize is slow. For this example we introduce a fake sleep
 # to make it slow since the function is actually very quick to eval...
 @everywhere function rosenbrock(x)
-  sleep(0.0005) # Fake a slower func to be optimized...
+  sleep(0.001) # Fake a slower func to be optimized...
   return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
 end
 
@@ -18,7 +18,7 @@ opt1 = bbsetup(rosenbrock; Method=:xnes, SearchRange = (-5.0, 5.0),
                NumDimensions = 50, MaxFuncEvals = 5000)
 tic()
 res1 = bboptimize(opt1)
-t1 = toq()
+t1 = round(toq(), 3)
 
 # When Workers= option is given, BlackBoxOptim enables parallel
 # evaluation of fitness using the specified worker processes
@@ -26,9 +26,11 @@ opt2 = bbsetup(rosenbrock; Method=:xnes, SearchRange = (-5.0, 5.0),
                NumDimensions = 50, MaxFuncEvals = 5000, Workers = workers())
 tic()
 res2 = bboptimize(opt2)
-t2 = toq()
+t2 = round(toq(), 3)
 
-println("Time: serial = $(t1), parallel = $(t2) (difference = $(t2-t1))")
+println("Time: serial = $(t1)s, parallel = $(t2)s")
 if t2 < t1
   println("Speedup is $(round(t1/t2, 1))x")
+else
+  println("Slowdown is $(round(t2/t1, 1))x")
 end
