@@ -338,3 +338,20 @@ make_opt_results{O<:PopulationOptimizer}(ctrl::OptRunController{O}, oc::OptContr
     num_func_evals(ctrl),
     population(ctrl.optimizer)
   )
+
+# HACK return population results, although ParallelPopulationOptimizer is not
+# populaton optimizer
+make_opt_results{O<:ParallelPopulationOptimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
+  PopulationOptimizationResults{fitness_type(problem(ctrl)), Individual,
+                                typeof(population(ctrl.optimizer))}(
+    string(oc.parameters[:Method]),
+    best_fitness(ctrl),
+    best_candidate(ctrl),
+    stop_reason(ctrl),
+    num_steps(ctrl),
+    start_time(ctrl),
+    elapsed_time(ctrl),
+    oc.parameters,
+    num_func_evals(ctrl),
+    population(ctrl.optimizer)
+  )
