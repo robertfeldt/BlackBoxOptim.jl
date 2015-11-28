@@ -58,27 +58,16 @@ You can find more examples of using BlackBoxOptim in [the examples directory](ht
 
 # Configurable Options
 
-The section above described the basic API for the BlackBoxOptim package. We employed several different optimization algorithms using the `method` keyword, which can take on any of the following values:
+The section above described the basic API for the BlackBoxOptim package. There is a large number of different optimization algorithms that you can select with the `method` keyword (`adaptive_de_rand_1_bin`, `adaptive_de_rand_1_bin_radiuslimited`, `separable_nes`, `xnes`, `de_rand_1_bin`, `de_rand_2_bin`, `de_rand_1_bin_radiuslimited`, `de_rand_2_bin_radiuslimited`, `random_search`, `generating_set_search`, `probabilistic_descent`).
 
-* `adaptive_de_rand_1_bin`
-* `adaptive_de_rand_1_bin_radiuslimited`
-* `separable_nes`
-* `xnes`
-* `de_rand_1_bin`
-* `de_rand_2_bin`
-* `de_rand_1_bin_radiuslimited`
-* `de_rand_2_bin_radiuslimited`
-* `random_search`
-* `generating_set_search`
-* `probabilistic_descent`
-
-In addition to the `Method` parameters, there are many other parameters you can change.
+In addition to the `method` parameter, there are many other parameters you can change. Some key ones are:
 
 * `MaxTime`: For how long can the optimization run? Defaults to false which means that number of iterations is the given budget, rather than time.
+* `MaxFuncEvals`: How many evaluations that are allowed of the function being optimized.
 * `TraceMode`: How optimization progress should be displayed. Defaults to `:compact` that outputs current number of fitness evaluations and best value each `TraceInterval` seconds.
 * `PopulationSize`: How large is the initial population for population-based optimizers? Defaults to `50`.
 
-You can also have detailed control over the optimization byt giving a Dict mapping named parameters to their values. Most optimizers have specific options that can be specified in the `parameters` dict.
+This list is not complete though, please refer to the examples and tests directories for additional examples.
 
 # State of the Library
 
@@ -103,7 +92,7 @@ You can also have detailed control over the optimization byt giving a Dict mappi
   - Resampling Memetic Search (RS): `resampling_memetic_search`
   - Resampling Inheritance Memetic Search (RIS): `resampling_inheritance_memetic_search`
 * Stochastic Approximation:
-  - Simultaneous Perturbation Stochastic Approximation (SPSA)
+  - Simultaneous Perturbation Stochastic Approximation (SPSA): `simultaneous_perturbation_stochastic_approximation`
 * RandomSearch (to compare to): `random_search`
 
 
