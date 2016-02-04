@@ -70,7 +70,7 @@ numdims(rss::RangePerDimSearchSpace) = length(mins(rss))
 diameters(rss::RangePerDimSearchSpace) = deltas(rss)
 
 # Convenience function to create symmetric search spaces.
-symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(ParamBounds[range for i in 1:numdims])
+symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(fill(range, numdims))
 
 # Create a feasible point (i.e. within the search space) given one which is
 # outside.
