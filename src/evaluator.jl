@@ -3,7 +3,7 @@
 abstract Evaluator{P <: OptimizationProblem}
 
 fitness_scheme(e::Evaluator) = fitness_scheme(problem(e))
-fitness_type(e::Evaluator) = fitness_type(fitness_scheme(e)) 
+fitness_type(e::Evaluator) = fitness_type(fitness_scheme(e))
 worst_fitness(e::Evaluator) = worst_fitness(fitness_scheme(e))
 numdims(e::Evaluator) = numdims(problem(e))
 search_space(e::Evaluator) = search_space(problem(e))

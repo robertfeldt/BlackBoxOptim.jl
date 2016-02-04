@@ -56,7 +56,6 @@ function convert_and_chain(parameters, kwargs)
 end
 
 function bbsetup(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}()); kwargs...)
-
   parameters = convert_and_chain(parameters, kwargs)
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
   check_valid!(params)
@@ -71,5 +70,4 @@ function bbsetup(functionOrProblem, parameters::Associative = @compat(Dict{Any,A
   ctrl = OptController(optimizer, problem, params)
 
   return ctrl
-
 end

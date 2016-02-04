@@ -3,7 +3,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
   lambda::Int                     # Number of samples to take per iteration
   sortedUtilities::Vector{Float64}# Fitness utility to give to each rank
-  tmp_Utilities::Vector{Float64}   # Fitness utilities assigned to current population
+  tmp_Utilities::Vector{Float64}  # Fitness utilities assigned to current population
   x_learnrate::Float64
   B_learnrate::Float64
   sigma_learnrate::Float64

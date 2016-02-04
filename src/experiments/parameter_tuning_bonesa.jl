@@ -56,8 +56,6 @@ function calc_temp_values_for_archive(bt::BonesaTuner)
 
   # Calc the good vectors (saved as (boolean) indicator values)
   mean_actual_utilities = mean(bt.utilities, 2) # Mean per row => mean for each utility value
-  
-
 end
 
 function support_of_vector(bt::BonesaTuner, pvector)

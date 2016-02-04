@@ -1,5 +1,5 @@
 # Archives work with candidate solutions. All candidate solutions can be mapped to
-# a behavioral descriptor (aka a fitness vector) which is used by the archive to judge 
+# a behavioral descriptor (aka a fitness vector) which is used by the archive to judge
 # what to maintain in the archive.
 abstract Candidate
 
@@ -21,6 +21,6 @@ type EpsilonBoxArchive <: Archive
 end
 
 # An EpsilonBoxArchive saves candidates in the archive. Each candidate must implement
-# a fitness_vector function that returns a fitness vector, i.e. float values that 
+# a fitness_vector function that returns a fitness vector, i.e. float values that
 # represents the objective values of the candidate.
 fitness_vector()
