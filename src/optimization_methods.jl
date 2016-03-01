@@ -2,7 +2,7 @@
    Optimization methods accepted by `bboptimize()`, the values are the
    method initialization routines or types derived from `Optimizer`.
 """
-const ValidMethods = Dict{Symbol,Any}(
+const ValidMethods = ParamsDict(
   :random_search => random_search,
   :de_rand_1_bin => de_rand_1_bin,
   :de_rand_2_bin => de_rand_2_bin,

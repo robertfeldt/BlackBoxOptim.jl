@@ -59,21 +59,14 @@ end
 """
 function bboptimize(optctrl::OptController; kwargs...)
   if length(kwargs) > 0
-    kwargs = convert_to_dict_symbol_any(kwargs)
-    update_parameters!(optctrl, kwargs)
+    update_parameters!(optctrl, convert(ParamsDict, kwargs))
   end
   run!(optctrl)
 end
 
-function bboptimize(functionOrProblem, parameters::Associative = Dict{Any,Any}(); kwargs...)
+function bboptimize(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
   optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
   run!(optctrl)
-end
-
-function convert_and_chain(parameters, kwargs)
-  kwargs = convert_to_dict_symbol_any(kwargs)
-  parameters = convert_to_dict_symbol_any(parameters)
-  chain(parameters, kwargs)
 end
 
 """
@@ -87,8 +80,8 @@ end
   Returns the initialized `OptController` instance. To actually run the method
   call `bboptimize()` or `run!()`.
 """
-function bbsetup(functionOrProblem, parameters::Associative = Dict{Any,Any}(); kwargs...)
-  parameters = convert_and_chain(parameters, kwargs)
+function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
+  parameters = chain(convert(ParamsDict, parameters), convert(ParamsDict, kwargs))
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
   check_valid!(params)
 

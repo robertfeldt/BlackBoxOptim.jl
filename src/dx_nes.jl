@@ -75,7 +75,7 @@ function trace_state(io::IO, dxnes::DXNESOpt)
             " speed=", evol_path_norm/dxnes.moving_threshold)
 end
 
-const DXNES_DefaultOptions = chain(NES_DefaultOptions, Dict{Symbol,Any}(
+const DXNES_DefaultOptions = chain(NES_DefaultOptions, ParamsDict(
   :ini_sigma => 1.0,      # Initial sigma (step size)
   :ini_lnB => nothing     # Initial log(B) (log of parameters covariation)
 ))

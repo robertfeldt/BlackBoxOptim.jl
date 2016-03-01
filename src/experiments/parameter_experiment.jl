@@ -59,7 +59,7 @@ function parameter_values_from_design_matrix(pe::ParameterExperiment, design)
   for(i in 1:size(design,1))
     ds = design[i,:]
     ps = Any[]
-    param_dict = Dict{Any,Any}()
+    param_dict = ParamsDict()
 
     # Calc the parameter values from the design values.
     for(j in 1:numparams(pe))

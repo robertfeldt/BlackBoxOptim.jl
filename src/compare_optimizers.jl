@@ -1,7 +1,8 @@
-function compare_optimizers(functionOrProblem, parameters::Associative = Dict{Any,Any}();
+function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
   Methods = BlackBoxOptim.MethodNames, kwargs...)
 
-  parameters = convert_and_chain(parameters, kwargs)
+  parameters = chain(convert(ParamsDict, parameters),
+                     convert(ParamsDict, kwargs))
 
   results = Any[]
   for(m in Methods)
@@ -26,10 +27,11 @@ function compare_optimizers(functionOrProblem, parameters::Associative = Dict{An
 end
 
 function compare_optimizers(problems::Dict{Any, OptimizationProblem},
-  parameters::Associative = Dict{Any,Any}();
+  parameters::Parameters = EMPTY_PARAMS;
   Methods = BlackBoxOptim.MethodNames, kwargs...)
 
-  parameters = convert_and_chain(parameters, kwargs)
+  parameters = chain(convert(ParamsDict, parameters),
+                     convert(ParamsDict, kwargs))
 
   # Lets create an array where we will save how the methods ranks per problem.
   ranks = zeros(length(Methods), length(problems))
@@ -148,12 +150,12 @@ end
 function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters::Parameters = EMPTY_PARAMS)
 
   fp = BlackBoxOptim.fixed_dim_problem(problem, dim)
-  result_dicts = Dict{Symbol,Any}[]
+  result_dicts = ParamsDict[]
 
   # Just so they are declared
   ps = best_so_far = nothing
 
-  params = chain(parameters, Dict{Symbol,Any}(:FitnessTolerance => ftol))
+  params = chain(parameters, ParamsDict(:FitnessTolerance => ftol))
 
   for m in methods
 
@@ -174,7 +176,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
     # ???
     best_so_far =
 
-    rdict = Dict{Symbol,Any}(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
+    rdict = ParamsDict(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
     rdict[:success_rate] = report_from_result_dict(rdict)
     push!(result_dicts, rdict)
 

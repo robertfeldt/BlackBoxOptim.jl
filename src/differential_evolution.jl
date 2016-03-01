@@ -1,6 +1,6 @@
 using Distributions
 
-const DE_DefaultOptions = Dict{Symbol,Any}(
+const DE_DefaultOptions = ParamsDict(
   :f => 0.6,
   :cr => 0.7,
   :SamplerRadius => 8,

@@ -303,14 +303,15 @@ lastrun(oc::OptController) = oc.runcontrollers[end]
   Update the `OptController` parameters.
 """
 function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
-  parameters::Associative = Dict{Any,Any}())
+  parameters::Parameters = EMPTY_DICT)
 
-  parameters = convert_to_dict_symbol_any(parameters)
+  parameters = convert(ParamsDict, parameters)
 
   # Most parameters cannot be changed since the problem and optimizer has already
   # been setup.
+  valid_params = Set([:MaxTime, :MaxSteps, :MaxFuncEvals, :TraceMode])
   for k in keys(parameters)
-    if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :TraceMode]
+    if k ∉ valid_params
       throw(ArgumentError("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))"))
     end
   end

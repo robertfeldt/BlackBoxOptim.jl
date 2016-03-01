@@ -52,7 +52,7 @@ end
 population(o::NaturalEvolutionStrategyOpt) = o.candidates
 numdims(o::NaturalEvolutionStrategyOpt) = numdims(search_space(o.embed))
 
-const NES_DefaultOptions = Dict{Symbol,Any}(
+const NES_DefaultOptions = ParamsDict(
   :lambda => 0,              # If 0 it will be set based on the number of dimensions
   :ini_x => nothing,         # starting point, "nothing" generates random point in a search space
   :mu_learnrate => 1.0,
@@ -264,7 +264,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   end
 end
 
-const XNES_DefaultOptions = chain(NES_DefaultOptions, Dict{Symbol,Any}(
+const XNES_DefaultOptions = chain(NES_DefaultOptions, ParamsDict(
   :B_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
   :ini_sigma => 1.0,     # Initial sigma (step size)
   :ini_lnB => nothing    # Initial log(B)
