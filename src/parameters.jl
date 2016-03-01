@@ -1,5 +1,7 @@
-# An ordered set of dicts which we traverse to find the parameter value.
-# Returns nothing if no param setting is found in any of the dicts.
+"""
+  An ordered set of dicts that are examined one after another to find the parameter value.
+  Returns nothing if no param setting is found in any of the dicts.
+"""
 type DictChain{K,V} <: Associative{K,V}
   dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
 
@@ -90,7 +92,6 @@ chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}...) = DictChain(chain(p2..
 flatten(d::Associative) = d
 flatten{K,V}(d::DictChain{K,V}) = convert(Dict{K,V}, d)
 
-# converts DictChain into Dict
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
 
 function delete!{K,V}(p::DictChain{K,V}, key::K)
@@ -100,13 +101,17 @@ function delete!{K,V}(p::DictChain{K,V}, key::K)
   p
 end
 
-# The default parameters storage in BlackBoxOptim
+"""
+  The default parameters storage in `BlackBoxOptim`
+"""
 typealias Parameters Associative{Symbol,Any}
 
 typealias ParamsDict Dict{Symbol,Any}
 typealias ParamsDictChain DictChain{Symbol,Any}
 
-# Default place for parameters argument in many methods
+"""
+  Default place for parameters argument in many methods.
+"""
 const EMPTY_PARAMS = @compat(Dict{Symbol, Any})
 
 # FIXME Clean this up

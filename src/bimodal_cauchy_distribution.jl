@@ -4,7 +4,7 @@ using Distributions
 typealias BimodalCauchy @compat Tuple{Cauchy, Cauchy}
 
 # In the literature Cauchy distributions have been used for sampling the
-# f and cr constants used in DE.
+# `f` and `cr` constants used in DE.
 function sample_bimodal_cauchy_once(cauchyDistrs::BimodalCauchy, cutoffProb = 0.5)
   index = (rand() < cutoffProb) ? 1 : 2
   rand(cauchyDistrs[index])

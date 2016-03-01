@@ -1,5 +1,7 @@
-# Manages the objective function evaluation
-# P is the optimization problem it is used for
+"""
+  The abstract base for types that manage the objective function evaluation.
+  `P` is the optimization problem it is used for.
+"""
 abstract Evaluator{P <: OptimizationProblem}
 
 fitness_scheme(e::Evaluator) = fitness_scheme(problem(e))
@@ -10,7 +12,9 @@ search_space(e::Evaluator) = search_space(problem(e))
 describe(e::Evaluator) = "Problem: $(name(e.problem)) (dimensions = $(numdims(e)))"
 problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 
-# Default implementation of the evaluator
+"""
+  Default implementation of the `Evaluator`.
+"""
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
 type ProblemEvaluator{F, P<:OptimizationProblem} <: Evaluator{P}
@@ -39,9 +43,14 @@ function fitness(params::Individual, e::ProblemEvaluator)
   res
 end
 
-# A way to get the fitness of the last evaluated candidate. Leads to nicer
-# code if we can first test if better than or worse than existing candidates
-# and only want the fitness itself if the criteria fulfilled.
+"""
+  `last_fitness(e::Evaluator)`
+
+  Get the fitness of the last evaluated candidate.
+
+  Leads to nicer code if we can first test if it is better or worse than existing candidates
+  and only want the fitness itself if the criteria fulfilled.
+"""
 last_fitness(e::Evaluator) = e.last_fitness
 
 is_better{F}(f1::F, f2::F, e::Evaluator) = is_better(f1, f2, fitness_scheme(e))
@@ -58,7 +67,12 @@ function best_of(candidate1::Individual, candidate2::Individual, e::Evaluator)
   end
 end
 
-# Candidate for the introduction into the population
+"""
+  Candidate solution to the problem.
+
+  Could be either a member of the population (`index` > 0) or
+  a standalone solution (`index` == -1).
+"""
 type Candidate{F}
     params::Individual
     index::Int           # index of individual in the population, -1 if unassigned

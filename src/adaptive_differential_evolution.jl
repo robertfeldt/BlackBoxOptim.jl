@@ -7,10 +7,12 @@ const ADE_DefaultOptions = chain(DE_DefaultOptions, @compat Dict{Symbol,Any}(
   :SearchSpace => symmetric_search_space(1)
 ))
 
-# Specific data and functions for adaptation
-# An Adaptive DE typically changes parameters of the search dynamically. This is
-# typically done in the tell! function when we know if the trial vector
-# was better than the target vector.
+"""
+  Specific data and functions for adaptation
+  An Adaptive DE typically changes parameters of the search dynamically. This is
+  typically done in the `tell!()` function when we know if the trial vector
+  was better than the target vector.
+"""
 type AdaptiveDiffEvoParameters
   # Distributions we will use to generate new F and CR values.
   # FIXME allow any distribution?
@@ -48,7 +50,9 @@ function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)
     end
 end
 
-# An Adaptive DE crossover operator changes cr and f parameters of the search dynamically.
+"""
+  An Adaptive DE crossover operator changes `cr` and `f` parameters of the search dynamically.
+"""
 type AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   params::AdaptiveDiffEvoParameters
 

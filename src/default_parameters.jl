@@ -1,4 +1,8 @@
-# Default parameters for all convenience methods that are exported to the end user.
+"""
+  Default parameters for all convenience methods that are exported to the end user.
+
+  See `OptRunController` for the description.
+"""
 const DefaultParameters = @compat Dict{Symbol,Any}(
   :NumDimensions  => :NotSpecified, # Dimension of problem to be optimized
   :SearchRange    => (-1.0, 1.0), # Default search range to use per dimension unless specified
@@ -6,13 +10,13 @@ const DefaultParameters = @compat Dict{Symbol,Any}(
 
   :Method => :adaptive_de_rand_1_bin_radiuslimited,
 
-  :MaxTime        => 0.0, # Max time in seconds (takes precedence over the other budget-related params if specified), 0.0 disables the check
-  :MaxFuncEvals   => 0,   # Max func evals (takes precedence over max iterations, but not max time), 0 disables the check
-  :MaxSteps       => 10000,   # Max iterations gives the least control since different optimizers have different "size" of their "iterations"
-  :MinDeltaFitnessTolerance => 1e-50, # Minimum delta fitness (difference between two consecutive best fitness improvements) we can accept before terminating
-  :FitnessTolerance => 1e-8,  # Stop optimization when the best fitness found is within this distance of the actual optimum (if known)
+  :MaxTime        => 0.0,
+  :MaxFuncEvals   => 0,
+  :MaxSteps       => 10000,
+  :MinDeltaFitnessTolerance => 1e-50,
+  :FitnessTolerance => 1e-8,
 
-  :MaxNumStepsWithoutFuncEvals => 100, # Stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
+  :MaxNumStepsWithoutFuncEvals => 100,
 
   :NumRepetitions => 1,     # Number of repetitions to run for each optimizer for each problem
 

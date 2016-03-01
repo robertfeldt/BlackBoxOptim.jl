@@ -34,12 +34,7 @@ function trace_state(io::IO, de::DiffEvoOpt)
     trace_state(io, de.modify)
 end
 
-# Ask for a new candidate object to be evaluated, and a list of individuals
-# it should be ranked with. The individuals are supplied as an array of tuples
-# with the individual and its index.
-function ask(de::DiffEvoOpt)
-  evolve(de, de.modify)
-end
+ask(de::DiffEvoOpt) = evolve(de, de.modify)
 
 function evolve(de::DiffEvoOpt, op::GeneticOperatorsMixture)
   sel_op, tag = next(op)
@@ -77,7 +72,9 @@ function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
   return evolved_pair(de, target, trial, crossover, 0)
 end
 
-# post processing of evolved pair
+"""
+  Post-process the evolved pair.
+"""
 function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F}, op::GeneticOperator, tag::Int = 0)
   # embed the trial parameter vector into the search space
   apply!(de.embed, trial.params, de.population, [target.index])
@@ -90,8 +87,6 @@ function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{
   return Candidate{F}[trial, target]
 end
 
-# Tell the optimizer about the ranking of candidates. Returns the number of
-# better candidates that were inserted into the population.
 function tell!{F}(de::DiffEvoOpt,
   # archive::Archive, # Skip for now
   rankedCandidates::Vector{Candidate{F}})
@@ -121,7 +116,9 @@ function tell!{F}(de::DiffEvoOpt,
   num_better
 end
 
-# adjust the parameters of the method
+"""
+  Adjust the parameters of the method after the candidate evaluation.
+"""
 function adjust!(de::DiffEvoOpt, candi::Candidate, is_improved::Bool)
   # adjust the parameters of the operation
   old_fitness = fitness(population(de), candi.index)
@@ -145,7 +142,7 @@ function diffevo(problem::OptimizationProblem, options::Parameters, name::ASCIIS
              RandomBound(search_space(problem)))
 end
 
-# The most used DE/rand/1/bin.
+""" The most used `DE/rand/1/bin` variant of differential evolution. """
 de_rand_1_bin(problem::OptimizationProblem,
               options::Parameters = EMPTY_PARAMS,
               name = "DE/rand/1/bin") = diffevo(problem, options, name)
@@ -156,7 +153,7 @@ de_rand_2_bin(problem::OptimizationProblem,
                                                 SimpleSelector(),
                                                 convert(DiffEvoRandBin2, chain(DE_DefaultOptions, options)))
 
-# The most used DE/rand/1/bin with "local geography" via radius limited sampling.
+""" The most used `DE/rand/1/bin` variant with "local geography" via radius-limited sampling. """
 de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
                             options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/1/bin/radiuslimited") =

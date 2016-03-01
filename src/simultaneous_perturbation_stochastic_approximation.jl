@@ -1,3 +1,6 @@
+"""
+  `AskTellOptimizer` that utilizes randomization to generate the candidates.
+"""
 abstract StochasticApproximationOptimizer <: AskTellOptimizer
 
 const SPSADefaultParameters = @compat Dict{Symbol,Any}(

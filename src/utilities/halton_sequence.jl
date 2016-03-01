@@ -1,24 +1,21 @@
-# Generate the first n numbers in Halton's sequence with base b.
-#
-#   seq = haltonsequence(b, n)
-#
-# Output:
-#  seq - sequence of n Halton numbers
-#
-# Inputs:
-#  b - base of the sequence
-#  n - length of vector to be generated
-#
+"""
+  `haltonsequence(b, n)`
+
+  Generate the first `n` numbers in Halton's sequence with base `b`.
+"""
 function haltonsequence(b, n)
   map((i) -> haltonnumber(b, i), 1:n)
 end
 
-# Generate the nth Halton number in the sequence with base b.
-#
-# Notes:
-#  Implementation is based on the psudo code in:
-#    http://en.wikipedia.org/wiki/Halton_sequence
-#
+"""
+  `haltonnumber(base, index)`
+
+  Generate the `n`-th Halton number in the sequence with base `b`.
+
+# Note
+  Implementation is based on the psudo code in:
+    http://en.wikipedia.org/wiki/Halton_sequence
+"""
 function haltonnumber(base, index)
   res = 0
   f = 1 / base

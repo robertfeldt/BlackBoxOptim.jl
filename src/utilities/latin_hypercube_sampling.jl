@@ -1,4 +1,7 @@
-# Latin hypercube sampling of values from given mins and maxs, per column.
+"""
+  Randomly sample `numSamples` values from the parallelogram defined
+  by `mins` and `maxs` using the Latin hypercube algorithm.
+"""
 function latin_hypercube_sampling(mins, maxs, numSamples)
   dims = length(mins)
   result = zeros(numSamples, dims)

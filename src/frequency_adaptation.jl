@@ -1,13 +1,15 @@
-# A FrequencyAdapter adapts the frequencies with which a set of
-# values/strategies/methods should be applied/tried in an optimization problem.
-# It is based on the Adaptive Coordinate Frequencies scheme described in:
-#
-# T. Glasmachers and U. Dogan, "Accelerated Coordinate Descent with
-# Adaptive Coordinate Frequencies", 2013.
-#
-# but generalized so that it can support more than the adaptation of only
-# the coordinates in a Coordinate Descent scheme. The things that are being
-# adapted are identified by integers in 1:n, with n being the main parameter.
+"""
+  A `FrequencyAdapter` adapts the frequencies with which a set of
+  values/strategies/methods should be applied/tried in an optimization problem.
+  It is based on the `Adaptive Coordinate Frequencies` scheme described in:
+
+  T. Glasmachers and U. Dogan, "Accelerated Coordinate Descent with
+  Adaptive Coordinate Frequencies", 2013.
+
+  but generalized so that it can support more than the adaptation of only
+  the coordinates in a Coordinate Descent scheme. The things that are being
+  adapted are identified by integers in 1:n, with n being the main parameter.
+"""
 type FrequencyAdapter
   n::Int                # number of methods to select from
   eta::Float64          # 0..1, running average decay rate
@@ -38,12 +40,18 @@ end
 
 frequencies(fa::FrequencyAdapter) = weights(fa.p)
 
-# Return the index of the next method that should be used. The base
-# FrequencyAdapter first creates a block of randomly shuffled methods that should
-# be applied and then selected the next one from it. If there is a current
-# block which is non-empty, use that, if not create a new block. However,
-# the first block is always random shuffles of all the methods since we need
-# to learn about their effectiveness.
+"""
+  `next(fa::FrequencyAdapter)`
+
+  Give the index of the method that should be used at the next iteration.
+
+  `FrequencyAdapter` maintains a block of randomly shuffled methods.
+  The function takes the next available method in the block.
+  If the block is empty, it is repopulated.
+
+  The methods are randomly shuffled each time the block is regenerated, since we need
+  to know their effectiveness at every period of the optimization process.
+"""
 function next(fa::FrequencyAdapter)
   if fa.block_pos > length(fa.block)
     fill_block!(fa)
@@ -53,7 +61,9 @@ function next(fa::FrequencyAdapter)
   return fa.block[fa.block_pos-1]
 end
 
-# Fill the block of methods to apply
+"""
+  Fill the block of methods to apply.
+"""
 function fill_block!(fa::FrequencyAdapter)
   #print("Creating new block, psum = $(fa.psum), a = ", fa.a, ", p = ", fa.p)
   empty!(fa.block)
@@ -87,9 +97,11 @@ function fill_block!(fa::FrequencyAdapter)
   shuffle!(fa.block)
 end
 
-# Update the internal model of progress and success rate of each method based
-# on the latest progress value of one method. Progress values should be larger
-# the larger the progress/improvement was.
+"""
+  Update the internal model of progress and success rate of each method based
+  on the latest progress value of one method. Progress values should be larger
+  the larger the progress/improvement was.
+"""
 function update!(fa::FrequencyAdapter, methodIndex, progress)
   # If we already have collected a few samples of progress rates we can update
   # the pi. This is the common case.

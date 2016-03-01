@@ -73,16 +73,21 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
   return ranks, fitnesses
 end
 
-# Summarize a vector of float values by stating its mean, std dev and median.
+"""
+  Summarize a vector of float values by stating its mean, std dev and median.
+"""
 function report_on_values(desc, v, lpad = "", rpad = "", digits = 3)
   println("$(lpad)$(desc): $(signif(mean(v), digits)) (std. dev = $(signif(std(v), digits)), median = $(signif(median(v), digits)))")
 end
 
-# Report on the number of times each key in a count dict was encountered.
-# Returns a percentage dict calculated while iterating over the counted items.
+"""
+  Report the number of times each key was encountered in a count `dict`.
+
+  Returns a percentage dict calculated while iterating over the counted items.
+"""
 function count_dict_report(dict, desc, lpad = "", rpad = "")
   println(desc, ":")
-  total = sum(collect(values(dict)))
+  total = sum(collect(values(dict))) # FIXME collect() should not be required
   pdict = Dict()
   for (r, c) in dict
     pdict[r] = round(100.0*c/total, 2)
@@ -91,9 +96,11 @@ function count_dict_report(dict, desc, lpad = "", rpad = "")
   pdict
 end
 
-# Print a report based on a result dict from one set of repeated runs of
-# an optimization method. Returns the success rate, i.e. number of times the
-# termination reason was "Within fitness tolerance...".
+"""
+  Print a report based on a result dict from one set of repeated runs of
+  an optimization method. Returns the success rate, i.e. number of times the
+  termination reason was "Within fitness tolerance...".
+"""
 function report_from_result_dict(statsdict)
   println("Method: $(statsdict[:method])")
   pdict = count_dict_report(statsdict[:reasoncounts], "  Termination reasons", "    ")

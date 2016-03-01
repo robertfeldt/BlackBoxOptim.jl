@@ -1,5 +1,7 @@
-# Randomly selects the mutator from the vector
-# according to its weight and applies it
+"""
+  Randomly selects the genetic operator from the vector
+  according to its weight and applies it.
+"""
 type FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operations
     weights::WeightVec{Float64}        # fixed weights
@@ -13,7 +15,9 @@ type FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     end
 end
 
-# default implementation of apply!() for operators mixture
+"""
+  Default implementation of `apply!()` for operators mixture.
+"""
 function apply!{T<:Real}(opmix::GeneticOperatorsMixture, v::Vector{T}, target_index::Int)
   op, tag = next(opmix)
   apply!(op, v, target_index)
@@ -24,7 +28,9 @@ function next(opmix::FixedGeneticOperatorsMixture)
   return opmix.operators[i], i
 end
 
-# Frequency-adapting genetic operators mixture
+"""
+  Frequency-adapting genetic operators mixture.
+"""
 type FAGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operators
     fa::FrequencyAdapter               # adapter of operator frequencies

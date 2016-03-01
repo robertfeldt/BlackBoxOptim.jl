@@ -1,9 +1,10 @@
-# An archive saves information about interesting points during an optimization
-# run. It also saves (at least) the two last best fitness values since they
-# can be used to estimate a confidence interval for how much improvement
-# potential there is.
+"""
+  `Archive` saves information about promising solutions during an optimization
+  run.
+"""
 abstract Archive
 
+" Fitness as stored in `Archive`. "
 immutable ArchivedFitness{F}
     timestamp::Float64    # when archived
     num_fevals::Int64     # number of fitness evaluations so far
@@ -30,22 +31,28 @@ Base.(:(==)){F}(x::ArchivedIndividual{F}, y::ArchivedIndividual{F}) =
 
 fitness(a::ArchivedIndividual) = a.fitness
 
-# A top list archive saves a top list of the best performing (best fitness)
-# candidates/individuals seen.
+"""
+  Archive that maintains a top list of the best performing (best fitness)
+  candidates seen so far.
+
+
+  The two last best fitness values could be used to estimate a confidence interval for how much improvement
+  potential there is.
+"""
 type TopListArchive{F,FS<:FitnessScheme} <: Archive
   fit_scheme::FS        # Fitness scheme used
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
-  numdims::Int          # Number of dimensions in opt problem. Needed for confidence interval estimation.
+  numdims::Int          # Number of dimensions in the optimization problem. Needed for confidence interval estimation.
 
   num_fitnesses::Int    # Number of calls to add_candidate
 
   capacity::Int         # Max size of top lists
   candidates::Vector{ArchivedIndividual{F}}  # Top candidates and their fitness values
 
-  # We save a fitness history that we can later print to a csv file.
-  # For each magnitude class (as defined by magnitude_class function below) we
+  # Stores a fitness history that we can later print to a csv file.
+  # For each magnitude class (as defined by `magnitude_class()` function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
-  # class is: (magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)
+  # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
   fitness_history::Vector{ArchivedFitness{F}}
 
   function TopListArchive(fit_scheme::FS, numdims, capacity = 10)
@@ -65,8 +72,11 @@ best_candidate(a::TopListArchive) = a.candidates[1].params
 best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[1]) : nafitness(fitness_scheme(a))
 last_top_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[end]) : nafitness(fitness_scheme(a))
 
-# Delta fitness is the difference between the best fitness and the former
-# best fitness
+"""
+  `delta_fitness(a::TopListArchive)`
+
+  The difference between the current best fitness and the former best fitness.
+"""
 function delta_fitness(a::TopListArchive)
   if length(a.fitness_history) < 2
     Inf
@@ -76,8 +86,12 @@ function delta_fitness(a::TopListArchive)
   end
 end
 
-# Add a candidate with a fitness to the archive (if it is good enough).
-function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, num_fevals = -1)
+"""
+  `add_candidate!(a::TopListArchive, fitness::F, candidate[, num_fevals=-1])`
+
+  Add a candidate with a fitness to the archive (if it is good enough).
+"""
+function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, num_fevals=-1)
   a.num_fitnesses += 1
 
   if isempty(a.fitness_history) || is_better(fitness, best_fitness(a), fitness_scheme(a))
@@ -97,9 +111,10 @@ function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F
   end
 end
 
-# The magnitude class of a value is a tuple indicating its sign and scale in a
-# tuple. This is used for filtering so that we only need to save one history
-# value per magnitude class instead of saving them all.
+"""
+  Get a tuple of the sign and the magnitude of the value rounded to the first digit.
+  Used for archiving candidates separately for each magnitude class.
+"""
 function magnitude_class(f)
   f = float(f)
   if f == 0.0
@@ -118,7 +133,9 @@ function fitness_improvement_ratio(a::Archive, newFitness)
   end
 end
 
-# Calculate the distance from a fitness value to the optimum/best known fitness value.
+"""
+  Get the distance from a fitness value to the optimum/best known fitness value.
+"""
 function distance_to_optimum(fitness, bestfitness)
   abs(fitness - bestfitness)
 end
@@ -165,8 +182,12 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
 
 end
 
-# Merge multiple fitness histories and calculate the min, max, avg and median
-# values for fitness and fir at all fitness eval change points.
+"""
+  `merge_fitness_histories(histories)`
+
+  Merge the collection of multiple fitness histories and calculate the `min`, `max`, `avg` and `median`
+  values for fitness and FIR (fitness improvement ratio) at each point where the fitness is changing.
+"""
 function merge_fitness_histories(histories)
   numhist = length(histories)
   counts = ones(numhist)
@@ -197,21 +218,26 @@ end
 #
 #end
 
-# Calculate the width of the confidence interval at a certain p-value.
-# This is based on the paper:
-#  Carvalho (2011), "Confidence intervals for the minimum of a
-#    function using extreme value statistics"
-#
-# This means that the current estimate of the confidence interval for the minimum
-# of the optimized function lies within the interval
-#
-#     ] l1 - w, l1 [
-#
-# with probability (1-p) as the number of sampled function points goes to infinity,
-# where
-#   w = width_of_confidence_interval(a, p)
-#   l1 = best_fitness(a)
-#
+"""
+  Calculate the width of the confidence interval at a certain `p`-value.
+  This is based on the paper:
+    Carvalho (2011), "Confidence intervals for the minimum of a
+    function using extreme value statistics"
+
+  This means that the current estimate of the confidence interval for the minimum
+  of the optimized function lies within the interval
+
+  ```
+     ] l1 - w, l1 [
+  ```
+
+  with probability ``(1-p)`` as the number of sampled function points goes to infinity,
+  where
+  ```
+    w = width_of_confidence_interval(a, p)
+    l1 = best_fitness(a)
+  ```
+"""
 function width_of_confidence_interval(a::Archive, p = 0.01)
   if length(a) < 2
     return Inf
@@ -223,10 +249,15 @@ function width_of_confidence_interval(a::Archive, p = 0.01)
   end
 end
 
-# We define the improvement potential as the percentage improvement
-# that can be expected from the current fitness value at a given p value.
-# In theory, an optimization run should be terminated when this value is very
-# small, i.e. there is little improvement potential left in the run.
+"""
+  `fitness_improvement_potential(a::Archive[, p = 0.01])`
+
+  Calculate the solution improvement potential.
+
+  The percentage improvement that can be expected from the current fitness value at a given `p`-value.
+  In theory, an optimization run should be terminated when this value is very
+  small, i.e. there is little improvement potential left in the run.
+"""
 function fitness_improvement_potential(a::Archive, p = 0.01)
   width_of_confidence_interval(a, p) / abs(best_fitness(a))
 end

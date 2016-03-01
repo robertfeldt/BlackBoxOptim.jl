@@ -1,4 +1,8 @@
-# simple random selector
+"""
+  Simple random `IndividualsSelector`.
+
+  The probabilties of all candidates are equal.
+"""
 immutable SimpleSelector <: IndividualsSelector
 end
 

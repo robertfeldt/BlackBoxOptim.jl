@@ -1,4 +1,7 @@
-# family of FunctionBasedProblem parameterized by the search space dimension
+"""
+  Family of `FunctionBasedProblem` optimization problems
+  parameterized by the number of search space dimensions.
+"""
 type FunctionBasedProblemFamily{F,FS<:FitnessScheme}
   objfunc::Function                          # Objective function
   name::ASCIIString
@@ -15,7 +18,9 @@ Base.convert{F,FS<:FitnessScheme}(FunctionBasedProblemFamily, objfunc::Function,
 
 objfunc(family::FunctionBasedProblemFamily) = family.objfunc
 
-# generates the problem with the specified number of dimensions
+"""
+  Construct the `FunctionBasedProblem` with the given number of dimensions.
+"""
 function fixed_dim_problem(family::FunctionBasedProblemFamily, ndim::Int)
   ss = symmetric_search_space(ndim, family.range_per_dimension)
   if isnull(family.opt_value)
@@ -47,16 +52,17 @@ function minimization_problem(f::Function, name::ASCIIString, range::ParamBounds
     fixed_dim_problem(MinimizationProblemFamily(f, name, range, fmin), ndim)
 end
 
-# A function set is specified through a dict mapping its function number
-# to an optimization problem. We can create a fixed dimensional variant of
-# an any dimensional function set with:
-function problem_set(ps::Dict{Any, Any}, dim::Int)
-  problem_set(ps, [dim])
-end
+"""
+  `problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Union{Int,Vector{Int}})`
 
-# Create a fixed dim version of each problem in ps for each dim in dims.
+  Construct a fixed-dimensional version of each problem from `ps`
+  for each dimension given in `dims`.
+
+  Returns a dictionary of problems.
+"""
 function problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Vector{Int})
   next_free_index = 1
+  # FIXME would using vector be more straightforward?
   result = Dict{Int, FunctionBasedProblem}()
   for d in dims
     for p in values(ps)
@@ -66,3 +72,5 @@ function problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Vector{Int
   end
   result
 end
+
+problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dim::Int) = problem_set(ps, [dim])

@@ -81,19 +81,61 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         FrequencyAdapter, next, update!, frequencies,
         name
 
-# base abstract class for black-box optimization algorithms
+"""
+  Base abstract class for black-box optimization algorithms.
+"""
 abstract Optimizer
 
-# SteppingOptimizer's do not have an ask and tell interface since they would be
-# complex to implement if forced into that form.
+"""
+    Optimizers derived from `SteppingOptimizer` implement classical iterative optimization scheme
+    `step!()` → `step!()` → …
+"""
 abstract SteppingOptimizer <: Optimizer
 evaluator(so::SteppingOptimizer) = so.evaluator
 
-# optimizer using ask()/..eval fitness../tell!() sequence at each step
+"""
+  `step!(opt::SteppingOptimizer)`
+
+  Do one iteration of the method.
+"""
+function step! end # FIXME avoid defining 0-arg function
+
+"""
+  Base abstract class for optimizers that perform
+  `ask()` → ..eval fitness.. → `tell!()`
+  sequence at each step.
+"""
 abstract AskTellOptimizer <: Optimizer
 
-# population-based optimizers
+"""
+  `ask(ato::AskTellOptimizer)`
+
+  Ask for a new candidate solution to be generated, and a list of individuals
+  it should be ranked with.
+
+  The individuals are supplied as an array of tuples
+  with the individual and its index.
+
+  See also `tell!()`
+"""
+function ask end # FIXME avoid defining 0-arg function
+
+"""
+  `tell!(ato::AskTellOptimizer, rankedCandidates)`
+
+  Tell the optimizer about the ranking of candidates.
+  Returns the number of `rankedCandidates` that were inserted into the population,
+  because of the improved fitness.
+
+  See also `ask()`.
+"""
+function tell! end # FIXME avoid defining 0-arg function
+
+"""
+  Base class for population-based optimization methods.
+"""
 abstract PopulationOptimizer <: AskTellOptimizer
+
 population(popopt::PopulationOptimizer) = popopt.population
 popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
@@ -147,10 +189,15 @@ function name(o::Optimizer)
   end
 end
 
-# trace current optimization state,
-# Called by OptRunController trace_progress()
-function trace_state(io::IO, optimizer::Optimizer)
-end
+"""
+  `trace_state(io::IO, optimizer::Optimizer)`
+
+  Trace the current optimization state to a given IO stream.
+  Called by `OptRunController` `trace_progress()`.
+
+  Override it for your optimizer to generate method-specific diagnostic traces.
+"""
+function trace_state(io::IO, optimizer::Optimizer) end
 
 # Population
 include("population.jl")

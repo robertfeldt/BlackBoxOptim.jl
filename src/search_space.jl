@@ -1,43 +1,65 @@
-# A SearchSpace determines which candidate points can be
-# considered in a search/optimization. This base class has very few restrictions
-# and can allow varying number of dimensions etc.
+"""
+  A `SearchSpace` defines the valid candidate points that could be
+  considered in a search/optimization.
+  The base abstract class has very few restrictions
+  and can allow varying number of dimensions etc.
+"""
 abstract SearchSpace
 
-# SearchSpace with a fixed number of dimensions. The vast majority of problems.
+"""
+  `SearchSpace` with a fixed finite number of dimensions.
+  Applicable to the vast majority of problems.
+"""
 abstract FixedDimensionSearchSpace <: SearchSpace
 
-# In a ContinuousSearchSpace each dimension has a continuous range of
-# valid values.
+"""
+  Fixed-dimensional space, each dimension has a continuous range of valid values.
+"""
 abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
 
-# representative of the search space
+"""
+  The point of the `SearchSpace`.
+"""
 typealias Individual Vector{Float64}
 
+"""
+  The valid range of values for a specific dimension in a `SearchSpace`.
+"""
 typealias ParamBounds @compat Tuple{Float64,Float64}
 
-# Access individual range for a dim.
+"""
+  Get the range of valid values for a specific dimension.
+"""
 range_for_dim(css::ContinuousSearchSpace, i) = (mins(css)[i], maxs(css)[i])
 
 ranges(css::ContinuousSearchSpace) = ParamBounds[range_for_dim(css, i) for i in 1:numdims(css)]
 
-# Generate a number of individuals by random sampling in the search space.
+"""
+  Generate `numIndividuals` individuals by random sampling in the search space.
+"""
 function rand_individuals(css::ContinuousSearchSpace, numIndividuals)
   # Basically min + delta * rand(), individuals are stored in columns
   broadcast(+, mins(css), broadcast(*, deltas(css), rand(numdims(css), numIndividuals)))
 end
 
-# Generate a number of individuals via latin hypercube sampling. This should
-# be the default when creating the initial population.
+"""
+  Generate `numIndividuals` individuals by latin hypercube sampling (LHS).
+  This should be the default way to create the initial population.
+"""
 function rand_individuals_lhs(css::ContinuousSearchSpace, numIndividuals)
   Utils.latin_hypercube_sampling(mins(css), maxs(css), numIndividuals)
 end
 
-# Generate one random candidate.
+"""
+  Generate one random candidate.
+"""
 function rand_individual(css::ContinuousSearchSpace)
   squeeze(rand_individuals(css, 1), 2)
 end
 
-# True iff ind is within the search space.
+"""
+  Check if given individual lies in the given search space.
+"""
 function Base.in(ind, css::ContinuousSearchSpace)
   @assert length(ind) == numdims(css)
   for i in eachindex(ind)
@@ -48,8 +70,9 @@ function Base.in(ind, css::ContinuousSearchSpace)
   return true
 end
 
-# In a RangePerDimSearchSpace each dimension is specified as a range of valid
-# values.
+"""
+  `SearchSpace` defined by a range of valid values for each dimension.
+"""
 type RangePerDimSearchSpace <: ContinuousSearchSpace
   # We save the ranges as individual mins, maxs and deltas for faster access later.
   mins::Vector{Float64}
@@ -69,9 +92,13 @@ numdims(rss::RangePerDimSearchSpace) = length(mins(rss))
 
 diameters(rss::RangePerDimSearchSpace) = deltas(rss)
 
-# Convenience function to create symmetric search spaces.
+"""
+  Create `RangePerDimSearchSpace` with given number of dimensions
+  and given range of valid values for each dimension.
+"""
 symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(fill(range, numdims))
 
-# Create a feasible point (i.e. within the search space) given one which is
-# outside.
+"""
+  Projects a given point onto the search space coordinate-wise.
+"""
 feasible(v, ss::RangePerDimSearchSpace) = Float64[ clamp( v[i], mins(ss)[i], maxs(ss)[i] ) for i in eachindex(v) ]

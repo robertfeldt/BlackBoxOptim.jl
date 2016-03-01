@@ -1,4 +1,6 @@
-# DX-NES: distance-weighted extensions of xNES by Fukushima et al
+"""
+  DX-NES: distance-weighted extensions of xNES by Fukushima et al.
+"""
 type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
   lambda::Int                     # Number of samples to take per iteration
@@ -61,8 +63,6 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   end
 end
 
-# trace current optimization state,
-# Called by OptRunController trace_progress()
 function trace_state(io::IO, dxnes::DXNESOpt)
     evol_path_norm = norm(dxnes.evol_path)
     println(io,
@@ -116,14 +116,14 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   return 0
 end
 
-#=
-Calculates the parameters for evolutionary path.
+"""
+  Calculate the parameters for evolutionary path.
 
-Returns the tuple:
- * moving threshold
- * path discount
- * current Z scale
-=#
+  Returns the tuple:
+    * moving threshold
+    * path discount
+    * current Z scale
+"""
 function calculate_evol_path_params(n::Int64, u::Vector{Float64})
   lambda = length(u)
   mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))

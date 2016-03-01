@@ -1,14 +1,42 @@
-# abstract genetic operator that transforms individuals in the population
+"""
+  Abstract genetic operator that transforms individuals in the population.
+"""
 abstract GeneticOperator
-# modifies one individual
+
+"""
+  Modifies (mutates) one individual.
+
+  The concrete implementations must provide `apply!()` method.
+"""
 abstract MutationOperator <: GeneticOperator
-# modifies NC "children" by transferring some information from NP "parents"
+
+"""
+  Modifies `NC` "children" by transferring some information from `NP` "parents".
+
+  The concrete implementations must provide `apply!()` method.
+"""
 abstract CrossoverOperator{NP,NC} <: GeneticOperator
-# embeds(projects) the individual into the search space
+
+"""
+  Embeds(projects) the individual into the search space.
+
+  The concrete implementations must provide `apply!()` method.
+"""
 abstract EmbeddingOperator <: GeneticOperator
 
-# selects the individuals from the population
+"""
+  Selects the individuals from the population.
+
+  The concrete implementations must provide `select()` method.
+"""
 abstract IndividualsSelector
+
+"""
+  `select(selector<:IndividualsSelector, population, numSamples::Int)`
+
+  Select `numSamples` random candidates from the `population`.
+"""
+function select(::IndividualsSelector, population, numSamples::Int) end
 
 apply{T <: Real}(o::MutationOperator, parents::Vector{Vector{T}}) = map(p -> apply(o, p), parents)
 
@@ -21,24 +49,39 @@ numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
-# mutation operator that does nothing
+"""
+  `MutationOperator` that does nothing.
+"""
 immutable NoMutation <: MutationOperator end
 apply!(mo::NoMutation, target, target_index) = target
 
-# placeholder for no-effect genetic operations
+"""
+  Placeholder for no-effect genetic operations.
+"""
 const NO_GEN_OP = NoMutation()
 
-# adjust the internal parameters of the genetic operator
-# default implementation does nothing
+"""
+  Adjust the internal parameters of the genetic operator `op` taking into account
+  the fitness change.
+
+  The default implementation does nothing.
+"""
 function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
 
-# trace the state of the operator, called by trace_progress()
-# of the OptRunController by some of the genetic optimizers
-# override if you need to trace the state of your genetic operator
+"""
+  `trace_state(io, op::GeneticOperator)`
+
+  Trace the state of the operator.
+  Called by `trace_progress()` during `OptRunController` run by some of the genetic optimizers.
+
+  Override the method to trace the state of your genetic operator.
+"""
 function trace_state(io::IO, op::GeneticOperator) end
 
-# a mixture of genetic operators,
-# use next() to choose the next operator from the mixture
+"""
+  A mixture of genetic operators,
+  use `next()` to choose the next operator from the mixture.
+"""
 abstract GeneticOperatorsMixture <: GeneticOperator
 
 include("operators_mixture.jl")

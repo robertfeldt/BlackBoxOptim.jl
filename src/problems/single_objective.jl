@@ -14,9 +14,13 @@ Shekel5 = minimization_problem(shekel5, "Shekel5", (0.0, 10.0), 4, -10.1532)
 Hartman6 = minimization_problem(hartman6, "Hartman6", (0.0, 1.0), 6, -3.32237)
 Hartman3 = minimization_problem(hartman3, "Hartman3", (0.0, 1.0), 3, -3.860038442)
 
-# We skip (for now) f12 and f13 in the JADE paper since they are penalized
-# functions which are quite nonstandard. We also skip f8 since we are unsure
-# about its proper implementation.
+"""
+  JADE collection of optimization problems.
+
+  We skip (for now) `f12` and `f13` in the JADE paper since they are penalized
+  functions which are quite nonstandard. We also skip `f8` since we are unsure
+  about its proper implementation.
+"""
 const JadeFunctionSet = @compat Dict{Int,FunctionBasedProblemFamily}(
   1   => MinimizationProblemFamily(sphere, "Sphere", (-100.0, 100.0), 0.0),
   2   => MinimizationProblemFamily(schwefel2_22,  "Schwefel2.22",  ( -10.0,  10.0), 0.0),
@@ -41,9 +45,14 @@ const JadeFunctionSet = @compat Dict{Int,FunctionBasedProblemFamily}(
 # S3 Transformations
 #####################################################################
 
-# A TransformedProblem just makes a few changes in a sub-problem but refers
-# most func calls to it. Concrete types must implement a sub_problem func.
+"""
+  A `TransformedProblem` just makes a few changes in an original problem but refers
+  most func calls to it.
+
+  The concrete derived types must implement a `sub_problem()` method.
+"""
 abstract TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS}
+
 search_space(tp::TransformedProblem) = search_space(sub_problem(tp))
 is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(tp))
 numfuncs(tp::TransformedProblem) = numfuncs(sub_problem(tp))
@@ -51,8 +60,10 @@ numdims(tp::TransformedProblem) = numdims(sub_problem(tp))
 fmins(tp::TransformedProblem) = fmins(sub_problem(tp))
 name(tp::TransformedProblem) = name(sub_problem(tp))
 
-# A ShiftedAndBiasedProblem shifts the minimum value and biases the returned
-# function values.
+"""
+  A `TransformedProblem` subclass that shifts the minimum value and biases the returned
+  function values.
+"""
 type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
   xshift::Array{Float64, 1}
   funcshift::Float64
@@ -69,7 +80,9 @@ sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
 
 is_fixed_dimensional(p::ShiftedAndBiasedProblem) = is_fixed_dimensional(sub_problem(p))
 
-# Evaluate by first shifting x and then biasing the returned function value.
+"""
+  Evaluate fitness by first shifting `x` and then biasing the returned function value.
+"""
 evalfunc(x, i, sp::ShiftedAndBiasedProblem) = begin
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
 end
@@ -111,8 +124,9 @@ s1_rosenbrock = rosenbrock
 # S1 Transformations
 #####################################################################
 
-# This transformation function is used to break the symmetry of symmetric
-# functions.
+"""
+  Transform symmetric `f` into asymmetric objective function.
+"""
 function t_asy(f, beta)
   D = length(f)
   g = copy(f)
@@ -123,14 +137,18 @@ function t_asy(f, beta)
   g
 end
 
-# This transformation is used to create the ill-conditioning effect.
+"""
+  Transform `f` into objective function with ill-conditioning effect.
+"""
 function t_diag(f, alpha)
   D = length(f)
   scales = sqrt(alpha) .^ linspace(0, 1, D)
   scales .* f
 end
 
-# This transformation is used to create smooth local irregularities.
+"""
+  Transform `f` into objective function with smooth local irregularities.
+"""
 function t_irreg(f)
    a = 0.1
    g = copy(f)
