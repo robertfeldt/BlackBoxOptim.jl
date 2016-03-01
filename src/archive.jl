@@ -103,7 +103,7 @@ function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F
      !isempty(a.candidates) && is_better(fitness, last_top_fitness(a), fitness_scheme(a))
     new_cand = ArchivedIndividual(copy(candidate), fitness)
     ix = searchsortedfirst(a.candidates, new_cand,
-                           by=BlackBoxOptim.fitness, lt=fitness_scheme_lt(fitness_scheme(a)))
+                           by=BlackBoxOptim.fitness, lt=fitness_scheme(a))
     if ix > length(a) || a.candidates[ix] != new_cand
       insert!(a.candidates, ix, new_cand)
     end

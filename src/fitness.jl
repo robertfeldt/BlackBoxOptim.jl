@@ -5,6 +5,9 @@
   on one or a set of evaluations. A scheme is a specific
   way to consider the scores in a coherent way.
   Type parameter `F` specifies the type of fitness values.
+
+  `FitnessScheme` could also be used as a function that defines the fitness
+  ordering, i.e. `fs(x, y) == true` iff fitness `x` is better than `y`.
 """
 abstract FitnessScheme{F}
 
@@ -19,12 +22,8 @@ fitness_type{F}(::FitnessScheme{F}) = F
 fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
-if VERSION >= v"0.4.0-dev+1258" # FIXME remove version check once v0.4 is released
+# ordering induced by the fitness scheme
 Base.call{F}(fs::FitnessScheme{F}, x::F, y::F) = is_better(x, y, fs)
-fitness_scheme_lt(fs::FitnessScheme) = fs
-else
-fitness_scheme_lt(fs::FitnessScheme) = (x,y) -> is_better(x, y, fs)
-end
 
 """
   In `RatioFitnessScheme` the fitness values can be ranked on a ratio scale so
