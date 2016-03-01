@@ -49,7 +49,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     u = fitness_shaping_utilities_log(lambda)
     moving_threshold, evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
-    new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
+    new(embed, lambda, u, Vector{Float64}(lambda),
       mu_learnrate, 0.0, 0.0, max_sigma,
       moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
       zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
@@ -75,7 +75,7 @@ function trace_state(io::IO, dxnes::DXNESOpt)
             " speed=", evol_path_norm/dxnes.moving_threshold)
 end
 
-const DXNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
+const DXNES_DefaultOptions = chain(NES_DefaultOptions, Dict{Symbol,Any}(
   :ini_sigma => 1.0,      # Initial sigma (step size)
   :ini_lnB => nothing     # Initial log(B) (log of parameters covariation)
 ))

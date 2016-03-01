@@ -1,7 +1,7 @@
 using Distributions
 
 # FIXME implement actual distribution using Distributions.MixtureModel
-typealias BimodalCauchy @compat Tuple{Cauchy, Cauchy}
+typealias BimodalCauchy Tuple{Cauchy, Cauchy}
 
 # In the literature Cauchy distributions have been used for sampling the
 # `f` and `cr` constants used in DE.

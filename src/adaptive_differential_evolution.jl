@@ -1,6 +1,6 @@
 include("bimodal_cauchy_distribution.jl")
 
-const ADE_DefaultOptions = chain(DE_DefaultOptions, @compat Dict{Symbol,Any}(
+const ADE_DefaultOptions = chain(DE_DefaultOptions, Dict{Symbol,Any}(
   # Distributions we will use to generate new F and CR values.
   :fdistr => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
   :crdistr => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),

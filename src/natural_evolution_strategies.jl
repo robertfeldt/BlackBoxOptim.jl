@@ -45,14 +45,14 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
       # Most modern NES papers use log rather than linear fitness shaping.
       fitness_shaping_utilities_log(lambda),
-      @compat(Vector{Float64}(lambda)))
+      Vector{Float64}(lambda))
   end
 end
 
 population(o::NaturalEvolutionStrategyOpt) = o.candidates
 numdims(o::NaturalEvolutionStrategyOpt) = numdims(search_space(o.embed))
 
-const NES_DefaultOptions = @compat Dict{Symbol,Any}(
+const NES_DefaultOptions = Dict{Symbol,Any}(
   :lambda => 0,              # If 0 it will be set based on the number of dimensions
   :ini_x => nothing,         # starting point, "nothing" generates random point in a search space
   :mu_learnrate => 1.0,
@@ -252,7 +252,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
       apply!(embed, ini_x, rand_individual(search_space(embed)))
     end
 
-    new(embed, lambda, fitness_shaping_utilities_log(lambda), @compat(Vector{Float64}(lambda)),
+    new(embed, lambda, fitness_shaping_utilities_log(lambda), Vector{Float64}(lambda),
       mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
       ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
       Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
@@ -264,7 +264,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   end
 end
 
-const XNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
+const XNES_DefaultOptions = chain(NES_DefaultOptions, Dict{Symbol,Any}(
   :B_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions
   :ini_sigma => 1.0,     # Initial sigma (step size)
   :ini_lnB => nothing    # Initial log(B)

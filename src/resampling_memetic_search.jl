@@ -1,4 +1,4 @@
-const RSDefaultParameters = @compat Dict{Symbol,Any}(
+const RSDefaultParameters = Dict{Symbol,Any}(
   :PrecisionRatio    => 0.40, # 40% of the diameter is used as the initial step length
   :PrecisionTreshold => 1e-6  # They use 1e-6 in the paper.
 )
@@ -50,7 +50,7 @@ end
 
 name(rs::ResamplingMemeticSearcher) = rs.name
 
-const RISDefaultParameters = @compat Dict{Symbol,Any}(
+const RISDefaultParameters = Dict{Symbol,Any}(
   :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
 )
 

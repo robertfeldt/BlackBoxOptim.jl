@@ -112,13 +112,13 @@ typealias ParamsDictChain DictChain{Symbol,Any}
 """
   Default place for parameters argument in many methods.
 """
-const EMPTY_PARAMS = @compat(Dict{Symbol, Any})
+const EMPTY_PARAMS = Dict{Symbol, Any}
 
 # FIXME Clean this up
 function convert_to_dict_symbol_any(parameters)
   if isa(parameters, Dict{Any,Any}) || isa(parameters, Array{Any,1})
     # convert into Dict{Symbol, Any}
-    parameters = Dict(@compat(Tuple{Symbol,Any})[(k::Symbol, v) for (k,v) in parameters])
+    parameters = Dict(Tuple{Symbol,Any}[(k::Symbol, v) for (k,v) in parameters])
   end
   return parameters
 end

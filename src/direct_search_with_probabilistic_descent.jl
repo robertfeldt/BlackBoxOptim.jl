@@ -46,7 +46,7 @@ function directions_for_k(rdg::MirroredRandomDirectionGen, k)
   [r -r]
 end
 
-const DirectSearchProbabilisticDescentDefaultParameters = @compat Dict{Symbol,Any}(
+const DirectSearchProbabilisticDescentDefaultParameters = Dict{Symbol,Any}(
   :NumDirections => 2, # This should be a function of Gamma and Phi for the GSS but 2 is often enough
 )
 

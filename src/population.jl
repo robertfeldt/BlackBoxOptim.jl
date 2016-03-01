@@ -38,7 +38,7 @@ type FitPopulation{F} <: PopulationWithFitness{F}
 
   function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F})
     popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
-    new(individuals, nafitness, fitness, @compat(Vector{Candidate{F}}()))
+    new(individuals, nafitness, fitness, Vector{Candidate{F}}())
   end
 end
 
@@ -86,7 +86,7 @@ candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 """
 function acquire_candi{F}(pop::FitPopulation{F})
   if isempty(pop.candi_pool)
-    return Candidate{F}(@compat(Vector{Float64}(numdims(pop))), -1, pop.nafitness)
+    return Candidate{F}(Vector{Float64}(numdims(pop)), -1, pop.nafitness)
   end
   res = pop!(pop.candi_pool)
   # reset reference to genetic operation

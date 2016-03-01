@@ -25,7 +25,7 @@ typealias Individual Vector{Float64}
 """
   The valid range of values for a specific dimension in a `SearchSpace`.
 """
-typealias ParamBounds @compat Tuple{Float64,Float64}
+typealias ParamBounds Tuple{Float64,Float64}
 
 """
   Get the range of valid values for a specific dimension.

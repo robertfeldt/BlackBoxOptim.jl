@@ -1,4 +1,4 @@
-function compare_optimizers(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}());
+function compare_optimizers(functionOrProblem, parameters::Associative = Dict{Any,Any}();
   Methods = BlackBoxOptim.MethodNames, kwargs...)
 
   parameters = convert_and_chain(parameters, kwargs)
@@ -26,7 +26,7 @@ function compare_optimizers(functionOrProblem, parameters::Associative = @compat
 end
 
 function compare_optimizers(problems::Dict{Any, OptimizationProblem},
-  parameters::Associative = @compat(Dict{Any,Any}());
+  parameters::Associative = Dict{Any,Any}();
   Methods = BlackBoxOptim.MethodNames, kwargs...)
 
   parameters = convert_and_chain(parameters, kwargs)
@@ -153,12 +153,12 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
   # Just so they are declared
   ps = best_so_far = nothing
 
-  params = chain(parameters, @compat Dict{Symbol,Any}(:FitnessTolerance => ftol))
+  params = chain(parameters, Dict{Symbol,Any}(:FitnessTolerance => ftol))
 
   for m in methods
 
     ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int, numrepeats)
-    rcounts = @compat Dict{String,Int}("Within fitness tolerance of optimum" => 0)
+    rcounts = Dict{String,Int}("Within fitness tolerance of optimum" => 0)
 
     for i in 1:numrepeats
       p = fp # BlackBoxOptim.ShiftedAndBiasedProblem(fp)
@@ -174,7 +174,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
     # ???
     best_so_far =
 
-    rdict = @compat Dict{Symbol,Any}(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
+    rdict = Dict{Symbol,Any}(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
     rdict[:success_rate] = report_from_result_dict(rdict)
     push!(result_dicts, rdict)
 

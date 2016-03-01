@@ -65,7 +65,7 @@ function bboptimize(optctrl::OptController; kwargs...)
   run!(optctrl)
 end
 
-function bboptimize(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}()); kwargs...)
+function bboptimize(functionOrProblem, parameters::Associative = Dict{Any,Any}(); kwargs...)
   optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
   run!(optctrl)
 end
@@ -87,7 +87,7 @@ end
   Returns the initialized `OptController` instance. To actually run the method
   call `bboptimize()` or `run!()`.
 """
-function bbsetup(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}()); kwargs...)
+function bbsetup(functionOrProblem, parameters::Associative = Dict{Any,Any}(); kwargs...)
   parameters = convert_and_chain(parameters, kwargs)
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
   check_valid!(params)

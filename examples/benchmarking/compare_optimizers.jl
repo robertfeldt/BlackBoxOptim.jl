@@ -130,7 +130,7 @@ function main(args)
   close(logfilehandle)
 end
 
-ProblemSets = @compat Dict{ASCIIString,Any}(
+ProblemSets = Dict{ASCIIString,Any}(
   "easy" => [
     # ProblemName, NumDims, PopSize, MaxFevals
     ("Sphere",        5, 20, 5e3),
@@ -182,7 +182,7 @@ ProblemSets = @compat Dict{ASCIIString,Any}(
 )
 ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 
-OptimizerSets = @compat Dict{ASCIIString,Any}(
+OptimizerSets = Dict{ASCIIString,Any}(
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
   "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
   "nes" => [:xnes, :separable_nes, :dxnes],

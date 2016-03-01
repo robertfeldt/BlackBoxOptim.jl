@@ -303,7 +303,7 @@ lastrun(oc::OptController) = oc.runcontrollers[end]
   Update the `OptController` parameters.
 """
 function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
-  parameters::Associative = @compat(Dict{Any,Any}()))
+  parameters::Associative = Dict{Any,Any}())
 
   parameters = convert_to_dict_symbol_any(parameters)
 

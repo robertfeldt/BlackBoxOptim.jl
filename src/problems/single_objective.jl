@@ -21,7 +21,7 @@ Hartman3 = minimization_problem(hartman3, "Hartman3", (0.0, 1.0), 3, -3.86003844
   functions which are quite nonstandard. We also skip `f8` since we are unsure
   about its proper implementation.
 """
-const JadeFunctionSet = @compat Dict{Int,FunctionBasedProblemFamily}(
+const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
   1   => MinimizationProblemFamily(sphere, "Sphere", (-100.0, 100.0), 0.0),
   2   => MinimizationProblemFamily(schwefel2_22,  "Schwefel2.22",  ( -10.0,  10.0), 0.0),
   3   => MinimizationProblemFamily(schwefel1_2,   "Schwefel1.2",   (-100.0, 100.0), 0.0),
@@ -178,7 +178,7 @@ function xrotatedandshifted(n, f, shiftAmplitude = 1.0, rotateAmplitude = 1.0)
   transformed_f(x) = f(rotmatrix * (x .- shift))
 end
 
-const example_problems = @compat Dict{AbstractString,Any}( #FIXME use Union{Optimization,FunctionBasedProblemFamily}
+const example_problems = Dict{UTF8String, Union{OptimizationProblem,FunctionBasedProblemFamily}}(
   "Sphere" => JadeFunctionSet[1],
   "Rosenbrock" => JadeFunctionSet[5],
   "Schwefel2.22" => JadeFunctionSet[2],
