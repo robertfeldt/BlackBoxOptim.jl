@@ -14,7 +14,7 @@ abstract DirectSearcher <: SteppingOptimizer
 abstract DirectionGenerator
 
 immutable ConstantDirectionGen <: DirectionGenerator
-  directions::Array{Float64, 2}
+  directions::Matrix{Float64}
 
   ConstantDirectionGen(directions) = begin
     new(directions)

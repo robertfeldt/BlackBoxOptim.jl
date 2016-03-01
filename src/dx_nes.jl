@@ -16,10 +16,10 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   uZscale::Float64                # distance scale for the weights
   evol_path::Vector{Float64}      # evolution path, discounted coordinates of population center
   # TODO use Symmetric{Float64} to inmprove exponent etc calculation
-  ln_B::Array{Float64,2}          # exponential of lnB
+  ln_B::Matrix{Float64}           # exponential of lnB
   sigma::Float64                  # step size
   x::Individual                   # The current incumbent (aka most likely value, mu etc)
-  Z::Array{Float64,2}             # current N(0,I) samples
+  Z::Matrix{Float64}              # current N(0,I) samples
   candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
 
   # temporary variables to minimize GC overhead

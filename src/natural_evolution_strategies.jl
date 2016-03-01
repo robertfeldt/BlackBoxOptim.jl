@@ -13,7 +13,7 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   sigma_learnrate::Float64
   max_sigma::Float64
 
-  last_s::Array{Float64,2}        # `s` values sampled in the last call to `ask()`
+  last_s::Matrix{Float64}         # `s` values sampled in the last call to `ask()`
   candidates::Vector{Candidate{F}}# the last sampled values, now being evaluated
   sortedUtilities::Vector{Float64}# the fitness shaping utility vector
   tmp_Utilities::Vector{Float64}   # the fitness shaping utility vector sorted by current population fitness
@@ -42,7 +42,7 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
       Normal(0, 1),
       mu_learnrate, sigma_learnrate, max_sigma,
       zeros(d, lambda),
-      Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
+      Candidate{F}[Candidate{F}(Vector{Float64}(d), i) for i in 1:lambda],
       # Most modern NES papers use log rather than linear fitness shaping.
       fitness_shaping_utilities_log(lambda),
       Vector{Float64}(lambda))
@@ -217,10 +217,10 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   max_sigma::Float64
 
   # TODO use Symmetric{Float64} to improve exponent etc calculation
-  ln_B::Array{Float64,2}          # `log` of "covariation" matrix
+  ln_B::Matrix{Float64}           # `log` of "covariation" matrix
   sigma::Float64                  # step size
   x::Individual                   # center of the population (aka most likely value, `mu` etc)
-  Z::Array{Float64,2}             # current `N(0,I)` samples
+  Z::Matrix{Float64}              # current `N(0,I)` samples
   candidates::Vector{Candidate{F}}# the last sampled values, now being evaluated
 
   # temporary variables to minimize GC overhead
@@ -255,7 +255,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     new(embed, lambda, fitness_shaping_utilities_log(lambda), Vector{Float64}(lambda),
       mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
       ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
-      Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
+      Candidate{F}[Candidate{F}(Vector{Float64}(d), i) for i in 1:lambda],
       # temporaries
       zeros(d), zeros(d), zeros(d),
       zeros(d, d),

@@ -65,7 +65,7 @@ name(tp::TransformedProblem) = name(sub_problem(tp))
   function values.
 """
 type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
-  xshift::Array{Float64, 1}
+  xshift::Vector{Float64}
   funcshift::Float64
   subp::OptimizationProblem{FS}
 

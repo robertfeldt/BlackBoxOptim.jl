@@ -1,9 +1,9 @@
 using JSON
 
 type ParameterExperiment
-  parameters::Array{ASCIIString, 1}             # Parameter names
-  mappers::Array{Function, 1}                   # One function per param mapping a design value to a param value
-  design_ranges::Array{(Float64, Float64), 1}   # Design range per parameter
+  parameters::Vector{ASCIIString}               # Parameter names
+  mappers::Vector{Function}                     # One function per param mapping a design value to a param value
+  design_ranges::Vector{Tuple{Float64, Float64}}# Design range per parameter
 end
 
 numparams(pe::ParameterExperiment) = length(pe.parameters)

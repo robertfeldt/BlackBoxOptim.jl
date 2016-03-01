@@ -116,7 +116,7 @@ const EMPTY_PARAMS = Dict{Symbol, Any}
 
 # FIXME Clean this up
 function convert_to_dict_symbol_any(parameters)
-  if isa(parameters, Dict{Any,Any}) || isa(parameters, Array{Any,1})
+  if isa(parameters, Dict{Any,Any}) || isa(parameters, Vector{Any})
     # convert into Dict{Symbol, Any}
     parameters = Dict(Tuple{Symbol,Any}[(k::Symbol, v) for (k,v) in parameters])
   end
