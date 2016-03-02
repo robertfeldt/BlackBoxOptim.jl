@@ -23,7 +23,8 @@ fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
 # ordering induced by the fitness scheme
-Base.call{F}(fs::FitnessScheme{F}, x::F, y::F) = is_better(x, y, fs)
+# FIXME enable once v0.5 issue #14919 is fixed
+# Base.call{F}(fs::FitnessScheme{F}, x::F, y::F) = is_better(x, y, fs)
 
 """
   In `RatioFitnessScheme` the fitness values can be ranked on a ratio scale so

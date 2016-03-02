@@ -116,7 +116,8 @@ end
 function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates::Vector{Candidate{F}})
   fs = fitness_scheme(e)
   sort!(update_fitness!(e, candidates);
-        by = fitness, lt = (x, y) -> is_better(x, y, fs))
+        # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed
+        by=fitness, lt=(x, y) -> is_better(x, y, fs))
 end
 
 fitness_is_within_ftol(e::Evaluator, atol) = fitness_is_within_ftol(problem(e), best_fitness(e.archive), atol)
