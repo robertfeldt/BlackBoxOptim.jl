@@ -25,12 +25,13 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Fitness
         FitnessScheme,
-        ScalarFitnessScheme, ComplexFitnessScheme, VectorFitnessScheme,
+        ScalarFitnessScheme, ComplexFitnessScheme,
         MinimizingFitnessScheme, MaximizingFitnessScheme,
-        fitness_type, numobjectives,
+        IndexedTupleFitness, TupleFitnessScheme, ParetoFitnessScheme,
+        EpsDominanceFitnessScheme, EpsBoxDominanceFitnessScheme,
+        fitness_type, fitness_eltype, numobjectives,
         is_minimizing, nafitness, isnafitness,
         hat_compare, is_better, is_worse, same_fitness,
-        vector_fitness_scheme_min, vector_fitness_scheme_max,
 
         # Evaluator
         #ProblemEvaluator,
@@ -89,6 +90,7 @@ end
 include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
+include("ntuple_fitness.jl")
 
 include("problem.jl")
 
@@ -116,12 +118,6 @@ include("resampling_memetic_search.jl")
 include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")
 include("direct_search_with_probabilistic_descent.jl")
-
-# Fitness
-# include("fitness/fitness_types.jl") FIXME merge it with fitness.jl
-include("fitness/pareto_dominance.jl")
-include("fitness/epsilon_pareto_dominance.jl")
-include("fitness/epsilon_box_dominance.jl")
 
 # End-user/top-level interface functions
 include(joinpath("problems", "problem_family.jl"))

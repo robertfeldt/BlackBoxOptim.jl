@@ -96,34 +96,3 @@ immutable HatCompare{FS<:FitnessScheme}
 end
 
 Base.call{F}(hc::HatCompare, x::F, y::F) = hat_compare(x, y, hc.fs)
-
-# All VectorFitness scheme has N individual fitness scores (at least 1) in
-# an array and could be aggregated to a float value.
-# FIXME
-immutable VectorFitnessScheme{MIN,N,AGG} <: RatioFitnessScheme{Vector{Float64}}
-  # Function mapping a fitness array to a single numerical value. Might be used
-  # for comparisons (or not, depending on setup). Always used when printing
-  # fitness vectors though.
-  aggregate::AGG
-end
-
-numobjectives{MIN,N}(::VectorFitnessScheme{MIN,N}) = N
-is_minimizing{MIN,N}(fs::VectorFitnessScheme{MIN,N}) = MIN
-
-nafitness{MIN,N}(::VectorFitnessScheme{MIN,N}) = fill(NaN, N)
-isnafitness{MIN,N}(f::Vector{Float64}, ::VectorFitnessScheme{MIN,N}) = any(isnan(f)) # or all?
-
-aggregate(fitness, fs::VectorFitnessScheme) = fs.aggregate(fitness)
-
-# Fitness scheme that minimizes the sum of objectives
-function vector_fitness_scheme_min(nobjectives::Int, aggregate = sum)
-  VectorFitnessScheme{true, nobjectives, Function}(aggregate)
-end
-
-# Fitness scheme that maximizes the sum of objectives
-function vector_fitness_scheme_max(nobjectives::Int, aggregate = sum)
-  VectorFitnessScheme{false, nobjectives, Function}(aggregate)
-end
-
-# FIXME now it's here just to avoid undeclared types
-type NewFitness end
