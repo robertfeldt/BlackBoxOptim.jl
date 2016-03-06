@@ -90,14 +90,13 @@ include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
 
+include("problem.jl")
+
 include("frequency_adaptation.jl")
 include("archive.jl")
 
 # Genetic Operators
 include("genetic_operators/genetic_operator.jl")
-
-include(joinpath("problems", "all_problems.jl"))
-include(joinpath("problems", "problem_family.jl"))
 
 include("evaluator.jl")
 if enable_parallel_methods
@@ -125,6 +124,7 @@ include("fitness/epsilon_pareto_dominance.jl")
 include("fitness/epsilon_box_dominance.jl")
 
 # End-user/top-level interface functions
+include(joinpath("problems", "problem_family.jl"))
 include("optimization_methods.jl")
 include("default_parameters.jl")
 include("optimization_result.jl")
