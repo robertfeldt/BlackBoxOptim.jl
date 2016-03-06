@@ -55,13 +55,11 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
   fitness_history::Vector{ArchivedFitness{F}}
 
-  function TopListArchive(fit_scheme::FS, numdims, capacity = 10)
-    new(fit_scheme, time(), numdims, 0, capacity, ArchivedIndividual[], ArchivedFitness[])
+  function Base.call{FS}(::Type{TopListArchive}, fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+    F = fitness_type(FS)
+    new{F,FS}(fit_scheme, time(), numdims, 0, capacity, ArchivedIndividual{F}[], ArchivedFitness{F}[])
   end
 end
-
-TopListArchive{FS<:FitnessScheme}(fit_scheme::FS, numdims, capacity = 10) =
-  TopListArchive{fitness_type(fit_scheme),FS}(fit_scheme, numdims, capacity)
 
 fitness_scheme(a::TopListArchive) = a.fit_scheme
 fitness_type(a::TopListArchive) = fitness_type(fitness_scheme(a))
