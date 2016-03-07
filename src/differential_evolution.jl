@@ -18,13 +18,13 @@ type DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperator,E<:Embed
   select::S        # random individuals selector
   modify::M        # genetic operator
   embed::E         # embedding operator
-end
 
-function DiffEvoOpt{P<:Population, S<:IndividualsSelector,
-                    M<:GeneticOperator, E<:EmbeddingOperator}(
-    name::ASCIIString, pop::P,
-    select::S = S(), modify::M = M(), embed::E = E())
-  DiffEvoOpt{P,S,M,E}(name, pop, select, modify, embed)
+  function Base.call{P<:Population, S<:IndividualsSelector,
+                     M<:GeneticOperator, E<:EmbeddingOperator}(
+        ::Type{DiffEvoOpt}, name::ASCIIString, pop::P,
+        select::S = S(), modify::M = M(), embed::E = E())
+    new{P,S,M,E}(name, pop, select, modify, embed)
+  end
 end
 
 # trace current optimization state,
