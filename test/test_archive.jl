@@ -1,11 +1,11 @@
 facts("TopListArchive") do
-  context("ArchivedIndividual") do
+  context("TopListIndividual") do
     # test equality
-    @fact isequal(BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0), BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) --> true
-    @fact (BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) == BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) --> true
-    @fact (BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) --> false
-    @fact (BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 1.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) --> true
-    @fact (BlackBoxOptim.ArchivedIndividual([1.0, 2.0], 2.0) != BlackBoxOptim.ArchivedIndividual([3.0, 2.0], 2.0)) --> true
+    @fact isequal(BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0), BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0)) --> true
+    @fact (BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0) == BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0)) --> true
+    @fact (BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0) != BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0)) --> false
+    @fact (BlackBoxOptim.TopListIndividual([3.0, 2.0], 1.0, 0) != BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0)) --> true
+    @fact (BlackBoxOptim.TopListIndividual([1.0, 2.0], 2.0, 0) != BlackBoxOptim.TopListIndividual([3.0, 2.0], 2.0, 0)) --> true
   end
 
   context("Constructing a small archive and adding to it") do

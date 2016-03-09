@@ -4,32 +4,38 @@
 """
 abstract Archive{F,FS<:FitnessScheme}
 
-" Fitness as stored in `Archive`. "
-immutable ArchivedFitness{F}
-    timestamp::Float64    # when archived
-    num_fevals::Int64     # number of fitness evaluations so far
-    fitness::F            # current fitness
-    fitness_improvement_ratio::Float64
+"""
+    Base class for individuals stored in different archives.
+"""
+abstract ArchivedIndividual{F}
 
-    ArchivedFitness(a::Archive, fitness::F, num_fevals = -1) =
-      new(time(), num_fevals == -1 ? a.num_fitnesses : num_fevals,
-          fitness, fitness_improvement_ratio(a, fitness))
-end
+params(indi::ArchivedIndividual) = indi.params
+fitness(indi::ArchivedIndividual) = indi.fitness
+tag(indi::ArchivedIndividual) = indi.tag
 
-ArchivedFitness{F}(a::Archive, fitness::F, num_fevals = -1) = ArchivedFitness{F}(a, fitness, num_fevals)
-
-fitness(a::ArchivedFitness) = a.fitness
-
-immutable ArchivedIndividual{F}
+"""
+    Individual stored in `TopListArchive`.
+"""
+immutable TopListIndividual{F} <: ArchivedIndividual{F}
     params::Individual
     fitness::F
+
+    Base.call{F}(::Type{TopListIndividual}, params::Individual, fitness::F) =
+        new{F}(params, fitness)
 end
 
-ArchivedIndividual{F}(params::Individual, fitness::F) = ArchivedIndividual{F}(params, fitness)
-Base.(:(==)){F}(x::ArchivedIndividual{F}, y::ArchivedIndividual{F}) =
+Base.(:(==)){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
   (x.fitness == y.fitness) && (x.params == y.params)
 
-fitness(a::ArchivedIndividual) = a.fitness
+" Fitness as stored in `TopListArchive`. "
+immutable TopListFitness{F<:Number}
+    fitness::F            # current fitness
+    fitness_improvement_ratio::Float64
+    timestamp::Float64    # when archived
+    num_fevals::Int64     # number of fitness evaluations so far
+end
+
+fitness(f::TopListFitness) = f.fitness
 
 """
   Archive that maintains a top list of the best performing (best fitness)
@@ -47,17 +53,17 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
   num_fitnesses::Int    # Number of calls to add_candidate
 
   capacity::Int         # Max size of top lists
-  candidates::Vector{ArchivedIndividual{F}}  # Top candidates and their fitness values
+  candidates::Vector{TopListIndividual{F}}  # Top candidates and their fitness values
 
   # Stores a fitness history that we can later print to a csv file.
   # For each magnitude class (as defined by `magnitude_class()` function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
-  fitness_history::Vector{ArchivedFitness{F}}
+  fitness_history::Vector{TopListFitness{F}}
 
   function Base.call{FS}(::Type{TopListArchive}, fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
     F = fitness_type(FS)
-    new{F,FS}(fit_scheme, time(), numdims, 0, capacity, ArchivedIndividual{F}[], ArchivedFitness{F}[])
+    new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
   end
 end
 
@@ -91,15 +97,16 @@ end
 """
 function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, num_fevals=-1)
   a.num_fitnesses += 1
+  if (num_fevals == -1) num_fevals = a.num_fitnesses end
 
   if isempty(a.fitness_history) || is_better(fitness, best_fitness(a), fitness_scheme(a))
     # Save fitness history so we can reconstruct the most important events later.
-    push!(a.fitness_history, ArchivedFitness(a, fitness, num_fevals))
+    push!(a.fitness_history, TopListFitness{F}(fitness, fitness_improvement_ratio(a, fitness), time(), num_fevals))
   end
 
   if length(a) < capacity(a) ||
      !isempty(a.candidates) && is_better(fitness, last_top_fitness(a), fitness_scheme(a))
-    new_cand = ArchivedIndividual(copy(candidate), fitness)
+    new_cand = TopListIndividual(copy(candidate), fitness)
     fs = fitness_scheme(a)
     ix = searchsortedfirst(a.candidates, new_cand,
                            # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed
