@@ -17,19 +17,21 @@ problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 """
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
-type ProblemEvaluator{F, P<:OptimizationProblem} <: Evaluator{P}
+type ProblemEvaluator{F, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
   problem::P
-  archive::Archive
+  archive::A
   num_evals::Int
   last_fitness::F
-end
 
-function ProblemEvaluator{P<:OptimizationProblem}(
-        problem::P;
-        archiveCapacity::Int = 10 )
-    ProblemEvaluator{fitness_type(fitness_scheme(problem)), P}(problem,
-        TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
+  Base.call{P<:OptimizationProblem, A<:Archive}(::Type{ProblemEvaluator},
+      problem::P, archive::A) =
+    new{fitness_type(fitness_scheme(problem)),A,P}(problem, archive,
         0, nafitness(fitness_scheme(problem)))
+
+  Base.call{P<:OptimizationProblem}(::Type{ProblemEvaluator},
+      problem::P; archiveCapacity::Int = 10) =
+    ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
+
 end
 
 problem(e::Evaluator) = e.problem
