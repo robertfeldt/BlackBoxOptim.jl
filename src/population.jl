@@ -51,7 +51,16 @@ FitPopulation(fs::FitnessScheme, individuals::PopulationMatrix) =
 
 FitPopulation(fs::FitnessScheme, popsize::Int = 100, dims::Int = 1) =
   # FIXME use PopulationMatrix(), this is v0.3 workaround
-  FitPopulation(fs, Array(Float64, dims, popsize))
+  FitPopulation(fs, PopulationMatrix(dims, popsize))
+
+# resize the population
+function Base.resize!(pop::FitPopulation, newpopsize::Integer)
+    new_individuals = PopulationMatrix(numdims(pop), newpopsize)
+    new_individuals[:, 1:min(newpopsize,popsize(pop))] = sub(pop.individuals, :, 1:min(newpopsize,popsize(pop)))
+    pop.individuals = new_individuals
+    resize!(pop.fitness, newpopsize)
+    pop
+end
 
 popsize(pop::FitPopulation) = popsize(pop.individuals)
 numdims(pop::FitPopulation) = numdims(pop.individuals)
