@@ -1,10 +1,8 @@
-function rosenbrock2d(x)
-  return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
+facts("bboptimize() single-objective methods smoketest") do
+  rosenbrock2d(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 
-facts("bboptimize smoketest") do
-  for(m in keys(BlackBoxOptim.ValidMethods))
-    context("testing $(m) method to ensure it works") do
+  for(m in keys(BlackBoxOptim.SingleObjectiveMethods))
+    context("$(m)") do
       ctrl = bbsetup(rosenbrock2d; Method = m,
         SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
       # run first iteration before the main run to exclude compilation from timing

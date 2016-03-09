@@ -1,5 +1,5 @@
 function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
-  Methods = BlackBoxOptim.MethodNames, kwargs...)
+  Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
   parameters = chain(convert(ParamsDict, parameters),
                      convert(ParamsDict, kwargs))
@@ -28,7 +28,7 @@ end
 
 function compare_optimizers(problems::Dict{Any, OptimizationProblem},
   parameters::Parameters = EMPTY_PARAMS;
-  Methods = BlackBoxOptim.MethodNames, kwargs...)
+  Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
   parameters = chain(convert(ParamsDict, parameters),
                      convert(ParamsDict, kwargs))

@@ -85,7 +85,7 @@ function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwarg
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
   check_valid!(params)
 
-  optimizer_func = ValidMethods[params[:Method]]
+  optimizer_func = SingleObjectiveMethods[params[:Method]]
   optimizer = optimizer_func(problem, params)
 
   # Now set up a controller for this problem. This will handle
