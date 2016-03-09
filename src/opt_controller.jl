@@ -111,6 +111,11 @@ num_func_evals(ctrl::OptRunController) = num_evals(ctrl.evaluator)
 stop_reason(ctrl::OptRunController) = ctrl.stop_reason
 start_time(ctrl::OptRunController) = ctrl.start_time
 
+best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
+best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
+
+format_fitness(best_fit::Number) = @sprintf("%.9f", best_fit)
+
 function elapsed_time(ctrl::OptRunController)
   isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
 end
@@ -162,7 +167,7 @@ function trace_progress(ctrl::OptRunController)
 
   # Always print fitness if num_evals > 0
   if num_func_evals(ctrl) > 0
-    tr(ctrl, @sprintf(", fitness=%.9f", best_fitness(ctrl)))
+    tr(ctrl, ", fitness=$(format_fitness(best_fitness(ctrl)))")
   end
 
   tr(ctrl, "\n")
@@ -234,9 +239,6 @@ function run!(ctrl::OptRunController)
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
 
-best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
-best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
-
 function show_report(ctrl::OptRunController, population_stats=false)
   final_elapsed_time = elapsed_time(ctrl)
   tr(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
@@ -251,7 +253,7 @@ function show_report(ctrl::OptRunController, population_stats=false)
   end
 
   tr(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
-  tr(ctrl, "\n\nFitness: ", best_fitness(ctrl))
+  tr(ctrl, "\n\nFitness: ", format_fitness(best_fitness(ctrl)))
   tr(ctrl, "\n\n")
 end
 
