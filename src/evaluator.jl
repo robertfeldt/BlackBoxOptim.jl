@@ -102,13 +102,17 @@ function Base.copy!{F}(c::Candidate{F}, o::Candidate{F})
   return c
 end
 
-function update_fitness!{F}(e::ProblemEvaluator{F}, candidates::Vector{Candidate{F}})
-  fs = fitness_scheme(e)
-  for i in eachindex(candidates)
-      # evaluate fitness if not known yet
-      if isnafitness(candidates[i].fitness, fs)
-          candidates[i].fitness = fitness(candidates[i].params, e, candidates[i].tag)
-      end
+function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA})
+  # evaluate fitness if not known yet
+  if isnafitness(candidate.fitness, fitness_scheme(e.archive))
+      candidate.fitness = fitness(candidate.params, e, candidate.tag)
+  end
+  candidate
+end
+
+function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidates::Vector{Candidate{FA}})
+  @inbounds for candidate in candidates
+      update_fitness!(e, candidate)
   end
   candidates
 end
