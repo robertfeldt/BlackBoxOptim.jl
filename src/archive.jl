@@ -74,6 +74,7 @@ fitness_scheme(a::TopListArchive) = a.fit_scheme
 fitness_type(a::TopListArchive) = fitness_type(fitness_scheme(a))
 capacity(a::TopListArchive) = a.capacity
 Base.length(a::TopListArchive) = length(a.candidates)
+Base.isempty(a::TopListArchive) = isempty(a.candidates)
 
 best_candidate(a::TopListArchive) = a.candidates[1].params
 best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[1]) : nafitness(fitness_scheme(a))
