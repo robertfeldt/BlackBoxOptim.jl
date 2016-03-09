@@ -137,4 +137,5 @@ function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates:
         by=fitness, lt=(x, y) -> is_better(x, y, fs))
 end
 
-fitness_is_within_ftol(e::Evaluator, atol) = fitness_is_within_ftol(problem(e), best_fitness(e.archive), atol)
+# called by check_stop_condition(OptRunController)
+check_stop_condition(e::Evaluator, ctrl) = check_stop_condition(e.archive, e.problem, ctrl)

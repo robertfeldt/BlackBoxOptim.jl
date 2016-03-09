@@ -95,6 +95,18 @@ function delta_fitness(a::TopListArchive)
   end
 end
 
+function check_stop_condition(a::TopListArchive, p::OptimizationProblem, ctrl)
+    if delta_fitness(a) < ctrl.min_delta_fitness_tol
+      return "Delta fitness ($(delta_fitness(a))) below tolerance ($(ctrl.min_delta_fitness_tol))"
+    end
+
+    if fitness_is_within_ftol(p, best_fitness(a), ctrl.fitness_tol)
+      return "Fitness ($(best_fitness(ctrl))) within tolerance ($(ctrl.fitness_tol)) of optimum"
+    end
+
+    return "" # no conditions met
+end
+
 """
   `add_candidate!(a::TopListArchive, fitness::F, candidate[, tag=0][, num_fevals=-1])`
 

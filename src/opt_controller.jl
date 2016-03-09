@@ -137,13 +137,7 @@ function check_stop_condition(ctrl::OptRunController)
       return "Max number of steps ($(ctrl.max_steps)) reached"
     end
 
-    if delta_fitness(ctrl.evaluator.archive) < ctrl.min_delta_fitness_tol
-      return "Delta fitness ($(delta_fitness(ctrl.evaluator.archive))) below tolerance ($(ctrl.min_delta_fitness_tol))"
-    end
-
-    if fitness_is_within_ftol(ctrl.evaluator, ctrl.fitness_tol)
-      return "Fitness ($(best_fitness(ctrl))) within tolerance ($(ctrl.fitness_tol)) of optimum"
-    end
+    return check_stop_condition(ctrl.evaluator, ctrl)
 
     return "" # empty string, no termination
 end
