@@ -2,9 +2,11 @@
   `Archive` saves information about promising solutions during an optimization
   run.
 """
-abstract Archive{F,FS<:FitnessScheme}
+abstract Archive{F,FA,FS<:FitnessScheme}
 
 numdims(a::Archive) = a.numdims
+fitness_type{F}(a::Archive{F}) = F
+archived_fitness_type{F,FA}(a::Archive{F,FA}) = FA
 
 """
     Base class for individuals stored in different archives.
@@ -48,7 +50,7 @@ fitness(f::TopListFitness) = f.fitness
   The two last best fitness values could be used to estimate a confidence interval for how much improvement
   potential there is.
 """
-type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
+type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,F,FS}
   fit_scheme::FS        # Fitness scheme used
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
   numdims::Int          # Number of dimensions in the optimization problem. Needed for confidence interval estimation.
@@ -71,7 +73,6 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
 end
 
 fitness_scheme(a::TopListArchive) = a.fit_scheme
-fitness_type(a::TopListArchive) = fitness_type(fitness_scheme(a))
 capacity(a::TopListArchive) = a.capacity
 Base.length(a::TopListArchive) = length(a.candidates)
 Base.isempty(a::TopListArchive) = isempty(a.candidates)

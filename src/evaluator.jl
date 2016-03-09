@@ -14,18 +14,21 @@ problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 
 """
   Default implementation of the `Evaluator`.
+
+  `FP` is the problem's fitness type
+  `FA` is the archive's stored type
 """
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
-type ProblemEvaluator{F, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
+type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
   problem::P
   archive::A
   num_evals::Int
-  last_fitness::F
+  last_fitness::FP
 
   Base.call{P<:OptimizationProblem, A<:Archive}(::Type{ProblemEvaluator},
       problem::P, archive::A) =
-    new{fitness_type(fitness_scheme(problem)),A,P}(problem, archive,
+    new{fitness_type(fitness_scheme(problem)),archived_fitness_type(archive),A,P}(problem, archive,
         0, nafitness(fitness_scheme(problem)))
 
   Base.call{P<:OptimizationProblem}(::Type{ProblemEvaluator},
@@ -37,16 +40,24 @@ end
 problem(e::Evaluator) = e.problem
 num_evals(e::ProblemEvaluator) = e.num_evals
 
-# evaluates the fitness (and implicitly updates the stats)
-function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
-  e.last_fitness = res = fitness(params, e.problem)
+"""
+    fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
+
+    Evaluate the fitness and implicitly update the archive with the provided
+    parameters and calculated fitness.
+
+    Returns the fitness in the archived format.
+"""
+function fitness{FP,FA}(params::Individual, e::ProblemEvaluator{FP,FA}, tag::Int=0)
+  e.last_fitness = fp = fitness(params, e.problem)
   e.num_evals += 1
-  add_candidate!(e.archive, res, params, tag, e.num_evals)
-  res
+  fa = convert(FA, fp, fitness_scheme(e.archive))
+  add_candidate!(e.archive, fa, params, tag, e.num_evals)
+  fa
 end
 
 """
-  `last_fitness(e::Evaluator)`
+    last_fitness(e::Evaluator)
 
   Get the fitness of the last evaluated candidate.
 

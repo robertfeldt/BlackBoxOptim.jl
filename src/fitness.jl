@@ -42,6 +42,9 @@ abstract RatioFitnessScheme{F} <: FitnessScheme{F}
 immutable ScalarFitnessScheme{MIN} <: RatioFitnessScheme{Float64}
 end
 
+# trivial convert() between calculated and archived fitness
+Base.convert{F}(::Type{F}, f::F, ::ScalarFitnessScheme) = f
+
 const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
 const MaximizingFitnessScheme = ScalarFitnessScheme{false}()
 
