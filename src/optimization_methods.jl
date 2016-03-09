@@ -24,7 +24,18 @@ const SingleObjectiveMethods = ParamsDict(
 const SingleObjectiveMethodNames = sort!(collect(keys(SingleObjectiveMethods)))
 
 """
+   Multi-objective optimization methods accepted by `bboptimize()`.
+
+   The values are the method initialization routines or types derived from `Optimizer`.
+"""
+const MultiObjectiveMethods = ParamsDict(
+)
+
+const MultiObjectiveMethodNames = sort!(collect(keys(MultiObjectiveMethods)))
+
+"""
   Names of optimization methods accepted by `bboptimize()`,
   `:Method` keyword argument.
 """
-const MethodNames = SingleObjectiveMethodNames
+const MethodNames = sort!(vcat(SingleObjectiveMethodNames,
+                               MultiObjectiveMethodNames))

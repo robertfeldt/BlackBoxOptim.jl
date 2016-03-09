@@ -131,5 +131,6 @@ include("compare_optimizers.jl")
 
 # Problems for testing
 include(joinpath("problems", "single_objective.jl"))
+include(joinpath("problems", "multi_objective.jl"))
 
 end # module BlackBoxOptim
