@@ -86,6 +86,14 @@ is_better(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == -1
 is_worse(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 1
 same_fitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 
+immutable HatCompare{FS<:FitnessScheme}
+    fs::FS
+
+    Base.call{FS<:FitnessScheme}(::Type{HatCompare}, fs::FS) = new{FS}(fs)
+end
+
+Base.call{F}(hc::HatCompare, x::F, y::F) = hat_compare(x, y, hc.fs)
+
 # All VectorFitness scheme has N individual fitness scores (at least 1) in
 # an array and could be aggregated to a float value.
 # FIXME
