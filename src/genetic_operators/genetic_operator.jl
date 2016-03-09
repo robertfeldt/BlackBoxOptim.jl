@@ -94,10 +94,15 @@ function trace_state(io::IO, op::GeneticOperator) end
 abstract GeneticOperatorsMixture <: GeneticOperator
 
 include("operators_mixture.jl")
+
 include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
+
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
+
 include("embedding/random_bound.jl")
+
 include("selector/simple.jl")
 include("selector/radius_limited.jl")
+include("selector/tournament.jl")
