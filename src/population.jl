@@ -64,6 +64,12 @@ Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 Base.getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
+function Base.setindex!{F}(pop::FitPopulation{F}, indi::ArchivedIndividual{F}, indi_ix::Integer)
+    pop.individuals[:, indi_ix] = params(indi)
+    pop.fitness[indi_ix] = fitness(indi)
+    pop
+end
+
 function Base.append!{F}(pop::FitPopulation{F}, extra_pop::FitPopulation{F})
   numdims(pop) == numdims(extra_pop) ||
     throw(DimensionMismatch("Cannot append population, "*
