@@ -19,9 +19,10 @@ tag(indi::ArchivedIndividual) = indi.tag
 immutable TopListIndividual{F} <: ArchivedIndividual{F}
     params::Individual
     fitness::F
+    tag::Int
 
-    Base.call{F}(::Type{TopListIndividual}, params::Individual, fitness::F) =
-        new{F}(params, fitness)
+    Base.call{F}(::Type{TopListIndividual}, params::Individual, fitness::F, tag::Int) =
+        new{F}(params, fitness, tag)
 end
 
 Base.(:(==)){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
@@ -91,11 +92,11 @@ function delta_fitness(a::TopListArchive)
 end
 
 """
-  `add_candidate!(a::TopListArchive, fitness::F, candidate[, num_fevals=-1])`
+  `add_candidate!(a::TopListArchive, fitness::F, candidate[, tag=0][, num_fevals=-1])`
 
   Add a candidate with a fitness to the archive (if it is good enough).
 """
-function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, num_fevals=-1)
+function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, tag::Int=0, num_fevals::Int=-1)
   a.num_fitnesses += 1
   if (num_fevals == -1) num_fevals = a.num_fitnesses end
 
@@ -106,7 +107,7 @@ function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F
 
   if length(a) < capacity(a) ||
      !isempty(a.candidates) && is_better(fitness, last_top_fitness(a), fitness_scheme(a))
-    new_cand = TopListIndividual(copy(candidate), fitness)
+    new_cand = TopListIndividual(copy(candidate), fitness, tag)
     fs = fitness_scheme(a)
     ix = searchsortedfirst(a.candidates, new_cand,
                            # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed

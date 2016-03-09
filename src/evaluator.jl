@@ -36,10 +36,10 @@ problem(e::Evaluator) = e.problem
 num_evals(e::ProblemEvaluator) = e.num_evals
 
 # evaluates the fitness (and implicitly updates the stats)
-function fitness(params::Individual, e::ProblemEvaluator)
+function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
   e.last_fitness = res = fitness(params, e.problem)
   e.num_evals += 1
-  add_candidate!(e.archive, res, params, e.num_evals)
+  add_candidate!(e.archive, res, params, tag, e.num_evals)
   res
 end
 
@@ -107,7 +107,7 @@ function update_fitness!{F}(e::ProblemEvaluator{F}, candidates::Vector{Candidate
   for i in eachindex(candidates)
       # evaluate fitness if not known yet
       if isnafitness(candidates[i].fitness, fs)
-          candidates[i].fitness = fitness(candidates[i].params, e)
+          candidates[i].fitness = fitness(candidates[i].params, e, candidates[i].tag)
       end
   end
   candidates
