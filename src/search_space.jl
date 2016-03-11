@@ -73,7 +73,7 @@ end
 """
   `SearchSpace` defined by a range of valid values for each dimension.
 """
-type RangePerDimSearchSpace <: ContinuousSearchSpace
+immutable RangePerDimSearchSpace <: ContinuousSearchSpace
   # We save the ranges as individual mins, maxs and deltas for faster access later.
   mins::Vector{Float64}
   maxs::Vector{Float64}
@@ -84,7 +84,10 @@ type RangePerDimSearchSpace <: ContinuousSearchSpace
     maxs = map(t -> t[2], ranges)
     new(mins, maxs, (maxs - mins))
   end
+
+  RangePerDimSearchSpace(mins, maxs) = new(mins, maxs, (maxs - mins))
 end
+
 mins(rss::RangePerDimSearchSpace) = rss.mins
 maxs(rss::RangePerDimSearchSpace) = rss.maxs
 deltas(rss::RangePerDimSearchSpace) = rss.deltas
