@@ -16,15 +16,17 @@ type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
   objfunc::Function                     # Objective function
   name::ASCIIString
   fitness_scheme::FS
+  reserved_ss::RangePerDimSearchSpace   # search space for the first reserved dimensions
   range_per_dim::ParamBounds            # Default range per dimension
   opt_value::FO                         # optional optimal value, or nothing
 
   function Base.call{FS<:FitnessScheme,FO}(::Type{FunctionBasedProblemFamily}, objfunc::Function, name::ASCIIString,
-                                        fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing)
+                                        fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
+                                        reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE)
     if FO <: Number
         fitness_type(fitness_scheme) == FO || throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))
     end
-    new{FO, FS, FO}(objfunc, name, fitness_scheme, range, opt_value)
+    new{FO, FS, FO}(objfunc, name, fitness_scheme, reserved_ss, range, opt_value)
   end
 end
 
@@ -36,7 +38,9 @@ objfunc(family::FunctionBasedProblemFamily) = family.objfunc
     Construct search space for `FunctionBasedProblem` with the given number of dimensions.
 """
 function instantiate_search_space(family::FunctionBasedProblemFamily, ndim::Int)
-    symmetric_search_space(ndim, family.range_per_dim)
+    ndim >= numdims(family.reserved_ss) ||
+        throw(ArgumentError("Cannot create $ndim-problem: number of dimensions less than reserved dimensions"))
+    vcat(family.reserved_ss, symmetric_search_space(ndim - numdims(family.reserved_ss), family.range_per_dim))
 end
 
 """
