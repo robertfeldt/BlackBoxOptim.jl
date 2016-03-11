@@ -3,7 +3,7 @@ facts("Differential evolution optimizer") do
 ss = symmetric_search_space(1, (0.0, 10.0))
 fake_problem = convert(FunctionBasedProblem, x -> 0.0, "test_problem",
                        MinimizingFitnessScheme, ss) # FIXME v0.3 workaround
-DE = de_rand_1_bin(fake_problem, @compat Dict{Symbol,Any}(
+DE = de_rand_1_bin(fake_problem, ParamsDict(
   :Population => collect(1.0:10.0)',
   :f => 0.4, :cr => 0.5, :NumParents => 3))
 
@@ -22,7 +22,7 @@ context("SimpleSelector") do
 end
 
 context("RadiusLimitedSelector") do
-  local DE = de_rand_1_bin_radiuslimited(fake_problem, @compat Dict{Symbol,Any}(
+  local DE = de_rand_1_bin_radiuslimited(fake_problem, ParamsDict(
     :Population => rand(1,100),
     :f => 0.4, :cr => 0.5, :NumParents => 3))
 

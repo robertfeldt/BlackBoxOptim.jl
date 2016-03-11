@@ -1,5 +1,8 @@
-# FIXME replace Any with Type{Optimizer} when the support for Julia v0.3 would be dropped
-const ValidMethods = @compat Dict{Symbol,Union{Any,Function}}(
+"""
+   Optimization methods accepted by `bboptimize()`, the values are the
+   method initialization routines or types derived from `Optimizer`.
+"""
+const ValidMethods = ParamsDict(
   :random_search => random_search,
   :de_rand_1_bin => de_rand_1_bin,
   :de_rand_2_bin => de_rand_2_bin,
@@ -17,4 +20,8 @@ const ValidMethods = @compat Dict{Symbol,Union{Any,Function}}(
   :probabilistic_descent => direct_search_probabilistic_descent,
 )
 
+"""
+  Names of optimization methods accepted by `bboptimize()`,
+  `:Method` keyword argument.
+"""
 const MethodNames = sort!(collect(keys(ValidMethods)))

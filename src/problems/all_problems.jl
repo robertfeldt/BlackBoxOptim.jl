@@ -1,7 +1,10 @@
-# root type for all optimization problems
+"""
+  The base abstract type for all optimization problems.
+  `FS` is a type of a problem's `FitnessScheme`.
+"""
 abstract OptimizationProblem{FS<:FitnessScheme}
 
-# common definitions for OptimizationProblem
+# common definitions for `OptimizationProblem`
 # (enforce field names of subtypes)
 name(p::OptimizationProblem) = p.name
 fitness_scheme(p::OptimizationProblem) = p.fitness_scheme
@@ -10,19 +13,30 @@ numobjectives(p::OptimizationProblem) = numobjectives(fitness_scheme(p))
 search_space(p::OptimizationProblem) = p.ss
 numdims(p::OptimizationProblem) = numdims(search_space(p))
 
-# by default the optimum is unknown
+"""
+  Checks if the current best fitness is within the given range
+  of a known best fitness.
+  By default the best fitness is unknown.
+"""
 fitness_is_within_ftol(p::OptimizationProblem, fitness, atol::Number) = false
 
-# problem with the objective function defined by some Julia function
+"""
+  `OptimizationProblem` with the objective function
+  defined by some Julia `Function`.
+"""
 abstract FunctionBasedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS}
 
 objfunc(p::FunctionBasedProblem) = p.objfunc
 
-# Evaluate fitness of a candidate
+"""
+  Evaluates fitness of a candidate.
+"""
 fitness(x, p::FunctionBasedProblem) = objfunc(p)(x)
 
-# problem with unknown global optimum,
-# a wrapper around Julia objective function
+"""
+  Problem with unknown global optimum with fitness
+  defined by some Julia `Function`.
+"""
 type UnboundedProblem{FS<:FitnessScheme, SS<:SearchSpace} <: FunctionBasedProblem{FS}
   objfunc::Function  # Objective function
   name::ASCIIString
@@ -37,8 +51,10 @@ end
 Base.copy{FS,SS}(p::UnboundedProblem{FS,SS}) =
   UnboundedProblem{FS,SS}(p.objfunc, copy(p.name), p.fitness_scheme, p.ss)
 
-# problem with known global optimum,
-# a wrapper around Julia objective function
+"""
+  Problem with known global optimum,
+  defined by some Julia `Function`.
+"""
 type BoundedProblem{F, FS<:FitnessScheme, SS<:SearchSpace} <: FunctionBasedProblem{FS}
   objfunc::Function  # Objective function
   name::ASCIIString

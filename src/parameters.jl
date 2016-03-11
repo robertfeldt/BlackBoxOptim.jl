@@ -1,5 +1,7 @@
-# An ordered set of dicts which we traverse to find the parameter value.
-# Returns nothing if no param setting is found in any of the dicts.
+"""
+  An ordered set of dicts that are examined one after another to find the parameter value.
+  Returns nothing if no param setting is found in any of the dicts.
+"""
 type DictChain{K,V} <: Associative{K,V}
   dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
 
@@ -37,15 +39,12 @@ function Base.getindex{K,V}(p::DictChain{K,V}, key::K)
   throw(KeyError(key))
 end
 
-# FIXME no type declaration for value due to 0.3 compatibility
-function Base.setindex!{K,V}(p::DictChain{K,V}, value, key::K)
+function Base.setindex!{K,V}(p::DictChain{K,V}, value::V, key::K)
   if isempty(p.dicts)
     push!(p.dicts, Dict{K,V}()) # add new dictionary on top
   end
   setindex!(first(p.dicts), value, key)
 end
-
-import Base.haskey, Base.get, Base.delete!
 
 function Base.haskey{K,V}(p::DictChain{K,V}, key::K)
   for d in p.dicts
@@ -56,8 +55,7 @@ function Base.haskey{K,V}(p::DictChain{K,V}, key::K)
   return false
 end
 
-# FIXME no type declaration for default due to 0.3 compatibility
-function get{K,V}(p::DictChain{K,V}, key::K, default = nothing)
+function Base.get{K,V}(p::DictChain{K,V}, key::K, default = nothing)
   return haskey(p, key) ? getindex(p, key) : default
 end
 
@@ -90,30 +88,30 @@ chain{K,V}(p1::Associative{K,V}, p2::Associative{K,V}...) = DictChain(chain(p2..
 flatten(d::Associative) = d
 flatten{K,V}(d::DictChain{K,V}) = convert(Dict{K,V}, d)
 
-# converts DictChain into Dict
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
 
-function delete!{K,V}(p::DictChain{K,V}, key::K)
+function Base.delete!{K,V}(p::DictChain{K,V}, key::K)
   for d in p.dicts
     delete!(d, key)
   end
   p
 end
 
-# The default parameters storage in BlackBoxOptim
+"""
+  The parameters storage type for `BlackBoxOptim`.
+"""
 typealias Parameters Associative{Symbol,Any}
 
+"""
+  The default parameters storage in `BlackBoxOptim`.
+"""
 typealias ParamsDict Dict{Symbol,Any}
 typealias ParamsDictChain DictChain{Symbol,Any}
 
-# Default place for parameters argument in many methods
-const EMPTY_PARAMS = @compat(Dict{Symbol, Any})
+"""
+  The default placeholder value for parameters argument.
+"""
+const EMPTY_PARAMS = ParamsDict()
 
-# FIXME Clean this up
-function convert_to_dict_symbol_any(parameters)
-  if isa(parameters, Dict{Any,Any}) || isa(parameters, Array{Any,1})
-    # convert into Dict{Symbol, Any}
-    parameters = Dict(@compat(Tuple{Symbol,Any})[(k::Symbol, v) for (k,v) in parameters])
-  end
-  return parameters
-end
+Base.convert(::Type{Dict{Symbol,Any}}, kwargs::Vector{Any}) =
+    Dict(Tuple{Symbol,Any}[(convert(Symbol, k), convert(Any,v)) for (k,v) in kwargs])

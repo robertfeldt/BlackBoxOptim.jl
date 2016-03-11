@@ -1,16 +1,18 @@
-# This implements a "trivial geography" similar to Spector and Kline (2006)
-# by first sampling an individual randomly and then selecting additional
-# individuals for the same tournament within a certain deme of limited size
-# for the sub-sequent individuals in the population. The version we implement
-# here is from:
-#  I. Harvey, "The Microbial Genetic Algorithm", in Advances in Artificial Life
-#  Darwin Meets von Neumann, Springer, 2011.
-# The original paper is:
-#  Spector, L., and J. Klein. 2005. Trivial Geography in Genetic Programming.
-#  In Genetic Programming Theory and Practice III, edited by T. Yu, R.L. Riolo,
-#  and B. Worzel, pp. 109-124. Boston, MA: Kluwer Academic Publishers.
-#  http://faculty.hampshire.edu/lspector/pubs/trivial-geography-toappear.pdf
-#
+"""
+  `IndividualsSelector` that implements a "trivial geography" similar to Spector and Kline (2006)
+  by first sampling an individual randomly and then selecting additional
+  individuals for the same tournament within a certain deme of limited size (`radius`)
+  for the sub-sequent individuals in the population.
+
+  The version we implement here is from:
+    I. Harvey, "The Microbial Genetic Algorithm", in Advances in Artificial Life
+    Darwin Meets von Neumann, Springer, 2011.
+  The original paper is:
+    Spector, L., and J. Klein. 2005. Trivial Geography in Genetic Programming.
+    In Genetic Programming Theory and Practice III, edited by T. Yu, R.L. Riolo,
+    and B. Worzel, pp. 109-124. Boston, MA: Kluwer Academic Publishers.
+    http://faculty.hampshire.edu/lspector/pubs/trivial-geography-toappear.pdf
+"""
 immutable RadiusLimitedSelector <: IndividualsSelector
     radius::Int
 end

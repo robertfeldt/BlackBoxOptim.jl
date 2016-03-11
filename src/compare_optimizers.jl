@@ -1,7 +1,8 @@
-function compare_optimizers(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}());
+function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
   Methods = BlackBoxOptim.MethodNames, kwargs...)
 
-  parameters = convert_and_chain(parameters, kwargs)
+  parameters = chain(convert(ParamsDict, parameters),
+                     convert(ParamsDict, kwargs))
 
   results = Any[]
   for(m in Methods)
@@ -26,10 +27,11 @@ function compare_optimizers(functionOrProblem, parameters::Associative = @compat
 end
 
 function compare_optimizers(problems::Dict{Any, OptimizationProblem},
-  parameters::Associative = @compat(Dict{Any,Any}());
+  parameters::Parameters = EMPTY_PARAMS;
   Methods = BlackBoxOptim.MethodNames, kwargs...)
 
-  parameters = convert_and_chain(parameters, kwargs)
+  parameters = chain(convert(ParamsDict, parameters),
+                     convert(ParamsDict, kwargs))
 
   # Lets create an array where we will save how the methods ranks per problem.
   ranks = zeros(length(Methods), length(problems))
@@ -73,16 +75,21 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
   return ranks, fitnesses
 end
 
-# Summarize a vector of float values by stating its mean, std dev and median.
+"""
+  Summarize a vector of float values by stating its mean, std dev and median.
+"""
 function report_on_values(desc, v, lpad = "", rpad = "", digits = 3)
   println("$(lpad)$(desc): $(signif(mean(v), digits)) (std. dev = $(signif(std(v), digits)), median = $(signif(median(v), digits)))")
 end
 
-# Report on the number of times each key in a count dict was encountered.
-# Returns a percentage dict calculated while iterating over the counted items.
+"""
+  Report the number of times each key was encountered in a count `dict`.
+
+  Returns a percentage dict calculated while iterating over the counted items.
+"""
 function count_dict_report(dict, desc, lpad = "", rpad = "")
   println(desc, ":")
-  total = sum(collect(values(dict)))
+  total = sum(collect(values(dict))) # FIXME collect() should not be required
   pdict = Dict()
   for (r, c) in dict
     pdict[r] = round(100.0*c/total, 2)
@@ -91,9 +98,11 @@ function count_dict_report(dict, desc, lpad = "", rpad = "")
   pdict
 end
 
-# Print a report based on a result dict from one set of repeated runs of
-# an optimization method. Returns the success rate, i.e. number of times the
-# termination reason was "Within fitness tolerance...".
+"""
+  Print a report based on a result dict from one set of repeated runs of
+  an optimization method. Returns the success rate, i.e. number of times the
+  termination reason was "Within fitness tolerance...".
+"""
 function report_from_result_dict(statsdict)
   println("Method: $(statsdict[:method])")
   pdict = count_dict_report(statsdict[:reasoncounts], "  Termination reasons", "    ")
@@ -141,17 +150,17 @@ end
 function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters::Parameters = EMPTY_PARAMS)
 
   fp = BlackBoxOptim.fixed_dim_problem(problem, dim)
-  result_dicts = Dict{Symbol,Any}[]
+  result_dicts = ParamsDict[]
 
   # Just so they are declared
   ps = best_so_far = nothing
 
-  params = chain(parameters, @compat Dict{Symbol,Any}(:FitnessTolerance => ftol))
+  params = chain(parameters, ParamsDict(:FitnessTolerance => ftol))
 
   for m in methods
 
     ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int, numrepeats)
-    rcounts = @compat Dict{String,Int}("Within fitness tolerance of optimum" => 0)
+    rcounts = Dict{String,Int}("Within fitness tolerance of optimum" => 0)
 
     for i in 1:numrepeats
       p = fp # BlackBoxOptim.ShiftedAndBiasedProblem(fp)
@@ -167,7 +176,7 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
     # ???
     best_so_far =
 
-    rdict = @compat Dict{Symbol,Any}(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
+    rdict = ParamsDict(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
     rdict[:success_rate] = report_from_result_dict(rdict)
     push!(result_dicts, rdict)
 

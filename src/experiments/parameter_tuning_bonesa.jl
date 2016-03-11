@@ -4,8 +4,8 @@
 # that to meaningful ranges.
 type BonesaTuner
   numvectors::Int                     # Current num of param vectors in archive
-  parameter_vectors::Array{Float64, 2}  # Archive of param vectors, each column is one vector
-  utilities::Array{Float64, 2}          # Each column has Nu * Np utility values for one and the same parameter vector
+  parameter_vectors::Matrix{Float64}  # Archive of param vectors, each column is one vector
+  utilities::Matrix{Float64}          # Each column has Nu * Np utility values for one and the same parameter vector
   num_utility_values
 end
 
@@ -56,8 +56,6 @@ function calc_temp_values_for_archive(bt::BonesaTuner)
 
   # Calc the good vectors (saved as (boolean) indicator values)
   mean_actual_utilities = mean(bt.utilities, 2) # Mean per row => mean for each utility value
-  
-
 end
 
 function support_of_vector(bt::BonesaTuner, pvector)

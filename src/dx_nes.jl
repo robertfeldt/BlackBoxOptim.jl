@@ -1,9 +1,11 @@
-# DX-NES: distance-weighted extensions of xNES by Fukushima et al
+"""
+  DX-NES: distance-weighted extensions of xNES by Fukushima et al.
+"""
 type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
   lambda::Int                     # Number of samples to take per iteration
   sortedUtilities::Vector{Float64}# Fitness utility to give to each rank
-  tmp_Utilities::Vector{Float64}   # Fitness utilities assigned to current population
+  tmp_Utilities::Vector{Float64}  # Fitness utilities assigned to current population
   x_learnrate::Float64
   B_learnrate::Float64
   sigma_learnrate::Float64
@@ -14,10 +16,10 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   uZscale::Float64                # distance scale for the weights
   evol_path::Vector{Float64}      # evolution path, discounted coordinates of population center
   # TODO use Symmetric{Float64} to inmprove exponent etc calculation
-  ln_B::Array{Float64,2}          # exponential of lnB
+  ln_B::Matrix{Float64}           # exponential of lnB
   sigma::Float64                  # step size
   x::Individual                   # The current incumbent (aka most likely value, mu etc)
-  Z::Array{Float64,2}             # current N(0,I) samples
+  Z::Matrix{Float64}              # current N(0,I) samples
   candidates::Vector{Candidate{F}}# The last sampled values, now being evaluated
 
   # temporary variables to minimize GC overhead
@@ -47,7 +49,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     u = fitness_shaping_utilities_log(lambda)
     moving_threshold, evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
-    new(embed, lambda, u, @compat(Vector{Float64}(lambda)),
+    new(embed, lambda, u, Vector{Float64}(lambda),
       mu_learnrate, 0.0, 0.0, max_sigma,
       moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
       zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
@@ -61,8 +63,6 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   end
 end
 
-# trace current optimization state,
-# Called by OptRunController trace_progress()
 function trace_state(io::IO, dxnes::DXNESOpt)
     evol_path_norm = norm(dxnes.evol_path)
     println(io,
@@ -75,7 +75,7 @@ function trace_state(io::IO, dxnes::DXNESOpt)
             " speed=", evol_path_norm/dxnes.moving_threshold)
 end
 
-const DXNES_DefaultOptions = chain(NES_DefaultOptions, @compat Dict{Symbol,Any}(
+const DXNES_DefaultOptions = chain(NES_DefaultOptions, ParamsDict(
   :ini_sigma => 1.0,      # Initial sigma (step size)
   :ini_lnB => nothing     # Initial log(B) (log of parameters covariation)
 ))
@@ -116,14 +116,14 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   return 0
 end
 
-#=
-Calculates the parameters for evolutionary path.
+"""
+  Calculate the parameters for evolutionary path.
 
-Returns the tuple:
- * moving threshold
- * path discount
- * current Z scale
-=#
+  Returns the tuple:
+    * moving threshold
+    * path discount
+    * current Z scale
+"""
 function calculate_evol_path_params(n::Int64, u::Vector{Float64})
   lambda = length(u)
   mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))

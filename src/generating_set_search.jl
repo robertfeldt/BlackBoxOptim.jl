@@ -4,15 +4,17 @@
 #  SIAM review 45.3 (2003): 385-482.
 #
 
-# GSS is a type of DirectSearch
+""" A supertype for all generating set searcher-like algorithms. """
 abstract DirectSearcher <: SteppingOptimizer
 
-# A direction generator generates the search directions to use at each step of
-# a GSS search.
+"""
+  `DirectionGenerator` generates the search directions to use at each step of
+  a GSS search.
+"""
 abstract DirectionGenerator
 
 immutable ConstantDirectionGen <: DirectionGenerator
-  directions::Array{Float64, 2}
+  directions::Matrix{Float64}
 
   ConstantDirectionGen(directions) = begin
     new(directions)
@@ -27,7 +29,7 @@ end
 # individually (+ and -) for each coordinate.
 compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
 
-const GSSDefaultParameters = @compat Dict{Symbol,Any}(
+const GSSDefaultParameters = ParamsDict(
   :DeltaTolerance => 1e-10,       # GSS has converged if the StepSize drops below this tolerance level
   :InitialStepSizeFactor => 0.50,        # Factor times the minimum search space diameter to give the initial StepSize
   :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
@@ -38,6 +40,12 @@ const GSSDefaultParameters = @compat Dict{Symbol,Any}(
 
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
+"""
+  Generating Set Search as described in Kolda2003:
+    Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization
+    by direct search: New perspectives on some classical and modern methods."
+    SIAM review 45.3 (2003): 385-482.
+"""
 type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
   direction_gen::D
   evaluator::V
@@ -83,8 +91,8 @@ function GeneratingSetSearcher(problem::OptimizationProblem, parameters::Paramet
                         params[:DeltaTolerance])
 end
 
-# We also include the name of the direction generator.}
 function name(opt::GeneratingSetSearcher)
+  # We also include the name of the direction generator.
   "GeneratingSetSearcher($(typeof(opt.direction_gen)))"
 end
 

@@ -1,5 +1,13 @@
+"""
+  Base type for `BlackBoxOptim` optimization results.
+"""
 abstract OptimizationResults{F}
 
+"""
+  Optimization results for non-populational optimization methods.
+  Should be compatible with the `Optim` package.
+  See `PopulationOptimizationResults`.
+"""
 immutable SimpleOptimizationResults{F,RT} <: OptimizationResults{F}
   method::ASCIIString # Symbol instead or flexible?
   best_fitness::F
@@ -28,7 +36,10 @@ f_minimum(or::OptimizationResults) = best_fitness(or)
 # FIXME lookup stop_reason
 iteration_converged(or::OptimizationResults) = iterations(or) >= parameters(or)[:MaxSteps]
 
-# optimization results for PopulationOptimizer storing the final population
+"""
+  Optimization results for `PopulationOptimizer` methods.
+  Stores the final population.
+"""
 immutable PopulationOptimizationResults{F,RT,P} <: OptimizationResults{F}
   method::ASCIIString # Symbol instead or flexible?
   best_fitness::F

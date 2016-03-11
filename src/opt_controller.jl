@@ -1,5 +1,9 @@
-# Optimization Run Controller
-# Applies specific optimizer to a given optimization problem in one run.
+"""
+  Optimization Run Controller.
+  Manages problem optimization using the specified method.
+
+  See `OptController`.
+"""
 type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
@@ -34,6 +38,26 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   stop_reason::ASCIIString # the reason for algorithm termination, empty if it's not terminated
 end
 
+"""
+    Create `OptRunController` for a given problem using specified `optimizer`.
+
+#Arguments
+    * `optimizer` initialized optimization method
+    * `evaluator` the evaluator of the problem fitness
+    * `params` controller settings, see `DefaultParameters` for the default values:
+        * `:MaxTime` max time in seconds (takes precedence over the other budget-related params if specified), 0.0 disables the check
+        * `:MaxFuncEvals` max fitness evals (takes precedence over max iterations, but not max time), 0 disables the check
+        * `:MaxSteps` max iterations gives the least control since different optimizers have different "size" of their "iterations"
+        * `:MinDeltaFitnessTolerance` minimum delta fitness (difference between the two consecutive best fitness improvements) we can accept before terminating
+        * `:FitnessTolerance` stop the optimization when the best fitness found is within this distance of the actual optimum (if known)
+        * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this many steps (indicates a converged/degenerate search)
+        * `:NumRepetitions` number of repetitions to run for each optimizer for each problem
+        * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization (one of `:silent`, `:compact`)
+        * `:TraceInterval` the trace interval (in seconds)
+        * `:SaveTrace` whether to save it to a file (defaults to `false`)
+        * `:SaveFitnessTraceToCsv` whether the history of fitness changes during optimization should be save to a csv file
+        * `:SaveParameters` save method/controller parameters to a JSON file
+"""
 function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
   OptRunController{O,E}(optimizer, evaluator,
         [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
@@ -42,6 +66,9 @@ function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
 
+"""
+    Create `Evaluator` instance for a given `problem`.
+"""
 function make_evaluator(problem::OptimizationProblem, params)
   workers = get(params, :Workers, Vector{Int}())
   if length(workers) > 0
@@ -145,10 +172,10 @@ function trace_progress(ctrl::OptRunController)
   end
 end
 
-# The ask and tell interface is more general since you can mix and max
-# elements from several optimizers using it. However, in this top-level
-# execution function we do not make use of this flexibility...
 function step!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
+  # The ask()/tell() interface is more general since you can mix and max
+  # elements from several optimizers using it. However, in this top-level
+  # execution function we do not make use of this flexibility...
   candidates = ask(ctrl.optimizer)
   rank_by_fitness!(ctrl.evaluator, candidates)
   return tell!(ctrl.optimizer, candidates)
@@ -170,6 +197,11 @@ finalize_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
 finalize_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
   finalize!(ctrl.optimizer, ctrl.evaluator)
 
+"""
+  `run!(ctrl::OptRunController)`
+
+  Run optimization until one of the stopping conditions are satisfied.
+"""
 function run!(ctrl::OptRunController)
   tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
   setup_optimizer!(ctrl)
@@ -235,9 +267,15 @@ function write_result(ctrl::OptRunController, filename = "")
       bestfitness = opt_value(problem(ctrl.evaluator)))
 end
 
-# Optimization Controller
-# Applies specific optimizer to a given optimization problem over one or more
-# optimization runs.
+"""
+  Optimization Controller.
+
+  Applies specific optimization method to a given problem.
+  Supports restarts and modifying parameter of the method between runs.
+  `runcontrollers` field maintains the list of `OptRunController` instances applied so far.
+
+  See `OptRunController`.
+"""
 type OptController{O<:Optimizer, P<:OptimizationProblem}
   optimizer::O   # optimization algorithm
   problem::P     # opt problem
@@ -245,6 +283,11 @@ type OptController{O<:Optimizer, P<:OptimizationProblem}
   runcontrollers::Vector{OptRunController{O}}
 end
 
+"""
+    Create `OptController` for a given `optimizer` and a `problem`.
+
+    `params` provide the `OptRunController` parameters, plus `:RngSeed` and `:RandomizeRngSeed` params.
+"""
 function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
   params::ParamsDictChain)
   OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
@@ -254,15 +297,21 @@ problem(oc::OptController) = oc.problem
 numruns(oc::OptController) = length(oc.runcontrollers)
 lastrun(oc::OptController) = oc.runcontrollers[end]
 
-function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
-  parameters::Associative = @compat(Dict{Any,Any}()))
+"""
+  `update_parameters!(oc::OptController, parameters::Associative)`
 
-  parameters = convert_to_dict_symbol_any(parameters)
+  Update the `OptController` parameters.
+"""
+function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
+  parameters::Parameters = EMPTY_DICT)
+
+  parameters = convert(ParamsDict, parameters)
 
   # Most parameters cannot be changed since the problem and optimizer has already
   # been setup.
+  valid_params = Set([:MaxTime, :MaxSteps, :MaxFuncEvals, :TraceMode])
   for k in keys(parameters)
-    if k ∉ [:MaxTime, :MaxSteps, :MaxFuncEvals, :TraceMode]
+    if k ∉ valid_params
       throw(ArgumentError("It is currently not supported to change parameters that can affect the original opt problem or optimizer (here: $(k))"))
     end
   end
@@ -281,7 +330,11 @@ function init_rng!(parameters::Parameters)
   end
 end
 
-# Start a new optimization run, possibly with new parameters and report on results.
+"""
+  `run!(oc::OptController)`
+
+  Start a new optimization run, possibly with new parameters and report on results.
+"""
 function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
   ctrl = OptRunController(oc.optimizer, oc.problem, oc.parameters)
   push!(oc.runcontrollers, ctrl)

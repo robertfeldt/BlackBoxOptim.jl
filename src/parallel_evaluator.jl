@@ -1,4 +1,6 @@
-# Internal data for the worker process of the parallel evaluator
+"""
+  Internal data for the worker process of the parallel evaluator.
+"""
 immutable ParallelEvaluatorWorker{P<:OptimizationProblem}
   problem::P
 
@@ -13,8 +15,9 @@ typealias ParallelEvaluatorWorkerRef{P} RemoteRef{Channel{ParallelEvaluatorWorke
 fitness{P}(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) =
   fitness(params, fetch(fetch(worker_ref))::ParallelEvaluatorWorker{P})
 
-# Current state of fitness evaluation
-# for the vector of candidates
+"""
+  Current state of fitness function evaluation for the vector of candidates.
+"""
 type ParallelEvaluationState{F, FS}
   fitness_scheme::FS
   candidates::Vector{Candidate{F}}  # candidates to calculate fitness for
@@ -37,7 +40,10 @@ is_stopped(estate::ParallelEvaluationState) = estate.next_index == 0
 
 abort!(estate::ParallelEvaluationState) = (estate.next_index = 0)
 
-# reset evaluation state for the new vector of candidates
+"""
+  Reset the current `ParallelEvaluationState` and the vector
+  of candidates that need fitness evaluation.
+"""
 function reset!{F}(estate::ParallelEvaluationState{F}, candidates::Vector{Candidate{F}})
   estate.candidates = candidates
   fill!(estate.worker_busy, false)
@@ -46,8 +52,10 @@ function reset!{F}(estate::ParallelEvaluationState{F}, candidates::Vector{Candid
   return estate
 end
 
-# get index of the next candidate for evaluation
-# based on the Base.pmap() code
+"""
+  Get the index of the next candidate for evaluation
+  based on the Base.pmap() code.
+"""
 function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
     @assert !estate.worker_busy[worker_ix]
 
@@ -84,7 +92,9 @@ function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
     return task_ix
 end
 
-# notify that the worker is finished and reset busy flag
+"""
+  Notify that the worker process is finished and reset its busy flag.
+"""
 function worker_finished!(estate::ParallelEvaluationState, worker_ix::Int)
   @assert estate.worker_busy[worker_ix]
   estate.worker_busy[worker_ix] = false
@@ -92,9 +102,10 @@ function worker_finished!(estate::ParallelEvaluationState, worker_ix::Int)
   return estate
 end
 
-# Fitness evaluator that
-# distributes candidates fitness calculation
-# among worker processes
+"""
+  Fitness evaluator that distributes candidates fitness calculation
+  among several worker processes.
+"""
 type ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
   problem::P
   archive::Archive
@@ -152,7 +163,7 @@ function update_fitness!{F}(e::ParallelEvaluator{F}, candidates::Vector{Candidat
     candidates
 end
 
-# it's not efficient to calculate fitness like that with ParallelEvaluator
+# FIXME it's not efficient to calculate fitness like that with `ParallelEvaluator`
 function fitness{F}(params::Individual, e::ParallelEvaluator{F})
   candi = Candidate{F}(params)
   update_fitness!(e, [candi])

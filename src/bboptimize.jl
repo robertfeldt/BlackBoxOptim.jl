@@ -1,10 +1,18 @@
-# Setup a fixed-dimensional problem
+"""
+  `setup_problem(problem, parameters::Parameters)`
+
+  Set up a fixed-dimensional optimization problem.
+
+  There are several `setup_problem()` method that accept different type of
+  `problem` argument:
+    * `OptimizationProblem`
+    * function (`:NumDimensions` has to be specified in `parameters`)
+    * `FunctionBasedProblemFamily` (`:NumDimensions` has to be specified in `parameters`)
+"""
 function setup_problem(problem::OptimizationProblem, parameters::Parameters)
   return problem, parameters
 end
 
-# Create a fixed-dimensional problem given
-#   any-dimensional problem and a number of dimensions as a parameter
 function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameters)
   # If an anydim problem was given the dimension param must have been specified.
   if parameters[:NumDimensions] == :NotSpecified
@@ -15,8 +23,6 @@ function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameter
   return problem, parameters
 end
 
-# Create a fixed-dimensional problem given
-#   a function and a search range + number of dimensions.
 function setup_problem(func::Function, parameters::Parameters)
   ss = check_and_create_search_space(parameters)
 
@@ -36,28 +42,46 @@ function setup_problem(func::Function, parameters::Parameters)
   return problem, parameters
 end
 
+"""
+  `bboptimize(problem[; parameters::Associative, kwargs...])`
+
+  Solve given optimization `problem`.
+
+  See `setup_problem()` for the types of `problem` supported.
+  In addition, the `problem` could be `OptController` containing the
+  results of the previous optimization runs.
+
+  The optimization method parameters could be specified via `kwargs` or `parameters` arguments.
+
+  Returns `OptimizationResults` instance.
+
+  See also `bbsetup()`.
+"""
 function bboptimize(optctrl::OptController; kwargs...)
   if length(kwargs) > 0
-    kwargs = convert_to_dict_symbol_any(kwargs)
-    update_parameters!(optctrl, kwargs)
+    update_parameters!(optctrl, convert(ParamsDict, kwargs))
   end
   run!(optctrl)
 end
 
-function bboptimize(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}()); kwargs...)
+function bboptimize(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
   optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
   run!(optctrl)
 end
 
-function convert_and_chain(parameters, kwargs)
-  kwargs = convert_to_dict_symbol_any(kwargs)
-  parameters = convert_to_dict_symbol_any(parameters)
-  chain(parameters, kwargs)
-end
+"""
+  `bbsetup(problem[; parameters::Associative, kwargs...])`
 
-function bbsetup(functionOrProblem, parameters::Associative = @compat(Dict{Any,Any}()); kwargs...)
+  Set up optimization method for a given problem.
 
-  parameters = convert_and_chain(parameters, kwargs)
+  See `setup_problem()` for the types of `problem` supported.
+  The optimization method parameters could be specified via `kwargs` or `parameters` arguments.
+
+  Returns the initialized `OptController` instance. To actually run the method
+  call `bboptimize()` or `run!()`.
+"""
+function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
+  parameters = chain(convert(ParamsDict, parameters), convert(ParamsDict, kwargs))
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
   check_valid!(params)
 
@@ -71,5 +95,4 @@ function bbsetup(functionOrProblem, parameters::Associative = @compat(Dict{Any,A
   ctrl = OptController(optimizer, problem, params)
 
   return ctrl
-
 end

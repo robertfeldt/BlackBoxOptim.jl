@@ -1,24 +1,24 @@
-# Implements variants of the memetic search algorithms RS and RIS. However,
-# we have modified them since they did not give very good performance when
-# implemented as described in the papers below. Possibly, the papers are not
-# unambigous and I have misinterpreted something from them...
-#
-# The "Resampling Search" (RS) memetic algorithm is described in:
-#
-#  F. Caraffini, F. Neri, M. Gongora and B. N. Passow, "Re-sampling Search: A
-#  Seriously Simple Memetic Approach with a High Performance", 2013.
-#
-# and its close sibling "Resampling Inheritance Search" (RIS) is described in:
-#
-#  F. Caraffini, F. Neri, B. N. Passow and G. Iacca, "Re-sampled Inheritance
-#  Search: High Performance Despite the Simplicity", 2013.
-#
-
-const RSDefaultParameters = @compat Dict{Symbol,Any}(
+const RSDefaultParameters = ParamsDict(
   :PrecisionRatio    => 0.40, # 40% of the diameter is used as the initial step length
   :PrecisionTreshold => 1e-6  # They use 1e-6 in the paper.
 )
 
+"""
+  The variants of the memetic search algorithms RS and RIS.
+  However, we have modified them since they did not give very good performance when
+  implemented as described in the papers below. Possibly, the papers are not
+  unambigous and I have misinterpreted something from them...
+
+  The "Resampling Search" (RS) memetic algorithm is described in:
+
+  F. Caraffini, F. Neri, M. Gongora and B. N. Passow, "Re-sampling Search: A
+  Seriously Simple Memetic Approach with a High Performance", 2013.
+
+ and its close sibling "Resampling Inheritance Search" (RIS) is described in:
+
+  F. Caraffini, F. Neri, B. N. Passow and G. Iacca, "Re-sampled Inheritance
+  Search: High Performance Despite the Simplicity", 2013.
+"""
 type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
   name::ASCIIString
   params::Parameters
@@ -50,7 +50,7 @@ end
 
 name(rs::ResamplingMemeticSearcher) = rs.name
 
-const RISDefaultParameters = @compat Dict{Symbol,Any}(
+const RISDefaultParameters = ParamsDict(
   :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
 )
 

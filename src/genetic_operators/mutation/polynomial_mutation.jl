@@ -1,6 +1,7 @@
-# Polynomial mutation as presented in the paper:
-#  Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
-
+"""
+  Polynomial mutation as presented in the paper:
+    Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
+"""
 type PolynomialMutation <: MutationOperator
   lowbound
   highbound
@@ -8,7 +9,9 @@ type PolynomialMutation <: MutationOperator
   PolynomialMutation(lowbound = 0.0, highbound = 1.0, eta = 100.0) = new(lowbound, highbound, eta)
 end
 
-# Apply polynomial mutation to one value.
+"""
+  Apply polynomial mutation to a single value.
+"""
 function apply(pm::PolynomialMutation, value::Float64)
   u = rand()
   if u <= 0.5

@@ -1,7 +1,19 @@
+"""
+  The base abstract type for the collection of candidate solutions
+  in the population-based optimization methods.
+"""
 abstract Population
+"""
+  The base abstract types for population that also stores the candidates
+  fitness.
+
+  `F` is the type of fitness values.
+"""
 abstract PopulationWithFitness{F} <: Population
 
-# The simplest population implementation -- a matrix of floats, each column is an individual.
+"""
+  The simplest `Population` implementation -- a matrix of floats, each column is an individual.
+"""
 typealias PopulationMatrix Matrix{Float64}
 
 popsize(pop::PopulationMatrix) = size(pop, 2)
@@ -12,6 +24,9 @@ params_std(pop::PopulationMatrix) = std(pop, 1)
 popsize{F}(pop::Vector{Candidate{F}}) = length(pop)
 numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
 
+"""
+  The default implementation of `PopulationWithFitness{F}`.
+"""
 type FitPopulation{F} <: PopulationWithFitness{F}
   # The population is a matrix of floats, each column being an individual.
   individuals::PopulationMatrix
@@ -23,7 +38,7 @@ type FitPopulation{F} <: PopulationWithFitness{F}
 
   function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F})
     popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
-    new(individuals, nafitness, fitness, @compat(Vector{Candidate{F}}()))
+    new(individuals, nafitness, fitness, Vector{Candidate{F}}())
   end
 end
 
@@ -62,10 +77,16 @@ end
 fitness_type{F}(pop::FitPopulation{F}) = F
 candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 
-# get unitialized individual from a pool, or create one, if it's empty
+"""
+  `acquire_candi(pop::FitPopulation[, {ix::Int, candi::Candidate}])`
+
+  Get individual from a pool, or create one if the pool is empty.
+  By default the individual is not initialized, but if `ix` or `candi` is specified,
+  the corresponding fields of the new candidate are set to the given values.
+"""
 function acquire_candi{F}(pop::FitPopulation{F})
   if isempty(pop.candi_pool)
-    return Candidate{F}(@compat(Vector{Float64}(numdims(pop))), -1, pop.nafitness)
+    return Candidate{F}(Vector{Float64}(numdims(pop)), -1, pop.nafitness)
   end
   res = pop!(pop.candi_pool)
   # reset reference to genetic operation
@@ -74,7 +95,7 @@ function acquire_candi{F}(pop::FitPopulation{F})
   return res
 end
 
-# get an individual from a pool and set it to ix-th individual from population
+# Get an individual from a pool and sets it to ix-th individual from population.
 function acquire_candi(pop::FitPopulation, ix::Int)
     x = acquire_candi(pop)
     x.params[:] = pop[ix] # FIXME might be suboptimal until Julia has array refs
@@ -83,19 +104,30 @@ function acquire_candi(pop::FitPopulation, ix::Int)
     return x
 end
 
-# get an individual from a pool and set it to another candidate
+# Get an individual from a pool and sets it to another candidate.
 acquire_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) = copy!(acquire_candi(pop), candi)
 
-# put the candidate back to the pool
+"""
+  Put the candidate back to the pool.
+"""
 release_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) = push!(pop.candi_pool, candi)
 
-# put the candidate into the population
+"""
+  Put the candidate back into the pool and copy the values
+  into the corresponding individual of the population (`candi.index` should be set).
+"""
 function accept_candi!{F}(pop::FitPopulation{F}, candi::Candidate{F})
   pop.individuals[:, candi.index] = candi.params
   pop.fitness[candi.index] = candi.fitness
   release_candi(pop, candi)
 end
 
+"""
+  Reset the candidate fitness.
+
+  Need it when the candidate parameters have changed, but the stored fitness
+  is still for the old parameter set.
+"""
 function reset_fitness!{F}(candi::Candidate{F}, pop::FitPopulation{F})
   candi.fitness = pop.nafitness
   return candi
@@ -103,7 +135,11 @@ end
 
 candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
 
-# default population generation
+"""
+  Generate a population for a given problem.
+
+  The default method to generate a population, uses Latin Hypercube Sampling.
+"""
 function population(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
   if !haskey(options, :Population)
       pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50))

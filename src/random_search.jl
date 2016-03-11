@@ -1,3 +1,6 @@
+"""
+  Optimize by randomly generating the candidates.
+"""
 type RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
   name::ASCIIString
   search_space::S
