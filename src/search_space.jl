@@ -105,3 +105,13 @@ symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(fil
   Projects a given point onto the search space coordinate-wise.
 """
 feasible(v, ss::RangePerDimSearchSpace) = Float64[ clamp( v[i], mins(ss)[i], maxs(ss)[i] ) for i in eachindex(v) ]
+
+# concatenates two range-based search spaces
+Base.vcat(ss1::RangePerDimSearchSpace, ss2::RangePerDimSearchSpace) =
+  RangePerDimSearchSpace(vcat(mins(ss1), mins(ss2)), vcat(maxs(ss1), maxs(ss2)))
+
+"""
+  0-dimensional search space.
+  Could be used as a placeholder for optional `SearchSpace` parameters.
+"""
+const ZERO_SEARCH_SPACE = RangePerDimSearchSpace(Vector{Float64}(), Vector{Float64}())
