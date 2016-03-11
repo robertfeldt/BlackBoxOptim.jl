@@ -8,7 +8,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
-  trace_mode::Symbol # controller state trace mode (:compact, :silent)
+  trace_mode::Symbol # controller state trace mode (:verbose, :silent)
                      # :silent makes tr() generate no output)
   save_trace::Bool # FIXME if traces should be saved to a file
   trace_interval::Float64 # periodicity of calling trace_progress()
@@ -52,7 +52,7 @@ end
         * `:FitnessTolerance` stop the optimization when the best fitness found is within this distance of the actual optimum (if known)
         * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this many steps (indicates a converged/degenerate search)
         * `:NumRepetitions` number of repetitions to run for each optimizer for each problem
-        * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization (one of `:silent`, `:compact`)
+        * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization (one of `:silent`, `:verbose`)
         * `:TraceInterval` the trace interval (in seconds)
         * `:SaveTrace` whether to save it to a file (defaults to `false`)
         * `:SaveFitnessTraceToCsv` whether the history of fitness changes during optimization should be save to a csv file
