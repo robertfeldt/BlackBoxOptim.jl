@@ -149,7 +149,7 @@ end
 
 function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters::Parameters = EMPTY_PARAMS)
 
-  fp = BlackBoxOptim.fixed_dim_problem(problem, dim)
+  fp = instantiate(problem, dim)
   result_dicts = ParamsDict[]
 
   # Just so they are declared

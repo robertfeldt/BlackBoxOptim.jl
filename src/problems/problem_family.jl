@@ -1,56 +1,76 @@
+
+"""
+    Base class for problem families.
+
+    It is an abstraction for problem parameterization (e.g by the
+    number of the search space dimensions) that allows
+    to instantiate `OptimizationProblem` for the concrete parameters.
+"""
+abstract ProblemFamily{FS<:FitnessScheme}
+
 """
   Family of `FunctionBasedProblem` optimization problems
   parameterized by the number of search space dimensions.
 """
-type FunctionBasedProblemFamily{F,FS<:FitnessScheme}
-  objfunc::Function                          # Objective function
+type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
+  objfunc::Function                     # Objective function
   name::ASCIIString
   fitness_scheme::FS
-  range_per_dimension::ParamBounds        # Default range per dimension
-  opt_value::Nullable{F}                  # optional optimal value
+  range_per_dim::ParamBounds            # Default range per dimension
+  opt_value::FO                         # optional optimal value, or nothing
 
-  FunctionBasedProblemFamily(objfunc::Function, name::ASCIIString, fitness_scheme::FS, range::ParamBounds,
-                opt_value::Nullable{F}) = new(objfunc, name, fitness_scheme, range, opt_value)
+  function Base.call{FS<:FitnessScheme,FO}(::Type{FunctionBasedProblemFamily}, objfunc::Function, name::ASCIIString,
+                                        fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing)
+    if FO <: Number
+        fitness_type(fitness_scheme) == FO || throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))
+    end
+    new{FO, FS, FO}(objfunc, name, fitness_scheme, range, opt_value)
+  end
 end
-
-Base.convert{F,FS<:FitnessScheme}(FunctionBasedProblemFamily, objfunc::Function, name::ASCIIString, fitness_scheme::FS, range::ParamBounds,
-                opt_value::Nullable{F}) = FunctionBasedProblemFamily{F,FS}(objfunc, name, fitness_scheme, range, opt_value)
 
 objfunc(family::FunctionBasedProblemFamily) = family.objfunc
 
 """
-  Construct the `FunctionBasedProblem` with the given number of dimensions.
+    instantiate(family::FunctionBasedProblemFamily, ndim::Int)
+
+    Construct search space for `FunctionBasedProblem` with the given number of dimensions.
 """
-function fixed_dim_problem(family::FunctionBasedProblemFamily, ndim::Int)
-  ss = symmetric_search_space(ndim, family.range_per_dimension)
-  if isnull(family.opt_value)
-    return convert(FunctionBasedProblem, family.objfunc, family.name, family.fitness_scheme, ss)
-  else
-    return convert(FunctionBasedProblem, family.objfunc, family.name, family.fitness_scheme, ss, get(family.opt_value))
-  end
+function instantiate_search_space(family::FunctionBasedProblemFamily, ndim::Int)
+    symmetric_search_space(ndim, family.range_per_dim)
 end
 
-fixed_dim_problem{FS<:FitnessScheme}(prob::OptimizationProblem{FS}, ndim::Int) = prob
+"""
+    instantiate(family::FunctionBasedProblemFamily, ndim::Int)
 
-function MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds, fmin::Float64)
-  convert(FunctionBasedProblemFamily, f, name, MinimizingFitnessScheme, range, convert(Nullable{Float64}, fmin))
+    Construct `FunctionBasedProblem` with the given number of dimensions.
+"""
+instantiate(family::FunctionBasedProblemFamily, ndim::Int) =
+    FunctionBasedProblem(family.objfunc, family.name, family.fitness_scheme,
+                         instantiate_search_space(family, ndim), family.opt_value)
+
+function instantiate(prob::OptimizationProblem, ndim::Int)
+    if numdims(prob) != ndim
+        throw("Problem dimensions and the requested dimension do not match")
+    end
+    prob
 end
 
-function MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds)
-  convert(FunctionBasedProblemFamily, f, name, MinimizingFitnessScheme, range, Nullable{Float64}())
-end
+@deprecate fixed_dim_problem instantiate
 
-function minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int)
-    fixed_dim_problem(MinimizationProblemFamily(f, name, range), ndim)
-end
+MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds, fmin::Float64) =
+  FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range, fmin)
 
-function minimization_problem(f::Function, range::ParamBounds, ndim::Int)
-    fixed_dim_problem(MinimizationProblemFamily(f, "unknown name", range), ndim)
-end
+MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds) =
+  FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range)
 
-function minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int, fmin::Float64)
-    fixed_dim_problem(MinimizationProblemFamily(f, name, range, fmin), ndim)
-end
+minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int) =
+    instantiate(MinimizationProblemFamily(f, name, range), ndim)
+
+minimization_problem(f::Function, range::ParamBounds, ndim::Int) =
+    instantiate(MinimizationProblemFamily(f, "<unknown>", range), ndim)
+
+minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int, fmin::Float64) =
+    instantiate(MinimizationProblemFamily(f, name, range, fmin), ndim)
 
 """
   `problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Union{Int,Vector{Int}})`
@@ -66,7 +86,7 @@ function problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Vector{Int
   result = Dict{Int, FunctionBasedProblem}()
   for d in dims
     for p in values(ps)
-      result[next_free_index] = generate(p, d)
+      result[next_free_index] = instantiate(p, d)
       next_free_index += 1
     end
   end

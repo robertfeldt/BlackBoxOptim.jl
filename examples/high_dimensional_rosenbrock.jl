@@ -16,7 +16,7 @@ using BlackBoxOptim
 function fitness_for_opt(problemname, numDimensions, populationSize, numSteps, method)
 
   p = BlackBoxOptim.example_problems[problemname]
-  problem = fixed_dim_problem(p, numDimensions)
+  problem = instantiate(p, numDimensions)
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
 

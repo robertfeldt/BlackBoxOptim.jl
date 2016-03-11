@@ -44,7 +44,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Problem factory/family
         FunctionBasedProblemFamily, MinimizationProblemFamily,
-        fixed_dim_problem,
+        fixed_dim_problem, instantiate,
 
         save_fitness_history_to_csv_file,
 
