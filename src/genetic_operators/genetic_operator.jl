@@ -49,6 +49,15 @@ numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
+# wrapper for multi-children variant of apply!() for single-child xover operators
+function apply!{NP}(xover::CrossoverOperator{NP,1}, targets::Vector{Individual}, target_indices::Vector{Int}, pop, parentIndices)
+    length(targets) == length(target_indices) || throw(ArgumentError("The number of target doesn't match the number of their indices"))
+    for i in eachindex(target_indices)
+        apply!(xover, targets[i], target_indices[i], pop, parentIndices)
+    end
+    targets
+end
+
 """
   `MutationOperator` that does nothing.
 """
