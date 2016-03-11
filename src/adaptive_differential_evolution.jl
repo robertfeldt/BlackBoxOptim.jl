@@ -57,10 +57,9 @@ type AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   params::AdaptiveDiffEvoParameters
 
   AdaptiveDiffEvoRandBin(params::AdaptiveDiffEvoParameters) = new(params)
-end
 
-Base.convert{N}(::Type{AdaptiveDiffEvoRandBin{N}}, options::Parameters) =
-    AdaptiveDiffEvoRandBin{N}(AdaptiveDiffEvoParameters(options))
+  AdaptiveDiffEvoRandBin(options::Parameters) = new(AdaptiveDiffEvoParameters(options))
+end
 
 crossover_parameters(xover::AdaptiveDiffEvoRandBin, pop::Population, target_index) =
     crossover_parameters(xover.params, pop, target_index)
@@ -76,7 +75,7 @@ function adaptive_diffevo(problem::OptimizationProblem,
                  options::Parameters, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
                  crossover::DiffEvoCrossoverOperator =
-                    convert(AdaptiveDiffEvoRandBin1, chain(ADE_DefaultOptions, options)))
+                    AdaptiveDiffEvoRandBin1(chain(ADE_DefaultOptions, options)))
   opts = chain(ADE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, select, crossover,
