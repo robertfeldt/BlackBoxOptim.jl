@@ -14,7 +14,7 @@ crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover
 typealias DiffEvoRandBin1 DiffEvoRandBin{3}
 typealias DiffEvoRandBin2 DiffEvoRandBin{5}
 
-function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index, pop, parentIndices)
+function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index::Int, pop, parentIndices)
   @assert length(parentIndices) == 3
   cr, f = crossover_parameters(xover, pop, target_index)
   p1ix, p2ix, p3ix = parentIndices
@@ -28,7 +28,7 @@ function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index, pop,
   return target
 end
 
-function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index, pop, parentIndices)
+function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index::Int, pop, parentIndices)
   @assert length(parentIndices) == 5
   cr, f = crossover_parameters(xover, pop, target_index)
   p1ix, p2ix, p3ix, p4ix, p5ix = parentIndices

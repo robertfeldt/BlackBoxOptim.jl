@@ -80,8 +80,16 @@ params_std(pop::FitPopulation) = std(persistent_individuals(pop), 1)
 fitness(pop::FitPopulation, ix::Int) = pop.fitness[ix]
 
 Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
-Base.getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
+
+"""
+    view(population, individual_index)
+
+    Get vector-slice of the population matrix for the specified
+    individual.
+    Does not allocate any additional space, while still providing the same lookup performance.
+"""
+view(pop::FitPopulation, indi_ix) = slice(pop.individuals, :, indi_ix)
 
 Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, ::Colon, indi_ix::Integer) =
     setindex!(pop, indi, indi_ix)
