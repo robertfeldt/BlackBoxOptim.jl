@@ -77,7 +77,7 @@ end
 """
 function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F}, op::GeneticOperator, tag::Int = 0)
   # embed the trial parameter vector into the search space
-  apply!(de.embed, trial.params, de.population, [target.index])
+  apply!(de.embed, trial.params, de.population, target.index)
   target.op = trial.op = op
   target.tag = trial.tag = 0
   if trial.params != target.params
