@@ -1,4 +1,4 @@
-nbfile = Libc.strftime("benchmark_runs_%Y%m%d.csv", time())
+nbfile = Libc.strftime("benchmark_runs_%y%m%d.csv", time())
 
 if isfile(nbfile)
   println("Deleting existing file: ", nbfile)
