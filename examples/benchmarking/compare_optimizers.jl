@@ -4,6 +4,7 @@ using BlackBoxOptim
 using ArgParse
 using CPUTime
 using Compat
+using PValueAdjust
 
 global logfilehandle = nothing
 function log(color::Symbol, str)
@@ -44,7 +45,7 @@ function main(args)
   for cmd in ["update", "compare", "list"]
     @add_arg_table s[cmd] begin
       "--benchmarkfile", "-b"
-        arg_type = String
+        arg_type = AbstractString
         default = "benchmark_runs.csv"
         help = "name of benchmark runs db file"
     end
@@ -53,12 +54,12 @@ function main(args)
   for cmd in ["update", "compare"]
     @add_arg_table s[cmd] begin
       "--problems"
-        arg_type = String
+        arg_type = AbstractString
         default = "all"
         help = "name of problem set"
 
       "--optimizers"
-        arg_type = String
+        arg_type = AbstractString
         default = "stable"
         help = "name of optimizer or optimizer set"
 
@@ -75,14 +76,14 @@ function main(args)
 
   @add_arg_table s["compare"] begin
     "--comparisonfile"
-      arg_type = String
+      arg_type = AbstractString
       default = ""
       help = "name of comparison db file"
   end
 
   @add_arg_table s["list"] begin
     "--outfile", "-o"
-      arg_type = String
+      arg_type = AbstractString
       default = ""
       help = "name of csv file where result comparison table is saved"
   end
@@ -248,7 +249,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
       CPUtic()
       ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), method)
       df[:ElapsedTime] = CPUtoc()
-      df[:StartTime] = strftime("%Y-%m-%d %H:%M:%S", start_time)
+      df[:StartTime] = Libc.strftime("%Y-%m-%d %H:%M:%S", start_time)
       df[:Fitness] = ftn
 
       push!(dfs, df)
@@ -319,7 +320,7 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
     # Now sort and print
     sort!(df; cols = [:MeanRank, :MeanRankTime, :Num1sFitness])
     println(df)
-    if typeof(saveResultCsvFile) <: String && length(saveResultCsvFile) > 0
+    if typeof(saveResultCsvFile) <: AbstractString && length(saveResultCsvFile) > 0
         writetable(saveResultCsvFile, df)
         println("Results written to file: ", saveResultCsvFile)
     end
@@ -389,7 +390,16 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
             end
         end
         df = vcat(dfs...)
-        writetable(strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
+
+        # Use Benjamini-Hochberg to judge which pvalues are significant given we did
+        # many comparisons.
+        pvs = convert(Array, df[:Pvalue])
+        @show pvs
+        df[:SignificantBH001] = benjamini_hochberg(pvs, 0.01)
+        df[:SignificantBH005] = benjamini_hochberg(pvs, 0.05)
+        df[:SignificantBH010] = benjamini_hochberg(pvs, 0.10)
+
+        writetable(Libc.strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
     else
         df = readtable(comparisonfile)
     end
@@ -397,6 +407,27 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
     report_below_pvalue(df, 1.00)
     report_below_pvalue(df, 0.05)
     report_below_pvalue(df, 0.01)
+    println("Num significant at Benjamini-Hochberg 0.01 level: ", sum(df[:SignificantBH001]))
+    println("Num significant at Benjamini-Hochberg 0.05 level: ", sum(df[:SignificantBH005]))
+end
+
+function benjamini_hochberg(pvals, alpha = 0.05)
+  n = length(pvals)
+  if n <= 1
+    return pvals
+  end
+  perm = sortperm(pvals)
+  origperm = sortperm(perm)
+  sortedps = pvals[perm]
+  
+  tresholds = alpha * collect(1:n) / n
+  khat = n+1 - findfirst(reverse(sortedps .<= tresholds))
+  if khat > n
+    return (ones(n).>10.0) # There were no significant ones so return all false
+  else
+    significant = vcat(ones(khat), zeros(n-khat)) .> 0.0
+    significant[origperm]
+  end
 end
 
 function report_below_pvalue(df, pvalue = 0.05)
