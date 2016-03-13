@@ -61,12 +61,16 @@ task :coverage do
   sh "#{Command} --code-coverage test/runtests.jl"
 end
 
-desc "Clear build files etc"
-task :clobber do
-  Dir['**/*.jl.cov'].each do |f|
+def deleting_file(f)
     puts "Deleting #{f}"
     File.delete(f)
-  end
+end
+
+desc "Clear build files etc"
+task :clobber do
+  Dir['**/*.jl.cov'].each {|f| deleting_file(f)}
+  Dir['examples/benchmarking/*.log'].each {|f| deleting_file(f)}
+  Dir['examples/benchmarking/comparison_2*.csv'].each {|f| deleting_file(f)}
 end
 
 task :at => :runalltest
