@@ -116,6 +116,13 @@ best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
 
 format_fitness(best_fit::Number) = @sprintf("%.9f", best_fit)
 
+format_fitness{N}(best_fit::NTuple{N}) =
+    string("(", join([@sprintf("%.9f", best_fit[i]) for i in 1:N], ", "), ")")
+
+format_fitness{N}(best_fit::IndexedTupleFitness{N}) =
+    string(format_fitness(best_fit.orig),
+           " agg=", @sprintf("%.9f", best_fit.agg))
+
 function elapsed_time(ctrl::OptRunController)
   isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
 end
@@ -161,7 +168,8 @@ function trace_progress(ctrl::OptRunController)
 
   # Always print fitness if num_evals > 0
   if num_func_evals(ctrl) > 0
-    tr(ctrl, ", fitness=$(format_fitness(best_fitness(ctrl)))")
+    tr(ctrl, ", fitness=")
+    tr(ctrl, format_fitness(best_fitness(ctrl)))
   end
 
   tr(ctrl, "\n")
