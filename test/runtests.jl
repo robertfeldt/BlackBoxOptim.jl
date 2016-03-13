@@ -14,6 +14,7 @@ my_tests = [
   "test_mutation_operators.jl",
   "test_frequency_adaptation.jl",
   "test_archive.jl",
+  "test_epsbox_archive.jl",
 
   "test_random_search.jl",
   "test_differential_evolution.jl",

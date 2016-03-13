@@ -50,12 +50,13 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         save_fitness_history_to_csv_file,
 
         # Archive
-        TopListArchive, best_fitness, best_candidate,
+        TopListArchive, EpsBoxArchive,
+        best_fitness, best_candidate,
         last_top_fitness, delta_fitness, capacity,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # OptimizationResults
-        minimum, f_minimum, iteration_converged, parameters, population,
+        minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier,
 
         # OptController
         numruns, lastrun, problem,
@@ -96,8 +97,8 @@ include("problem.jl")
 
 include("frequency_adaptation.jl")
 include("archive.jl")
+include("archives/epsbox_archive.jl")
 
-# Genetic Operators
 include("genetic_operators/genetic_operator.jl")
 
 include("evaluator.jl")
