@@ -82,6 +82,25 @@ end
 Base.call(::Type{ArchiveOutput}, archive::TopListArchive) = TopListArchiveOutput(archive)
 
 """
+    `EpsBoxArchive`-specific components of the optimization results.
+"""
+immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutput
+  best_fitness::NTuple{N,F}
+  best_candidate::Individual
+  frontier::Vector{EpsBoxFrontierIndividual{N,F}} # inferred Pareto frontier
+  fit_scheme::FS
+
+  function Base.call{N,F}(::Type{EpsBoxArchiveOutput}, archive::EpsBoxArchive{N,F})
+    fit_scheme = fitness_scheme(archive)
+    new{N,F,typeof(fit_scheme)}(best_fitness(archive), best_candidate(archive), archive.frontier, fit_scheme)
+  end
+end
+
+Base.call(::Type{ArchiveOutput}, archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
+
+pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
+
+"""
   `PopulationOptimizer`-specific components of the `OptimizationResults`.
   Stores the final population.
 """
