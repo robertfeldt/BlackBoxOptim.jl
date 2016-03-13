@@ -92,3 +92,10 @@ task :loc do
     puts("Test to code ratio:\t\t%.3f   \t\t(%.3f)" % [(testloc.to_f/srcloc), (testnbloc.to_f/srcnbloc)])
   end
 end
+
+desc "Benchmark (against latest, saved set of benchmark runs)"
+task :bench do
+  cd("./examples/benchmarking")
+  sh("julia runcompare.jl 10")
+  cd("../..")
+end
