@@ -129,6 +129,20 @@ function main(args)
   end
 
   close(logfilehandle)
+
+  println("elapsed time:    ", format_time(time() - start_time))
+end
+
+function format_time(t)
+  if t < 60.0
+    @sprintf("%.1f secs", t)
+  elseif t < 3600.0
+    m = floor(Int, t/60.0)
+    @sprintf("%d min%s ", m, (m>1) ? "s" : "") * format_time(t - 60*m)
+  else
+    h = floor(Int, t/3600.0)
+    @sprintf("%d hour%s ", h, (h>1) ? "s" : "") * format_time(t - 3600*h)
+  end
 end
 
 ProblemSets = Dict{ASCIIString,Any}(
@@ -407,8 +421,13 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
     report_below_pvalue(df, 1.00)
     report_below_pvalue(df, 0.05)
     report_below_pvalue(df, 0.01)
-    println("Num significant at Benjamini-Hochberg 0.01 level: ", sum(df[:SignificantBH001]))
-    println("Num significant at Benjamini-Hochberg 0.05 level: ", sum(df[:SignificantBH005]))
+
+    # Report (in color) on number of significant differences after Benjamini-Hochberg
+    # correction.
+    color = (sum(df[:SignificantBH005]) > 0) ? :red : :green
+    print_with_color(color, 
+      "\nNum significant at Benjamini-Hochberg 0.05 level: ", string(sum(df[:SignificantBH005])),
+      "\n")
 end
 
 function benjamini_hochberg(pvals, alpha = 0.05)
