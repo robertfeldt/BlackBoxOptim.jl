@@ -1,3 +1,5 @@
 external/*
 spikes/**/*.csv
 *.jl.cov
+examples/benchmarking/*.log
+examples/benchmarking/comparison*.csv
