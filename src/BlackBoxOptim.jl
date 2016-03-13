@@ -75,10 +75,10 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
-        apply!, adjust!, next,
+        apply!, adjust!,
 
         # Utilities
-        FrequencyAdapter, next, update!, frequencies,
+        FrequencyAdapter, update!, frequencies,
         name
 
 module Utils

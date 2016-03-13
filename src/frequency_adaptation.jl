@@ -52,7 +52,7 @@ frequencies(fa::FrequencyAdapter) = weights(fa.p)
   The methods are randomly shuffled each time the block is regenerated, since we need
   to know their effectiveness at every period of the optimization process.
 """
-function next(fa::FrequencyAdapter)
+function Base.next(fa::FrequencyAdapter)
   if fa.block_pos > length(fa.block)
     fill_block!(fa)
   end
