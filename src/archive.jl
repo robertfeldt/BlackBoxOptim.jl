@@ -4,6 +4,8 @@
 """
 abstract Archive{F,FS<:FitnessScheme}
 
+numdims(a::Archive) = a.numdims
+
 """
     Base class for individuals stored in different archives.
 """
