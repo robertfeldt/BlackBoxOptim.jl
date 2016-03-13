@@ -352,42 +352,14 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
       write_results(ctrl)
     end
 
-    return make_opt_results(ctrl, oc)
+    return OptimizationResults(ctrl, oc)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
     if isa(ex, InterruptException)
       warn("Optimization interrupted, recovering intermediate results...")
-      return make_opt_results(ctrl, oc)
+      return OptimizationResults(ctrl, oc)
     else
       rethrow(ex)
     end
   end
 end
-
-make_opt_results{O<:Optimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
-  SimpleOptimizationResults{fitness_type(problem(ctrl)), Individual}(
-    string(oc.parameters[:Method]),
-    best_fitness(ctrl),
-    best_candidate(ctrl),
-    stop_reason(ctrl),
-    num_steps(ctrl),
-    start_time(ctrl),
-    elapsed_time(ctrl),
-    oc.parameters,
-    num_func_evals(ctrl)
-  )
-
-make_opt_results{O<:PopulationOptimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
-  PopulationOptimizationResults{fitness_type(problem(ctrl)), Individual,
-                                typeof(population(ctrl.optimizer))}(
-    string(oc.parameters[:Method]),
-    best_fitness(ctrl),
-    best_candidate(ctrl),
-    stop_reason(ctrl),
-    num_steps(ctrl),
-    start_time(ctrl),
-    elapsed_time(ctrl),
-    oc.parameters,
-    num_func_evals(ctrl),
-    population(ctrl.optimizer)
-  )

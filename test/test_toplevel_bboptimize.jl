@@ -35,7 +35,6 @@ facts("Top-level interface") do
       res = bboptimize(rosenbrock; Method=:generating_set_search,
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
                        MaxSteps = 5000, TraceMode = :silent)
-      @fact isa(res, BlackBoxOptim.SimpleOptimizationResults) --> true
       @fact best_fitness(res) --> less_than(1.0)
       xbest = best_candidate(res)
       @fact typeof(xbest) --> Vector{Float64}
@@ -45,7 +44,6 @@ facts("Top-level interface") do
       res = bboptimize(rosenbrock; Method=:adaptive_de_rand_1_bin,
                        SearchRange = (-5.0, 5.0), NumDimensions = 2,
                        MaxSteps = 5000, TraceMode = :silent)
-      @fact isa(res, BlackBoxOptim.PopulationOptimizationResults) --> true
       @fact best_fitness(res) --> less_than(0.1)
       xbest = best_candidate(res)
       @fact typeof(xbest) --> Vector{Float64}
