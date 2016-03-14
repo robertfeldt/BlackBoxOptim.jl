@@ -97,6 +97,55 @@ function IGD{N,F<:Number,NP}(ref::Hypersurface{N}, sol::Vector{EpsBoxFrontierInd
     end
 end
 
+"""
+   CEC09 Unconstrained Problem 8 objective function.
+"""
+function CEC09_UP8(x::Vector{Float64})
+    N = length(x)
+    N >= 3 || throw(ArgumentError("CEC09_UP9(): insufficient dimensions"))
+    sumix = 3
+    nterms = zeros(Int, 3)
+    sums = zeros(Float64, 3)
+    for j in 3:N
+        sums[sumix] += (x[j] - 2*x[2]*sin(2π*x[1] + π/N*j))^2
+        nterms[sumix] += 1
+        sumix += 1
+        if sumix > 3
+            sumix = 1
+        end
+    end
+    for i in 1:3
+        if nterms[i] > 0
+            sums[i] *= 2/nterms[i]
+        end
+    end
+    (cos(0.5*π*x[1]) * cos(0.5*π*x[2]) + sums[1],
+     cos(0.5*π*x[1]) * sin(0.5*π*x[2]) + sums[2],
+     sin(0.5*π*x[1]) + sums[3])
+end
+
+"""
+   CEC09 Unconstrained Problem 8 Pareto Frontier.
+   Parameterized by t[1]=f[1] and t[2]=f[2].
+"""
+function CEC09_UP8_PF{NP}(t::Vector{Float64}, ::Type{Val{NP}})
+    d=sumabs2(t)
+    (t[1], t[2], d <= 1.0 ? (1.0 - d)^(1/3) : NaN)
+end
+
+"""
+   The collection of CEC09 unconstrained
+   multi-objective problems.
+
+   See http://dces.essex.ac.uk/staff/zhang/MOEAcompetition/cec09testproblem0904.pdf.pdf
+"""
+const CEC09_Unconstrained_Set = Dict{Int,FunctionBasedProblemFamily}(
+    8 => FunctionBasedProblemFamily(CEC09_UP8, "CEC09 UP8",  ParetoFitnessScheme{3}(is_minimizing=true),
+                                    (-2.0, 2.0),
+                                    Hypersurface(CEC09_UP8_PF, symmetric_search_space(2, (0.0, 1.0))),
+                                    symmetric_search_space(2, (0.0, 1.0)))
+)
+
 schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
 schaffer1_PF{NP}(t, ::Type{Val{NP}}) = (NP*t[1]^2, NP*(2-t[1])^2)
 
