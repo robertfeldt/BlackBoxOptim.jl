@@ -29,6 +29,7 @@ const SingleObjectiveMethodNames = sort!(collect(keys(SingleObjectiveMethods)))
    The values are the method initialization routines or types derived from `Optimizer`.
 """
 const MultiObjectiveMethods = ParamsDict(
+  :borg_moea => borg_moea
 )
 
 const MultiObjectiveMethodNames = sort!(collect(keys(MultiObjectiveMethods)))

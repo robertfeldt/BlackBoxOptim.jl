@@ -120,6 +120,9 @@ include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")
 include("direct_search_with_probabilistic_descent.jl")
 
+# multi-objective optimization algorithms
+include("borg_moea.jl")
+
 # End-user/top-level interface functions
 include(joinpath("problems", "problem_family.jl"))
 include("optimization_methods.jl")

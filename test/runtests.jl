@@ -21,6 +21,8 @@ my_tests = [
   "test_adaptive_differential_evolution.jl",
   "test_natural_evolution_strategies.jl",
 
+  "test_borg_moea.jl",
+
   "test_toplevel_bboptimize.jl",
   "test_smoketest_bboptimize.jl",
 
