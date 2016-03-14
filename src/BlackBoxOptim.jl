@@ -77,6 +77,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
+        SimulatedBinaryCrossover,
+
         apply!, adjust!,
 
         # Utilities
