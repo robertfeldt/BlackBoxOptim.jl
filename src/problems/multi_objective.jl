@@ -97,3 +97,9 @@ function IGD{N,F<:Number,NP}(ref::Hypersurface{N}, sol::Vector{EpsBoxFrontierInd
     end
 end
 
+schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+schaffer1_PF{NP}(t, ::Type{Val{NP}}) = (NP*t[1]^2, NP*(2-t[1])^2)
+
+const Schaffer1Family = FunctionBasedProblemFamily(schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing=true),
+                                (-10.0, 10.0),
+                                Hypersurface(schaffer1_PF, symmetric_search_space(1, (0.0, 2.0))))
