@@ -73,7 +73,9 @@ function borg_moea{FS<:TupleFitnessScheme}(problem::OptimizationProblem{FS}, opt
   N = numobjectives(fs)
   F = fitness_eltype(fs)
   pop = population(problem, opts, nafitness(IndexedTupleFitness{N,F}), ntransient=1)
-  BorgMOEA(problem, pop, CrossoverOperator[DiffEvoRandBin1(chain(DE_DefaultOptions, options))],
+  BorgMOEA(problem, pop, CrossoverOperator[DiffEvoRandBin1(chain(DE_DefaultOptions, options)),
+                                           SimulatedBinaryCrossover(chain(SBX_DefaultOptions, options)),
+                                           SimplexCrossover{3}(chain(SPX_DefaultOptions, options))],
            MutationClock(SimpleGibbsMutation(search_space(problem)), 0.25),
            RandomBound(search_space(problem)), opts)
 end

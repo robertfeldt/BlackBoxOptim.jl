@@ -99,6 +99,7 @@ include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
 
 include("crossover/simulated_binary_crossover.jl")
+include("crossover/simplex_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
 
 include("embedding/random_bound.jl")
