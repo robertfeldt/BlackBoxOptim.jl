@@ -132,11 +132,13 @@ immutable IndexedTupleFitness{N,F}
     dist::F                 # distance between ϵ-index vector and the original fitness
 
     # TODO use @generated to avoid loops for N<=8?
-    function Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}})
-        pairs = ntuple(i -> ϵ_index(u[i], ϵ, is_minimizing), Val{N}) # FIXME faster?
+    function Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
+        pairs = ntuple(i -> ϵ_index(u[i], ϵ[i], is_minimizing), Val{N}) # FIXME faster?
         return new{N,F}(u, agg, ntuple(i -> pairs[i][1], Val{N}),
                         sqrt(sum(pair::Tuple{Int,F} -> pair[2]^2, pairs)))
     end
+    Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) =
+        IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
 end
 
 Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitness.orig
@@ -173,6 +175,17 @@ function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFit
     return (comp != 0 ? comp : (u.dist < v.dist ? -1 : u.dist > v.dist ? 1 : 0), comp == 0)
 end
 
+function check_epsbox_ϵ(ϵ::Number, n::Int)
+    ϵ>0.0 || throw(ArgumentError("ϵ must be positive"))
+    fill(ϵ, n)
+end
+
+function check_epsbox_ϵ{F<:Number}(ϵ::Vector{F}, n::Int)
+    length(ϵ)==n || throw(ArgumentError("The length of ϵ vector ($(length(ϵ))) does not match the specified fitness dimensions ($n)"))
+    all(isposdef, ϵ) || throw(ArgumentError("ϵ must be positive"))
+    ϵ
+end
+
 """
   `EpsBoxDominanceFitnessScheme` defines ϵ-box dominance for
   `N`-tuple (`N`≧1) fitnesses.
@@ -183,18 +196,16 @@ end
   Always used when printing fitness vectors though.
 """
 immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,MIN,AGG}
-    ϵ::F              # ɛ-domination threshold
-    aggregator::AGG    # fitness aggregation function
+    ϵ::Vector{F}        # per-objective ɛ-domination thresholds
+    aggregator::AGG     # fitness aggregation function
 
-    function Base.call{N,F<:Number,AGG}(::Type{EpsBoxDominanceFitnessScheme{N,F}},
-                                ϵ::F; is_minimizing::Bool=true, aggregator::AGG=sum)
-        ϵ>0.0 || throw(ArgumentError("ϵ must be positive"))
-        new{N,F,is_minimizing,AGG}(ϵ, aggregator)
-    end
+    Base.call{N,F<:Number,AGG}(::Type{EpsBoxDominanceFitnessScheme{N,F}}, ϵ::Union{F,Vector{F}};
+                               is_minimizing::Bool=true, aggregator::AGG=sum) =
+        new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 
-    Base.call{N,F<:Number,AGG}(::Type{EpsBoxDominanceFitnessScheme{N}}, ϵ::F;
-                               fitness_type::Type{F} = Float64, is_minimizing::Bool=true, aggregator::AGG=sum) =
-        EpsBoxDominanceFitnessScheme{N,fitness_type}(ϵ, is_minimizing=is_minimizing, aggregator=aggregator)
+    Base.call{N,F<:Number,AGG}(::Type{EpsBoxDominanceFitnessScheme{N}}, ϵ::Union{F,Vector{F}};
+                               is_minimizing::Bool=true, aggregator::AGG=sum) =
+        new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 end
 
 # overloads of the default behaviour, because the actual fitness type is not NTuple{N,F}
@@ -202,10 +213,13 @@ fitness_type{N,F}(::Type{EpsBoxDominanceFitnessScheme{N,F}}) = IndexedTupleFitne
 nafitness{N,F}(::EpsDominanceFitnessScheme{N,F}) = nafitness(IndexedTupleFitness{N,F})
 isnafitness{N,F}(f::IndexedTupleFitness{N,F}, ::EpsBoxDominanceFitnessScheme{N,F}) = any(isnan, f.orig) # or any?
 
-Base.convert{N,F,MIN,AGG}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN,AGG}, ϵ::F=one(F)) =
+Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::F=one(F)) =
   EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
 
-Base.convert{N,F,MIN,AGG}(::Type{EpsBoxDominanceFitnessScheme}, fs::EpsDominanceFitnessScheme{N,F,MIN,AGG}, ϵ::F=fs.ϵ) =
+Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::Vector{F}) =
+  EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
+
+Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::EpsDominanceFitnessScheme{N,F,MIN}, ϵ::Union{F,Vector{F}}=fs.ϵ) =
   EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
 
 Base.convert{N,F,MIN}(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},

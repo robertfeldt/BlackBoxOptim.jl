@@ -19,13 +19,13 @@ end
     Generate the points of the hypersurface using the
     discretization defined by ϵ-box fitness schema.
 """
-@generated function generate{N,F,NP}(surf::Hypersurface{N}, fs::EpsBoxDominanceFitnessScheme{N,F}, ::Type{Val{NP}}, param_step::Number = 0.1*fs.ϵ)
+@generated function generate{N,F,NP}(surf::Hypersurface{N}, fs::EpsBoxDominanceFitnessScheme{N,F}, ::Type{Val{NP}}, param_step::Vector{F} = 0.1*fs.ϵ)
     quote
         #archive = EpsBoxArchive(fs)
         pf = Dict{NTuple{N,Int}, IndexedTupleFitness{N,F}}()
         param = Vector{Float64}(N-1)
         #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N-1) t d->linspace(surf.parameter_space.mins[d], surf.parameter_space.maxs[d], ceil(Int, surf.parameter_space.deltas[d]/param_step)) d->param[d]=t_d begin
+        Base.Cartesian.@nloops $(N-1) t d->linspace(surf.parameter_space.mins[d], surf.parameter_space.maxs[d], ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
             fit = surf.manifold(param, Val{NP})
             if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
                 ifit = convert(IndexedTupleFitness, fit, fs)
@@ -83,7 +83,7 @@ IGD{N,F<:Number}(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}) =
 function IGD{N,F<:Number,NP}(ref::Hypersurface{N}, sol::Vector{EpsBoxFrontierIndividual{N,F}},
                              fit_scheme::EpsBoxDominanceFitnessScheme{N,F},
                              ::Type{Val{NP}},
-                             param_step::Number = 0.1*fit_scheme.ϵ, two_sided::Bool=true)
+                             param_step::Vector{F} = 0.1*fit_scheme.ϵ, two_sided::Bool=true)
     ref_pts = values(generate(ref, fit_scheme, Val{NP}, param_step))
     orig_sol_pts = NTuple{N,F}[fitness(candi).orig for candi in sol]
     nondom_ref_pts = nondominated(IndexedTupleFitness{N,F}[val for val in ref_pts], fit_scheme)
