@@ -64,6 +64,15 @@ Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 Base.getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
+Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, ::Colon, indi_ix::Integer) =
+    setindex!(pop, indi, indi_ix)
+
+function Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, indi_ix::Integer)
+    pop.individuals[:, indi_ix] = indi
+    pop.fitness[indi_ix] = pop.nafitness
+    pop
+end
+
 function Base.setindex!{F}(pop::FitPopulation{F}, indi::ArchivedIndividual{F}, indi_ix::Integer)
     pop.individuals[:, indi_ix] = params(indi)
     pop.fitness[indi_ix] = fitness(indi)
