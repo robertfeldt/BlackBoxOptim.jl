@@ -78,6 +78,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
         SimulatedBinaryCrossover, SimplexCrossover, UnimodalNormalDistributionCrossover,
+        ParentCentricCrossover,
 
         apply!, adjust!,
 

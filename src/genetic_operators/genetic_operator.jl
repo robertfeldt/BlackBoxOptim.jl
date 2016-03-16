@@ -101,6 +101,7 @@ include("mutation/mutation_clock.jl")
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/simplex_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
+include("crossover/parent_centric_crossover.jl")
 include("crossover/unimodal_normal_distribution_crossover.jl")
 
 include("embedding/random_bound.jl")

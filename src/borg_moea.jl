@@ -76,6 +76,8 @@ function borg_moea{FS<:TupleFitnessScheme}(problem::OptimizationProblem{FS}, opt
   BorgMOEA(problem, pop, CrossoverOperator[DiffEvoRandBin1(chain(DE_DefaultOptions, options)),
                                            SimulatedBinaryCrossover(chain(SBX_DefaultOptions, options)),
                                            SimplexCrossover{3}(chain(SPX_DefaultOptions, options)),
+                                           ParentCentricCrossover{2}(chain(PCX_DefaultOptions, options)),
+                                           ParentCentricCrossover{3}(chain(PCX_DefaultOptions, options)),
                                            UnimodalNormalDistributionCrossover{2}(chain(UNDX_DefaultOptions, options)),
                                            UnimodalNormalDistributionCrossover{3}(chain(UNDX_DefaultOptions, options))],
            MutationClock(SimpleGibbsMutation(search_space(problem)), 0.25),
