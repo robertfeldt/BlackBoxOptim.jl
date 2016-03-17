@@ -92,7 +92,11 @@ function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
   if ctrl.trace_mode != :silent
     print(msg)
     if obj != nothing
-      showcompact(obj)
+      if isa(obj, AbstractString)
+        print(obj)
+      else
+        showcompact(obj)
+      end
     end
   end
   if ctrl.save_trace
