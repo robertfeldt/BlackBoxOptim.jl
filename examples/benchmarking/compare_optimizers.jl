@@ -203,7 +203,7 @@ OptimizerSets = Dict{ASCIIString,Any}(
   "nes" => [:xnes, :separable_nes, :dxnes],
   "test" => [:de_rand_1_bin],
 )
-OptimizerSets["all"] = unique(collect(keys(BlackBoxOptim.ValidMethods)))
+OptimizerSets["all"] = unique(collect(keys(BlackBoxOptim.SingleObjectiveMethods)))
 OptimizerSets["stable"] = vcat(OptimizerSets["de"], OptimizerSets["stable_non_de"])
 
 # Keep track of how many times we have executed each problem for this run of the script,
