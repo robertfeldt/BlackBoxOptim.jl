@@ -102,7 +102,7 @@ end
 """
 function CEC09_UP8(x::Vector{Float64})
     N = length(x)
-    N >= 3 || throw(ArgumentError("CEC09_UP9(): insufficient dimensions"))
+    N >= 3 || throw(ArgumentError("CEC09_UP8(): insufficient dimensions"))
     sumix = 3
     nterms = zeros(Int, 3)
     sums = zeros(Float64, 3)
