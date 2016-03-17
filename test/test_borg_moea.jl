@@ -12,6 +12,6 @@ facts("BorgMOEA") do
                        NumDimensions=4, ϵ=0.01,
                        MaxSteps=15000, TraceMode=:silent)
       @fact BlackBoxOptim.IGD(BlackBoxOptim.CEC09_Unconstrained_Set[8].opt_value, pareto_frontier(res),
-                fitness_scheme(res), Val{length(best_candidate(res))}) --> less_than(0.1)
+                fitness_scheme(res), Val{length(best_candidate(res))}) --> less_than(0.13)
     end
 end
