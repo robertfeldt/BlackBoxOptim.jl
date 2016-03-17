@@ -20,7 +20,7 @@ pareto_pts = BlackBoxOptim.generate(pareto_curve,
 BlackBoxOptim.IGD(pareto_curve, pareto_frontier(res), fitness_scheme(res), Val{numdims(res)})
 
 # draw the results
-plot(layer(x = [x.orig[1] for x in values(pareto_pts)], # Draw the excat Pareto frontier
+plot(layer(x = [x.orig[1] for x in values(pareto_pts)], # Draw the exact Pareto frontier
            y = [x.orig[2] for x in values(pareto_pts)],
            Geom.line),
     layer(x= [fitness(x).orig[1] for x in pareto_frontier(res)], # the result of the method
