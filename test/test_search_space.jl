@@ -168,4 +168,14 @@ facts("Search space") do
     @fact diams[:] --> [1.0, 1.0, 1.0]
   end
 
+  context("concat(ss1, ss2)") do
+    ss1 = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+    ss2 = RangePerDimSearchSpace([(6.0, 7.0), (8.0, 9.0)])
+
+    sscat = vcat(ss1, ss2)
+    @fact numdims(sscat) --> 5
+    @fact mins(sscat) --> [0.0, 2.0, 4.0, 6.0, 8.0]
+    @fact maxs(sscat) --> [1.0, 3.0, 5.0, 7.0, 9.0]
+    @fact deltas(sscat) --> fill(1.0, 5)
+  end
 end

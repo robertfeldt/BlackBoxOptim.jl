@@ -18,7 +18,7 @@ function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameter
   if parameters[:NumDimensions] == :NotSpecified
     throw(ArgumentError("You MUST specify NumDimensions= when a problem family is given"))
   end
-  problem = fixed_dim_problem(family, parameters[:NumDimensions])
+  problem = instantiate(family, parameters[:NumDimensions])
 
   return problem, parameters
 end
@@ -28,7 +28,7 @@ function setup_problem(func::Function, parameters::Parameters)
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
-  problem = convert(FunctionBasedProblem, func, "", MinimizingFitnessScheme, ss) # FIXME v0.3 workaround
+  problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss)
 
   # validate fitness: create a random solution from the search space and ensure that fitness(problem) returns fitness_type(problem).
   ind = rand_individual(search_space(problem))
@@ -85,7 +85,7 @@ function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwarg
   problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
   check_valid!(params)
 
-  optimizer_func = ValidMethods[params[:Method]]
+  optimizer_func = chain(SingleObjectiveMethods, MultiObjectiveMethods)[params[:Method]]
   optimizer = optimizer_func(problem, params)
 
   # Now set up a controller for this problem. This will handle

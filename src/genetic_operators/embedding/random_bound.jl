@@ -13,24 +13,28 @@ RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace
 
 search_space(rb::RandomBound) = rb.searchSpace
 
-function apply!(eo::RandomBound, target::Individual, pop, parentIndices)
-  @assert length(parentIndices) == 1
+function apply!(eo::RandomBound, target::Individual, ref::AbstractVector)
+  length(target) == length(ref) == numdims(eo.searchSpace) || throw(ArgumentError("Dimensions of problem/individuals do not match"))
   ssmins = mins(eo.searchSpace)
   ssmaxs = maxs(eo.searchSpace)
 
-  parentIx = parentIndices[1]
   for i in 1:length(target)
     l, u = ssmins[i], ssmaxs[i]
 
     if target[i] < l
-      target[i] = l + rand() * (pop[i, parentIx] - l)
+      target[i] = l + rand() * (ref[i] - l)
     elseif target[i] > u
-      target[i] = u + rand() * (pop[i, parentIx] - u)
+      target[i] = u + rand() * (ref[i] - u)
     end
     @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
   end
   return target
 end
 
-# 1-individual population
-apply!(eo::RandomBound, target::Individual, example::Individual) = apply!(eo, target, example, [1])
+apply!(eo::RandomBound, target::Individual, pop, refIndex::Int) =
+  apply!(eo, target, view(pop, refIndex))
+
+function apply!(eo::RandomBound, target::Individual, pop, parentIndices::Vector{Int})
+  @assert length(parentIndices) == 1
+  apply!(eo, target, pop, parentIndices[1])
+end

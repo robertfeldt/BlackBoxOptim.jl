@@ -13,14 +13,14 @@ function my_fun1(x)
 end
 
 # Cross-entropy using a gaussian proposal distr...
-function cross_entropy_method(func; 
-  max_iterations = 100, num_samples = 100, top_quantile = 0.10, 
+function cross_entropy_method(func;
+  max_iterations = 100, num_samples = 100, top_quantile = 0.10,
   std_convergence = 1e-5, mu = 0, sigma = sqrt(100), maximization = true)
 
-  num_top = convert(Int64, ceil(num_samples * top_quantile))
+  num_top = ceil(Int, num_samples * top_quantile)
   step = 0
 
-  while( step < max_iterations && sigma > std_convergence) 
+  while( step < max_iterations && sigma > std_convergence)
     X = sample_gaussian(mu, sigma, num_samples)
     S = func(X)
     top_X = X[sortperm(S, rev=maximization)[1:num_top]]

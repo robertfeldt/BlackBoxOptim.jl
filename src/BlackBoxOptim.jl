@@ -25,12 +25,13 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Fitness
         FitnessScheme,
-        ScalarFitnessScheme, ComplexFitnessScheme, VectorFitnessScheme,
+        ScalarFitnessScheme, ComplexFitnessScheme,
         MinimizingFitnessScheme, MaximizingFitnessScheme,
-        fitness_type, numobjectives,
+        IndexedTupleFitness, TupleFitnessScheme, ParetoFitnessScheme,
+        EpsDominanceFitnessScheme, EpsBoxDominanceFitnessScheme,
+        fitness_type, fitness_eltype, numobjectives,
         is_minimizing, nafitness, isnafitness,
         hat_compare, is_better, is_worse, same_fitness,
-        vector_fitness_scheme_min, vector_fitness_scheme_max,
 
         # Evaluator
         #ProblemEvaluator,
@@ -44,17 +45,18 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Problem factory/family
         FunctionBasedProblemFamily, MinimizationProblemFamily,
-        fixed_dim_problem,
+        fixed_dim_problem, instantiate,
 
         save_fitness_history_to_csv_file,
 
         # Archive
-        TopListArchive, best_fitness, best_candidate,
+        TopListArchive, EpsBoxArchive,
+        best_fitness, best_candidate,
         last_top_fitness, delta_fitness, capacity,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # OptimizationResults
-        minimum, f_minimum, iteration_converged, parameters, population,
+        minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier,
 
         # OptController
         numruns, lastrun, problem,
@@ -75,69 +77,14 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
-        apply!, adjust!, next,
+        SimulatedBinaryCrossover, SimplexCrossover, UnimodalNormalDistributionCrossover,
+        ParentCentricCrossover,
+
+        apply!, adjust!,
 
         # Utilities
-        FrequencyAdapter, next, update!, frequencies,
+        FrequencyAdapter, update!, frequencies,
         name
-
-"""
-  Base abstract class for black-box optimization algorithms.
-"""
-abstract Optimizer
-
-"""
-    Optimizers derived from `SteppingOptimizer` implement classical iterative optimization scheme
-    `step!()` → `step!()` → …
-"""
-abstract SteppingOptimizer <: Optimizer
-evaluator(so::SteppingOptimizer) = so.evaluator
-
-"""
-  `step!(opt::SteppingOptimizer)`
-
-  Do one iteration of the method.
-"""
-function step! end # FIXME avoid defining 0-arg function
-
-"""
-  Base abstract class for optimizers that perform
-  `ask()` → ..eval fitness.. → `tell!()`
-  sequence at each step.
-"""
-abstract AskTellOptimizer <: Optimizer
-
-"""
-  `ask(ato::AskTellOptimizer)`
-
-  Ask for a new candidate solution to be generated, and a list of individuals
-  it should be ranked with.
-
-  The individuals are supplied as an array of tuples
-  with the individual and its index.
-
-  See also `tell!()`
-"""
-function ask end # FIXME avoid defining 0-arg function
-
-"""
-  `tell!(ato::AskTellOptimizer, rankedCandidates)`
-
-  Tell the optimizer about the ranking of candidates.
-  Returns the number of `rankedCandidates` that were inserted into the population,
-  because of the improved fitness.
-
-  See also `ask()`.
-"""
-function tell! end # FIXME avoid defining 0-arg function
-
-"""
-  Base class for population-based optimization methods.
-"""
-abstract PopulationOptimizer <: AskTellOptimizer
-
-population(popopt::PopulationOptimizer) = popopt.population
-popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
@@ -147,90 +94,23 @@ end
 include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
+include("ntuple_fitness.jl")
+
+include("problem.jl")
 
 include("frequency_adaptation.jl")
 include("archive.jl")
+include("archives/epsbox_archive.jl")
 
-# Genetic Operators
 include("genetic_operators/genetic_operator.jl")
-
-include(joinpath("problems", "all_problems.jl"))
-include(joinpath("problems", "problem_family.jl"))
 
 include("evaluator.jl")
 if enable_parallel_methods
 include("parallel_evaluator.jl")
 end
 
-function setup!(o::SteppingOptimizer)
-  # Do nothing, override if you need to setup prior to the optimization loop
-end
-
-function finalize!(o::SteppingOptimizer)
-  # Do nothing, override if you need to finalize something after the optimization loop
-end
-
-function setup!(o::AskTellOptimizer, evaluator::Evaluator)
-  # Do nothing, override if you need to setup prior to the optimization loop
-end
-
-function finalize!(o::AskTellOptimizer, evaluator::Evaluator)
-  # Do nothing, override if you need to finalize something after the optimization loop
-end
-
-# The standard name function converts the type of the optimizer to a string
-# and strips off trailing "Opt".
-function name(o::Optimizer)
-  s = string(typeof(o))
-  if s[end-2:end] == "Opt"
-    return s[1:end-3]
-  else
-    return s
-  end
-end
-
-"""
-  `trace_state(io::IO, optimizer::Optimizer)`
-
-  Trace the current optimization state to a given IO stream.
-  Called by `OptRunController` `trace_progress()`.
-
-  Override it for your optimizer to generate method-specific diagnostic traces.
-"""
-function trace_state(io::IO, optimizer::Optimizer) end
-
-# Population
 include("population.jl")
-
-# Our design is inspired by the object-oriented, ask-and-tell "optimizer API
-# format" as proposed in:
-#
-#  Collette, Y., N. Hansen, G. Pujol, D. Salazar Aponte and
-#  R. Le Riche (2010). On Object-Oriented Programming of Optimizers -
-#  Examples in Scilab. In P. Breitkopf and R. F. Coelho, eds.:
-#  Multidisciplinary Design Optimization in Computational Mechanics, Wiley,
-#  pp. 527-565.
-#  https://www.lri.fr/~hansen/collette2010Chap14.pdf
-#
-# but since Julia is not OO this is more reflected in certain patterns of how
-# to specify and call optimizers. The basic ask-and-tell pattern is:
-#
-#   while !optimizer.stop
-#     x = ask(optimizer)
-#     y = f(x)
-#     optimizer = tell(optimizer, x, y)
-#   end
-#
-# after which the best solutions can be found by:
-#
-#   yopt, xopt = best(optimizer)
-#
-# We have extended this paradigm with the use of an archive that saves
-# information on what we have learnt about the search space as well as the
-# best solutions found. For most multi-objective optimization problems there
-# is no single optimum. Instead there are many pareto optimal solutions.
-# An archive collects information about the pareto optimal set or some
-# approximation of it. Different archival strategies can be implemented.
+include("optimizer.jl")
 
 # Different optimization algorithms/methods
 include("random_search.jl")
@@ -243,13 +123,11 @@ include("simultaneous_perturbation_stochastic_approximation.jl")
 include("generating_set_search.jl")
 include("direct_search_with_probabilistic_descent.jl")
 
-# Fitness
-# include("fitness/fitness_types.jl") FIXME merge it with fitness.jl
-include("fitness/pareto_dominance.jl")
-include("fitness/epsilon_pareto_dominance.jl")
-include("fitness/epsilon_box_dominance.jl")
+# multi-objective optimization algorithms
+include("borg_moea.jl")
 
 # End-user/top-level interface functions
+include(joinpath("problems", "problem_family.jl"))
 include("optimization_methods.jl")
 include("default_parameters.jl")
 include("optimization_result.jl")
@@ -259,5 +137,6 @@ include("compare_optimizers.jl")
 
 # Problems for testing
 include(joinpath("problems", "single_objective.jl"))
+include(joinpath("problems", "multi_objective.jl"))
 
 end # module BlackBoxOptim

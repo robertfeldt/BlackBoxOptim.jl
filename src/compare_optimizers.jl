@@ -1,5 +1,5 @@
 function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
-  Methods = BlackBoxOptim.MethodNames, kwargs...)
+  Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
   parameters = chain(convert(ParamsDict, parameters),
                      convert(ParamsDict, kwargs))
@@ -28,7 +28,7 @@ end
 
 function compare_optimizers(problems::Dict{Any, OptimizationProblem},
   parameters::Parameters = EMPTY_PARAMS;
-  Methods = BlackBoxOptim.MethodNames, kwargs...)
+  Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
   parameters = chain(convert(ParamsDict, parameters),
                      convert(ParamsDict, kwargs))
@@ -149,7 +149,7 @@ end
 
 function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters::Parameters = EMPTY_PARAMS)
 
-  fp = BlackBoxOptim.fixed_dim_problem(problem, dim)
+  fp = instantiate(problem, dim)
   result_dicts = ParamsDict[]
 
   # Just so they are declared

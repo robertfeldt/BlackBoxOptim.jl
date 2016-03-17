@@ -8,7 +8,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
-  trace_mode::Symbol # controller state trace mode (:compact, :silent)
+  trace_mode::Symbol # controller state trace mode (:verbose, :silent)
                      # :silent makes tr() generate no output)
   save_trace::Bool # FIXME if traces should be saved to a file
   trace_interval::Float64 # periodicity of calling trace_progress()
@@ -52,7 +52,7 @@ end
         * `:FitnessTolerance` stop the optimization when the best fitness found is within this distance of the actual optimum (if known)
         * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this many steps (indicates a converged/degenerate search)
         * `:NumRepetitions` number of repetitions to run for each optimizer for each problem
-        * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization (one of `:silent`, `:compact`)
+        * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization (one of `:silent`, `:verbose`)
         * `:TraceInterval` the trace interval (in seconds)
         * `:SaveTrace` whether to save it to a file (defaults to `false`)
         * `:SaveFitnessTraceToCsv` whether the history of fitness changes during optimization should be save to a csv file
@@ -111,6 +111,18 @@ num_func_evals(ctrl::OptRunController) = num_evals(ctrl.evaluator)
 stop_reason(ctrl::OptRunController) = ctrl.stop_reason
 start_time(ctrl::OptRunController) = ctrl.start_time
 
+best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
+best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
+
+format_fitness(best_fit::Number) = @sprintf("%.9f", best_fit)
+
+format_fitness{N}(best_fit::NTuple{N}) =
+    string("(", join([@sprintf("%.9f", best_fit[i]) for i in 1:N], ", "), ")")
+
+format_fitness{N}(best_fit::IndexedTupleFitness{N}) =
+    string(format_fitness(best_fit.orig),
+           " agg=", @sprintf("%.9f", best_fit.agg))
+
 function elapsed_time(ctrl::OptRunController)
   isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
 end
@@ -132,13 +144,7 @@ function check_stop_condition(ctrl::OptRunController)
       return "Max number of steps ($(ctrl.max_steps)) reached"
     end
 
-    if delta_fitness(ctrl.evaluator.archive) < ctrl.min_delta_fitness_tol
-      return "Delta fitness ($(delta_fitness(ctrl.evaluator.archive))) below tolerance ($(ctrl.min_delta_fitness_tol))"
-    end
-
-    if fitness_is_within_ftol(ctrl.evaluator, ctrl.fitness_tol)
-      return "Fitness ($(best_fitness(ctrl))) within tolerance ($(ctrl.fitness_tol)) of optimum"
-    end
+    return check_stop_condition(ctrl.evaluator, ctrl)
 
     return "" # empty string, no termination
 end
@@ -162,7 +168,8 @@ function trace_progress(ctrl::OptRunController)
 
   # Always print fitness if num_evals > 0
   if num_func_evals(ctrl) > 0
-    tr(ctrl, @sprintf(", fitness=%.9f", best_fitness(ctrl)))
+    tr(ctrl, ", fitness=")
+    tr(ctrl, format_fitness(best_fitness(ctrl)))
   end
 
   tr(ctrl, "\n")
@@ -234,9 +241,6 @@ function run!(ctrl::OptRunController)
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
 
-best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
-best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
-
 function show_report(ctrl::OptRunController, population_stats=false)
   final_elapsed_time = elapsed_time(ctrl)
   tr(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
@@ -251,7 +255,7 @@ function show_report(ctrl::OptRunController, population_stats=false)
   end
 
   tr(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
-  tr(ctrl, "\n\nFitness: ", best_fitness(ctrl))
+  tr(ctrl, "\n\nFitness: ", format_fitness(best_fitness(ctrl)))
   tr(ctrl, "\n\n")
 end
 
@@ -352,42 +356,14 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
       write_results(ctrl)
     end
 
-    return make_opt_results(ctrl, oc)
+    return OptimizationResults(ctrl, oc)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
     if isa(ex, InterruptException)
       warn("Optimization interrupted, recovering intermediate results...")
-      return make_opt_results(ctrl, oc)
+      return OptimizationResults(ctrl, oc)
     else
       rethrow(ex)
     end
   end
 end
-
-make_opt_results{O<:Optimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
-  SimpleOptimizationResults{fitness_type(problem(ctrl)), Individual}(
-    string(oc.parameters[:Method]),
-    best_fitness(ctrl),
-    best_candidate(ctrl),
-    stop_reason(ctrl),
-    num_steps(ctrl),
-    start_time(ctrl),
-    elapsed_time(ctrl),
-    oc.parameters,
-    num_func_evals(ctrl)
-  )
-
-make_opt_results{O<:PopulationOptimizer}(ctrl::OptRunController{O}, oc::OptController{O}) =
-  PopulationOptimizationResults{fitness_type(problem(ctrl)), Individual,
-                                typeof(population(ctrl.optimizer))}(
-    string(oc.parameters[:Method]),
-    best_fitness(ctrl),
-    best_candidate(ctrl),
-    stop_reason(ctrl),
-    num_steps(ctrl),
-    start_time(ctrl),
-    elapsed_time(ctrl),
-    oc.parameters,
-    num_func_evals(ctrl),
-    population(ctrl.optimizer)
-  )

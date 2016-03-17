@@ -49,6 +49,15 @@ numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
+# wrapper for multi-children variant of apply!() for single-child xover operators
+function apply!{NP}(xover::CrossoverOperator{NP,1}, targets::Vector{Individual}, target_indices::Vector{Int}, pop, parentIndices)
+    length(targets) == length(target_indices) || throw(ArgumentError("The number of target doesn't match the number of their indices"))
+    for i in eachindex(target_indices)
+        apply!(xover, targets[i], target_indices[i], pop, parentIndices)
+    end
+    targets
+end
+
 """
   `MutationOperator` that does nothing.
 """
@@ -85,10 +94,18 @@ function trace_state(io::IO, op::GeneticOperator) end
 abstract GeneticOperatorsMixture <: GeneticOperator
 
 include("operators_mixture.jl")
+
 include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
+
 include("crossover/simulated_binary_crossover.jl")
+include("crossover/simplex_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
+include("crossover/parent_centric_crossover.jl")
+include("crossover/unimodal_normal_distribution_crossover.jl")
+
 include("embedding/random_bound.jl")
+
 include("selector/simple.jl")
 include("selector/radius_limited.jl")
+include("selector/tournament.jl")

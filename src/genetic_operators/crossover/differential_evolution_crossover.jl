@@ -6,36 +6,35 @@ immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   f::Float64    # scale parameter
 
   DiffEvoRandBin(cr::Number, f::Number) = new(cr, f)
+  DiffEvoRandBin(options::Parameters) = new(options[:cr], options[:f])
 end
-
-Base.convert{N}(::Type{DiffEvoRandBin{N}}, options::Associative{Symbol,Any}) = DiffEvoRandBin{N}(options[:cr], options[:f])
 
 crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover.f
 
 typealias DiffEvoRandBin1 DiffEvoRandBin{3}
 typealias DiffEvoRandBin2 DiffEvoRandBin{5}
 
-function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index, pop, parentIndices)
+function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index::Int, pop, parentIndices)
   @assert length(parentIndices) == 3
   cr, f = crossover_parameters(xover, pop, target_index)
   p1ix, p2ix, p3ix = parentIndices
   # Always ensure at least one parameter is xovered
   mut_ix = rand(1:length(target))
-  for i in 1:length(target)
+  @inbounds for i in 1:length(target)
     if i == mut_ix || rand() <= cr
-      target[i] = pop[i,p3ix] + f .* (pop[i,p1ix] .- pop[i,p2ix])
+      target[i] = pop[i,p3ix] + f * (pop[i,p1ix] .- pop[i,p2ix])
     end
   end
   return target
 end
 
-function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index, pop, parentIndices)
+function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index::Int, pop, parentIndices)
   @assert length(parentIndices) == 5
   cr, f = crossover_parameters(xover, pop, target_index)
   p1ix, p2ix, p3ix, p4ix, p5ix = parentIndices
   # Always ensure at least one parameter is xovered
   mut_ix = rand(1:length(target))
-  for i in 1:length(target)
+  @inbounds for i in 1:length(target)
     if i == mut_ix || rand() <= cr
       target[i] = pop[i,p3ix] +
                 f .* (pop[i,p1ix] .- pop[i,p2ix]) +
