@@ -23,7 +23,7 @@ function apply!{T<:Real}(opmix::GeneticOperatorsMixture, v::Vector{T}, target_in
   apply!(op, v, target_index)
 end
 
-function next(opmix::FixedGeneticOperatorsMixture)
+function Base.next(opmix::FixedGeneticOperatorsMixture)
   i = sample(1:length(opmix.operators), opmix.weights)
   return opmix.operators[i], i
 end
@@ -42,7 +42,7 @@ end
 
 frequencies(opmix::FAGeneticOperatorsMixture) = frequencies(opmix.fa)
 
-function next(opmix::FAGeneticOperatorsMixture)
+function Base.next(opmix::FAGeneticOperatorsMixture)
   i = next(opmix.fa)
   return opmix.operators[i], i
 end

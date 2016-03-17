@@ -2,34 +2,45 @@
   `Archive` saves information about promising solutions during an optimization
   run.
 """
-abstract Archive
+abstract Archive{F,FA,FS<:FitnessScheme}
 
-" Fitness as stored in `Archive`. "
-immutable ArchivedFitness{F}
-    timestamp::Float64    # when archived
-    num_fevals::Int64     # number of fitness evaluations so far
-    fitness::F            # current fitness
-    fitness_improvement_ratio::Float64
+numdims(a::Archive) = a.numdims
+fitness_type{F}(a::Archive{F}) = F
+archived_fitness_type{F,FA}(a::Archive{F,FA}) = FA
 
-    ArchivedFitness(a::Archive, fitness::F, num_fevals = -1) =
-      new(time(), num_fevals == -1 ? a.num_fitnesses : num_fevals,
-          fitness, fitness_improvement_ratio(a, fitness))
-end
+"""
+    Base class for individuals stored in different archives.
+"""
+abstract ArchivedIndividual{F}
 
-ArchivedFitness{F}(a::Archive, fitness::F, num_fevals = -1) = ArchivedFitness{F}(a, fitness, num_fevals)
+params(indi::ArchivedIndividual) = indi.params
+fitness(indi::ArchivedIndividual) = indi.fitness
+tag(indi::ArchivedIndividual) = indi.tag
 
-fitness(a::ArchivedFitness) = a.fitness
-
-immutable ArchivedIndividual{F}
+"""
+    Individual stored in `TopListArchive`.
+"""
+immutable TopListIndividual{F} <: ArchivedIndividual{F}
     params::Individual
     fitness::F
+    tag::Int
+
+    Base.call{F}(::Type{TopListIndividual}, params::Individual, fitness::F, tag::Int) =
+        new{F}(params, fitness, tag)
 end
 
-ArchivedIndividual{F}(params::Individual, fitness::F) = ArchivedIndividual{F}(params, fitness)
-Base.(:(==)){F}(x::ArchivedIndividual{F}, y::ArchivedIndividual{F}) =
+Base.(:(==)){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
   (x.fitness == y.fitness) && (x.params == y.params)
 
-fitness(a::ArchivedIndividual) = a.fitness
+" Fitness as stored in `TopListArchive`. "
+immutable TopListFitness{F<:Number}
+    fitness::F            # current fitness
+    fitness_improvement_ratio::Float64
+    timestamp::Float64    # when archived
+    num_fevals::Int64     # number of fitness evaluations so far
+end
+
+fitness(f::TopListFitness) = f.fitness
 
 """
   Archive that maintains a top list of the best performing (best fitness)
@@ -39,7 +50,7 @@ fitness(a::ArchivedIndividual) = a.fitness
   The two last best fitness values could be used to estimate a confidence interval for how much improvement
   potential there is.
 """
-type TopListArchive{F,FS<:FitnessScheme} <: Archive
+type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,F,FS}
   fit_scheme::FS        # Fitness scheme used
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
   numdims::Int          # Number of dimensions in the optimization problem. Needed for confidence interval estimation.
@@ -47,26 +58,24 @@ type TopListArchive{F,FS<:FitnessScheme} <: Archive
   num_fitnesses::Int    # Number of calls to add_candidate
 
   capacity::Int         # Max size of top lists
-  candidates::Vector{ArchivedIndividual{F}}  # Top candidates and their fitness values
+  candidates::Vector{TopListIndividual{F}}  # Top candidates and their fitness values
 
   # Stores a fitness history that we can later print to a csv file.
   # For each magnitude class (as defined by `magnitude_class()` function below) we
   # we save the first entry of that class. The tuple saved for each magnitude
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
-  fitness_history::Vector{ArchivedFitness{F}}
+  fitness_history::Vector{TopListFitness{F}}
 
-  function TopListArchive(fit_scheme::FS, numdims, capacity = 10)
-    new(fit_scheme, time(), numdims, 0, capacity, ArchivedIndividual[], ArchivedFitness[])
+  function Base.call{FS}(::Type{TopListArchive}, fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+    F = fitness_type(FS)
+    new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
   end
 end
 
-TopListArchive{FS<:FitnessScheme}(fit_scheme::FS, numdims, capacity = 10) =
-  TopListArchive{fitness_type(fit_scheme),FS}(fit_scheme, numdims, capacity)
-
 fitness_scheme(a::TopListArchive) = a.fit_scheme
-fitness_type(a::TopListArchive) = fitness_type(fitness_scheme(a))
 capacity(a::TopListArchive) = a.capacity
 Base.length(a::TopListArchive) = length(a.candidates)
+Base.isempty(a::TopListArchive) = isempty(a.candidates)
 
 best_candidate(a::TopListArchive) = a.candidates[1].params
 best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[1]) : nafitness(fitness_scheme(a))
@@ -86,22 +95,35 @@ function delta_fitness(a::TopListArchive)
   end
 end
 
+function check_stop_condition(a::TopListArchive, p::OptimizationProblem, ctrl)
+    if delta_fitness(a) < ctrl.min_delta_fitness_tol
+      return "Delta fitness ($(delta_fitness(a))) below tolerance ($(ctrl.min_delta_fitness_tol))"
+    end
+
+    if fitness_is_within_ftol(p, best_fitness(a), ctrl.fitness_tol)
+      return "Fitness ($(best_fitness(ctrl))) within tolerance ($(ctrl.fitness_tol)) of optimum"
+    end
+
+    return "" # no conditions met
+end
+
 """
-  `add_candidate!(a::TopListArchive, fitness::F, candidate[, num_fevals=-1])`
+  `add_candidate!(a::TopListArchive, fitness::F, candidate[, tag=0][, num_fevals=-1])`
 
   Add a candidate with a fitness to the archive (if it is good enough).
 """
-function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, num_fevals=-1)
+function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, tag::Int=0, num_fevals::Int=-1)
   a.num_fitnesses += 1
+  if (num_fevals == -1) num_fevals = a.num_fitnesses end
 
   if isempty(a.fitness_history) || is_better(fitness, best_fitness(a), fitness_scheme(a))
     # Save fitness history so we can reconstruct the most important events later.
-    push!(a.fitness_history, ArchivedFitness(a, fitness, num_fevals))
+    push!(a.fitness_history, TopListFitness{F}(fitness, fitness_improvement_ratio(a, fitness), time(), num_fevals))
   end
 
   if length(a) < capacity(a) ||
      !isempty(a.candidates) && is_better(fitness, last_top_fitness(a), fitness_scheme(a))
-    new_cand = ArchivedIndividual(copy(candidate), fitness)
+    new_cand = TopListIndividual(copy(candidate), fitness, tag)
     fs = fitness_scheme(a)
     ix = searchsortedfirst(a.candidates, new_cand,
                            # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed

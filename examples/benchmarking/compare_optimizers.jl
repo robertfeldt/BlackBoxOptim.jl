@@ -218,7 +218,7 @@ end
 function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int, PopulationSize::Int, MaxFuncEvals::Int,
     Method::Symbol, TraceMode::Symbol = :verbose)
 
-  problem = BlackBoxOptim.fixed_dim_problem(family, NumDimensions)
+  problem = instantiate(family, NumDimensions)
 
   res = bboptimize(problem; Method = Method,
     NumDimensions = NumDimensions,

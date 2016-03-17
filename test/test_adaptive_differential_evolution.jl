@@ -3,7 +3,7 @@ NumTestRepetitions = 100
 facts("Adaptive differential evolution optimizer") do
 
 ss = symmetric_search_space(1, (0.0, 10.0))
-fake_problem = convert(FunctionBasedProblem, x -> 0.0, "test_problem", MinimizingFitnessScheme, ss) # FIXME v0.3 workaround
+fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", MinimizingFitnessScheme, ss)
 
 ade = adaptive_de_rand_1_bin(fake_problem, ParamsDict(
   :Population => rand(1, 100)))

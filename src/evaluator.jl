@@ -14,37 +14,50 @@ problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 
 """
   Default implementation of the `Evaluator`.
+
+  `FP` is the problem's fitness type
+  `FA` is the archive's stored type
 """
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
-type ProblemEvaluator{F, P<:OptimizationProblem} <: Evaluator{P}
+type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
   problem::P
-  archive::Archive
+  archive::A
   num_evals::Int
-  last_fitness::F
-end
+  last_fitness::FP
 
-function ProblemEvaluator{P<:OptimizationProblem}(
-        problem::P;
-        archiveCapacity::Int = 10 )
-    ProblemEvaluator{fitness_type(fitness_scheme(problem)), P}(problem,
-        TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
+  Base.call{P<:OptimizationProblem, A<:Archive}(::Type{ProblemEvaluator},
+      problem::P, archive::A) =
+    new{fitness_type(fitness_scheme(problem)),archived_fitness_type(archive),A,P}(problem, archive,
         0, nafitness(fitness_scheme(problem)))
+
+  Base.call{P<:OptimizationProblem}(::Type{ProblemEvaluator},
+      problem::P; archiveCapacity::Int = 10) =
+    ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
+
 end
 
 problem(e::Evaluator) = e.problem
 num_evals(e::ProblemEvaluator) = e.num_evals
 
-# evaluates the fitness (and implicitly updates the stats)
-function fitness(params::Individual, e::ProblemEvaluator)
-  e.last_fitness = res = fitness(params, e.problem)
+"""
+    fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
+
+    Evaluate the fitness and implicitly update the archive with the provided
+    parameters and calculated fitness.
+
+    Returns the fitness in the archived format.
+"""
+function fitness{FP,FA}(params::Individual, e::ProblemEvaluator{FP,FA}, tag::Int=0)
+  e.last_fitness = fp = fitness(params, e.problem)
   e.num_evals += 1
-  add_candidate!(e.archive, res, params, e.num_evals)
-  res
+  fa = convert(FA, fp, fitness_scheme(e.archive))
+  add_candidate!(e.archive, fa, params, tag, e.num_evals)
+  fa
 end
 
 """
-  `last_fitness(e::Evaluator)`
+    last_fitness(e::Evaluator)
 
   Get the fitness of the last evaluated candidate.
 
@@ -102,13 +115,17 @@ function Base.copy!{F}(c::Candidate{F}, o::Candidate{F})
   return c
 end
 
-function update_fitness!{F}(e::ProblemEvaluator{F}, candidates::Vector{Candidate{F}})
-  fs = fitness_scheme(e)
-  for i in eachindex(candidates)
-      # evaluate fitness if not known yet
-      if isnafitness(candidates[i].fitness, fs)
-          candidates[i].fitness = fitness(candidates[i].params, e)
-      end
+function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA})
+  # evaluate fitness if not known yet
+  if isnafitness(candidate.fitness, fitness_scheme(e.archive))
+      candidate.fitness = fitness(candidate.params, e, candidate.tag)
+  end
+  candidate
+end
+
+function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidates::Vector{Candidate{FA}})
+  @inbounds for candidate in candidates
+      update_fitness!(e, candidate)
   end
   candidates
 end
@@ -120,4 +137,5 @@ function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates:
         by=fitness, lt=(x, y) -> is_better(x, y, fs))
 end
 
-fitness_is_within_ftol(e::Evaluator, atol) = fitness_is_within_ftol(problem(e), best_fitness(e.archive), atol)
+# called by check_stop_condition(OptRunController)
+check_stop_condition(e::Evaluator, ctrl) = check_stop_condition(e.archive, e.problem, ctrl)

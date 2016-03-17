@@ -1,8 +1,9 @@
 """
-   Optimization methods accepted by `bboptimize()`, the values are the
-   method initialization routines or types derived from `Optimizer`.
+   Single objective optimization methods accepted by `bboptimize()`.
+
+   The values are the method initialization routines or types derived from `Optimizer`.
 """
-const ValidMethods = ParamsDict(
+const SingleObjectiveMethods = ParamsDict(
   :random_search => random_search,
   :de_rand_1_bin => de_rand_1_bin,
   :de_rand_2_bin => de_rand_2_bin,
@@ -20,8 +21,22 @@ const ValidMethods = ParamsDict(
   :probabilistic_descent => direct_search_probabilistic_descent,
 )
 
+const SingleObjectiveMethodNames = sort!(collect(keys(SingleObjectiveMethods)))
+
+"""
+   Multi-objective optimization methods accepted by `bboptimize()`.
+
+   The values are the method initialization routines or types derived from `Optimizer`.
+"""
+const MultiObjectiveMethods = ParamsDict(
+  :borg_moea => borg_moea
+)
+
+const MultiObjectiveMethodNames = sort!(collect(keys(MultiObjectiveMethods)))
+
 """
   Names of optimization methods accepted by `bboptimize()`,
   `:Method` keyword argument.
 """
-const MethodNames = sort!(collect(keys(ValidMethods)))
+const MethodNames = sort!(vcat(SingleObjectiveMethodNames,
+                               MultiObjectiveMethodNames))

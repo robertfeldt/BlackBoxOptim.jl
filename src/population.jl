@@ -33,38 +33,81 @@ type FitPopulation{F} <: PopulationWithFitness{F}
 
   nafitness::F
   fitness::Vector{F}
+  ntransient::Int                  # how many transient members are in the population
 
   candi_pool::Vector{Candidate{F}} # pool of reusable candidates
 
-  function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F})
+  function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F}; ntransient::Integer=0)
     popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
-    new(individuals, nafitness, fitness, Vector{Candidate{F}}())
+    new(individuals, nafitness, fitness, ntransient, Vector{Candidate{F}}())
   end
 end
 
 FitPopulation{F}(individuals::PopulationMatrix, nafitness::F,
-                 fitnesses::Vector{F} = fill(nafitness, popsize(individuals))) =
-  FitPopulation{F}(individuals, nafitness, fitnesses)
+                 fitnesses::Vector{F} = fill(nafitness, popsize(individuals));
+                 ntransient::Integer=0) =
+  FitPopulation{F}(individuals, nafitness, fitnesses, ntransient=ntransient)
 
-FitPopulation(fs::FitnessScheme, individuals::PopulationMatrix) =
-  FitPopulation(individuals, nafitness(fs))
+FitPopulation(fs::FitnessScheme, individuals::PopulationMatrix;
+              ntransient::Integer=0) =
+  FitPopulation(individuals, nafitness(fs), ntransient=ntransient)
 
-FitPopulation(fs::FitnessScheme, popsize::Int = 100, dims::Int = 1) =
-  # FIXME use PopulationMatrix(), this is v0.3 workaround
-  FitPopulation(fs, Array(Float64, dims, popsize))
+FitPopulation(fs::FitnessScheme, popsize::Int = 100, dims::Int = 1;
+              ntransient::Integer=0) =
+  FitPopulation(fs, PopulationMatrix(dims, popsize); ntransient=ntransient)
 
-popsize(pop::FitPopulation) = popsize(pop.individuals)
+popsize(pop::FitPopulation) = popsize(pop.individuals)-pop.ntransient
 numdims(pop::FitPopulation) = numdims(pop.individuals)
-params_mean(pop::FitPopulation) = mean(pop.individuals, 1)
-params_std(pop::FitPopulation) = std(pop.individuals, 1)
+
+# resize the population
+function Base.resize!(pop::FitPopulation, newpopsize::Integer)
+    new_individuals = PopulationMatrix(numdims(pop), newpopsize+pop.ntransient)
+    new_individuals[:, 1:min(newpopsize,popsize(pop))] = sub(pop.individuals, :, 1:min(newpopsize,popsize(pop)))
+    pop.individuals = new_individuals
+    resize!(pop.fitness, newpopsize + pop.ntransient)
+    pop
+end
+
+# indices of the persistent individuals
+@inline persistent_range(pop::FitPopulation) = 1:popsize(pop)
+# indices of the transient individuals
+@inline transient_range(pop::FitPopulation) = popsize(pop):(popsize(pop)+pop.ntransient-1)
+persistent_individuals(pop::FitPopulation) = sub(pop.individuals, :, persistent_range(pop))
+
+params_mean(pop::FitPopulation) = mean(persistent_individuals(pop), 1)
+params_std(pop::FitPopulation) = std(persistent_individuals(pop), 1)
 
 fitness(pop::FitPopulation, ix::Int) = pop.fitness[ix]
 
 Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
-Base.getindex(pop::FitPopulation, ::Colon, cols) = pop.individuals[:, cols] # FIXME remove v0.3 workaround
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
+"""
+    view(population, individual_index)
+
+    Get vector-slice of the population matrix for the specified
+    individual.
+    Does not allocate any additional space, while still providing the same lookup performance.
+"""
+view(pop::FitPopulation, indi_ix) = slice(pop.individuals, :, indi_ix)
+
+Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, ::Colon, indi_ix::Integer) =
+    setindex!(pop, indi, indi_ix)
+
+function Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, indi_ix::Integer)
+    pop.individuals[:, indi_ix] = indi
+    pop.fitness[indi_ix] = pop.nafitness
+    pop
+end
+
+function Base.setindex!{F}(pop::FitPopulation{F}, indi::ArchivedIndividual{F}, indi_ix::Integer)
+    pop.individuals[:, indi_ix] = params(indi)
+    pop.fitness[indi_ix] = fitness(indi)
+    pop
+end
+
 function Base.append!{F}(pop::FitPopulation{F}, extra_pop::FitPopulation{F})
+  pop.ntransient == 0 || throw(error("Appending to the population with transients not supported (yet)"))
   numdims(pop) == numdims(extra_pop) ||
     throw(DimensionMismatch("Cannot append population, "*
                             "the number of parameters differs "*
@@ -140,16 +183,19 @@ candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
 
   The default method to generate a population, uses Latin Hypercube Sampling.
 """
-function population(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
+function population{F}(problem::OptimizationProblem,
+                       options::Parameters = EMPTY_PARAMS,
+                       nafitness::F = nafitness(fitness_scheme(problem));
+                       ntransient::Integer = 0)
   if !haskey(options, :Population)
-      pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50))
+      pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50) + ntransient)
   else
      pop = options[:Population]
   end
   if isa(pop, Population)
     return pop
   elseif isa(pop, PopulationMatrix)
-    return FitPopulation(fitness_scheme(problem), pop)
+    return FitPopulation(pop, nafitness, ntransient=ntransient)
   else
     throw(ArgumentError("\"Population\" parameter is of unsupported type: $(typeof(pop))"))
   end

@@ -18,13 +18,13 @@ type DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperator,E<:Embed
   select::S        # random individuals selector
   modify::M        # genetic operator
   embed::E         # embedding operator
-end
 
-function DiffEvoOpt{P<:Population, S<:IndividualsSelector,
-                    M<:GeneticOperator, E<:EmbeddingOperator}(
-    name::ASCIIString, pop::P,
-    select::S = S(), modify::M = M(), embed::E = E())
-  DiffEvoOpt{P,S,M,E}(name, pop, select, modify, embed)
+  function Base.call{P<:Population, S<:IndividualsSelector,
+                     M<:GeneticOperator, E<:EmbeddingOperator}(
+        ::Type{DiffEvoOpt}, name::ASCIIString, pop::P,
+        select::S = S(), modify::M = M(), embed::E = E())
+    new{P,S,M,E}(name, pop, select, modify, embed)
+  end
 end
 
 # trace current optimization state,
@@ -77,7 +77,7 @@ end
 """
 function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F}, op::GeneticOperator, tag::Int = 0)
   # embed the trial parameter vector into the search space
-  apply!(de.embed, trial.params, de.population, [target.index])
+  apply!(de.embed, trial.params, de.population, target.index)
   target.op = trial.op = op
   target.tag = trial.tag = 0
   if trial.params != target.params
@@ -135,7 +135,7 @@ end
 
 function diffevo(problem::OptimizationProblem, options::Parameters, name::ASCIIString,
                  select::IndividualsSelector = SimpleSelector(),
-                 crossover::DiffEvoCrossoverOperator = convert(DiffEvoRandBin1, chain(DE_DefaultOptions, options)))
+                 crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(chain(DE_DefaultOptions, options)))
   opts = chain(DE_DefaultOptions, options)
   pop = population(problem, opts)
   DiffEvoOpt(name, pop, select, crossover,
@@ -151,7 +151,7 @@ de_rand_2_bin(problem::OptimizationProblem,
               options::Parameters = EMPTY_PARAMS,
               name = "DE/rand/2/bin") = diffevo(problem, options, name,
                                                 SimpleSelector(),
-                                                convert(DiffEvoRandBin2, chain(DE_DefaultOptions, options)))
+                                                DiffEvoRandBin2(chain(DE_DefaultOptions, options)))
 
 """ The most used `DE/rand/1/bin` variant with "local geography" via radius-limited sampling. """
 de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
@@ -165,4 +165,4 @@ de_rand_2_bin_radiuslimited(problem::OptimizationProblem,
                             name = "DE/rand/2/bin/radiuslimited") =
     diffevo(problem, options, name,
             RadiusLimitedSelector(chain(DE_DefaultOptions, options)[:SamplerRadius]),
-            convert(DiffEvoRandBin2, chain(DE_DefaultOptions, options)))
+            DiffEvoRandBin2(chain(DE_DefaultOptions, options)))
