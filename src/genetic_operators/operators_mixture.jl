@@ -6,12 +6,12 @@ type FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operations
     weights::WeightVec{Float64}        # fixed weights
 
-    function FixedGeneticOperatorsMixture(
-        operators::Vector{GeneticOperator},
-        rates::Vector{Float64} = fill(1.0/length(operators), length(operators)) # defaults to uniform distribution of rates
+    function FixedGeneticOperatorsMixture{GO<:GeneticOperator}(
+        operators::AbstractVector{GO},
+        rates::AbstractVector{Float64} = fill(1.0/length(operators), length(operators)) # defaults to uniform distribution of rates
     )
       length(operators) == length(rates) || throw(DimensionMismatch("Number of mutators does not match the number of their rates"))
-      new(operators, weights(rates))
+      new(GeneticOperator[op for op in operators], weights(rates))
     end
 end
 
@@ -35,8 +35,12 @@ type FAGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operators
     fa::FrequencyAdapter               # adapter of operator frequencies
 
-    function FAGeneticOperatorsMixture(operators::Vector{GeneticOperator}; c = 1E-2, eta = 1E-2, pmin = 0.01, pmax = 1.0)
-      new(operators, FrequencyAdapter(length(operators); c = c, eta = eta, pmin = pmin, pmax = pmax))
+    function FAGeneticOperatorsMixture{GO<:GeneticOperator}(
+        operators::AbstractVector{GO};
+        c = 1E-2, eta = 1E-2, pmin = 0.01, pmax = 1.0
+    )
+      new(GeneticOperator[op for op in operators],
+          FrequencyAdapter(length(operators); c = c, eta = eta, pmin = pmin, pmax = pmax))
     end
 end
 
