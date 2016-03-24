@@ -95,8 +95,8 @@ abstract GeneticOperatorsMixture <: GeneticOperator
 
 include("operators_mixture.jl")
 
-include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
+include("mutation/polynomial_mutation.jl")
 
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/simplex_crossover.jl")

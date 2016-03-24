@@ -2,23 +2,28 @@
   Polynomial mutation as presented in the paper:
     Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
 """
-type PolynomialMutation <: MutationOperator
-  lowbound
-  highbound
-  eta
-  PolynomialMutation(lowbound = 0.0, highbound = 1.0, eta = 100.0) = new(lowbound, highbound, eta)
+immutable PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
+    ss::SS
+    η::Float64
+
+    Base.call{SS<:SearchSpace}(::Type{PolynomialMutation}, ss::SS, η = 50.0) = new{SS}(ss, η)
+    Base.call{SS<:SearchSpace}(::Type{PolynomialMutation}, ss::SS, options::Parameters) = new{SS}(ss, options[:PM_η])
 end
 
 """
-  Apply polynomial mutation to a single value.
+   Default parameters for `PolynomialMutation`.
 """
-function apply(pm::PolynomialMutation, value::Float64)
-  u = rand()
-  if u <= 0.5
-    deltaL = (2*u)^(1/(1+pm.eta)) - 1
-    return (value + deltaL * (value - pm.lowbound))
-  else
-    deltaR = 1 - (2*(1-u))^(1/(1+pm.eta))
-    return (value + deltaR * (pm.highbound - value))
-  end
+const PM_DefaultOptions = ParamsDict(
+  :PM_η => 50.0,
+)
+
+function apply(m::PolynomialMutation, v::Number, dim::Int, target_index::Int)
+    u = 2.0*rand()
+    if u <= 1.0
+        ΔL = u^(1.0/(1.0+m.η)) - 1.0
+        return (v + ΔL * (v - mins(m.ss)[dim]))
+    else
+        ΔR = 1.0 - (2.0-u)^(1.0/(1.0+m.η))
+        return (v + ΔR * (maxs(m.ss)[dim] - v))
+    end
 end
