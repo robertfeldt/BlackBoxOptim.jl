@@ -1,10 +1,8 @@
 using Distributions
 
-const DE_DefaultOptions = ParamsDict(
-  :f => 0.6,
-  :cr => 0.7,
+const DE_DefaultOptions = chain(DEX_DefaultOptions, ParamsDict(
   :SamplerRadius => 8,
-)
+))
 
 # FIXME DifferentialEvolution is just a specific case of this optimizer,
 # should it be called EvolutionaryOptimizer?

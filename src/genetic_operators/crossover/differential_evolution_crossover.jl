@@ -6,8 +6,13 @@ immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   f::Float64    # scale parameter
 
   DiffEvoRandBin(cr::Number, f::Number) = new(cr, f)
-  DiffEvoRandBin(options::Parameters) = new(options[:cr], options[:f])
+  DiffEvoRandBin(options::Parameters) = new(options[:DEX_cr], options[:DEX_f])
 end
+
+const DEX_DefaultOptions = ParamsDict(
+  :DEX_f => 0.6,
+  :DEX_cr => 0.7
+)
 
 crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover.f
 
