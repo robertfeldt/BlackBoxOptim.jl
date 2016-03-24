@@ -50,7 +50,7 @@ numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
 # wrapper for multi-children variant of apply!() for single-child xover operators
-function apply!{NP}(xover::CrossoverOperator{NP,1}, targets::Vector{Individual}, target_indices::Vector{Int}, pop, parentIndices)
+function apply!{NP,T<:AbstractVector{Float64}}(xover::CrossoverOperator{NP,1}, targets::AbstractVector{T}, target_indices::AbstractVector{Int}, pop, parentIndices)
     length(targets) == length(target_indices) || throw(ArgumentError("The number of target doesn't match the number of their indices"))
     for i in eachindex(target_indices)
         apply!(xover, targets[i], target_indices[i], pop, parentIndices)
