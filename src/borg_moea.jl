@@ -82,7 +82,7 @@ function borg_moea{FS<:TupleFitnessScheme}(problem::OptimizationProblem{FS}, opt
                                            ParentCentricCrossover{3}(chain(PCX_DefaultOptions, options)),
                                            UnimodalNormalDistributionCrossover{2}(chain(UNDX_DefaultOptions, options)),
                                            UnimodalNormalDistributionCrossover{3}(chain(UNDX_DefaultOptions, options))],
-           MutationClock(SimpleGibbsMutation(search_space(problem)), 0.25),
+           MutationClock(UniformMutation(search_space(problem)), 0.25),
            RandomBound(search_space(problem)), opts)
 end
 

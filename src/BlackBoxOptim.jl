@@ -73,7 +73,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
-        NoMutation, MutationClock, GibbsMutationOperator, SimpleGibbsMutation,
+        NoMutation, MutationClock, GibbsMutationOperator, UniformMutation,
         PolynomialMutation,
         FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
