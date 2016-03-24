@@ -22,7 +22,9 @@ function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index::Int,
   mut_ix = rand(1:length(target))
   @inbounds for i in 1:length(target)
     if i == mut_ix || rand() <= cr
-      target[i] = pop[i,p3ix] + f * (pop[i,p1ix] .- pop[i,p2ix])
+      target[i] = pop[i,p3ix] + f * (pop[i,p1ix] - pop[i,p2ix])
+    elseif target_index == 0
+      target[i] = pop[i,p3ix]
     end
   end
   return target
@@ -37,8 +39,10 @@ function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index::Int,
   @inbounds for i in 1:length(target)
     if i == mut_ix || rand() <= cr
       target[i] = pop[i,p3ix] +
-                f .* (pop[i,p1ix] .- pop[i,p2ix]) +
-                f .* (pop[i,p4ix] .- pop[i,p5ix])
+                f * (pop[i,p1ix] - pop[i,p2ix]) +
+                f * (pop[i,p4ix] - pop[i,p5ix])
+    elseif target_index == 0
+      target[i] = pop[i,p3ix]
     end
   end
   return target
