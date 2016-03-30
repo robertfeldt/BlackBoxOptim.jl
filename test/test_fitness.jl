@@ -223,13 +223,13 @@ facts("Fitness") do
           @fact ifit1.orig --> fit
           @fact ifit1.agg --> sum(fit)
           @fact ifit1.index --> (5, 3, -3)
-          @fact ifit1.dist --> roughly(norm([0.05, 0.09]))
+          @fact ifit1.dist --> roughly(norm([0.05, 0.09])/0.1)
 
           ifit2 = IndexedTupleFitness(fit, sum(fit), 0.1, Val{false})
           @fact ifit2.orig --> fit
           @fact ifit2.agg --> sum(fit)
           @fact ifit2.index --> (6, 3, -2)
-          @fact ifit2.dist --> roughly(norm([0.05, 0.01]))
+          @fact ifit2.dist --> roughly(norm([0.05, 0.01])/0.1)
 
           ifit3 = convert(IndexedTupleFitness, fit,
                           EpsBoxDominanceFitnessScheme{3}(0.1))

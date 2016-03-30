@@ -115,10 +115,26 @@ hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme
     hat_compare_ϵ(f2, f1, fs.ϵ, expected)
 
 # ϵ-index of the fitness component for minimizing scheme
-@inline ϵ_index{F}(u::F, ϵ::F, ::Type{Val{true}}) = begin ix=isnan(u) ? typemax(Int) : floor(Int, u/ϵ+10eps(F)); (ix, u-ϵ*ix) end
+@inline function ϵ_index{F}(u::F, ϵ::F, ::Type{Val{true}})
+    if isnan(u)
+        return (typemax(Int), zero(F))
+    else
+        u_div_ϵ = u/ϵ
+        ix = floor(Int, u_div_ϵ+10eps(F))
+        return (ix, max(zero(F), u_div_ϵ-ix))
+    end
+end
 
 # ϵ-index of the fitness component for maximizing scheme
-@inline ϵ_index{F}(u::F, ϵ::F, ::Type{Val{false}}) = begin ix=isnan(u) ? typemax(Int) : ceil(Int, u/ϵ); (ix, ϵ*ix-u) end
+@inline function ϵ_index{F}(u::F, ϵ::F, ::Type{Val{false}})
+    if isnan(u)
+        return (typemin(Int), zero(F))
+    else
+        u_div_ϵ = u/ϵ
+        ix = ceil(Int, u_div_ϵ)
+        return (ix, ix-u_div_ϵ)
+    end
+end
 
 """
     ϵ-box indexed representation of the N-tuple fitness.
