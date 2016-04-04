@@ -36,7 +36,14 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
   function Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
     new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, max_size, EpsBoxFrontierIndividual{N,F}[])
   end
+
+  Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
+    EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
 end
+
+const EpsBoxArchive_DefaultParameters = ParamsDict(
+  :MaxArchiveSize => 10_000,
+)
 
 fitness_scheme(a::EpsBoxArchive) = a.fit_scheme
 # EpsBoxArchive stores indexed fitness

@@ -43,7 +43,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
     isa(fit_scheme, TupleFitnessScheme) || throw(ArgumentError("BorgMOEA can only solve problems with `TupleFitnessScheme`"))
     !isempty(recombinate) || throw(ArgumentError("No recombinate operators specified"))
     fit_scheme = convert(EpsBoxDominanceFitnessScheme, fit_scheme, params[:ϵ])
-    archive = EpsBoxArchive(fit_scheme, params[:MaxArchiveSize])
+    archive = EpsBoxArchive(fit_scheme, params)
     evaluator = ProblemEvaluator(problem, archive)
     new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, 0, 0, 0, 0,
            params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
@@ -55,17 +55,16 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
   end
 end
 
-const BorgMOEA_DefaultParameters = ParamsDict(
+const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, ParamsDict(
   :ϵ => 0.1,        # size of the ϵ-box
   :τ => 0.02,       # selection ratio, fraction of population to use for tournament
   :γ => 4.0,        # recommended population-to-archive ratio
   :γ_δ => 0.25,     # the maximum allowed deviation of the population-to-archive ratio from γ
   :ζ => 1.0,        # dampening coefficient for recombination operator weights
-  :MaxArchiveSize => 10_000,
   :RestartCheckPeriod => 1000,
   :OperatorsUpdatePeriod => 100,
   :MaxStepsWithoutProgress => 100
-)
+))
 
 function borg_moea{FS<:TupleFitnessScheme}(problem::OptimizationProblem{FS}, options::Parameters = EMPTY_PARAMS)
   opts = chain(BorgMOEA_DefaultParameters, options)
