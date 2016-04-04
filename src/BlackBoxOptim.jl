@@ -80,7 +80,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         SimulatedBinaryCrossover, SimplexCrossover, UnimodalNormalDistributionCrossover,
         ParentCentricCrossover,
 
-        apply!, adjust!,
+        numparents, numchildren, apply!, adjust!,
 
         # Utilities
         FrequencyAdapter, update!, frequencies,
