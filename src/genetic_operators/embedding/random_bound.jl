@@ -18,7 +18,7 @@ function apply!(eo::RandomBound, target::Individual, ref::AbstractVector)
   ssmins = mins(eo.searchSpace)
   ssmaxs = maxs(eo.searchSpace)
 
-  for i in 1:length(target)
+  @inbounds for i in 1:length(target)
     l, u = ssmins[i], ssmaxs[i]
 
     if target[i] < l

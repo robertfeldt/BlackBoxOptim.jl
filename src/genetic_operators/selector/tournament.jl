@@ -40,5 +40,5 @@ function tournament(sel::TournamentSelector, population, candidates)
             end
         end
     end
-    candidates[sortperm(wins, rev=true)[1]]
+    candidates[findmax(wins)[2]]
 end
