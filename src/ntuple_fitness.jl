@@ -180,15 +180,15 @@ Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitn
 """
 function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, is_minimizing::Bool=true, expected::Int=0)
     comp = 0
-    @inbounds for i in 1:N
-        if u.index[i] > v.index[i]
+    @inbounds for (ui, vi) in zip(u.index, v.index)
+        if ui > vi
             if comp == 0
                 comp = 1
                 if expected < 0 return (1, false) end
             elseif comp == -1
                 return (0, false)  # non-dominated
             end
-        elseif u.index[i] < v.index[i]
+        elseif ui < vi
             if comp == 0
                 comp = -1
                 if expected > 0 return (-1, false) end
