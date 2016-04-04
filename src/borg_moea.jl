@@ -90,7 +90,7 @@ function step!(alg::BorgMOEA)
     alg.n_steps += 1
     if alg.n_steps >= alg.last_restart_check + alg.restart_check_period
         # check for restarting conditions
-        if ((popsize(alg.population) > alg.min_popsize) &&
+        if (!isempty(archive(alg)) &&
             (abs(popsize(alg.population) - alg.γ * length(archive(alg))) >= alg.γ_δ * length(archive(alg)))) ||
             candidates_without_progress(archive(alg)) >=  alg.max_steps_without_ϵ_progress
             restart!(alg)
