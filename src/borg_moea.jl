@@ -117,8 +117,9 @@ function step!(alg::BorgMOEA)
         push!(parent_indices, arch_ix)
     end
     # Crossover parents and target
-    children = [acquire_candi(alg.population) for i in 1:numchildren(recomb_op)]
-    apply!(recomb_op, Individual[child.params for child in children], zeros(Int, length(children)), alg.population, parent_indices)
+    children = acquire_candis(alg.population, numchildren(recomb_op))
+    apply!(recomb_op, Individual[child.params for child in children],
+           zeros(Int, length(children)), alg.population, parent_indices)
     for child in children
         process_candidate!(alg, child, recomb_op_ix, parent_indices[1])
     end

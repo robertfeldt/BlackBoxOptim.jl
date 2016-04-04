@@ -138,6 +138,9 @@ function acquire_candi{F}(pop::FitPopulation{F})
   return res
 end
 
+acquire_candis{F}(pop::FitPopulation{F}, n::Integer) =
+    Candidate{F}[acquire_candi(pop) for _ in 1:n]
+
 # Get an individual from a pool and sets it to ix-th individual from population.
 function acquire_candi(pop::FitPopulation, ix::Int)
     x = acquire_candi(pop)
