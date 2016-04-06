@@ -7,6 +7,7 @@ abstract Archive{F,FA,FS<:FitnessScheme}
 numdims(a::Archive) = a.numdims
 fitness_type{F}(a::Archive{F}) = F
 archived_fitness_type{F,FA}(a::Archive{F,FA}) = FA
+archived_fitness{F}(f::F, a::Archive{F,F}) = f
 
 """
     Base class for individuals stored in different archives.

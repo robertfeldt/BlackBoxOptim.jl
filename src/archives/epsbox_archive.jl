@@ -152,11 +152,14 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
     return a
 end
 
+archived_fitness{N,F}(fitness::NTuple{N,F}, a::EpsBoxArchive{N,F}) =
+    convert(IndexedTupleFitness, fitness, a.fit_scheme)
+
 # actually this methods should never be called because the fitness
 # is already indexes within the method
 add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
                     candidate, tag::Int=0, num_fevals::Int=-1) =
-    add_candidate!(a, convert(IndexedTupleFitness, cand_fitness, a.fit_scheme), candidate, tag, num_fevals)
+    add_candidate!(a, archived_fitness(cand_fitness, a), candidate, tag, num_fevals)
 
 # called by check_stop_condition(e::Evaluator, ctrl)
 check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl) = ""
