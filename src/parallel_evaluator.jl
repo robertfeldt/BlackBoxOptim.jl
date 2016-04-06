@@ -117,11 +117,11 @@ type ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
 end
 
 function ParallelEvaluator{P<:OptimizationProblem}(
-        problem::P, pids::Vector{Int} = workers();
-        archiveCapacity::Int = 10)
+        problem::P, archive::Archive;
+        pids::Vector{Int} = workers())
     fs = fitness_scheme(problem)
     ParallelEvaluator{fitness_type(fs), typeof(fs), P}(problem,
-        TopListArchive(fs, numdims(problem), archiveCapacity),
+        archive,
         0, nafitness(fs),
         [RemoteRef(function ()
                      # create fake channel and put problem there
@@ -132,6 +132,12 @@ function ParallelEvaluator{P<:OptimizationProblem}(
         ParallelEvaluationState(fs, length(pids))
     )
 end
+
+ParallelEvaluator(problem::OptimizationProblem;
+        pids::Vector{Int} = workers(),
+        archiveCapacity::Integer = 10) =
+    ParallelEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
+                      pids=pids)
 
 num_evals(e::ParallelEvaluator) = e.num_evals
 
