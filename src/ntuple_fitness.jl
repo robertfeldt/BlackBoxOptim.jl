@@ -136,6 +136,17 @@ end
     end
 end
 
+# vectorized ϵ-index
+@generated function ϵ_index{N,F,MIN}(u::NTuple{N,F}, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
+    quote
+        pairs = Base.Cartesian.@ntuple $N i -> ϵ_index(u[i], ϵ[i], is_minimizing)
+        ix = Base.Cartesian.@ntuple $N i -> pairs[i][1]
+        sqrdist = zero(F)
+        Base.Cartesian.@nexprs $N i -> sqrdist += pairs[i][2]^2
+        return ix, sqrt(sqrdist)
+    end
+end
+
 """
     ϵ-box indexed representation of the N-tuple fitness.
 
@@ -147,11 +158,9 @@ immutable IndexedTupleFitness{N,F}
     index::NTuple{N,Int}    # ϵ-index vector
     dist::F                 # distance between ϵ-index vector and the original fitness
 
-    # TODO use @generated to avoid loops for N<=8?
     function Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
-        pairs = ntuple(i -> ϵ_index(u[i], ϵ[i], is_minimizing), Val{N}) # FIXME faster?
-        return new{N,F}(u, agg, ntuple(i -> pairs[i][1], Val{N}),
-                        sqrt(sum(pair::Tuple{Int,F} -> pair[2]^2, pairs)))
+        ix, dist = ϵ_index(u, ϵ, is_minimizing)
+        return new{N,F}(u, agg, ix, dist)
     end
     Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) =
         IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
