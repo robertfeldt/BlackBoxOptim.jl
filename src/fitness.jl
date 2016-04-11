@@ -20,6 +20,8 @@ abstract FitnessScheme{F}
 fitness_type{F}(::Type{FitnessScheme{F}}) = F
 fitness_type{F}(::FitnessScheme{F}) = F
 fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
+fitness_eltype{F<:Number}(::Type{FitnessScheme{F}}) = F
+fitness_eltype{F<:Number}(::FitnessScheme{F}) = F
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
 # ordering induced by the fitness scheme
