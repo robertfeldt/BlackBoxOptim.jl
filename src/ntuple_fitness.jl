@@ -168,7 +168,12 @@ end
 
 Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitness.orig
 
-@generated nafitness{N,F}(::Type{IndexedTupleFitness{N,F}}) = IndexedTupleFitness(ntuple(_ -> convert(F, NaN), Val{N}), NaN, 1.0, Val{true})
+@generated function nafitness{N,F}(::Type{IndexedTupleFitness{N,F}})
+    quote
+        IndexedTupleFitness(Base.Cartesian.@ntuple($N, _ -> convert($F, NaN)),
+                            NaN, 1.0, Val{true})
+    end
+end
 
 # comparison for minimizing ϵ-box dominance scheme
 """
@@ -243,7 +248,6 @@ end
 
 # overloads of the default behaviour, because the actual fitness type is not NTuple{N,F}
 fitness_type{N,F}(::Type{EpsBoxDominanceFitnessScheme{N,F}}) = IndexedTupleFitness{N,F}
-nafitness{N,F}(::EpsDominanceFitnessScheme{N,F}) = nafitness(IndexedTupleFitness{N,F})
 isnafitness{N,F}(f::IndexedTupleFitness{N,F}, ::EpsBoxDominanceFitnessScheme{N,F}) = any(isnan, f.orig) # or any?
 
 Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::F=one(F)) =

@@ -54,6 +54,7 @@ facts("Fitness") do
             scheme = ParetoFitnessScheme{1}()
             @fact numobjectives(scheme) --> 1
             @fact is_minimizing(scheme) --> true
+            @fact isnafitness(nafitness(scheme), scheme) --> true
             @fact isequal(nafitness(scheme), (NaN,)) --> true
             @fact isnafitness((NaN,), scheme) --> true
             @fact isnafitness((1.0,), scheme) --> false
@@ -63,6 +64,7 @@ facts("Fitness") do
             scheme = ParetoFitnessScheme{1}(is_minimizing=false)
             @fact numobjectives(scheme) --> 1
             @fact is_minimizing(scheme) --> false
+            @fact isnafitness(nafitness(scheme), scheme) --> true
             @fact isequal(nafitness(scheme), (NaN,)) --> true
             @fact isnafitness((NaN,), scheme) --> true
             @fact isnafitness((1.0,), scheme) --> false
@@ -73,6 +75,7 @@ facts("Fitness") do
             @fact isequal(nafitness(scheme), (NaN,NaN,NaN)) --> true
             @fact numobjectives(scheme) --> 3
             @fact is_minimizing(scheme) --> true
+            @fact isnafitness(nafitness(scheme), scheme) --> true
             @fact isnafitness((NaN,NaN,NaN), scheme) --> true
             @fact isnafitness((1.0,NaN,2.0), scheme) --> true
             @fact isnafitness((1.0,2.0,2.0), scheme) --> false
