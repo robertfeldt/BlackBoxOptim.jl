@@ -119,7 +119,7 @@ hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme
     if isnan(u)
         return (typemax(Int), zero(F))
     else
-        u_div_ϵ = u/ϵ
+        u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
         ix = floor(Int, u_div_ϵ+10eps(F))
         return (ix, max(zero(F), u_div_ϵ-ix))
     end
@@ -130,7 +130,7 @@ end
     if isnan(u)
         return (typemin(Int), zero(F))
     else
-        u_div_ϵ = u/ϵ
+        u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
         ix = ceil(Int, u_div_ϵ)
         return (ix, ix-u_div_ϵ)
     end
