@@ -87,6 +87,32 @@ end
     @fact parameters(res2)[:MaxTime] --> 1.0
   end
 
+  context("return results after interruption") do
+      i = 0
+      function rosenbrock_throwing(x)
+          i += 1
+          if i < 50
+              return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
+          else
+              throw(InterruptException())
+          end
+      end
+      context(":RecoverResults on") do
+        i = 0
+        optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+            MaxSteps=100, TraceMode=:silent, RecoverResults=true)
+        res = bboptimize(optctrl)
+        @fact BlackBoxOptim.stop_reason(res) --> (@sprintf "%s" InterruptException())
+      end
+
+      context(":RecoverResults off") do
+        i = 0 # reset the counter, otherwise it will throw in the setup
+        optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+            MaxSteps=100, TraceMode=:silent, RecoverResults=false)
+        @fact_throws InterruptException bboptimize(optctrl)
+      end
+  end
+
   context("continue running an optimization after serializing to disc") do
     optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
       MaxTime = 0.5, TraceMode = :silent)

@@ -343,7 +343,9 @@ end
 """
     Create `OptController` for a given `optimizer` and a `problem`.
 
-    `params` provide the `OptRunController` parameters, plus `:RngSeed` and `:RandomizeRngSeed` params.
+    `params` are any of `OptRunController` parameters plus
+        * `:RngSeed` and `:RandomizeRngSeed` params for controlling the random seed
+        * `:RecoverResults` if intermediate results are returned upon `InterruptException()` (on by default)
 """
 function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
   params::ParamsDictChain)
@@ -414,8 +416,9 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
     return OptimizationResults(ctrl, oc)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
-    if isa(ex, InterruptException)
+    if get(oc.parameters, :RecoverResults, true) && isa(ex, InterruptException)
       warn("Optimization interrupted, recovering intermediate results...")
+      ctrl.stop_reason = @sprintf "%s" ex
       return OptimizationResults(ctrl, oc)
     else
       rethrow(ex)
