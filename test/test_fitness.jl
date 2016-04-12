@@ -239,24 +239,52 @@ facts("Fitness") do
           @fact ifit4 --> ifit2
       end
 
-      context("hat_compare(..., EpsBoxDominanceFitnessScheme{2}(is_minimizing=true))") do
-        scheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=true)
+      context("hat_compare(..., EpsBoxDominanceFitnessScheme{2}(...))") do
+        minscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=true)
+        maxscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=false)
 
-        @fact hat_compare((-1.0, 0.0), (1.0, 0.0), scheme) --> (-1, false)
-        @fact hat_compare((0.9, 0.0), (1.0, 0.0), scheme) --> (-1, false)
-        @fact hat_compare((0.95, 0.0), (0.98, 0.0), scheme) --> (-1, true)
+        @fact isnafitness(nafitness(minscheme), minscheme) --> true
+        @fact isnafitness(nafitness(maxscheme), minscheme) --> true
+        @fact isnafitness(nafitness(minscheme), maxscheme) --> true
+        @fact isnafitness(nafitness(maxscheme), maxscheme) --> true
 
-        @fact hat_compare((-1.0, 0.05), (1.0, 0.0), scheme) --> (-1, false)
-        @fact hat_compare((0.9, 0.05), (1.0, 0.0), scheme) --> (-1, false)
-        @fact hat_compare((0.95, 0.05), (0.98, 0.0), scheme) --> (-1, true)
-        @fact hat_compare((0.95, 0.05), (0.96, 0.0), scheme) --> (1, true)
+        @fact hat_compare((-1.0, 0.0), (-1.0, 0.0), minscheme) --> (0, true)
+        @fact hat_compare((-1.0, 0.0), (-1.0, 0.0), maxscheme) --> (0, true)
+        @fact hat_compare((-1.0, 0.0), (1.0, 0.0), minscheme) --> (-1, false)
+        @fact hat_compare((-1.0, 0.0), (1.0, 0.0), maxscheme) --> (1, false)
+        @fact hat_compare((-1.0, 0.0), (-0.99, 0.0), minscheme) --> (-1, true)
+        @fact hat_compare((-1.0, 0.0), (-0.99, 0.0), maxscheme) --> (1, false)
+        @fact hat_compare((-1.0, 0.0), (-1.01, 0.0), minscheme) --> (1, false)
+        @fact hat_compare((-1.0, 0.0), (-1.01, 0.0), maxscheme) --> (-1, true)
+
+        @fact hat_compare((-0.97, 0.44), (-0.96, 0.43), minscheme) --> (0, true)
+        @fact hat_compare((-0.97, 0.44), (-0.96, 0.43), maxscheme) --> (0, true)
+        @fact hat_compare((-1.0, 0.5), (-1.0, 0.51), minscheme) --> (-1, true)
+        @fact hat_compare((-1.0, 0.5), (-1.0, 0.51), maxscheme) --> (1, false)
+
+        @fact hat_compare((0.9, 0.0), (1.0, 0.0), minscheme) --> (-1, false)
+        @fact hat_compare((0.9, 0.0), (1.0, 0.0), maxscheme) --> (1, false)
+        @fact hat_compare((0.95, 0.0), (0.98, 0.0), minscheme) --> (-1, true)
+        @fact hat_compare((0.95, 0.0), (0.98, 0.0), maxscheme) --> (1, true)
+
+        @fact hat_compare((-1.0, 0.05), (1.0, 0.0), minscheme) --> (-1, false)
+        @fact hat_compare((-1.0, 0.05), (1.0, 0.0), maxscheme) --> (0, false)
+        @fact hat_compare((0.9, 0.05), (1.0, 0.0), minscheme) --> (-1, false)
+        @fact hat_compare((0.9, 0.05), (1.0, 0.0), maxscheme) --> (0, false)
+        @fact hat_compare((0.95, 0.05), (0.98, 0.0), minscheme) --> (-1, true)
+        @fact hat_compare((0.95, 0.05), (0.98, 0.0), maxscheme) --> (-1, false)
+        @fact hat_compare((0.95, 0.05), (0.98, 0.01), maxscheme) --> (-1, true)
+        @fact hat_compare((0.95, 0.05), (0.96, 0.0), minscheme) --> (1, true)
+        @fact hat_compare((0.95, 0.05), (0.96, 0.0), maxscheme) --> (-1, false)
+        @fact hat_compare((0.95, 0.05), (0.96, 0.04), minscheme) --> (-1, true)
+        @fact hat_compare((0.95, 0.05), (0.96, 0.04), maxscheme) --> (-1, true)
 
         @fact hat_compare((6.9928266604943286,0.03386770153536918),
-                          (7.007808609410211,0.032833634435236035), scheme, 0) --> (-1, false)
+                          (7.007808609410211,0.032833634435236035), minscheme, 0) --> (-1, false)
         @fact hat_compare((6.9928266604943286,0.03386770153536918),
-                          (7.007808609410211,0.032833634435236035), scheme, 1) --> (-1, false)
+                          (7.007808609410211,0.032833634435236035), minscheme, 1) --> (-1, false)
         @fact hat_compare((6.9928266604943286,0.03386770153536918),
-                          (7.007808609410211,0.032833634435236035), scheme, -1) --> (-1, false)
+                          (7.007808609410211,0.032833634435236035), minscheme, -1) --> (-1, false)
       end
   end
 end

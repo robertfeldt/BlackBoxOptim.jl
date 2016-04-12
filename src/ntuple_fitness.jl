@@ -153,7 +153,7 @@ Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitn
       * `1`: u≻v
     and whether `u` index fully matches `v` index.
 """
-function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, expected::Int=0)
+function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, is_minimizing::Bool=true, expected::Int=0)
     comp = 0
     @inbounds for i in 1:N
         if u.index[i] > v.index[i]
@@ -172,7 +172,15 @@ function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFit
             end
         end
     end
-    return (comp != 0 ? comp : (u.dist < v.dist ? -1 : u.dist > v.dist ? 1 : 0), comp == 0)
+    if !is_minimizing
+        comp = -comp
+    end
+    if comp != 0
+        return (comp, comp==0)
+    else
+        uv_diff = u.dist - v.dist
+        return (uv_diff < -10eps(F) ? -1 : uv_diff > 10eps(F) ? 1 : 0, comp==0)
+    end
 end
 
 function check_epsbox_ϵ(ϵ::Number, n::Int)
@@ -230,13 +238,9 @@ Base.convert{N,F,MIN}(::Type{IndexedTupleFitness}, fitness::NTuple{N,F},
                       fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
     IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
 
-hat_compare{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F,true}, expected::Int=0) =
-    hat_compare_ϵ_box(u, v, expected)
-
-hat_compare{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F,false}, expected::Int=0) =
-    hat_compare_ϵ_box(v, u, expected)
+hat_compare{N,F,MIN}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
+                 fs::EpsBoxDominanceFitnessScheme{N,F,MIN}, expected::Int=0) =
+    hat_compare_ϵ_box(u, v, MIN, expected)
 
 hat_compare{N,F}(u::NTuple{N,F}, v::IndexedTupleFitness{N,F},
                  fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) =
