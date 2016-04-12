@@ -85,8 +85,7 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
 
     has_progress = true
     updated_frontier_ix = 0
-    i = length(a.frontier)
-    while i > 0
+    for i in length(a.frontier):-1:1
         hat, index_match = hat_compare(cand_fitness, fitness(a.frontier[i]), a.fit_scheme)
         has_progress = has_progress && !index_match
         if hat < 0
@@ -114,10 +113,9 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
         elseif hat > 0 || (hat == 0 && index_match && cand_fitness.orig == fitness(a.frontier[i]).orig)
             # the new fitness dominates or is equal to the element in the archive, ignore
             has_progress = false
-            updated_frontier_ix = 1 # just something nonzero to prevent appending
+            updated_frontier_ix = -1 # just something nonzero to prevent appending
             break
         end
-        i -= 1
     end
     if updated_frontier_ix == 0 # non-dominated candidate, append to the frontier
         #info("Appended non-dominated element to the frontier")
@@ -131,7 +129,7 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
             a.best_candidate_ix = updated_frontier_ix
         else
             d = a.frontier[a.best_candidate_ix].fitness.agg - a.frontier[updated_frontier_ix].fitness.agg
-            if (d > 0 && is_minimizing(a.fit_scheme)) || (d < 0 && !is_minimizing(a.fit_scheme))
+            if (d > zero(d) && is_minimizing(a.fit_scheme)) || (d < zero(d) && !is_minimizing(a.fit_scheme))
                 #info("New best candidate")
                 a.best_candidate_ix = updated_frontier_ix
             end
