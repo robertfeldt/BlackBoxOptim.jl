@@ -56,7 +56,7 @@ objfunc(p::FunctionBasedProblem) = p.objfunc
 fitness(x, p::FunctionBasedProblem) = objfunc(p)(x)
 
 Base.copy(p::FunctionBasedProblem) =
-  FunctionBasedProblem(p.objfunc, copy(p.name), p.fitness_scheme, p.ss, p.opt_value)
+  FunctionBasedProblem(copy(p.objfunc), copy(p.name), p.fitness_scheme, p.ss, p.opt_value)
 
 opt_value(p::FunctionBasedProblem) = p.opt_value
 
