@@ -110,7 +110,9 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
                     a.best_candidate_ix = updated_frontier_ix
                 end
             end
-        elseif hat > 0 || (hat == 0 && index_match && cand_fitness.orig == fitness(a.frontier[i]).orig)
+        elseif hat > 0 || (hat == 0 && index_match &&
+                           isapprox(cand_fitness.agg, fitness(a.frontier[i]).agg, rtol=0.0, atol=100eps(Float64)) &&
+                           isapprox(cand_fitness.dist, fitness(a.frontier[i]).dist, rtol=0.0, atol=100eps(Float64)))
             # the new fitness dominates or is equal to the element in the archive, ignore
             has_progress = false
             updated_frontier_ix = -1 # just something nonzero to prevent appending
