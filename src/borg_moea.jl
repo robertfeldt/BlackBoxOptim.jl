@@ -22,6 +22,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
   recombinate_distr::Categorical # weights of the recombination operators
 
   # method parameters
+  θ::Float64        # restart-discounting coefficient for recombination operator weights
   ζ::Float64        # dampening coefficient for recombination operator weights
   wrecombinate_update_period::Int
   restart_check_period::Int
@@ -49,7 +50,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
     new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0,
            params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
            Categorical(ones(length(recombinate))/length(recombinate)),
-           params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
+           params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
            params[:MaxStepsWithoutProgress],
            recombinate,
            TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
@@ -61,6 +62,7 @@ const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, Params
   :τ => 0.02,       # selection ratio, fraction of population to use for tournament
   :γ => 4.0,        # recommended population-to-archive ratio
   :γ_δ => 0.25,     # the maximum allowed deviation of the population-to-archive ratio from γ
+  :θ => 0.9,        # restart-discounting coefficient for recombination operator weights
   :ζ => 1.0,        # dampening coefficient for recombination operator weights
   :RestartCheckPeriod => 1000,
   :OperatorsUpdatePeriod => 100,
@@ -188,7 +190,7 @@ end
   Update recombination operator probabilities based on the archive tag counts.
 """
 function update_recombination_weights!(alg::BorgMOEA)
-    op_counts = tagcounts(archive(alg))
+    op_counts = tagcounts(archive(alg), alg.θ)
     adj_op_counts = sum(values(op_counts)) + length(alg.recombinate)*alg.ζ
     alg.recombinate_distr = Categorical([(get(op_counts, i, 0)+alg.ζ)/adj_op_counts for i in eachindex(alg.recombinate)])
     alg.last_wrecombinate_update = alg.n_steps
@@ -202,6 +204,7 @@ end
 """
 function restart!(alg::BorgMOEA)
     narchived = length(archive(alg))
+    notify!(archive(alg), :restart)
     new_popsize = max(alg.min_popsize, ceil(Int, alg.γ * narchived))
     # fill populations with the solutions from the archive
     resize!(alg.population, new_popsize)
@@ -223,7 +226,6 @@ function restart!(alg::BorgMOEA)
         i += 1
     end
     alg.select.size = max(2, floor(Int, alg.τ * new_popsize))
-    archive(alg).candidates_without_progress = 0
     alg.last_restart_check = alg.n_steps
     alg.n_restarts+=1
     return alg

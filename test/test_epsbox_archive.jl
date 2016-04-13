@@ -3,12 +3,13 @@ facts("EpsBoxArchive") do
 
   context("EpsBoxFrontierIndividual") do
     arch_indiv = BlackBoxOptim.EpsBoxFrontierIndividual(
-            convert(IndexedTupleFitness, (2.21, 1.12), scheme), [3.0, 2.0], 3, 5)
+            convert(IndexedTupleFitness, (2.21, 1.12), scheme), [3.0, 2.0], 3, 5, 2)
     @fact arch_indiv.fitness.orig --> (2.21, 1.12)
     @fact arch_indiv.fitness.index --> (22, 11)
     @fact arch_indiv.timestamp --> greater_than(0)
     @fact arch_indiv.tag --> 3
     @fact arch_indiv.num_fevals --> 5
+    @fact arch_indiv.n_restarts --> 2
   end
 
   context("Constructing a small archive and adding to it") do

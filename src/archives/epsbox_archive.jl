@@ -7,10 +7,11 @@ immutable EpsBoxFrontierIndividual{N,F<:Number} <: ArchivedIndividual{IndexedTup
     tag::Int                            # tag of the individual (e.g. gen.op. ID)
     timestamp::Float64                  # when archived
     num_fevals::Int                     # number of fitness evaluations so far
+    n_restarts::Int                     # the number of method restarts so far
 
     Base.call{N,F}(::Type{EpsBoxFrontierIndividual}, fitness::IndexedTupleFitness{N,F},
-                   params, tag, num_fevals) =
-        new{N,F}(fitness, deepcopy(params), tag, time(), num_fevals)
+                   params, tag, num_fevals, n_restarts) =
+        new{N,F}(fitness, deepcopy(params), tag, time(), num_fevals, n_restarts)
 end
 
 """
@@ -27,6 +28,7 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
   num_candidates::Int               # Number of calls to add_candidate!()
   best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
   candidates_without_progress::Int  # last Number of calls to add_candidate!() without ϵ-progress
+  n_restarts::Int                   # the counter of the method restarts
 
   max_size::Int         # maximal frontier size
   # TODO allow different frontier containers?
@@ -34,7 +36,7 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
   frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
 
   function Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
-    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, max_size, EpsBoxFrontierIndividual{N,F}[])
+    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, max_size, EpsBoxFrontierIndividual{N,F}[])
   end
 
   Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
@@ -57,6 +59,7 @@ pareto_frontier(a::EpsBoxArchive) = a.frontier
     `candidates_without_progress(a::EpsBoxArchive)`
 
     Get the number of `add_candidate!()` calls since the last ϵ-progress.
+    The counter is reset after the method restart.
 """
 candidates_without_progress(a::EpsBoxArchive) = a.candidates_without_progress
 
@@ -64,19 +67,29 @@ Base.getindex(a::EpsBoxArchive, i::Integer) = a.frontier[i]
 
 best_candidate(a::EpsBoxArchive) = a.frontier[a.best_candidate_ix].params
 best_fitness(a::EpsBoxArchive) = a.best_candidate_ix > 0 ? fitness(a.frontier[a.best_candidate_ix]) : nafitness(fitness_scheme(a))
+function notify!(a::EpsBoxArchive, event::Symbol)
+    if event == :restart
+        a.n_restarts += 1
+        a.candidates_without_progress = 0
+    end
+    a
+end
 
 """
     `tagcounts(a::EpsBoxArchive)`
 
     Count the tags of individuals on the ϵ-box frontier.
+    Each restart the individual remains in the frontier discounts it by `θ`.
+
     Returns the `tag`→`count` dictionary.
 """
-function tagcounts(a::EpsBoxArchive)
-    res = Dict{Int,Int}()
+function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
+    (0.0 < θ <= 1.0) || throw(ArgumentError("θ ($θ) should be in (0.0, 1.0] range"))
+    res = Dict{Int,Float64}()
     for i in eachindex(a.frontier)
         curtag = tag(a.frontier[i])
-        curcounts = get!(res, curtag, 0)
-        res[curtag] = curcounts+1
+        curcounts = get!(res, curtag, 0.0)
+        res[curtag] = curcounts+θ^(a.n_restarts-a.frontier[i].n_restarts)
     end
     return res
 end
@@ -101,7 +114,7 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
                 #info("Replaced the dominated element $i on the frontier")
                 # replace the fitness to minimize memory operations
                 # note - if i was the best candidate index, it stays
-                a.frontier[i] = EpsBoxFrontierIndividual(cand_fitness, candidate, tag, num_fevals)
+                a.frontier[i] = EpsBoxFrontierIndividual(cand_fitness, candidate, tag, num_fevals, a.n_restarts)
                 updated_frontier_ix = i
             else
                 # already replaced the other dominated fitness, delete this one
@@ -128,7 +141,7 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
     end
     if updated_frontier_ix == 0 # non-dominated candidate, append to the frontier
         #info("Appended non-dominated element to the frontier")
-        push!(a.frontier, EpsBoxFrontierIndividual(cand_fitness, candidate, tag, num_fevals))
+        push!(a.frontier, EpsBoxFrontierIndividual(cand_fitness, candidate, tag, num_fevals, a.n_restarts))
         if length(a.frontier) > a.max_size
             throw(error("Pareto frontier exceeds maximum size"))
         end
