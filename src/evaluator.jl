@@ -12,6 +12,8 @@ search_space(e::Evaluator) = search_space(problem(e))
 describe(e::Evaluator) = "Problem: $(name(e.problem)) (dimensions = $(numdims(e)))"
 problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 
+shutdown!(e::Evaluator) = e # do nothing
+
 """
   Default implementation of the `Evaluator`.
 

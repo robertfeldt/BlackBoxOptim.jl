@@ -254,10 +254,13 @@ setup_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
 setup_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
   setup!(ctrl.optimizer, ctrl.evaluator)
 
-finalize_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
-  finalize!(ctrl.optimizer)
-finalize_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
-  finalize!(ctrl.optimizer, ctrl.evaluator)
+shutdown_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
+  shutdown!(ctrl.optimizer)
+
+function shutdown_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
+  shutdown!(ctrl.optimizer)
+  shutdown!(ctrl.evaluator)
+end
 
 """
   `run!(ctrl::OptRunController)`
@@ -292,7 +295,7 @@ function run!(ctrl::OptRunController)
     ctrl.stop_reason = check_stop_condition(ctrl)
   end
   ctrl.stop_time = time()
-  finalize_optimizer!(ctrl)
+  shutdown_optimizer!(ctrl)
   tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 end
 
