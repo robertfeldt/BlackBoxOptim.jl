@@ -28,13 +28,13 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
   best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
   candidates_without_progress::Int  # last Number of calls to add_candidate!() without ϵ-progress
 
-  capacity::Int         # maximal frontier size
+  max_size::Int         # maximal frontier size
   # TODO allow different frontier containers?
   # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
   frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
 
-  function Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, capacity::Integer = 1_000_000)
-    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, capacity, EpsBoxFrontierIndividual{N,F}[])
+  function Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
+    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, max_size, EpsBoxFrontierIndividual{N,F}[])
   end
 end
 
@@ -42,7 +42,7 @@ fitness_scheme(a::EpsBoxArchive) = a.fit_scheme
 # EpsBoxArchive stores indexed fitness
 Base.length(a::EpsBoxArchive) = length(a.frontier)
 Base.isempty(a::EpsBoxArchive) = isempty(a.frontier)
-capacity(a::EpsBoxArchive) = a.capacity
+capacity(a::EpsBoxArchive) = a.max_size
 numdims(a::EpsBoxArchive) = !isempty(a.frontier) ? length(a.frontier[1].params) : 0
 pareto_frontier(a::EpsBoxArchive) = a.frontier
 
@@ -122,8 +122,8 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
     if updated_frontier_ix == 0 # non-dominated candidate, append to the frontier
         #info("Appended non-dominated element to the frontier")
         push!(a.frontier, EpsBoxFrontierIndividual(cand_fitness, candidate, tag, num_fevals))
-        if length(a.frontier) > a.capacity
-            throw(error("Frontier size exceeds archive capacity"))
+        if length(a.frontier) > a.max_size
+            throw(error("Pareto frontier exceeds maximum size"))
         end
         updated_frontier_ix = length(a.frontier)
         # check if the new candidate has better aggregate score

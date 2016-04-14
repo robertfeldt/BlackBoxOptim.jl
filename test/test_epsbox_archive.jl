@@ -12,7 +12,7 @@ facts("EpsBoxArchive") do
   end
 
   context("Constructing a small archive and adding to it") do
-    a = EpsBoxArchive(scheme, 100)
+    a = EpsBoxArchive(scheme, max_size=100)
 
     @fact capacity(a) --> 100
     @fact length(a)   --> 0
@@ -79,7 +79,7 @@ facts("EpsBoxArchive") do
   end
 
   context("archive copies the individuals") do
-    a = EpsBoxArchive(scheme, 100)
+    a = EpsBoxArchive(scheme, max_size=100)
     @fact length(a) --> 0
 
     indiv = [1.5, 2.0]
