@@ -123,14 +123,53 @@ start_time(ctrl::OptRunController) = ctrl.start_time
 best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
 best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
 
-format_fitness(best_fit::Number) = @sprintf("%.9f", best_fit)
+"""
+    show_fitness(io, fit, [problem::OptimizationProblem])
 
-format_fitness{N}(best_fit::NTuple{N}) =
-    string("(", join([@sprintf("%.9f", best_fit[i]) for i in 1:N], ", "), ")")
+    Output fitness to the given IO stream.
+    `show_fitness()` method could be overridden for a specific problem, e.g.
+    to print the names of each objective.
+"""
+show_fitness(io::IO, fit::Number) = @printf(io, "%.9f", fit)
 
-format_fitness{N}(best_fit::IndexedTupleFitness{N}) =
-    string(format_fitness(best_fit.orig),
-           " agg=", @sprintf("%.9f", best_fit.agg))
+function show_fitness{N}(io::IO, fit::NTuple{N})
+    print(io, "(")
+    for i in 1:N
+        if i > 1
+            print(io, ", ")
+        end
+        @printf(io, "%.5f", fit[i])
+    end
+    print(io, ")")
+end
+
+function show_fitness{N}(io::IO, fit::IndexedTupleFitness{N})
+    show_fitness(io, fit.orig)
+    @printf(io, " agg=%.5f", fit.agg)
+end
+
+# problem-specific method defaults to problem-agnostic method
+# note that the fitness type of the problem could be different from FA,
+# because show_fitness() typically is called for the archived fitness
+show_fitness{FA}(io::IO, fit::FA, problem::OptimizationProblem) = show_fitness(io, fit)
+
+"""
+    format_fitness(fit, [problem::OptimizationProblem])
+
+    Format fitness into a string.
+    Calls `show_fitness()` under the hood.
+"""
+function format_fitness(fit::Any, problem::OptimizationProblem)
+    buf = IOBuffer(false, true)
+    show_fitness(buf, fit, problem)
+    return bytestring(buf.data)
+end
+
+function format_fitness(fit::Any)
+    buf = IOBuffer(false, true)
+    show_fitness(buf, fit)
+    return bytestring(buf.data)
+end
 
 function elapsed_time(ctrl::OptRunController)
   isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
@@ -184,7 +223,7 @@ function trace_progress(ctrl::OptRunController)
   # Always print fitness if num_evals > 0
   if num_func_evals(ctrl) > 0
     tr(ctrl, ", fitness=")
-    tr(ctrl, format_fitness(best_fitness(ctrl)))
+    show_fitness(STDOUT, best_fitness(ctrl), problem(ctrl))
   end
 
   tr(ctrl, "\n")
@@ -268,7 +307,8 @@ function show_report(ctrl::OptRunController, population_stats=false)
   end
 
   tr(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
-  tr(ctrl, "\n\nFitness: ", format_fitness(best_fitness(ctrl)))
+  tr(ctrl, "\n\nFitness: ")
+  show_fitness(STDOUT, best_fitness(ctrl), problem(ctrl))
   tr(ctrl, "\n\n")
 end
 
