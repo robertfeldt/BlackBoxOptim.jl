@@ -114,11 +114,11 @@ function name(o::Optimizer)
 end
 
 """
-  `trace_state(io::IO, optimizer::Optimizer)`
+  `trace_state(io::IO, optimizer::Optimizer, mode::Symbol)`
 
   Trace the current optimization state to a given IO stream.
   Called by `OptRunController` `trace_progress()`.
 
   Override it for your optimizer to generate method-specific diagnostic traces.
 """
-function trace_state(io::IO, optimizer::Optimizer) end
+function trace_state(io::IO, optimizer::Optimizer, mode::Symbol) end

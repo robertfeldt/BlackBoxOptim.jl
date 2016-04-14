@@ -63,7 +63,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   end
 end
 
-function trace_state(io::IO, dxnes::DXNESOpt)
+function trace_state(io::IO, dxnes::DXNESOpt, mode::Symbol)
     evol_path_norm = norm(dxnes.evol_path)
     println(io,
             "σ=", dxnes.sigma,

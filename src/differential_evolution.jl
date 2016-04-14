@@ -27,9 +27,11 @@ end
 
 # trace current optimization state,
 # Called by OptRunController trace_progress()
-function trace_state(io::IO, de::DiffEvoOpt)
-    println(io, "DE modify state:")
-    trace_state(io, de.modify)
+function trace_state(io::IO, de::DiffEvoOpt, mode::Symbol)
+    if mode != :compact
+        println(io, "DE modify state:")
+        trace_state(io, de.modify, mode)
+    end
 end
 
 ask(de::DiffEvoOpt) = evolve(de, de.modify)

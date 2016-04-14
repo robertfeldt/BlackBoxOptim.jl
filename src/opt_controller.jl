@@ -184,7 +184,7 @@ function trace_progress(ctrl::OptRunController)
   tr(ctrl, "\n")
 
   if ctrl.trace_mode == :verbose
-    trace_state(STDOUT, ctrl.optimizer)
+    trace_state(STDOUT, ctrl.optimizer, ctrl.trace_mode)
   end
 end
 

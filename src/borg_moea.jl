@@ -182,7 +182,7 @@ end
 
 # trace current optimization state,
 # Called by OptRunController trace_progress()
-function trace_state(io::IO, alg::BorgMOEA)
+function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
     println(io, "pop.size=", popsize(alg.population),
                 " arch.size=", length(archive(alg)),
                 " recombinate=", alg.recombinate_distr,

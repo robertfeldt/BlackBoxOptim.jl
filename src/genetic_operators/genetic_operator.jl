@@ -78,14 +78,14 @@ const NO_GEN_OP = NoMutation()
 function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
 
 """
-  `trace_state(io, op::GeneticOperator)`
+  `trace_state(io, op::GeneticOperator, mode::Symbol)`
 
   Trace the state of the operator.
   Called by `trace_progress()` during `OptRunController` run by some of the genetic optimizers.
 
   Override the method to trace the state of your genetic operator.
 """
-function trace_state(io::IO, op::GeneticOperator) end
+function trace_state(io::IO, op::GeneticOperator, mode::Symbol) end
 
 """
   A mixture of genetic operators,
