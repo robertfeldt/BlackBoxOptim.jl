@@ -8,7 +8,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
-  trace_mode::Symbol # controller state trace mode (:verbose, :silent)
+  trace_mode::Symbol # controller state trace mode (:verbose, :compact, :silent)
                      # :silent makes tr() generate no output)
   save_trace::Bool # FIXME if traces should be saved to a file
   trace_interval::Float64 # periodicity of calling trace_progress()
@@ -159,7 +159,16 @@ function check_stop_condition(ctrl::OptRunController)
 end
 
 function trace_progress(ctrl::OptRunController)
+  # update the counters
   ctrl.last_report_time = time()
+  total_improvement_rate = ctrl.num_better/num_steps(ctrl)
+  recent_improvement_rate = ctrl.num_better_since_last_report/ctrl.num_steps_since_last_report
+  ctrl.num_better_since_last_report = 0
+  ctrl.num_steps_since_last_report = 0
+
+  if ctrl.trace_mode == :silent
+      return
+  end
 
   # Always print step number, num fevals and elapsed time
   tr(ctrl, @sprintf("%.2f secs, %d evals, %d steps",
@@ -167,12 +176,9 @@ function trace_progress(ctrl::OptRunController)
 
   # Only print if this optimizer reports on number of better. They return 0
   # if they do not.
-  if ctrl.num_better_since_last_report > 0
+  if total_improvement_rate > 0.0
     tr(ctrl, @sprintf(", improv/step: %.3f (last = %.4f)",
-        ctrl.num_better/num_steps(ctrl),
-        ctrl.num_better_since_last_report/ctrl.num_steps_since_last_report))
-    ctrl.num_better_since_last_report = 0
-    ctrl.num_steps_since_last_report = 0
+        total_improvement_rate, recent_improvement_rate))
   end
 
   # Always print fitness if num_evals > 0
@@ -183,9 +189,7 @@ function trace_progress(ctrl::OptRunController)
 
   tr(ctrl, "\n")
 
-  if ctrl.trace_mode == :verbose
-    trace_state(STDOUT, ctrl.optimizer, ctrl.trace_mode)
-  end
+  trace_state(STDOUT, ctrl.optimizer, ctrl.trace_mode)
 end
 
 function step!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
@@ -359,7 +363,9 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
 
   try
     run!(ctrl)
-    show_report(ctrl)
+    if ctrl.trace_mode != :silent
+        show_report(ctrl)
+    end
 
     if oc.parameters[:SaveFitnessTraceToCsv]
       write_results(ctrl)
