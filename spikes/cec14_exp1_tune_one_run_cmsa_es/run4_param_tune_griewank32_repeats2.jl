@@ -13,9 +13,9 @@ for(dim in [32])
   diameter = minimum(diameters(search_space(p)))
 
   pe = ParameterExperiment(
-  ["lambda", 
-   "mu", 
-   "sigma", 
+  ["lambda",
+   "mu",
+   "sigma",
    "decompose_covar_prob",
    "tau",
    "tau_c"

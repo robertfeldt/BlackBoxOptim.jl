@@ -1,5 +1,5 @@
-# 
-# Test a sparse rosenbrock, i.e. we have many factors but only a few are 
+#
+# Test a sparse rosenbrock, i.e. we have many factors but only a few are
 # actually active in determining the response from the function.
 #
 function rosenbrock(x)
@@ -144,7 +144,7 @@ for(problem in Problems)
 
           for(cssi in 1:ncss)
             css = CovariateSelectionSchemes[cssi]
-            println(csvfile, css, ",", problem, ",", dim, ",", asd, ",", gsd, ",", size, ",", 
+            println(csvfile, css, ",", problem, ",", dim, ",", asd, ",", gsd, ",", size, ",",
               mean(times[:,cssi]), ",",
               std(percent_missed[:,cssi]), ",", mean(percent_missed[:,cssi]))
             flush(STDOUT)

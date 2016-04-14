@@ -1,5 +1,5 @@
 # This is an implementation of the CMSA-ES as described in the paper:
-#  H. Beyer and B. Sendhoff, "Covariance Matrix Adaptation Revisited – 
+#  H. Beyer and B. Sendhoff, "Covariance Matrix Adaptation Revisited –
 #  the CMSA Evolution Strategy", 2008
 #
 
@@ -16,7 +16,7 @@ function log_utilities(mu, lambda)
 end
 
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES.
-function cmsa_es(p; 
+function cmsa_es(p;
   trace = true,
 
   # Stopping criteria related
@@ -62,12 +62,12 @@ function cmsa_es(p;
     if (time() - start_time) > max_seconds
       termination_reason = "Exceeded time budget"
       break
-    end    
+    end
 
     if num_fevals > max_evals
       termination_reason = "Exceeded function eval budget"
       break
-    end    
+    end
 
     # Decompose only with a given probability => saves time
     if rand() <= decompose_covar_prob
@@ -206,7 +206,7 @@ type CholeskyCovarSampler <: CovarianceMatrixSampler
 end
 
 function decompose!(cms::CholeskyCovarSampler)
-  try 
+  try
     cms.sqrtC = chol(cms.C)'
   catch error
     # We don't update if there is some problem

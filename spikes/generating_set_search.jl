@@ -1,4 +1,4 @@
-# A direction generator generates the search directions to use at each step of 
+# A direction generator generates the search directions to use at each step of
 # a GSS search.
 abstract DirectionGenerator
 
@@ -14,7 +14,7 @@ function directions_for_k(cg::ConstantDirectionGen, k)
   cg.directions # Always the same regardless of k...
 end
 
-# We can easily do a compass search with GSS by generating directions 
+# We can easily do a compass search with GSS by generating directions
 # individually (+ and -) for each coordinate.
 compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
 
@@ -22,10 +22,10 @@ using BlackBoxOptim
 
 # Generating set search as described on page 21 (405) in Kolda2003 but extended
 # with random ordering or frequency adapted ordering of directions.
-function generating_set_search(problem; 
+function generating_set_search(problem;
   max_seconds = 2*numdims(problem), max_evals_per_dim = 1e5,
   ftol = 1e-7,
-  delta_tol = 1e-13, 
+  delta_tol = 1e-13,
   step_size = false, x = false, random_order = false,
   freq_adapt_order = false,
   direction_gen = compass_search_directions(numdims(problem)))
@@ -76,7 +76,7 @@ function generating_set_search(problem;
     if num_fevals > max_evals
       termination_reason = "Exceeded function eval budget"
       break
-    end    
+    end
 
     # Get the directions for this iteration
     k += 1
@@ -138,7 +138,7 @@ function min_distance(point, points)
   dist
 end
 
-function maximize_min_distance(n, points, num_samples = 100, 
+function maximize_min_distance(n, points, num_samples = 100,
   sampler = () -> randn(n,1))
   xbest = xnew = sampler()
   dist = min_distance(xnew, points)
@@ -153,8 +153,8 @@ function maximize_min_distance(n, points, num_samples = 100,
   xbest
 end
 
-function restart_gss(f, n; max_seconds = 2*n, delta_tol = 1e-7, 
-  step_size = 1.0, 
+function restart_gss(f, n; max_seconds = 2*n, delta_tol = 1e-7,
+  step_size = 1.0,
   x = false, diverse_starting_points = false, diameter = 1.0,
   random_order = false, freq_adapt_order = false,
   known_fmin = :unknown, ftol = 1e-8,
@@ -179,10 +179,10 @@ function restart_gss(f, n; max_seconds = 2*n, delta_tol = 1e-7,
 
     num_runs += 1
 
-    x, fbest, num_fevals, termination_reason = generating_set_search(f, n; 
+    x, fbest, num_fevals, termination_reason = generating_set_search(f, n;
       max_seconds = time_left, delta_tol = delta_tol, random_order = random_order,
       freq_adapt_order = freq_adapt_order,
-      step_size = step_size, x = starting_points[:,num_runs], 
+      step_size = step_size, x = starting_points[:,num_runs],
       known_fmin = known_fmin, ftol = ftol,
       direction_gen = direction_gen)
 
@@ -246,13 +246,13 @@ end
 
 #of = rosenbrock
 #@time ts, fbs, fes = compare_params([
-#  (of, 2, false, false, false, 1.0), 
-#  (of, 2, false, false, false, 2.0), 
-#  (of, 2, false, false, true, 1.0), 
+#  (of, 2, false, false, false, 1.0),
+#  (of, 2, false, false, false, 2.0),
+#  (of, 2, false, false, true, 1.0),
 #  (of, 2, false, false, true, 2.0)
 #  ],
-#  ((f, n, fao, ro, div, diam) -> 
-#    restart_gss(xtransform(n, f), n; 
+#  ((f, n, fao, ro, div, diam) ->
+#    restart_gss(xtransform(n, f), n;
 #      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro,
 #      diverse_starting_points = div, diameter = diam)),
 #  5
@@ -268,15 +268,15 @@ end
 
 #of = rosenbrock
 #@time ts, fbs, fes = compare_params([
-#  (of, 10, true, false), 
-#  #(of, 10, false, true), 
+#  (of, 10, true, false),
+#  #(of, 10, false, true),
 #  #(of, 10, false, false),
-#  #(of, 30, true, false), 
-#  #(of, 30, false, true), 
+#  #(of, 30, true, false),
+#  #(of, 30, false, true),
 #  (of, 30, false, false)
 #  ],
-#  ((f, n, fao, ro) -> 
-#    restart_gss(xtransform(n, f), n; 
+#  ((f, n, fao, ro) ->
+#    restart_gss(xtransform(n, f), n;
 #      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
 #  2
 #)
@@ -296,21 +296,21 @@ end
 #of = deceptive_cuccu2011(15, 2)
 #of = rastrigin
 #@time ts, fbs, fes = compare_params([
-#  (of, 2, true, false), 
-#  #(of, 2, false, true), 
+#  (of, 2, true, false),
+#  #(of, 2, false, true),
 #  (of, 2, false, false),
-#  (of, 5, true, false), 
-#  #(of, 5, false, true), 
+#  (of, 5, true, false),
+#  #(of, 5, false, true),
 #  (of, 5, false, false),
-#  (of, 10, true, false), 
-#  #(of, 10, false, true), 
+#  (of, 10, true, false),
+#  #(of, 10, false, true),
 #  (of, 10, false, false),
-#  (of, 20, true, false), 
-#  #(of, 20, false, true), 
+#  (of, 20, true, false),
+#  #(of, 20, false, true),
 #  (of, 20, false, false)
 #  ],
-#  ((f, n, fao, ro) -> 
-#    restart_gss(xtransform(n, f), n; 
+#  ((f, n, fao, ro) ->
+#    restart_gss(xtransform(n, f), n;
 #      known_fmin = 0.0, freq_adapt_order = fao, random_order = ro)),
 #  25
 #);

@@ -1,8 +1,8 @@
 # Compass search as described on page 18 (402) in Kolda2003:
-#  Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization 
-#  by direct search: New perspectives on some classical and modern methods.", 
+#  Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization
+#  by direct search: New perspectives on some classical and modern methods.",
 #  SIAM review 45.3 (2003): 385-482.
-function compass_search(f, n; max_fevals = 1e6, delta_tol = 1e-20, 
+function compass_search(f, n; max_fevals = 1e6, delta_tol = 1e-20,
   step_size = 1.0, x = false, known_fmin = false)
 
   @assert delta_tol > 0

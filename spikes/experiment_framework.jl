@@ -69,8 +69,8 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       reason_counts[pi][reason] = get(reason_counts[pi], reason, 0) + 1
 
       # Save fitness history to a csv file
-      save_fitness_history_to_csv_file(archive, run_csvfile; 
-        header_prefix = join(["Problem,Dimensions,RunId", paramheader], ","), 
+      save_fitness_history_to_csv_file(archive, run_csvfile;
+        header_prefix = join(["Problem,Dimensions,RunId", paramheader], ","),
         line_prefix = join(["\"$(name(prob))\",$(dims),$(i)", params], ","),
         include_header = include_run_csv_header)
       include_run_csv_header = false # Only the first round...
@@ -79,9 +79,9 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       # Create the summary_csv file on the first loop through since we now
       # know the number of parameters
       if add_summary_csv_header
-        summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId", 
+        summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId",
           "Problem", "Dimension", paramheader,
-          "ElapsedTime", "FuncEvals", "TerminationReason", 
+          "ElapsedTime", "FuncEvals", "TerminationReason",
           "Fitness"]; filepath = join([file_prefix, "_summary.csv"]))
         add_summary_csv_header = false
       end
@@ -146,7 +146,7 @@ end
 function run_test(f, n; mu = false)
   of = xtransform(n, f)
   tic()
-  x, f, fevals, reason = cmsa_es(n, of; covarMatrixSampler = EigenCovarSampler, 
+  x, f, fevals, reason = cmsa_es(n, of; covarMatrixSampler = EigenCovarSampler,
     mu = mu,
     trace = true, known_fmin = 0.0)
   t = toq()

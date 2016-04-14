@@ -1,5 +1,5 @@
 # This is an implementation of the CMSA-ES as described in the paper:
-#  H. Beyer and B. Sendhoff, "Covariance Matrix Adaptation Revisited – 
+#  H. Beyer and B. Sendhoff, "Covariance Matrix Adaptation Revisited –
 #  the CMSA Evolution Strategy", 2008
 #
 
@@ -21,14 +21,14 @@
 #
 #  CMSA_ES(n, mu, lambda, decomposeFunc = chol) = begin
 #
-#    tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008 
+#    tau = 1 / sqrt(2*n)           # Equation (1) on page 5 in Beyer2008
 #    tau_c = 1 + n * (n + 1) / 2   # Equation (2) on page 5 in Beyer2008
 #
-#    sigma = 1.0                   # Mutation strength, sigma (self-adapted) 
+#    sigma = 1.0                   # Mutation strength, sigma (self-adapted)
 #    sigmas = sigma * ones(1, n)
 #    C = eye(n, n)                 # Covariance matrix
 #
-#    new(n, mu, lambda, decomposeFunc, tau, tau_c, 
+#    new(n, mu, lambda, decomposeFunc, tau, tau_c,
 #      sigma, sigmas, C, decomposeFunc(C))
 #
 #  end
@@ -63,7 +63,7 @@ function active_linear_utilities(mu, lambda)
 end
 
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES.
-function cmsa_es(p; 
+function cmsa_es(p;
   trace = true,
 
   # Stopping criteria related
@@ -114,12 +114,12 @@ function cmsa_es(p;
     if (time() - start_time) > max_seconds
       termination_reason = "Exceeded time budget"
       break
-    end    
+    end
 
     if num_fevals > max_evals
       termination_reason = "Exceeded function eval budget"
       break
-    end    
+    end
 
     # Decompose only with a given probability => saves time
     if rand() <= decompose_covar_prob
@@ -211,7 +211,7 @@ function cmsa_es(p;
   return xbest, fbest, num_fevals, termination_reason, archive
 end
 
-function restart_cmsa_es(p; 
+function restart_cmsa_es(p;
   trace = true,
 
   # Stopping criteria related
@@ -227,7 +227,7 @@ function restart_cmsa_es(p;
   covarMatrixSampler = CholeskyCovarSampler,
   utilitiesFunc = log_utilities,
   tau = 1 / sqrt(2*numdims(p)), # Equation (1) on page 5 in Beyer2008
-  covar_learning_rate = 0.88, 
+  covar_learning_rate = 0.88,
 
   )
 
@@ -242,12 +242,12 @@ function restart_cmsa_es(p;
 
     num_runs += 1
 
-    x, fbest, num_fevals, termination_reason, archive = cmsa_es(p; 
-      trace = trace, max_seconds = time_left, 
+    x, fbest, num_fevals, termination_reason, archive = cmsa_es(p;
+      trace = trace, max_seconds = time_left,
       ftol = ftol, xtol = xtol, stol = stol,
       max_evals_per_dim = max_evals_per_dim,
       max_rounds_without_improvement = 1000,
-      lambda = lambda, 
+      lambda = lambda,
       mu = int(maximum([ceil(lambda/lambda_divisor), 2.0])),
       covarMatrixSampler = CholeskyCovarSampler, utilitiesFunc = log_utilities,
       tau = tau, covar_learning_rate = covar_learning_rate
@@ -341,7 +341,7 @@ type CholeskyCovarSampler <: CovarianceMatrixSampler
 end
 
 function decompose!(cms::CholeskyCovarSampler)
-  try 
+  try
     cms.sqrtC = chol(cms.C)'
   catch error
     # We don't update if there is some problem

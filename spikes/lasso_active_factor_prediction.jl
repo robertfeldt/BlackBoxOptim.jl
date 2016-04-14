@@ -55,7 +55,7 @@ function most_active_factors_from_lasso(xs, y; alpha = 1.0)
   return factor_counts, lasso_factors
 end
 
-function eval_if_lasso_finds_active_factors(N, K, S, reps = 100; 
+function eval_if_lasso_finds_active_factors(N, K, S, reps = 100;
   beta_intercept = 0.0, beta_slope = 1.0, alpha = 1.0)
 
   active_factors = shuffle(collect(1:N))[1:K]
@@ -68,7 +68,7 @@ function eval_if_lasso_finds_active_factors(N, K, S, reps = 100;
     sum(active .* betas)
   end
 
-  # We want to count how many times the predicted factors (ranked based on how 
+  # We want to count how many times the predicted factors (ranked based on how
   # often they were in the lasso factor set) are among the actually active factors.
   factor_found_counts = Dict{Int64, Int64}()
 
@@ -121,7 +121,7 @@ type RandObjectiveFunction
   #  maxOrder = maximum number of interaction terms in one factor (a product) of the sum that is the objective func
   #  sparsitiesPerOrder = array that gives the number of factors for that order.
   #  effect_heritage = true iff the factors of higher order can only involve vars used for order 1 (main effects)
-  RandObjectiveFunction(N, maxOrder = 1, factorsPerOrder = [2]; 
+  RandObjectiveFunction(N, maxOrder = 1, factorsPerOrder = [2];
     effect_heritage = true) = begin
     all_vars = 1:N
 
@@ -165,6 +165,6 @@ function eval(f::RandObjectiveFunction, a)
   s = size(xs, 2)
   y = zeros(s)
   for(i in 1:s)
-    y[i] = 
+    y[i] =
   end
 end

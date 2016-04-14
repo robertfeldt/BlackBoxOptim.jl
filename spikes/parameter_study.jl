@@ -1,8 +1,8 @@
 require("covar_matrix_self_adaptation_es.jl")
 
 # Calls to ensure everything has been compiled on all processors.
-@everywhere cmsa_es(2, rosenbrock; max_fevals = 2, trace = false) 
-@everywhere cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = CholeskyCovarSampler, trace = false) 
+@everywhere cmsa_es(2, rosenbrock; max_fevals = 2, trace = false)
+@everywhere cmsa_es(2, rosenbrock; max_fevals = 2, covarMatrixSampler = CholeskyCovarSampler, trace = false)
 
 # Parameter study
 num_runs_per_dim = 25
@@ -64,7 +64,7 @@ end
   ts = strftime("%y%m%d,%H%M%S", time())
 
   tic()
-  x, f, fevals = cmsa_es(d, prob; 
+  x, f, fevals = cmsa_es(d, prob;
     max_fevals = maxfevals, covarMatrixSampler = s,
     mu = mu, lambda = l,
     utilitiesFunc = uf, trace = false)

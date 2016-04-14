@@ -13,8 +13,8 @@ for(dim in [2,4,8,16,32,64])
   diameter = minimum(diameters(search_space(p)))
 
   pe = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
-   "max_successes_before_increasing", "max_failures_before_decreasing", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
+   "max_successes_before_increasing", "max_failures_before_decreasing",
    "max_rounds_without_improvement", "tau_c"
   ],
   [((ds, ps) -> int(10^ds[1])),

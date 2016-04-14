@@ -15,7 +15,7 @@ end
 
 # Optimize the n-dimensional objective func with a (mu,lambda) CMSA-ES using
 # subset tournaments to optimize subsets of variables in rounds.
-function st_cmsa_es(p; 
+function st_cmsa_es(p;
   trace = true,
 
   # Stopping criteria related
@@ -86,7 +86,7 @@ function st_cmsa_es(p;
     if (time() - start_time) > max_seconds
       termination_reason = "Exceeded time budget"
       break
-    end    
+    end
 
     if num_fevals > max_evals
       termination_reason = "Exceeded function eval budget"
@@ -327,7 +327,7 @@ type CholeskyCovarSampler <: CovarianceMatrixSampler
 end
 
 function decompose!(cms::CholeskyCovarSampler)
-  try 
+  try
     cms.sqrtC = chol(cms.C)'
   catch error
     # We don't update if there is some problem
@@ -338,7 +338,7 @@ function multivariate_normal_sample(cms::CholeskyCovarSampler, n, m)
   cms.sqrtC * randn(n, m)
 end
 
-# The subset CholeskyCovarSampler only uses a subset of the variables in the 
+# The subset CholeskyCovarSampler only uses a subset of the variables in the
 # (expensive) cholesky decomposition, the other variables are kept constant.
 # However, the covariance matrix itself is always updated and saved in full
 # so that the overall learning of the shape of the fitness landscape is not lost.
@@ -361,7 +361,7 @@ end
 using JSON
 
 function decompose!(cms::SubsetCholeskyCovarSampler)
-  try 
+  try
     subset_C = cms.C[cms.subset, cms.subset]
     cms.sqrtC = chol(subset_C)'
   catch error
@@ -377,7 +377,7 @@ function multivariate_normal_sample(cms::SubsetCholeskyCovarSampler, n, m)
   subset_inv_c = 1
 
   # Calc the inverted covar matrix only for the subset
-  try 
+  try
     subset_inv_c = cms.sqrtC * randn(subset_size, m)
   catch error
     println("Error in subset_inv_c multiplication, size(cms.sqrtC) = $(size(cms.sqrtC)), subset_size = $(subset_size), m = $(m), size(cms.C) = $(size(cms.C))")
