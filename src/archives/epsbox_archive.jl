@@ -10,7 +10,7 @@ immutable EpsBoxFrontierIndividual{N,F<:Number} <: ArchivedIndividual{IndexedTup
 
     Base.call{N,F}(::Type{EpsBoxFrontierIndividual}, fitness::IndexedTupleFitness{N,F},
                    params, tag, num_fevals) =
-        new{N,F}(fitness, copy(params), tag, time(), num_fevals)
+        new{N,F}(fitness, deepcopy(params), tag, time(), num_fevals)
 end
 
 """
