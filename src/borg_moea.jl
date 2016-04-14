@@ -45,7 +45,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
     !isempty(recombinate) || throw(ArgumentError("No recombinate operators specified"))
     fit_scheme = convert(EpsBoxDominanceFitnessScheme, fit_scheme, params[:ϵ])
     archive = EpsBoxArchive(fit_scheme, params)
-    evaluator = ProblemEvaluator(problem, archive)
+    evaluator = make_evaluator(problem, archive, params)
     new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0,
            params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
            Categorical(ones(length(recombinate))/length(recombinate)),
