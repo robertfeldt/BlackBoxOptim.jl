@@ -27,7 +27,7 @@ function tune_parameters(bt::BonesaTuner, max_hours = 1.0)
   # Create a random set of vectors and then evaluate them on the problem set.
   create_random_parameter_vectors(bt, bt.M)
   bt.utilities = zeros(num_utilities(bt) * num_problems(bt.problem_set), bt.M)
-  for(i in 1:num_param_vectors(bt))
+  for i in 1:num_param_vectors(bt)
     if time_is_up(bt)
       # Cut the size of the archive since we did not have time to eval them all... :(
       bt.parameter_vectors = bt.parameter_vectors[:,1:(i-1)]
@@ -83,7 +83,7 @@ function evaluate_param_vector(bt, pvector)
   np = num_problems(bt.problem_set)
   utilities = zeros(np*nu)
 
-  for(i in 1:np)
+  for i in 1:np
     p = bt.problem_set[i]
     start = 1 + (i-1) * nu
     tic()
@@ -111,9 +111,9 @@ function find_approximate_c_given_random_sample_of_points(m, l, tolerance = 1e-3
 
   # Now calc the distances between points. We only sample them if m is large.
   distances = zeros(Float64, m, m)
-  for(i in 1:m)
+  for i in 1:m
     x = points[:,i]
-    for(j in i:m)
+    for j in i:m
       y = points[:,j]
       distances[i, j] = distances[i, j] = std_distance(x, y, std_devs)
     end

@@ -53,7 +53,7 @@ function update_transform!(ae::AdaptiveEncoding, x::Array{Float64, 2}, us::Array
   zis = (ae.sqrtn / norm(Binv * xis_minus_m_prev)) * xis_minus_m_prev
   C_mu = zeros(ae.n, ae.n)
   # Should be some simpler way to achieve this... Maybe C_mu = zis * diag(us) * zis'
-  for(i in 1:ae.n)
+  for i in 1:ae.n
     z = zis[:,i]
     C_mu += (us[i] * (z * z'))
   end

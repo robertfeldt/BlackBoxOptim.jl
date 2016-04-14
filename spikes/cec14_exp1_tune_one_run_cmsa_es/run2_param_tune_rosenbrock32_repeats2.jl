@@ -5,7 +5,7 @@ require("../../src/experiments/parameter_experiment.jl")
 
 using BlackBoxOptim
 
-for(dim in [32])
+for dim in [32]
 
   n = dim
   p = BlackBoxOptim.as_fixed_dim_problem(BlackBoxOptim.example_problems["Rosenbrock"], n)

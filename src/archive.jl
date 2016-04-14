@@ -187,7 +187,7 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
 
   end
 
-  for(af in a.fitness_history)
+  for af in a.fitness_history
 
     mc = magnitude_class(af.fitness)
 

@@ -26,19 +26,19 @@ problems = [rosenbrock, sphere, cigar, cigtab]
 
 # Now create parameter combinations
 Params = Any[]
-for(run in 1:num_runs_per_dim)
-  for(prob in problems)
-    for(d in dims)
-      for(maxfevals in max_evals_per_dim)
-        for(uf in utils)
-          for(s in samplers)
-            for(l in lambdas)
+for run in 1:num_runs_per_dim
+  for prob in problems
+    for d in dims
+      for maxfevals in max_evals_per_dim
+        for uf in utils
+          for s in samplers
+            for l in lambdas
 
               if typeof(l) == Function
                 l = l(d)
               end
 
-              for(mu in mus)
+              for mu in mus
                 if typeof(mu) != Int64
                   mu = int(mu * l)
                 end
@@ -83,7 +83,7 @@ results = pmap(one_run_and_save, Params)
 
 fh = open(strftime("parameter_studies/%y%m%d_%H%M%S_$(machine).csv", time()), "w")
 println(fh, "Date,Time,RunID,Problem,N,Machine,Sampler,Utilities,Mu,Lambda,NumFuncEvals,ExecTime,Fitness")
-for(i in 1:length(results))
+for i in 1:length(results)
   println(fh, results[i])
 end
 close(fh)

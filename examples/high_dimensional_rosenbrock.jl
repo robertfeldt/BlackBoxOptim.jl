@@ -34,7 +34,7 @@ problemname = "Rosenbrock"
 # Call once to compile everything
 fitness_for_opt(problemname, 2, 10, 100, :adaptive_de_rand_1_bin)
 
-for( (dims, steps) in [(128, 1e6), (256, 2e6), (512, 4e6)])
+for (dims, steps) in [(128, 1e6), (256, 2e6), (512, 4e6)]
   println("Num dims = ", dims, ", Num steps = ", steps)
   fitness = fitness_for_opt(problemname, dims, 50, steps, :adaptive_de_rand_1_bin)
 end

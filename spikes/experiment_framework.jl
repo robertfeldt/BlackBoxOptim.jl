@@ -49,10 +49,10 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
 
   # We add one run per problem (with runid 0) to ensure everything has been
   # compiled. It is not saved in the data though.
-  for(i in 0:num_runs)
+  for i in 0:num_runs
     # Random order of running each problem
     problem_indices = shuffle(collect(1:num_problems))
-    for(pi in problem_indices)
+    for pi in problem_indices
       num, prob = problems[pi]
       dims = BlackBoxOptim.numdims(prob)
       println("Run $(i) of problem $(name(prob))")
@@ -94,7 +94,7 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
     end
   end
 
-  for(i in 1:num_problems)
+  for i in 1:num_problems
     p = problems[i][2]
     println("\nProblem: ", name(p))
     println("Dimensions: ", numdims(p))
@@ -119,8 +119,8 @@ function compare_params(params, searchf, num_runs = 10)
   fbests = zeros(num_runs, num_configs)
   fevals = zeros(num_runs, num_configs)
 
-  for(r in 1:num_runs)
-    for(i in 1:num_configs)
+  for r in 1:num_runs
+    for i in 1:num_configs
       tic()
       xb, fb, fe, reason = searchf(params[i]...)
       times[r,i] = toq()
@@ -132,7 +132,7 @@ function compare_params(params, searchf, num_runs = 10)
   println("\n\nResults per parameter config")
   println("----------------------------")
   sp = sortperm(mean(fbests, 1)[:])
-  for(i in 1:num_configs)
+  for i in 1:num_configs
     print(i, ". "); show(params[i]); println("")
     println("Fitness: ", sumstats(fbests[:,i], (x) -> @sprintf("%.6e", x)))
     println("Time: ", sumstats(times[:,i], format_time))

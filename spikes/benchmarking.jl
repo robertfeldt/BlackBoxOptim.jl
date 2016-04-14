@@ -23,14 +23,14 @@ function benchmark(optimizers, problems)
 
   # For each problem, run all the optimizers while collecting a quality profile.
   # Shuffle the order of the problems just in case they have some dependence.
-  for(p in shuffle(problems))
+  for p in shuffle(problems)
 
     # Create the dict mapping opts to their performance trace on this problem.
     profiles[p] = Dict(Any, Any)
 
     # Shuffle the order of the optimizers for this problem (in case there is
     # some state/dependence between calls to a problem).
-    for(opt in shuffle(optimizers))
+    for opt in shuffle(optimizers)
 
 
     end

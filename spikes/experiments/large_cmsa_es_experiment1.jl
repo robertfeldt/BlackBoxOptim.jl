@@ -5,7 +5,7 @@ require("../../src/experiments/parameter_experiment.jl")
 
 using BlackBoxOptim
 
-for(dim in [2,4,8,16,32,64])
+for dim in [2,4,8,16,32,64]
 
   n = dim
   p = BlackBoxOptim.as_fixed_dim_problem(BlackBoxOptim.example_problems["Sphere"], n)

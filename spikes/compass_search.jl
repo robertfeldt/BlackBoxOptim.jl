@@ -21,7 +21,7 @@ function compass_search(f, n; max_fevals = 1e6, delta_tol = 1e-20,
   while(step_size > delta_tol && num_fevals <= max_fevals)
     # Check all directions to find a better point
     found_better = false
-    for(direction in 1:(2*n))
+    for direction in 1:(2*n)
       candidate = x + step_size .* directions[:, direction]
 
       fc = f(candidate)

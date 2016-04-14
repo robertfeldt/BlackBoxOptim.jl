@@ -17,7 +17,7 @@ function count_events_per_bin(delta, sorteddata)
   current_bin = 1
   next_bin_start = minv + delta
 
-  for(data in sorteddata)
+  for data in sorteddata
     if data >= next_bin_start
       next_bin_start += delta
       current_bin += 1

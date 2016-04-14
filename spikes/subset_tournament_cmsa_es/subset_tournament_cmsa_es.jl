@@ -180,7 +180,7 @@ function st_cmsa_es(p;
 
     # Update the covariance matrix
     uc = zeros(Float64, N, N)
-    for(i in 1:lambda)
+    for i in 1:lambda
       if weights[i] > 0.0
         se = s[:,i]
         uc += weights[i] * (se * se')
@@ -269,7 +269,7 @@ end
 
 function eval_fitnesses(problem, xs, lambda = size(xs, 2))
   fitnesses = zeros(lambda)
-  for(i in 1:lambda)
+  for i in 1:lambda
     fitnesses[i] = eval1(xs[:,i], problem)
   end
   fitnesses
@@ -278,7 +278,7 @@ end
 function assign_weights(n, fitnesses, utilities; minimize = true)
   us_ordered = zeros(n, 1)
   perms = sortperm(fitnesses, rev = !minimize)
-  for(i in 1:n)
+  for i in 1:n
     us_ordered[perms[i]] = utilities[i]
   end
   us_ordered

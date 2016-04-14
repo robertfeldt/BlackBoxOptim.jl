@@ -92,7 +92,7 @@ function generating_set_search(problem;
       shuffle!(order)
     end
 
-    for(direction in order)
+    for direction in order
       candidate = x + step_size .* directions[:, direction]
 
       fc = eval1(candidate, problem)
@@ -132,7 +132,7 @@ end
 
 function min_distance(point, points)
   dist = norm(point - points[:,1])
-  for(i in 2:size(points, 2))
+  for i in 2:size(points, 2)
     dist = minimum([dist, norm(point - points[:, i])])
   end
   dist
@@ -142,7 +142,7 @@ function maximize_min_distance(n, points, num_samples = 100,
   sampler = () -> randn(n,1))
   xbest = xnew = sampler()
   dist = min_distance(xnew, points)
-  for(i in 1:num_samples)
+  for i in 1:num_samples
     xnew = sampler()
     newdist = min_distance(xnew, points)
     if newdist > dist

@@ -106,7 +106,7 @@ function sprint_predicted_model(bestfit, terms = nothing, skipIfLower = 1e-5)
 
   elems = Any[]
   first_push = true
-  for(i in 1:length(bestfit))
+  for i in 1:length(bestfit)
     if abs(bestfit[i]) > skipIfLower
       str = join([signstr(bestfit[i]), terms[i]])
       if first_push

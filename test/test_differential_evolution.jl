@@ -9,7 +9,7 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
 context("SimpleSelector") do
   @fact popsize(DE) --> 10
   sel = BlackBoxOptim.SimpleSelector()
-  for(i in 1:NumTestRepetitions)
+  for i in 1:NumTestRepetitions
     numSamples = rand(1:8)
     sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
@@ -29,7 +29,7 @@ context("RadiusLimitedSelector") do
   sel = DE.select
   @fact typeof(sel) --> BlackBoxOptim.RadiusLimitedSelector
 
-  for(i in 1:NumTestRepetitions)
+  for i in 1:NumTestRepetitions
     numSamples = rand(1:sel.radius)
     sampled = BlackBoxOptim.select(sel, DE.population, numSamples)
 
@@ -91,7 +91,7 @@ context("DiffEvoRandBin1") do
   end
 
   context("always copies at least one element from donor") do
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       len = rand(1:100)
       pop = rand(len,4)
       target = pop[:,1]
@@ -106,7 +106,7 @@ context("DiffEvoRandBin1") do
   end
 
   context("unlikely to copy everything if vectors are large") do
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       len = 50 + rand(1:50)
       pop = rand(len,4)
       target = pop[:,1]
@@ -141,7 +141,7 @@ context("DiffEvoRandBin1") do
 end
 
 context("ask()/tell!()") do
-  for(i in 1:NumTestRepetitions)
+  for i in 1:NumTestRepetitions
     res = BlackBoxOptim.ask(DE)
     @fact BlackBoxOptim.candi_pool_size(BlackBoxOptim.population(DE)) --> 0 # no candidates in the pool as we just exhausted it
     @fact length(res) --> 2

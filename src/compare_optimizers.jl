@@ -5,7 +5,7 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
                      convert(ParamsDict, kwargs))
 
   results = Any[]
-  for(m in Methods)
+  for m in Methods
     tic()
     res = bboptimize(functionOrProblem, parameters; Method = m)
     push!( results,  (m, best_candidate(res), best_fitness(res), toq()) )
@@ -16,7 +16,7 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
   if parameters[:TraceMode] != :silent
     println("\n********************************************************************************")
     #println(describe(evaluator))
-    for(i in 1:length(sorted))
+    for i in 1:length(sorted)
       println("$(i). $(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
     end
     println("********************************************************************************\n")
@@ -43,7 +43,7 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
   for i in 1:length(problems)
     name, p = problems[i]
     res = compare_optimizers(p, parameters; Methods = Methods)
-    for(j in 1:length(res))
+    for j in 1:length(res)
       method, best, fitness, elapsedtime = res[j]
       index = findfirst(Methods, method)
       ranks[index, i] = j
@@ -58,7 +58,7 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
 
   perm = sortperm(avg_ranks[:])
   println("\nBy avg rank:")
-  for(i in 1:length(methods))
+  for i in 1:length(methods)
     j = perm[i]
     print("\n$(i). $(methods[j]), avg rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), avg time = $(avg_times[j]), ranks = ")
     showcompact(ranks[j,:][:])
@@ -66,7 +66,7 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
 
   perm = sortperm(avg_fitness[:])
   println("\n\nBy avg fitness:")
-  for(i in 1:length(methods))
+  for i in 1:length(methods)
     j = perm[i]
     print("\n$(i). $(methods[j]), avg rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), avg time = $(avg_times[j]), ranks = ")
     showcompact(ranks[j,:][:])

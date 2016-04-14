@@ -23,12 +23,12 @@ function sparse_cholfact(C, randsamples)
   C = C + (s * s')
 end
 
-for(n in Ns)
+for n in Ns
   # Non-sparse, sqrtm
   C = eye(n)
   if n <= 2000
     tic()
-    for(rep in 1:num_reps)
+    for rep in 1:num_reps
       C = non_sparse_sqrtm(C, randn(n, n))
     end
     t = toq()
@@ -36,11 +36,11 @@ for(n in Ns)
     println("Non-sparse, sqrtm, n = $(n), time = $(t/num_reps), time = $(tpdn)")
   end
 
-  for(d in Ds)
+  for d in Ds
     # Sparse, cholfact, randn
     C = speye(n)
     tic()
-    for(rep in 1:num_reps)
+    for rep in 1:num_reps
       C = sparse_cholfact(C, sprandn(n, n, d))
     end
     t = toq()

@@ -188,12 +188,12 @@ outfile = "cmsa_es_exp6.csv"
 write_csv_header_to_file(pe6, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 1)
-for(i in 1:33)
+for i in 1:33
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa min`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 2)
 end
 # Then we maximize the success rate and select the quickest among the top 10.
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 2)
 end
@@ -259,7 +259,7 @@ run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 5 10 4 $(outfile) new_run
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe8, outfile; num_repeats = 1)
 # Since many runs end up in the 2.0 magnitude class we optimize on fitness rather than magnitude => higher resolution.
 # First we minimize the magnitude class with ei => 2*4+1
-for(i in 1:20)
+for i in 1:20
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 1 9 4 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe8, outfile; num_repeats = 1)
 end
@@ -290,12 +290,12 @@ outfile = "cmsa_es_exp9.csv"
 write_csv_header_to_file(pe9, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
-for(i in 1:23)
+for i in 1:23
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
 end
 # Then we maximize the success rate and select the quickest among the top 10.
-for(i in 1:3)
+for i in 1:3
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 15 6 $(outfile) new_runs.json sa min`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
 end
@@ -325,12 +325,12 @@ outfile = "cmsa_es_exp10.csv"
 write_csv_header_to_file(pe10, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 16 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
-for(i in 1:13)
+for i in 1:13
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
 end
 # Then we maximize the success rate and select the quickest among the top 10.
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
 end
@@ -364,7 +364,7 @@ outfile = "cmsa_es_exp11.csv"
 write_csv_header_to_file(pe11, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe11, outfile; num_repeats = 1)
-for(i in 1:13)
+for i in 1:13
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 13 6 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe11, outfile; num_repeats = 1)
 end
@@ -402,15 +402,15 @@ outfile = "cmsa_es_exp12.csv"
 write_csv_header_to_file(pe12, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
 end
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa min`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
 end
@@ -449,15 +449,15 @@ outfile = "cmsa_es_exp13.csv"
 write_csv_header_to_file(pe13, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
 end
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 19 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
 end
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
 end
@@ -497,11 +497,11 @@ outfile = "cmsa_es_exp14.csv"
 write_csv_header_to_file(pe14, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
 end
@@ -516,11 +516,11 @@ outfile = "cmsa_es_exp15.csv"
 write_csv_header_to_file(pe, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
 end
@@ -535,11 +535,11 @@ outfile = "cmsa_es_exp16.csv"
 write_csv_header_to_file(pe, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
 end

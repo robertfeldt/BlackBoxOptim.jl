@@ -115,11 +115,11 @@ function best_of_if_better(x, y, names = ["1", "2"], minimizing = true, pvalue_t
 end
 
 println(csvfile, "CovariateSelectionScheme,Problem,Dimensionality,ActualSparseness,GuessedSparseness,ArchiveSize,MeanTime,StdMissed,MeanMissed")
-for(problem in Problems)
-  for(dim in Dimensionality)
-    for(asd in ActualSparsenessDegree)
-      for(sizedegree in ArchiveSizeDegree)
-        for(gsd in GuessedSparsenessDegree)
+for problem in Problems
+  for dim in Dimensionality
+    for asd in ActualSparsenessDegree
+      for sizedegree in ArchiveSizeDegree
+        for gsd in GuessedSparsenessDegree
 
           k = int(asd * dim)
 
@@ -128,11 +128,11 @@ for(problem in Problems)
           times = zeros(NumRepeats, ncss)
           size = int(sizedegree * dim)
 
-          for(ir in 1:NumRepeats)
+          for ir in 1:NumRepeats
             ssp = SparseShiftedProblem(dim, k, problem)
             xs, y = sample_points_and_calc_response(dim, size, (x) -> calc(ssp, x))
 
-            for(cssi in 1:ncss)
+            for cssi in 1:ncss
               css = CovariateSelectionSchemes[cssi]
               tic()
               selected_factors = css(xs, y, num_selected)
@@ -142,7 +142,7 @@ for(problem in Problems)
             end
           end
 
-          for(cssi in 1:ncss)
+          for cssi in 1:ncss
             css = CovariateSelectionSchemes[cssi]
             println(csvfile, css, ",", problem, ",", dim, ",", asd, ",", gsd, ",", size, ",",
               mean(times[:,cssi]), ",",

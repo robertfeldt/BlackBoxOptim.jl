@@ -1,10 +1,10 @@
 facts("Search space") do
   context("in()") do
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       reps = rand(1:10)
       ss1 = symmetric_search_space(reps, (0.0, 1.0))
       ind = rand_individual(ss1)
-      for(j in 1:reps)
+      for j in 1:reps
         @fact (mins(ss1)[j] <= ind[j] <= maxs(ss1)[j])  --> true
       end
     end
@@ -16,7 +16,7 @@ facts("Search space") do
     @fact ranges(ss1) --> [(0.0, 1.0)]
     @fact range_for_dim(ss1,1) --> (0.0, 1.0)
 
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       ind = rand_individual(ss1)
       @fact size(ind) --> (1,)
       @fact in(ind, ss1) --> true
@@ -29,7 +29,7 @@ facts("Search space") do
     @fact range_for_dim(ss3,2) --> (0.0, 1.0)
     @fact range_for_dim(ss3,3) --> (0.0, 1.0)
 
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       ind = rand_individual(ss3)
       @fact size(ind) --> (3,)
       @fact in(ind, ss3) --> true
@@ -42,7 +42,7 @@ facts("Search space") do
     @fact ranges(ss1) --> [(-1.0, 1.0)]
     @fact range_for_dim(ss1,1) --> (-1.0, 1.0)
 
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       reps = rand(1:100)
       range = (rand(), rand())
       ss = symmetric_search_space(reps, range)
@@ -52,7 +52,7 @@ facts("Search space") do
   end
 
   context("rand_individual is within the search space") do
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       reps = rand(1:100)
       mm = sort(rand(2,1), 1)
       range = (mm[1], mm[2])
@@ -64,7 +64,7 @@ facts("Search space") do
   end
 
   context("rand_individuals creates many individuals and all are within the search space") do
-    for(i in 1:NumTestRepetitions)
+    for i in 1:NumTestRepetitions
       reps = rand(1:10)
       mm = sort(rand(2,1), 1)
       range = (mm[1], mm[2])
@@ -73,14 +73,14 @@ facts("Search space") do
       inds = rand_individuals(ss, numinds)
       @fact size(inds,1) --> numdims(ss)
       @fact size(inds,2) --> numinds
-      for(j in 1:numinds)
+      for j in 1:numinds
         @fact in(inds[:,j], ss) --> true
       end
     end
   end
 
   context("rand_individuals correctly handles column-wise generation in assymetric search spaces") do
-    for(i in 1:NumTestRepetitions÷10)
+    for i in 1:NumTestRepetitions÷10
       numdims = rand(1:13)
       minbounds = rand(numdims)
       ds = rand(1:10, numdims) .* rand(numdims)

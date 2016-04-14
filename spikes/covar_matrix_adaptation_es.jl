@@ -1,7 +1,9 @@
 function ellipsoid(x)
-  res = 0
-  for(i in 1:length(x))
-    res += sum(x[1:i])^2
+  res = 0.0
+  cumsum = 0.0
+  for xx in x
+    cumsum += xx
+    res += cumsum^2
   end
   res
 end
