@@ -185,8 +185,14 @@ end
 function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
     println(io, "pop.size=", popsize(alg.population),
                 " arch.size=", length(archive(alg)),
-                " recombinate=", alg.recombinate_distr,
-                " N_restarts=", alg.n_restarts)
+                " n.restarts=", alg.n_restarts)
+    if mode == :verbose
+        # output recombination operator rates
+        println(io, "P(recombine):")
+        for i in eachindex(alg.recombinate)
+            println(io, "  #$i(", alg.recombinate[i], ")=", @sprintf("%.4f",alg.recombinate_distr.p[i]))
+        end
+    end
 end
 
 """
