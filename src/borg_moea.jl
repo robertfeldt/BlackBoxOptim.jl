@@ -7,6 +7,7 @@
 type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<:EmbeddingOperator} <: SteppingOptimizer
   evaluator::V
   population::P     # candidates, NOTE index one is always reserved for one archive parent for recombination
+  rand_check_order::Vector{Int} # random population check order
 
   n_restarts::Int
   n_steps::Int
@@ -45,7 +46,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
     fit_scheme = convert(EpsBoxDominanceFitnessScheme, fit_scheme, params[:ϵ])
     archive = EpsBoxArchive(fit_scheme, params)
     evaluator = ProblemEvaluator(problem, archive)
-    new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, 0, 0, 0, 0,
+    new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0,
            params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
            Categorical(ones(length(recombinate))/length(recombinate)),
            params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
@@ -131,17 +132,29 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
     ifitness = fitness(update_fitness!(alg.evaluator, candi)) # implicitly updates the archive
     # test the population
     hat_comp = HatCompare(fitness_scheme(archive(alg)))
-    check_order = randperm(popsize(alg.population))
+    popsz = popsize(alg.population)
+    if length(alg.rand_check_order) != popsz
+        # initialize the random check order
+        alg.rand_check_order = randperm(popsz)
+    end
     comp = 0
     isaccepted = false
-    for i in check_order
-        cur_comp = hat_comp(ifitness, fitness(alg.population, i))[1]
+    # iterate through the population in a random way
+    for i in 1:popsz
+        # use "modern" Fisher-Yates shuffle to gen random population index
+        j = rand(i:popsz)
+        ix = alg.rand_check_order[j] # the next random individual
+        if j > i
+            alg.rand_check_order[j] = alg.rand_check_order[i]
+            alg.rand_check_order[i] = ix
+        end
+        cur_comp = hat_comp(ifitness, fitness(alg.population, ix))[1]
         if cur_comp > 0 # new candidate does not dominate
             comp = cur_comp
             break
         elseif cur_comp < 0 # replace the first dominated
             comp = cur_comp
-            candi.index = i
+            candi.index = ix
             isaccepted = true
             # FIXME the population check is stopped when the first candidate dominated
             # by the `child` is found, but since the population might already contain candidates
@@ -152,7 +165,7 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
         end
     end
     if comp == 0 # non-dominating candidate, replace random individual in the population
-        candi.index = sample(1:popsize(alg.population))
+        candi.index = rand(1:popsz) # replace the random non-dominated
         isaccepted = true
     end
     if isaccepted
