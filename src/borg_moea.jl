@@ -206,12 +206,12 @@ function restart!(alg::BorgMOEA)
     # fill populations with the solutions from the archive
     resize!(alg.population, new_popsize)
     i = 1 # current candidate index
-    while i <= narchived
+    while i <= min(narchived, new_popsize)
         alg.population[i] = archive(alg)[i]
         i += 1
     end
     # inject mutated archive members
-    while i <= popsize(alg.population)
+    while i <= new_popsize
         mut_archived = acquire_candi(alg.population)
         mut_archived.index = i
         copy!(mut_archived.params, params(archive(alg)[rand(1:narchived)]))
