@@ -270,35 +270,40 @@ end
   Run optimization until one of the stopping conditions are satisfied.
 """
 function run!(ctrl::OptRunController)
-  tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
-  setup_optimizer!(ctrl)
+    tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
+    try
+        setup_optimizer!(ctrl)
 
-  ctrl.start_time = time()
-  ctrl.num_steps = 0
-  while isempty(ctrl.stop_reason)
-    # Report on progress every now and then...
-    if (time() - ctrl.last_report_time) > ctrl.trace_interval
-      trace_progress(ctrl)
+        ctrl.start_time = time()
+        ctrl.num_steps = 0
+        while isempty(ctrl.stop_reason)
+            # Report on progress every now and then...
+            if (time() - ctrl.last_report_time) > ctrl.trace_interval
+                trace_progress(ctrl)
+            end
+
+            # update the counters
+            nstep_better = step!(ctrl)
+            ctrl.num_better += nstep_better
+            ctrl.num_better_since_last_report += nstep_better
+            ctrl.num_steps += 1
+            ctrl.num_steps_since_last_report += 1
+            if num_evals(ctrl.evaluator) == ctrl.last_num_fevals
+                ctrl.num_steps_without_fevals += 1
+            else
+                ctrl.num_steps_without_fevals = 0
+            end
+            ctrl.last_num_fevals = num_func_evals(ctrl)
+
+            ctrl.stop_reason = check_stop_condition(ctrl)
+        end
+        ctrl.stop_time = time()
+    finally
+        shutdown_optimizer!(ctrl)
     end
+    tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 
-    # update the counters
-    nstep_better = step!(ctrl)
-    ctrl.num_better += nstep_better
-    ctrl.num_better_since_last_report += nstep_better
-    ctrl.num_steps += 1
-    ctrl.num_steps_since_last_report += 1
-    if num_evals(ctrl.evaluator) == ctrl.last_num_fevals
-        ctrl.num_steps_without_fevals += 1
-    else
-        ctrl.num_steps_without_fevals = 0
-    end
-    ctrl.last_num_fevals = num_func_evals(ctrl)
-
-    ctrl.stop_reason = check_stop_condition(ctrl)
-  end
-  ctrl.stop_time = time()
-  shutdown_optimizer!(ctrl)
-  tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
+    return ctrl.stop_reason
 end
 
 function show_report(ctrl::OptRunController, population_stats=false)
