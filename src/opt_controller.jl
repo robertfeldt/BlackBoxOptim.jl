@@ -1,4 +1,25 @@
 """
+    Create `Evaluator` instance for a given `problem`.
+"""
+function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
+    workers = get(params, :Workers, Vector{Int}())
+    if archive===nothing
+        # make the default archive
+        archiveCapacity = get(params, :ArchiveCapacity, 10)
+        archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
+    end
+    if length(workers) > 0
+        if BlackBoxOptim.enable_parallel_methods
+            return ParallelEvaluator(problem, archive, pids=workers)
+        else
+            throw(SystemError("Parallel evaluation disabled"))
+        end
+    else
+        return ProblemEvaluator(problem, archive)
+    end
+end
+
+"""
   Optimization Run Controller.
   Manages problem optimization using the specified method.
 
@@ -68,31 +89,12 @@ function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
 
-"""
-    Create `Evaluator` instance for a given `problem`.
-"""
-function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
-    workers = get(params, :Workers, Vector{Int}())
-    if archive===nothing
-        # make the default archive
-        archiveCapacity = get(params, :ArchiveCapacity, 10)
-        archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
-    end
-    if length(workers) > 0
-        if BlackBoxOptim.enable_parallel_methods
-            return ParallelEvaluator(problem, archive, pids=workers)
-        else
-            throw(SystemError("Parallel evaluation disabled"))
-        end
-    else
-        return ProblemEvaluator(problem, archive)
-    end
-end
-
 # stepping optimizer has it's own evaluator, get a reference
-OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, evaluator(optimizer), params)
-# all other optimizers are using ProblemEvaluator by default
-OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, make_evaluator(problem, nothing, params), params)
+OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) =
+    OptRunController(optimizer, evaluator(optimizer), params)
+# all other optimizers are using make_evaluator() method to create evaluator by default
+OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) =
+    OptRunController(optimizer, make_evaluator(problem, nothing, params), params)
 
 # logging/tracing
 function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
