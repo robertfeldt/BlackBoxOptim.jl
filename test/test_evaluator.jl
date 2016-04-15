@@ -56,7 +56,7 @@ end
 
 facts("Evaluator") do
   # Set up a small example problem
-  f(x) = sum(x.^2)
+  f(x) = sumabs2(x)
   p = minimization_problem(f, "", (-1.0, 1.0), 2)
   context("ProblemEvaluator") do
     evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
