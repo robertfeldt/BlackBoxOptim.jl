@@ -31,10 +31,11 @@ function apply!{NP}(xover::UnimodalNormalDistributionCrossover{NP}, target::Indi
     sd = mean(map(sqrt, sumabs2(parents, 2)))
     svdf = svdfact(parents)
     svals = svdf.S / norm(svdf.S)
-    parent_mask = Bool[abs(s) > 1E-8 for s in svals] # FIXME is the threshold correct?
-    svals[parent_mask] .*= sd * xover.ζ
-    svals[!parent_mask] = sd * xover.η
-    svals .*= rand(Normal(), length(svals))
+    @inbounds for (i,s) in enumerate(svals)
+        svals[i] = sd*randn() * (
+            abs(s) > 1E-8 ? # check if parent subspace; FIXME is the threshold correct?
+            s * xover.ζ : xover.η )
+    end
 
     A_mul_B!(target, svdf.U, svals)
     @inbounds @simd for i in eachindex(target)
