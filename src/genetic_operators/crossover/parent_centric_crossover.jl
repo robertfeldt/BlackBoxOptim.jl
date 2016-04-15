@@ -25,17 +25,14 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
     @assert length(parentIndices) == NP
 
     parents_centered = pop[:, parentIndices]
-    #@show parents
     center = mean(parents_centered, 2)
-    #@show center
     broadcast!(-, parents_centered, parents_centered, center)
-    #@show parents
-    other_parents_centered = parents_centered[:, 2:length(parentIndices)]
     # project other parents vectors orthogonal to
     # the subspace orthogonal to the selected parent
-    other_parents_centered = (eye(size(parents_centered,1)) - A_mul_Bt(parents_centered[:,1], parents_centered[:,1])) * other_parents_centered
+    other_parents_centered = (eye(size(parents_centered,1)) -
+            A_mul_Bt(slice(parents_centered, :, 1), slice(parents_centered, :, 1))) *
+            sub(parents_centered, :, 2:length(parentIndices))
     sd = mean(map(sqrt, sumabs2(other_parents_centered, 2)))
-    #@show sd
     if sd > 1E-8
         svdf = svdfact(other_parents_centered)
         svals_norm = norm(svdf.S)
@@ -54,6 +51,5 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
         target[i] += selParent[i] + selScale * selParentOffset[i]
     end
 
-    #@show target
     return target
 end
