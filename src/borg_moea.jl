@@ -143,9 +143,9 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
         alg.rand_check_order = randperm(popsz)
     end
     comp = 0
-    isaccepted = false
+    candi.index = 0
     # iterate through the population in a random way
-    for i in 1:popsz
+    @inbounds for i in 1:popsz
         # use "modern" Fisher-Yates shuffle to gen random population index
         j = rand(i:popsz)
         ix = alg.rand_check_order[j] # the next random individual
@@ -160,10 +160,9 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
         elseif cur_comp < 0 # replace the first dominated
             comp = cur_comp
             candi.index = ix
-            isaccepted = true
             # FIXME the population check is stopped when the first candidate dominated
             # by the `child` is found, but since the population might already contain candidates
-            # dominated by others , it could be that the `child` is also dominated
+            # dominated by others, it could be that the `child` is also dominated
             # In Borg paper they do not discuss this situation in detail -- whether the search
             # should continue
             break
@@ -171,13 +170,13 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
     end
     if comp == 0 # non-dominating candidate, replace random individual in the population
         candi.index = rand(1:popsz) # replace the random non-dominated
-        isaccepted = true
     end
-    if isaccepted
+    if candi.index > 0
         accept_candi!(alg.population, candi)
     else
         release_candi(alg.population, candi)
     end
+    alg
 end
 
 # trace current optimization state,
