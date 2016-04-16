@@ -145,7 +145,8 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
     comp = 0
     candi.index = 0
     # iterate through the population in a random way
-    @inbounds for i in 1:popsz
+    n_checks = rand(min(popsz, 2*alg.select.size):popsz)
+    @inbounds for i in 1:n_checks
         # use "modern" Fisher-Yates shuffle to gen random population index
         j = rand(i:popsz)
         ix = alg.rand_check_order[j] # the next random individual
@@ -168,8 +169,8 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, 
             break
         end
     end
-    if comp == 0 # non-dominating candidate, replace random individual in the population
-        candi.index = rand(1:popsz) # replace the random non-dominated
+    if comp == 0 # non-dominated among the checked ones, replace random checked individual
+        candi.index = alg.rand_check_order[rand(1:n_checks)]
     end
     if candi.index > 0
         accept_candi!(alg.population, candi)
