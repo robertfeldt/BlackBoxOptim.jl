@@ -233,7 +233,7 @@ function restart!(alg::BorgMOEA)
         accept_candi!(alg.population, mut_archived)
         i += 1
     end
-    alg.select.size = max(2, floor(Int, alg.τ * new_popsize))
+    alg.select.size = min(new_popsize, max(3, ceil(Int, alg.τ * new_popsize)))
     alg.last_restart_check = alg.n_steps
     alg.n_restarts+=1
     return alg
