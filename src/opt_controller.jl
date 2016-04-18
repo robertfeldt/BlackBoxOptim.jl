@@ -109,6 +109,7 @@ function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
   end
 end
 
+optimizer(ctrl::OptRunController) = ctrl.optimizer
 evaluator(ctrl::OptRunController) = ctrl.evaluator
 problem(ctrl::OptRunController) = problem(evaluator(ctrl))
 isstarted(ctrl::OptRunController) = ctrl.start_time > 0
