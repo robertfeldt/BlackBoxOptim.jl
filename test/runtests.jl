@@ -26,6 +26,7 @@ my_tests = [
 
   "test_borg_moea.jl",
 
+  "test_tracing.jl",
   "test_toplevel_bboptimize.jl",
   "test_smoketest_bboptimize.jl",
 
