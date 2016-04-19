@@ -92,7 +92,8 @@ immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOu
 
   function Base.call{N,F}(::Type{EpsBoxArchiveOutput}, archive::EpsBoxArchive{N,F})
     fit_scheme = fitness_scheme(archive)
-    new{N,F,typeof(fit_scheme)}(best_fitness(archive), best_candidate(archive), archive.frontier, fit_scheme)
+    new{N,F,typeof(fit_scheme)}(best_fitness(archive), best_candidate(archive),
+                                archive.frontier[archive.frontier_isoccupied], fit_scheme)
   end
 end
 

@@ -24,7 +24,7 @@ facts("EpsBoxArchive") do
     @fact capacity(a)         --> 100
     @fact length(a)           --> 1
     @fact a.best_candidate_ix --> 1
-    @fact a[1].num_fevals --> 8
+    @fact a.frontier[1].num_fevals --> 8
     @fact BlackBoxOptim.candidates_without_progress(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1)
 
@@ -32,14 +32,14 @@ facts("EpsBoxArchive") do
     @fact capacity(a)         --> 100
     @fact length(a)           --> 1
     @fact a.best_candidate_ix --> 1
-    @fact a[1].num_fevals --> 8
+    @fact a.frontier[1].num_fevals --> 8
     @fact BlackBoxOptim.candidates_without_progress(a) --> 1
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1)
 
     BlackBoxOptim.add_candidate!(a, (1.21, 2.11), [1.2, 3.0], 3)
     @fact capacity(a)         --> 100
     @fact length(a)           --> 2
-    @fact a[2].num_fevals --> 3
+    @fact a.frontier[2].num_fevals --> 3
     @fact a.best_candidate_ix --> 2
     @fact BlackBoxOptim.candidates_without_progress(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1, 3=>1)
@@ -103,13 +103,13 @@ facts("EpsBoxArchive") do
     indiv = [1.5, 2.0]
     BlackBoxOptim.add_candidate!(a, (1.5, 2.0), indiv)
     # equal but not identical
-    @fact a[1].params == indiv --> true
-    @fact a[1].params === indiv --> false
+    @fact a.frontier[1].params == indiv --> true
+    @fact a.frontier[1].params === indiv --> false
 
     # modify the vector
     indiv[1] = 5.0
     # test that archived version is still the same
-    @fact a[1].params --> [1.5, 2.0]
+    @fact a.frontier[1].params --> [1.5, 2.0]
   end
 
 end

@@ -115,7 +115,7 @@ function step!(alg::BorgMOEA)
     if !isempty(archive(alg))
         # get one parent from the archive and copy it to the fitrst transient member
         arch_ix = transient_range(alg.population)[1]
-        alg.population[arch_ix] = archive(alg)[sample(1:length(archive(alg)))]
+        alg.population[arch_ix] = archive(alg).frontier[rand_frontier_index(archive(alg))]
         push!(parent_indices, arch_ix)
     end
     # Crossover parents and target
@@ -212,21 +212,22 @@ end
     Resize and refills the population from the archive.
 """
 function restart!(alg::BorgMOEA)
-    narchived = length(archive(alg))
     notify!(archive(alg), :restart)
+    frontier_ixs = occupied_frontier_indices(archive(alg))
+    narchived = length(frontier_ixs)
     new_popsize = max(alg.min_popsize, ceil(Int, alg.γ * narchived))
     # fill populations with the solutions from the archive
     resize!(alg.population, new_popsize)
     i = 1 # current candidate index
     while i <= min(narchived, new_popsize)
-        alg.population[i] = archive(alg)[i]
+        alg.population[i] = archive(alg).frontier[frontier_ixs[i]]
         i += 1
     end
     # inject mutated archive members
     while i <= new_popsize
         mut_archived = acquire_candi(alg.population)
         mut_archived.index = i
-        copy!(mut_archived.params, params(archive(alg)[rand(1:narchived)]))
+        copy!(mut_archived.params, params(archive(alg).frontier[frontier_ixs[rand(1:narchived)]]))
         reset_fitness!(mut_archived, alg.population)
         apply!(alg.modify, mut_archived.params, i)
         # project using one unmodified from the archive as the reference
