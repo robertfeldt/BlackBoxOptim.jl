@@ -64,6 +64,23 @@ facts("EpsBoxArchive") do
     @fact a.best_candidate_ix --> 1
     @fact BlackBoxOptim.candidates_without_progress(a) --> 1
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(6=>1)
+
+    context("updating best candidate index if old and new non-dominated") do
+        a = EpsBoxArchive(scheme, max_size=100)
+
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (1.0, 0.0), scheme), [0.0, 1.0], 1)
+        @fact a.best_candidate_ix --> 1
+        @fact length(a)           --> 1
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.6, 0.6), scheme), [0.0, 2.0], 2)
+        @fact a.best_candidate_ix --> 1
+        @fact length(a)           --> 2
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.0, 1.1), scheme), [0.0, 3.0], 3)
+        @fact a.best_candidate_ix --> 1
+        @fact length(a)           --> 3
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.0, 0.9), scheme), [0.0, 4.0], 4)
+        @fact a.best_candidate_ix --> 3
+        @fact length(a)           --> 3
+    end
   end
 
   context("shaffer1() Pareto frontier") do

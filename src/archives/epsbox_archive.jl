@@ -147,18 +147,20 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
             throw(error("Pareto frontier exceeds maximum size"))
         end
         updated_frontier_ix = length(a.frontier)
+    end
+    if updated_frontier_ix > 0
         # check if the new candidate has better aggregate score
         if a.best_candidate_ix==0
             a.best_candidate_ix = updated_frontier_ix
-        else
-            d = a.frontier[a.best_candidate_ix].fitness.agg - a.frontier[updated_frontier_ix].fitness.agg
+        elseif a.best_candidate_ix != updated_frontier_ix
+            d = a.frontier[a.best_candidate_ix].fitness.agg - cand_fitness.agg
             if (d > zero(d) && is_minimizing(a.fit_scheme)) || (d < zero(d) && !is_minimizing(a.fit_scheme))
                 #info("New best candidate")
                 a.best_candidate_ix = updated_frontier_ix
             end
         end
     end
-    if has_progress # non-dominated solution that has some indices different from the existing ones
+    if has_progress # non-dominated solution that has some eps-indices different from the existing ones
         a.candidates_without_progress = 0
     else
         a.candidates_without_progress += 1
