@@ -245,4 +245,7 @@ add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
     add_candidate!(a, archived_fitness(cand_fitness, a), candidate, tag, num_fevals)
 
 # called by check_stop_condition(e::Evaluator, ctrl)
-check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl) = ""
+function check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl)
+    ctrl.max_steps_without_progress > 0 && noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress ?
+        "No epsilon-progress for more than $(ctrl.max_steps_without_progress) iterations" : ""
+end
