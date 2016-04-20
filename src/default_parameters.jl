@@ -14,6 +14,7 @@ const DefaultParameters = ParamsDict(
   :MaxTime        => 0.0,
   :MaxFuncEvals   => 0,
   :MaxSteps       => 10000,
+  :MaxStepsWithoutProgress => 10000,
   :MinDeltaFitnessTolerance => 1e-50,
   :FitnessTolerance => 1e-8,
 

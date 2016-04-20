@@ -17,6 +17,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   max_steps::Int      # maximal number of steps
   max_fevals::Int # maximal number of fitness evaluations
   max_steps_without_fevals::Int # stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
+  max_steps_without_progress::Int # stop optimization if no improvement in this many steps (indicates a converged/degenerate search)
   max_time::Float64   # maximal time, 0 to ignore
 
   min_delta_fitness_tol::Float64 # minimal difference between current best fitness and second-best one
@@ -48,6 +49,7 @@ end
         * `:MaxTime` max time in seconds (takes precedence over the other budget-related params if specified), 0.0 disables the check
         * `:MaxFuncEvals` max fitness evals (takes precedence over max iterations, but not max time), 0 disables the check
         * `:MaxSteps` max iterations gives the least control since different optimizers have different "size" of their "iterations"
+        * `:MaxStepsWithoutProgress` max iterations without fitness improvement
         * `:MinDeltaFitnessTolerance` minimum delta fitness (difference between the two consecutive best fitness improvements) we can accept before terminating
         * `:FitnessTolerance` stop the optimization when the best fitness found is within this distance of the actual optimum (if known)
         * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this many steps (indicates a converged/degenerate search)
@@ -61,7 +63,7 @@ end
 function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
   OptRunController{O,E}(optimizer, evaluator,
         [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
-                      :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxTime,
+                      :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
