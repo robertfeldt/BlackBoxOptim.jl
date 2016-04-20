@@ -17,7 +17,7 @@ facts("EpsBoxArchive") do
 
     @fact capacity(a) --> 100
     @fact length(a)   --> 0
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 0
+    @fact BlackBoxOptim.noprogress_streak(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}()
 
     BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (2.21, 1.12), scheme), [0.0, 5.0], 1, 8)
@@ -25,7 +25,7 @@ facts("EpsBoxArchive") do
     @fact length(a)           --> 1
     @fact a.best_candidate_ix --> 1
     @fact a.frontier[1].num_fevals --> 8
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 0
+    @fact BlackBoxOptim.noprogress_streak(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1)
 
     BlackBoxOptim.add_candidate!(a, (3.21, 1.12), [1.0, 5.0], 2)
@@ -33,7 +33,7 @@ facts("EpsBoxArchive") do
     @fact length(a)           --> 1
     @fact a.best_candidate_ix --> 1
     @fact a.frontier[1].num_fevals --> 8
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 1
+    @fact BlackBoxOptim.noprogress_streak(a) --> 1
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1)
 
     BlackBoxOptim.add_candidate!(a, (1.21, 2.11), [1.2, 3.0], 3)
@@ -41,29 +41,40 @@ facts("EpsBoxArchive") do
     @fact length(a)           --> 2
     @fact a.frontier[2].num_fevals --> 3
     @fact a.best_candidate_ix --> 2
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 0
+    @fact BlackBoxOptim.noprogress_streak(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1, 3=>1)
 
     BlackBoxOptim.add_candidate!(a, (0.52, 3.15), [1.5, 3.0], 3)
     @fact capacity(a)         --> 100
     @fact length(a)           --> 3
     @fact a.best_candidate_ix --> 2
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 0
+    @fact BlackBoxOptim.noprogress_streak(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(1=>1, 3=>2)
 
-    BlackBoxOptim.add_candidate!(a, (0.21, 0.21), [1.5, 3.0], 5)
+    BlackBoxOptim.add_candidate!(a, (0.22, 0.22), [1.5, 3.0], 5)
     @fact capacity(a)         --> 100
     @fact length(a)           --> 1
     @fact a.best_candidate_ix --> 1
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 0
+    @fact BlackBoxOptim.noprogress_streak(a) --> 0
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(5=>1)
 
-    BlackBoxOptim.add_candidate!(a, (0.2, 0.2), [1.5, 3.0], 6)
+    BlackBoxOptim.add_candidate!(a, (0.21, 0.21), [1.5, 3.0], 6)
     @fact capacity(a)         --> 100
     @fact length(a)           --> 1
     @fact a.best_candidate_ix --> 1
-    @fact BlackBoxOptim.candidates_without_progress(a) --> 1
+    @fact BlackBoxOptim.noprogress_streak(a) --> 1
     @fact BlackBoxOptim.tagcounts(a) --> Dict{Int,Int}(6=>1)
+
+    context("noprogress_streak(since_restart=0) is reset after restart") do
+        @fact BlackBoxOptim.noprogress_streak(a, since_restart=false) --> 1
+        @fact BlackBoxOptim.noprogress_streak(a, since_restart=true) --> 1
+        BlackBoxOptim.notify!(a, :restart)
+        @fact BlackBoxOptim.noprogress_streak(a, since_restart=false) --> 1
+        @fact BlackBoxOptim.noprogress_streak(a, since_restart=true) --> 0
+        BlackBoxOptim.add_candidate!(a, (0.2, 0.2), [1.5, 3.0], 6)
+        @fact BlackBoxOptim.noprogress_streak(a, since_restart=false) --> 2
+        @fact BlackBoxOptim.noprogress_streak(a, since_restart=true) --> 1
+    end
 
     context("updating best candidate index if old and new non-dominated") do
         a = EpsBoxArchive(scheme, max_size=100)

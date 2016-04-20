@@ -27,7 +27,8 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
 
   num_candidates::Int               # Number of calls to add_candidate!()
   best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
-  candidates_without_progress::Int  # last Number of calls to add_candidate!() without ϵ-progress
+  last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
+  last_restart::Int                 # when (wrt num_dlast) last restart has occured
   n_restarts::Int                   # the counter of the method restarts
 
   len::Int              # current frontier size
@@ -38,7 +39,7 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
   frontier_isoccupied::BitVector # true if given frontier element is occupied
 
   function Base.call{N,F}(::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
-    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, max_size,
+    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
                                 sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
                                 sizehint!(BitVector(), 64))
   end
@@ -108,19 +109,23 @@ function rand_frontier_index(a::EpsBoxArchive)
 end
 
 """
-    `candidates_without_progress(a::EpsBoxArchive)`
+    `noprogress_streak(a::EpsBoxArchive, [since_restart])`
 
     Get the number of `add_candidate!()` calls since the last ϵ-progress.
-    The counter is reset after the method restart.
+    If `since_restart` is specified, the number is relative to the last
+    restart.
 """
-candidates_without_progress(a::EpsBoxArchive) = a.candidates_without_progress
+noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
+    since_restart ?
+        a.num_candidates - max(a.last_progress, a.last_restart) :
+        a.num_candidates - a.last_progress
 
 best_candidate(a::EpsBoxArchive) = a.frontier[a.best_candidate_ix].params
 best_fitness(a::EpsBoxArchive) = a.best_candidate_ix > 0 ? fitness(a.frontier[a.best_candidate_ix]) : nafitness(fitness_scheme(a))
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
         a.n_restarts += 1
-        a.candidates_without_progress = 0
+        a.last_restart = a.num_candidates
         # TODO check if the pareto frontier needs to be compactified
     end
     a
@@ -225,9 +230,7 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
         end
     end
     if has_progress # non-dominated solution that has some eps-indices different from the existing ones
-        a.candidates_without_progress = 0
-    else
-        a.candidates_without_progress += 1
+        a.last_progress = a.num_candidates
     end
     return a
 end
