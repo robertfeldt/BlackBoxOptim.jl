@@ -1,7 +1,9 @@
-function ellipsoid(x) 
-  res = 0
-  for(i in 1:length(x))
-    res += sum(x[1:i])^2
+function ellipsoid(x)
+  res = 0.0
+  cumsum = 0.0
+  for xx in x
+    cumsum += xx
+    res += cumsum^2
   end
   res
 end
@@ -19,7 +21,7 @@ function cma_es(p)
 
 end
 
-function cma_es(p; 
+function cma_es(p;
   trace = true,
 
   # Stopping criteria related
@@ -34,7 +36,7 @@ function cma_es(p;
   covarMatrixSampler = CholeskyCovarSampler,
   utilitiesFunc = log_utilities,
 
-  lambda = 12, 
+  lambda = 12,
   mu = 3,
   decompose_covar_prob = 0.4,
   xmean = false,
@@ -75,12 +77,12 @@ function cma_es(p;
     if (time() - start_time) > max_seconds
       termination_reason = "Exceeded time budget"
       break
-    end    
+    end
 
     if num_fevals > max_evals
       termination_reason = "Exceeded function eval budget"
       break
-    end    
+    end
 
     # Decompose only with a given probability => saves time
     if rand() <= decompose_covar_prob
@@ -92,7 +94,7 @@ function cma_es(p;
     z = sigma * ss
     xs = repmat(xmean, 1, lambda) + z               # n*lambda
 
-    # 
+    #
     # Evaluate fitness
     fitnesses = eval_fitnesses(p, xs, lambda)
     num_fevals += lambda
@@ -132,10 +134,9 @@ function cma_es(p;
 
     # Recombination
     rw = z * weights
-    rstd = 
+    rstd =
     xmean += rw
 
-    
 end
 
 function cma_recombine(w, std)
@@ -153,9 +154,9 @@ end
 ############################################################################
 # initialization:
 ############################################################################
-#Cov = eye(n);           # initial covariance matrix 
+#Cov = eye(n);           # initial covariance matrix
 # initializing individual population:
-#Individual.y = yInit; 
+#Individual.y = yInit;
 #Individual.w = 0;
 #Individual.std = 0;
 #Individual.F = fitness(Individual.y);
@@ -176,7 +177,7 @@ while(1)
  end;
  ParentPop = SortPop(OffspringPop, mu);   # sort population and take mu best
  disp(ParentPop{1}.F);                    # display best fitness in population
- Recombinant = CMArecomb(ParentPop);      # (L2) perform recombination 
+ Recombinant = CMArecomb(ParentPop);      # (L2) perform recombination
  yParent = yParent + Recombinant.w;       # (L2) calculate new centroid parent
  s = (1-1/tau)*s + sqrt(mu/tau*(2-1/tau))*Recombinant.w/sigma;   # line (L3)
  Cov = (1-1/tau_c)*Cov + (s/tau_c)*s';                           # line (L4)

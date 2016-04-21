@@ -9,7 +9,7 @@ ade = adaptive_de_rand_1_bin(fake_problem, ParamsDict(
   :Population => rand(1, 100)))
 
 context("parameters adjust!()") do
-  for(i in 1:NumTestRepetitions)
+  for i in 1:NumTestRepetitions
     cur_cr, cur_f = BlackBoxOptim.crossover_parameters(ade.modify, ade.population, rand(1:popsize(ade.population)))
     @fact (0.0 <= cur_cr <= 1.0) --> true
     @fact (0.0 <= cur_f <= 1.0) --> true
@@ -23,7 +23,7 @@ end
 
 # FIXME actually this test is not required as the standard DE already tests for that
 context("ask()") do
-  for(i in 1:NumTestRepetitions)
+  for i in 1:NumTestRepetitions
     res = BlackBoxOptim.ask(ade)
     @fact length(res) --> 2
 

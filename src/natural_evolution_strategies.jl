@@ -128,7 +128,7 @@ end
 
 #  Traces the current `sNES` optimization state.
 #  Called by `OptRunController` `trace_progress()`.
-function trace_state(io::IO, snes::SeparableNESOpt)
+function trace_state(io::IO, snes::SeparableNESOpt, mode::Symbol)
     println(io, "|σ|=", norm(snes.sigma))
 end
 
@@ -295,7 +295,7 @@ function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
   return 0
 end
 
-function trace_state(io::IO, xnes::XNESOpt)
+function trace_state(io::IO, xnes::XNESOpt, mode::Symbol)
     println(io, "sigma=", xnes.sigma,
                 " |trace(ln_B)|=", trace(xnes.ln_B))
 end

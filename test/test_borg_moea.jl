@@ -9,8 +9,8 @@ facts("BorgMOEA") do
     end
     context("CEC09_UP8") do
       res = bboptimize(BlackBoxOptim.CEC09_Unconstrained_Set[8]; Method=:borg_moea,
-                       NumDimensions=4, ϵ=0.01,
-                       MaxSteps=15000, TraceMode=:silent)
+                       NumDimensions=4, ϵ=0.025,
+                       MaxSteps=50000, TraceMode=:silent)
       @fact BlackBoxOptim.IGD(BlackBoxOptim.CEC09_Unconstrained_Set[8].opt_value, pareto_frontier(res),
                 fitness_scheme(res), Val{length(best_candidate(res))}) --> less_than(0.13)
     end

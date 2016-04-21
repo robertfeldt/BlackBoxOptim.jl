@@ -123,7 +123,7 @@ function step!(gss::GeneratingSetSearcher)
   candidate = zeros(gss.n, 1)
 
   # Loop over directions until we find an improvement (or there are no more directions to check).
-  for(direction in order)
+  for direction in order
 
     candidate = gss.x + gss.step_size .* directions[:, direction]
     apply!(gss.embed, candidate, gss.x)

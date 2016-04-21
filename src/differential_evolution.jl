@@ -1,10 +1,8 @@
 using Distributions
 
-const DE_DefaultOptions = ParamsDict(
-  :f => 0.6,
-  :cr => 0.7,
+const DE_DefaultOptions = chain(DEX_DefaultOptions, ParamsDict(
   :SamplerRadius => 8,
-)
+))
 
 # FIXME DifferentialEvolution is just a specific case of this optimizer,
 # should it be called EvolutionaryOptimizer?
@@ -29,9 +27,11 @@ end
 
 # trace current optimization state,
 # Called by OptRunController trace_progress()
-function trace_state(io::IO, de::DiffEvoOpt)
-    println(io, "DE modify state:")
-    trace_state(io, de.modify)
+function trace_state(io::IO, de::DiffEvoOpt, mode::Symbol)
+    if mode != :compact
+        println(io, "DE modify state:")
+        trace_state(io, de.modify, mode)
+    end
 end
 
 ask(de::DiffEvoOpt) = evolve(de, de.modify)

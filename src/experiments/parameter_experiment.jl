@@ -40,7 +40,7 @@ function design_matrix_from_design01_matrix(pe::ParameterExperiment, design01)
   ds = zeros(Float64, size(design01))
   next_design_col = 1
 
-  for(i in 1:numparams(pe))
+  for i in 1:numparams(pe)
     #if is_fixed_param(pe, i)
     #  ds[:, i] = value_for_fixed_param(pe, i) * ones(num_rows)
     #else
@@ -56,13 +56,13 @@ end
 function parameter_values_from_design_matrix(pe::ParameterExperiment, design)
   pvs = Any[]
 
-  for(i in 1:size(design,1))
+  for i in 1:size(design,1)
     ds = design[i,:]
     ps = Any[]
     param_dict = ParamsDict()
 
     # Calc the parameter values from the design values.
-    for(j in 1:numparams(pe))
+    for j in 1:numparams(pe)
       param_dict[symbol(pe.parameters[j])] = pv = pe.mappers[j](ds, ps)
       push!(ps, pv)
     end
@@ -75,7 +75,7 @@ end
 
 function summary_of_R_output(pe::ParameterExperiment, designfile = "new_runs.json")
   res = read_json_design_list_from_file(designfile)
-  for(d01name in ["best", "top5_max", "top5_mean", "top5_min"])
+  for d01name in ["best", "top5_max", "top5_mean", "top5_min"]
     d01 = design01_matrix_from_R_list(res, d01name)
     d = design_matrix_from_design01_matrix(pe, d01)
     pvs = parameter_values_from_design_matrix(pe, d)
@@ -102,7 +102,7 @@ function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(runf
   d = design_matrix_from_design01_matrix(pe, d01)
   pvs = parameter_values_from_design_matrix(pe, d)
 
-  for(i in 1:length(pvs))
+  for i in 1:length(pvs)
     param_dict = pvs[i]
     # Add other arguments.
     param_dict = chain(param_dict, fixed_params)
@@ -115,7 +115,7 @@ function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(runf
     num_within_ftol = 0
 
     # Now run it while timing.
-    for(k in 1:num_repeats)
+    for k in 1:num_repeats
       tic()
       xb, fbs[k], nfs[k], r, a = runfunc(problem; collect(param_dict)...)
       ets[k] = toq()
@@ -127,7 +127,7 @@ function run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(runf
     # Save info to the csv file
     fh = open(outfilepath, "a+")
     print(fh, join(map( (dv) -> "$(dv)", d01[i,:]), ","))
-    for(i in 1:numparams(pe))
+    for i in 1:numparams(pe)
       pv = param_dict[symbol(pe.parameters[i])]
       print(fh, ",$(pv)")
     end
@@ -178,21 +178,21 @@ function explore_parameters(pe::ParameterExperiment, searchfunc, problem;
 
   # Now run new points, each selected by ALC and optimizing fitness magnitude,
   # until we have gathered 30 points in total.
-  for(i in 1:(30-nps-1))
+  for i in 1:(30-nps-1)
     run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 $(index_magnitude) $(nps) $(outfile) $(designfile) not alc`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc,
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
   end
 
   # Now run 20 new points that minimize fitness and select by alc.
-  for(i in 1:20)
+  for i in 1:20
     run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 $(index_fitness) $(nps) $(outfile) $(designfile) not alc`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc,
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
   end
 
   # Now run 10 new points that minimize fitness magnitude and select greedily to minimize execution time.
-  for(i in 1:10)
+  for i in 1:10
     run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 $(index_magnitude) $(nps) $(outfile) $(designfile) not min`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc,
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
@@ -200,7 +200,7 @@ function explore_parameters(pe::ParameterExperiment, searchfunc, problem;
 
   # Now run 10 new points that minimize fitness magnitude and select greedily to
   # minimize and be quick.
-  for(i in 1:10)
+  for i in 1:10
     run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 $(index_magnitude) $(nps) $(outfile) $(designfile) not min`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc,
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)
@@ -209,7 +209,7 @@ function explore_parameters(pe::ParameterExperiment, searchfunc, problem;
   # Now run 10 new points that maximize success rate and select greedily to
   # minimize and be quick. I missed the negative sign on the first runs so skip
   # those runs.
-  for(i in 1:10)
+  for i in 1:10
     run(`/usr/bin/Rscript $(path_to_R_dir)/parameter_experiment.R $(nps) 1 -$(index_success_rate) $(nps) $(outfile) $(designfile) not minquick`)
     run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(searchfunc,
       problem, pe, outfile; num_repeats = num_repeats, designfile = designfile)

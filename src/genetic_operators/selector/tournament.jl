@@ -14,9 +14,15 @@ end
 # selection using `n_tours` tournaments
 function select(sel::TournamentSelector, population, n_tours::Int)
     n_candidates = min(popsize(population), sel.size*n_tours)
-    candidates = sample(1:popsize(population), n_candidates; replace=false)
-    Int[tournament(sel, population,
-                   candidates[(floor(Int, n_candidates*(i-1)/n_tours)+1):floor(Int, n_candidates*i/n_tours)]) for i in 1:n_tours]
+    all_candidates = sample(1:popsize(population), n_candidates; replace=false)
+
+    res = Vector{Int}(n_tours)
+    tour_candidates = Vector{Int}(sel.size)
+    @inbounds for i in eachindex(res)
+        copy!(tour_candidates, 1, all_candidates, 1+(i-1)*sel.size, sel.size)
+        res[i] = tournament(sel, population, tour_candidates)
+    end
+    return res
 end
 
 """
@@ -25,20 +31,21 @@ end
     Returns the index of the winner.
 """
 function tournament(sel::TournamentSelector, population, candidates)
-    wins = zeros(length(candidates))
-    for i in eachindex(candidates)
-        ifitness = fitness(population, candidates[i])
-        for j in (i+1):length(candidates)
-            hat = sel.hat_comp(ifitness, fitness(population, candidates[j]))
-            if hat == 1 # 1st wins, gets 3 pts
-                wins[i] += 3
-            elseif hat == -1 # 2nd wins, gets 3 pts
-                wins[j] += 3
-            else # draw, each gets 1 pt
-                wins[i] += 1
-                wins[j] += 1
+    if isempty(candidates)
+        return 0
+    end
+    @inbounds begin
+        winner_ix = candidates[1]
+        best_fitness = fitness(population, winner_ix)
+        for i in 2:length(candidates)
+            cand_ix = candidates[i]
+            ifitness = fitness(population, cand_ix)
+            hat = sel.hat_comp(ifitness, best_fitness)
+            if hat == -1
+                best_fitness = ifitness
+                winner_ix = cand_ix
             end
         end
+        return winner_ix
     end
-    candidates[sortperm(wins, rev=true)[1]]
 end

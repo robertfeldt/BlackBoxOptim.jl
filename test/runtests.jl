@@ -12,6 +12,9 @@ my_tests = [
   "test_bimodal_cauchy_distribution.jl",
   "test_search_space.jl",
   "test_mutation_operators.jl",
+  "test_crossover_operators.jl",
+  "test_selectors.jl",
+  "test_embedders.jl",
   "test_frequency_adaptation.jl",
   "test_archive.jl",
   "test_epsbox_archive.jl",
@@ -23,6 +26,7 @@ my_tests = [
 
   "test_borg_moea.jl",
 
+  "test_tracing.jl",
   "test_toplevel_bboptimize.jl",
   "test_smoketest_bboptimize.jl",
 

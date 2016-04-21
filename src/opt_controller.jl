@@ -8,7 +8,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
   evaluator::E   # problem evaluator
 
-  trace_mode::Symbol # controller state trace mode (:verbose, :silent)
+  trace_mode::Symbol # controller state trace mode (:verbose, :compact, :silent)
                      # :silent makes tr() generate no output)
   save_trace::Bool # FIXME if traces should be saved to a file
   trace_interval::Float64 # periodicity of calling trace_progress()
@@ -17,6 +17,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   max_steps::Int      # maximal number of steps
   max_fevals::Int # maximal number of fitness evaluations
   max_steps_without_fevals::Int # stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
+  max_steps_without_progress::Int # stop optimization if no improvement in this many steps (indicates a converged/degenerate search)
   max_time::Float64   # maximal time, 0 to ignore
 
   min_delta_fitness_tol::Float64 # minimal difference between current best fitness and second-best one
@@ -48,6 +49,7 @@ end
         * `:MaxTime` max time in seconds (takes precedence over the other budget-related params if specified), 0.0 disables the check
         * `:MaxFuncEvals` max fitness evals (takes precedence over max iterations, but not max time), 0 disables the check
         * `:MaxSteps` max iterations gives the least control since different optimizers have different "size" of their "iterations"
+        * `:MaxStepsWithoutProgress` max iterations without fitness improvement
         * `:MinDeltaFitnessTolerance` minimum delta fitness (difference between the two consecutive best fitness improvements) we can accept before terminating
         * `:FitnessTolerance` stop the optimization when the best fitness found is within this distance of the actual optimum (if known)
         * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this many steps (indicates a converged/degenerate search)
@@ -61,7 +63,7 @@ end
 function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
   OptRunController{O,E}(optimizer, evaluator,
         [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
-                      :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxTime,
+                      :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
@@ -69,23 +71,28 @@ end
 """
     Create `Evaluator` instance for a given `problem`.
 """
-function make_evaluator(problem::OptimizationProblem, params)
-  workers = get(params, :Workers, Vector{Int}())
-  if length(workers) > 0
-    if BlackBoxOptim.enable_parallel_methods
-      return ParallelEvaluator(problem, workers)
-    else
-      throw(SystemError("Parallel evaluation disabled"))
+function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
+    workers = get(params, :Workers, Vector{Int}())
+    if archive===nothing
+        # make the default archive
+        archiveCapacity = get(params, :ArchiveCapacity, 10)
+        archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
     end
-  else
-    return ProblemEvaluator(problem)
-  end
+    if length(workers) > 0
+        if BlackBoxOptim.enable_parallel_methods
+            return ParallelEvaluator(problem, archive, pids=workers)
+        else
+            throw(SystemError("Parallel evaluation disabled"))
+        end
+    else
+        return ProblemEvaluator(problem, archive)
+    end
 end
 
 # stepping optimizer has it's own evaluator, get a reference
 OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, evaluator(optimizer), params)
 # all other optimizers are using ProblemEvaluator by default
-OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, make_evaluator(problem, params), params)
+OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, make_evaluator(problem, nothing, params), params)
 
 # logging/tracing
 function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
@@ -104,6 +111,7 @@ function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
   end
 end
 
+optimizer(ctrl::OptRunController) = ctrl.optimizer
 evaluator(ctrl::OptRunController) = ctrl.evaluator
 problem(ctrl::OptRunController) = problem(evaluator(ctrl))
 isstarted(ctrl::OptRunController) = ctrl.start_time > 0
@@ -118,14 +126,53 @@ start_time(ctrl::OptRunController) = ctrl.start_time
 best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
 best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
 
-format_fitness(best_fit::Number) = @sprintf("%.9f", best_fit)
+"""
+    show_fitness(io, fit, [problem::OptimizationProblem])
 
-format_fitness{N}(best_fit::NTuple{N}) =
-    string("(", join([@sprintf("%.9f", best_fit[i]) for i in 1:N], ", "), ")")
+    Output fitness to the given IO stream.
+    `show_fitness()` method could be overridden for a specific problem, e.g.
+    to print the names of each objective.
+"""
+show_fitness(io::IO, fit::Number) = @printf(io, "%.9f", fit)
 
-format_fitness{N}(best_fit::IndexedTupleFitness{N}) =
-    string(format_fitness(best_fit.orig),
-           " agg=", @sprintf("%.9f", best_fit.agg))
+function show_fitness{N}(io::IO, fit::NTuple{N})
+    print(io, "(")
+    for i in 1:N
+        if i > 1
+            print(io, ", ")
+        end
+        @printf(io, "%.5f", fit[i])
+    end
+    print(io, ")")
+end
+
+function show_fitness{N}(io::IO, fit::IndexedTupleFitness{N})
+    show_fitness(io, fit.orig)
+    @printf(io, " agg=%.5f", fit.agg)
+end
+
+# problem-specific method defaults to problem-agnostic method
+# note that the fitness type of the problem could be different from FA,
+# because show_fitness() typically is called for the archived fitness
+show_fitness{FA}(io::IO, fit::FA, problem::OptimizationProblem) = show_fitness(io, fit)
+
+"""
+    format_fitness(fit, [problem::OptimizationProblem])
+
+    Format fitness into a string.
+    Calls `show_fitness()` under the hood.
+"""
+function format_fitness(fit::Any, problem::OptimizationProblem)
+    buf = IOBuffer(false, true)
+    show_fitness(buf, fit, problem)
+    return bytestring(buf.data)
+end
+
+function format_fitness(fit::Any)
+    buf = IOBuffer(false, true)
+    show_fitness(buf, fit)
+    return bytestring(buf.data)
+end
 
 function elapsed_time(ctrl::OptRunController)
   isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
@@ -154,7 +201,16 @@ function check_stop_condition(ctrl::OptRunController)
 end
 
 function trace_progress(ctrl::OptRunController)
+  # update the counters
   ctrl.last_report_time = time()
+  total_improvement_rate = ctrl.num_better/num_steps(ctrl)
+  recent_improvement_rate = ctrl.num_better_since_last_report/ctrl.num_steps_since_last_report
+  ctrl.num_better_since_last_report = 0
+  ctrl.num_steps_since_last_report = 0
+
+  if ctrl.trace_mode == :silent
+      return
+  end
 
   # Always print step number, num fevals and elapsed time
   tr(ctrl, @sprintf("%.2f secs, %d evals, %d steps",
@@ -162,25 +218,20 @@ function trace_progress(ctrl::OptRunController)
 
   # Only print if this optimizer reports on number of better. They return 0
   # if they do not.
-  if ctrl.num_better_since_last_report > 0
+  if total_improvement_rate > 0.0
     tr(ctrl, @sprintf(", improv/step: %.3f (last = %.4f)",
-        ctrl.num_better/num_steps(ctrl),
-        ctrl.num_better_since_last_report/ctrl.num_steps_since_last_report))
-    ctrl.num_better_since_last_report = 0
-    ctrl.num_steps_since_last_report = 0
+        total_improvement_rate, recent_improvement_rate))
   end
 
   # Always print fitness if num_evals > 0
   if num_func_evals(ctrl) > 0
     tr(ctrl, ", fitness=")
-    tr(ctrl, format_fitness(best_fitness(ctrl)))
+    show_fitness(STDOUT, best_fitness(ctrl), problem(ctrl))
   end
 
   tr(ctrl, "\n")
 
-  if ctrl.trace_mode == :verbose
-    trace_state(STDOUT, ctrl.optimizer)
-  end
+  trace_state(STDOUT, ctrl.optimizer, ctrl.trace_mode)
 end
 
 function step!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
@@ -259,7 +310,8 @@ function show_report(ctrl::OptRunController, population_stats=false)
   end
 
   tr(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
-  tr(ctrl, "\n\nFitness: ", format_fitness(best_fitness(ctrl)))
+  tr(ctrl, "\n\nFitness: ")
+  show_fitness(STDOUT, best_fitness(ctrl), problem(ctrl))
   tr(ctrl, "\n\n")
 end
 
@@ -294,7 +346,9 @@ end
 """
     Create `OptController` for a given `optimizer` and a `problem`.
 
-    `params` provide the `OptRunController` parameters, plus `:RngSeed` and `:RandomizeRngSeed` params.
+    `params` are any of `OptRunController` parameters plus
+        * `:RngSeed` and `:RandomizeRngSeed` params for controlling the random seed
+        * `:RecoverResults` if intermediate results are returned upon `InterruptException()` (on by default)
 """
 function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
   params::ParamsDictChain)
@@ -354,7 +408,9 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
 
   try
     run!(ctrl)
-    show_report(ctrl)
+    if ctrl.trace_mode != :silent
+        show_report(ctrl)
+    end
 
     if oc.parameters[:SaveFitnessTraceToCsv]
       write_results(ctrl)
@@ -363,8 +419,9 @@ function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
     return OptimizationResults(ctrl, oc)
   catch ex
     # If it was a ctrl-c interrupt we try to make a result and return it...
-    if isa(ex, InterruptException)
+    if get(oc.parameters, :RecoverResults, true) && isa(ex, InterruptException)
       warn("Optimization interrupted, recovering intermediate results...")
+      ctrl.stop_reason = @sprintf "%s" ex
       return OptimizationResults(ctrl, oc)
     else
       rethrow(ex)

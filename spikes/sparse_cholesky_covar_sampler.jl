@@ -10,12 +10,12 @@ function Base.broadcast{Tv,Ti}(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti})
   V = zeros(nnz(A))
   vn, vm = size(v)
   if vn >= 1 && vm == 1
-    for(l in 1:nnz(A))
+    for l in 1:nnz(A)
       row = I[l]
       V[l] = op(v[row], A.nzval[l])
     end
   elseif vn == 1 && vm >= 1
-    for(l in 1:nnz(A))
+    for l in 1:nnz(A)
       col = J[l]
       V[l] = op(v[col], A.nzval[l])
     end

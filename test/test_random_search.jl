@@ -1,7 +1,7 @@
 facts("Random search") do
 
 context("ask()") do
-  for(i in 1:NumTestRepetitions)
+  for i in 1:NumTestRepetitions
     dims = rand(1:20)
     min = rand(1:123)
     range = (min * rand(), min + rand() * min)

@@ -49,10 +49,10 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
 
   # We add one run per problem (with runid 0) to ensure everything has been
   # compiled. It is not saved in the data though.
-  for(i in 0:num_runs)
+  for i in 0:num_runs
     # Random order of running each problem
     problem_indices = shuffle(collect(1:num_problems))
-    for(pi in problem_indices)
+    for pi in problem_indices
       num, prob = problems[pi]
       dims = BlackBoxOptim.numdims(prob)
       println("Run $(i) of problem $(name(prob))")
@@ -69,8 +69,8 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       reason_counts[pi][reason] = get(reason_counts[pi], reason, 0) + 1
 
       # Save fitness history to a csv file
-      save_fitness_history_to_csv_file(archive, run_csvfile; 
-        header_prefix = join(["Problem,Dimensions,RunId", paramheader], ","), 
+      save_fitness_history_to_csv_file(archive, run_csvfile;
+        header_prefix = join(["Problem,Dimensions,RunId", paramheader], ","),
         line_prefix = join(["\"$(name(prob))\",$(dims),$(i)", params], ","),
         include_header = include_run_csv_header)
       include_run_csv_header = false # Only the first round...
@@ -79,9 +79,9 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       # Create the summary_csv file on the first loop through since we now
       # know the number of parameters
       if add_summary_csv_header
-        summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId", 
+        summary_csvfh = csvfile(["Experiment", "Date", "Time", "RunId",
           "Problem", "Dimension", paramheader,
-          "ElapsedTime", "FuncEvals", "TerminationReason", 
+          "ElapsedTime", "FuncEvals", "TerminationReason",
           "Fitness"]; filepath = join([file_prefix, "_summary.csv"]))
         add_summary_csv_header = false
       end
@@ -94,7 +94,7 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
     end
   end
 
-  for(i in 1:num_problems)
+  for i in 1:num_problems
     p = problems[i][2]
     println("\nProblem: ", name(p))
     println("Dimensions: ", numdims(p))
@@ -119,8 +119,8 @@ function compare_params(params, searchf, num_runs = 10)
   fbests = zeros(num_runs, num_configs)
   fevals = zeros(num_runs, num_configs)
 
-  for(r in 1:num_runs)
-    for(i in 1:num_configs)
+  for r in 1:num_runs
+    for i in 1:num_configs
       tic()
       xb, fb, fe, reason = searchf(params[i]...)
       times[r,i] = toq()
@@ -132,7 +132,7 @@ function compare_params(params, searchf, num_runs = 10)
   println("\n\nResults per parameter config")
   println("----------------------------")
   sp = sortperm(mean(fbests, 1)[:])
-  for(i in 1:num_configs)
+  for i in 1:num_configs
     print(i, ". "); show(params[i]); println("")
     println("Fitness: ", sumstats(fbests[:,i], (x) -> @sprintf("%.6e", x)))
     println("Time: ", sumstats(times[:,i], format_time))
@@ -146,7 +146,7 @@ end
 function run_test(f, n; mu = false)
   of = xtransform(n, f)
   tic()
-  x, f, fevals, reason = cmsa_es(n, of; covarMatrixSampler = EigenCovarSampler, 
+  x, f, fevals, reason = cmsa_es(n, of; covarMatrixSampler = EigenCovarSampler,
     mu = mu,
     trace = true, known_fmin = 0.0)
   t = toq()

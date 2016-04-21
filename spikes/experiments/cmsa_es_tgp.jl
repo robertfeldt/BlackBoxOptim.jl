@@ -10,7 +10,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe = cmsa_es_exp2 = ParameterExperiment(
-  ["covar_learning_rate", "sigma", "lambda", "mu", 
+  ["covar_learning_rate", "sigma", "lambda", "mu",
     "covarMatrixSampler", "utilitiesFunc"
   ],
   [((ds, ps) -> ds[1]),
@@ -31,16 +31,16 @@ pe = cmsa_es_exp2 = ParameterExperiment(
 
 # It seems clear that (in order of sensitivity)
 #  1. covar_learning_rate needs to be high (highest sensitivity)
-#  2. mu should be a rather high divisor, at least 4, maybe even 8 
+#  2. mu should be a rather high divisor, at least 4, maybe even 8
 #  3. we should use log_utilities (but large variation on this one so unclear)
 #  4. sigma should be rather low (but low sensitivity)
 #  5. lambda should be high, rather than low (low s)
 #  6. the covar sampler does not have a large effect but Cholesky seems somewhat better
-#  
+#
 # We design a new experiment in line with this:
 
 pe3 = cmsa_es_exp3 = ParameterExperiment(
-  ["covar_learning_rate", "sigma", "lambda", "mu", 
+  ["covar_learning_rate", "sigma", "lambda", "mu",
   ],
   [((ds, ps) -> ds[1]),
    ((ds, ps) -> diameter * 10^ds[2]),
@@ -74,7 +74,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe4 = cmsa_es_exp4 = ParameterExperiment(
-  ["covar_learning_rate", "sigma", "lambda", "mu", 
+  ["covar_learning_rate", "sigma", "lambda", "mu",
   ],
   [((ds, ps) -> ds[1]),
    ((ds, ps) -> diameter * 10^ds[2]),
@@ -104,7 +104,7 @@ run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(pe4, outfile,
 #   2. best performance for low mu all the way down to divisor 20 (high sens)
 #   3. covar learning rate should be from around 0.89-0.95 but worse if higher
 #   4. fairly insensitive to sigma as long as its around 0.05-0.20 of diameter (lowest sens)
-# 
+#
 # Lets now try these settings on the Rosenbrock with 32 dims.
 
 n = 32
@@ -113,7 +113,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe5 = ParameterExperiment(
-  ["covar_learning_rate", "sigma", "lambda", "mu", 
+  ["covar_learning_rate", "sigma", "lambda", "mu",
   ],
   [((ds, ps) -> ds[1]),
    ((ds, ps) -> diameter * 10^ds[2]),
@@ -165,7 +165,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe6 = ParameterExperiment(
-  ["tau", "lambda", "mu", "tau_c", "sigma", "decompose_covar_prob" 
+  ["tau", "lambda", "mu", "tau_c", "sigma", "decompose_covar_prob"
   ],
   [((ds, ps) -> (2*n)^ds[1]),
    ((ds, ps) -> n*int(round(ds[2]))),
@@ -188,15 +188,15 @@ outfile = "cmsa_es_exp6.csv"
 write_csv_header_to_file(pe6, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 1)
-for(i in 1:33)
+for i in 1:33
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa min`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 2)
-end  
+end
 # Then we maximize the success rate and select the quickest among the top 10.
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe6, outfile; num_repeats = 2)
-end  
+end
 
 # Conclusions for finding good solutions (in sensitivity order):
 #  1. lambda should be a fairly low multiple of n, 1-8
@@ -214,7 +214,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe7 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob" 
+  ["lambda", "mu", "sigma", "decompose_covar_prob"
   ],
   [((ds, ps) -> int(round(n*ds[1]))),
    ((ds, ps) -> int(max(1.0, ceil(ps[1] / ds[2])))),
@@ -239,7 +239,7 @@ run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, p
 # decomposing the covar matrix is high for high-dimensional problems.
 
 pe8 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob" 
+  ["lambda", "mu", "sigma", "decompose_covar_prob"
   ],
   [((ds, ps) -> int(round(n*ds[1]))),
    ((ds, ps) -> int(max(1.0, ceil(ps[1] / ds[2])))),
@@ -259,17 +259,17 @@ run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 5 10 4 $(outfile) new_run
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe8, outfile; num_repeats = 1)
 # Since many runs end up in the 2.0 magnitude class we optimize on fitness rather than magnitude => higher resolution.
 # First we minimize the magnitude class with ei => 2*4+1
-for(i in 1:20)
+for i in 1:20
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 4 1 9 4 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe8, outfile; num_repeats = 1)
-end  
+end
 
 # It seems hard to make progress on this one and it seems that very low values for lambda
 # and mu are needed. So lets expand the search ranges and add back the old tau_c and tau
 # covariates and lets see what we find.
 
 pe9 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", "tau", "tau_c" 
+  ["lambda", "mu", "sigma", "decompose_covar_prob", "tau", "tau_c"
   ],
   [((ds, ps) -> int(10^ds[1])),
    ((ds, ps) -> int(max(1.0, ds[2]*ps[1]))),
@@ -290,18 +290,18 @@ outfile = "cmsa_es_exp9.csv"
 write_csv_header_to_file(pe9, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
-for(i in 1:23)
+for i in 1:23
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 14 6 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
 end
 # Then we maximize the success rate and select the quickest among the top 10.
-for(i in 1:3)
+for i in 1:3
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 15 6 $(outfile) new_runs.json sa min`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe9, outfile; num_repeats = 1)
 end
 
 pe10 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
    "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
   ],
   [((ds, ps) -> int(10^ds[1])),
@@ -325,12 +325,12 @@ outfile = "cmsa_es_exp10.csv"
 write_csv_header_to_file(pe10, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 16 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
-for(i in 1:13)
+for i in 1:13
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
 end
 # Then we maximize the success rate and select the quickest among the top 10.
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe10, outfile; num_repeats = 1)
 end
@@ -342,7 +342,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe11 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
    "max_successes_before_increasing", "max_failures_before_decreasing"
   ],
   [((ds, ps) -> int(10^ds[1])),
@@ -364,7 +364,7 @@ outfile = "cmsa_es_exp11.csv"
 write_csv_header_to_file(pe11, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 7 14 6 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe11, outfile; num_repeats = 1)
-for(i in 1:13)
+for i in 1:13
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 6 1 13 6 $(outfile) new_runs.json sa ei`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe11, outfile; num_repeats = 1)
 end
@@ -378,7 +378,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe12 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
    "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
   ],
   [((ds, ps) -> int(10^ds[1])),
@@ -402,15 +402,15 @@ outfile = "cmsa_es_exp12.csv"
 write_csv_header_to_file(pe12, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
 end
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 16 7 $(outfile) new_runs.json sa min`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe12, outfile; num_repeats = 1)
 end
@@ -425,7 +425,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe13 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
    "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
   ],
   [((ds, ps) -> int(10^ds[1])),
@@ -449,15 +449,15 @@ outfile = "cmsa_es_exp13.csv"
 write_csv_header_to_file(pe13, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 15 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
 end
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 19 7 $(outfile) new_runs.json sa alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
 end
-for(i in 1:10)
+for i in 1:10
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe13, outfile; num_repeats = 10)
 end
@@ -473,7 +473,7 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe = pe14 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
    "max_successes_before_increasing", "max_failures_before_decreasing", "max_rounds_without_improvement"
   ],
   [((ds, ps) -> int(10^ds[1])),
@@ -497,11 +497,11 @@ outfile = "cmsa_es_exp14.csv"
 write_csv_header_to_file(pe14, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
 end
@@ -516,11 +516,11 @@ outfile = "cmsa_es_exp15.csv"
 write_csv_header_to_file(pe, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
 end
@@ -535,11 +535,11 @@ outfile = "cmsa_es_exp16.csv"
 write_csv_header_to_file(pe, outfile)
 run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 8 15 7 $(outfile) new_runs.json`)
 run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
-for(i in 1:12)
+for i in 1:12
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json not alc`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 10)
 end
-for(i in 1:5)
+for i in 1:5
   run(`/usr/bin/Rscript ../../R/parameter_experiment.R 7 1 -19 7 $(outfile) new_runs.json sa minquick`)
   run_based_on_design_matrix_in_file_while_saving_results_to_csvfile(cmsa_es, p, pe, outfile; num_repeats = 5)
 end
@@ -553,8 +553,8 @@ p = BlackBoxOptim.shifted(p)
 diameter = minimum(diameters(search_space(p)))
 
 pe = pe15 = ParameterExperiment(
-  ["lambda", "mu", "sigma", "decompose_covar_prob", 
-   "max_successes_before_increasing", "max_failures_before_decreasing", 
+  ["lambda", "mu", "sigma", "decompose_covar_prob",
+   "max_successes_before_increasing", "max_failures_before_decreasing",
    "max_rounds_without_improvement", "tau_c"
   ],
   [((ds, ps) -> int(10^ds[1])),

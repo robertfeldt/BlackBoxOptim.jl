@@ -50,7 +50,7 @@ numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
 # wrapper for multi-children variant of apply!() for single-child xover operators
-function apply!{NP}(xover::CrossoverOperator{NP,1}, targets::Vector{Individual}, target_indices::Vector{Int}, pop, parentIndices)
+function apply!{NP,T<:AbstractVector{Float64}}(xover::CrossoverOperator{NP,1}, targets::AbstractVector{T}, target_indices::AbstractVector{Int}, pop, parentIndices)
     length(targets) == length(target_indices) || throw(ArgumentError("The number of target doesn't match the number of their indices"))
     for i in eachindex(target_indices)
         apply!(xover, targets[i], target_indices[i], pop, parentIndices)
@@ -78,14 +78,14 @@ const NO_GEN_OP = NoMutation()
 function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
 
 """
-  `trace_state(io, op::GeneticOperator)`
+  `trace_state(io, op::GeneticOperator, mode::Symbol)`
 
   Trace the state of the operator.
   Called by `trace_progress()` during `OptRunController` run by some of the genetic optimizers.
 
   Override the method to trace the state of your genetic operator.
 """
-function trace_state(io::IO, op::GeneticOperator) end
+function trace_state(io::IO, op::GeneticOperator, mode::Symbol) end
 
 """
   A mixture of genetic operators,
@@ -95,8 +95,8 @@ abstract GeneticOperatorsMixture <: GeneticOperator
 
 include("operators_mixture.jl")
 
-include("mutation/polynomial_mutation.jl")
 include("mutation/mutation_clock.jl")
+include("mutation/polynomial_mutation.jl")
 
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/simplex_crossover.jl")

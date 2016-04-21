@@ -20,6 +20,8 @@ abstract FitnessScheme{F}
 fitness_type{F}(::Type{FitnessScheme{F}}) = F
 fitness_type{F}(::FitnessScheme{F}) = F
 fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
+fitness_eltype{F<:Number}(::Type{FitnessScheme{F}}) = F
+fitness_eltype{F<:Number}(::FitnessScheme{F}) = F
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
 # ordering induced by the fitness scheme
@@ -49,12 +51,13 @@ const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
 const MaximizingFitnessScheme = ScalarFitnessScheme{false}()
 
 is_minimizing{MIN}(::ScalarFitnessScheme{MIN}) = MIN
-nafitness(::ScalarFitnessScheme) = NaN
-isnafitness(f::Float64, ::ScalarFitnessScheme) = isnan(f)
-numobjectives(::ScalarFitnessScheme) = 1
+nafitness{F<:Number}(::Type{F}) = convert(F, NaN)
+@inline nafitness(fs::FitnessScheme) = nafitness(fitness_type(fs))
+isnafitness{F<:Number}(f::F, ::RatioFitnessScheme{F}) = isnan(f)
+numobjectives{F<:Number}(::RatioFitnessScheme{F}) = 1
 
 """ Aggregation is just the identity function for scalar fitness. """
-aggregate(fitness, ::ScalarFitnessScheme) = fitness
+aggregate{F<:Number}(fitness::F, ::RatioFitnessScheme{F}) = fitness
 
 is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{true}) = f1 < f2
 is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{false}) = f1 > f2

@@ -1,7 +1,7 @@
 facts("bboptimize() single-objective methods smoketest") do
   rosenbrock2d(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 
-  for(m in keys(BlackBoxOptim.SingleObjectiveMethods))
+  for m in keys(BlackBoxOptim.SingleObjectiveMethods)
     context("$(m)") do
       ctrl = bbsetup(rosenbrock2d; Method = m,
         SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
@@ -19,7 +19,7 @@ end
 facts("bboptimize() multi-objective methods smoketest") do
   schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
 
-  for(m in keys(BlackBoxOptim.MultiObjectiveMethods))
+  for m in keys(BlackBoxOptim.MultiObjectiveMethods)
     context("$(m)") do
       ctrl = bbsetup(schaffer1; Method = m, MaxSteps=100000,
         SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,

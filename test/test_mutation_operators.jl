@@ -1,8 +1,8 @@
 facts("Mutation operators") do
   ss = RangePerDimSearchSpace([(-1.0, 1.0), (0.0, 100.0), (-5.0, 0.0)])
 
-  context("SimpleGibbsMutation") do
-    gibbs = SimpleGibbsMutation(ss)
+  context("UniformMutation") do
+    gibbs = UniformMutation(ss)
 
     @fact search_space(gibbs) --> ss
     # incorrect dimensions
@@ -20,7 +20,7 @@ facts("Mutation operators") do
   end
 
   context("MutationClock") do
-    mc = MutationClock(SimpleGibbsMutation(ss), 0.05)
+    mc = MutationClock(UniformMutation(ss), 0.05)
 
     mutations_per_param = zeros(numdims(ss))
     NumReps = 2_000
@@ -39,7 +39,7 @@ facts("Mutation operators") do
   end
 
   context("FixedGeneticOperatorsMixture") do
-    mx = FixedGeneticOperatorsMixture(GeneticOperator[NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], [0.3, 0.7])
+    mx = FixedGeneticOperatorsMixture(GeneticOperator[NoMutation(), MutationClock(UniformMutation(ss), 0.05)], [0.3, 0.7])
 
     ref_ind = rand_individual(ss)
     n_params_mutated = 0
@@ -55,7 +55,7 @@ facts("Mutation operators") do
   end
 
   context("FAGeneticOperatorsMixture") do
-    mx = FAGeneticOperatorsMixture(GeneticOperator[NoMutation(), MutationClock(SimpleGibbsMutation(ss), 0.05)], pmin = 0.05, pmax = 20.0)
+    mx = FAGeneticOperatorsMixture(GeneticOperator[NoMutation(), MutationClock(UniformMutation(ss), 0.05)], pmin = 0.05, pmax = 20.0)
 
     ref_ind = rand_individual(ss)
     n_params_mutated = 0

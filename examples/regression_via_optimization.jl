@@ -6,7 +6,7 @@
 #
 # The basic idea is that a regression problem is a problem of deciding
 # which set of coefficients (betas) minimize an objective function
-# that compares the dependent variable y to a model based on the betas and the 
+# that compares the dependent variable y to a model based on the betas and the
 # independent variables x.
 #
 # When implementing this, x will be a matrix d*n of floats where d is the dimension
@@ -23,7 +23,7 @@ function discrepancies(beta, x, y)
   y - ( (ones(1, ncols) * beta0) .+ sum(beta[2:end] .* x, 1) )
 end
 
-# Given this setup we can now create an objective function for 
+# Given this setup we can now create an objective function for
 # Ordinare Least Squares (OLS) regression. This is actually just the L2 norm:
 function ols_regression_objective(beta, x, y)
   norm(discrepancies(beta, x, y), 2)
@@ -34,7 +34,7 @@ function lad_regression_objective(beta, x, y)
   norm(discrepancies(beta, x, y), 1)
 end
 
-# And we can do LASSO and Ridge regression by adding a penalty on large coefficients, but 
+# And we can do LASSO and Ridge regression by adding a penalty on large coefficients, but
 # note that these also take a lambda constant:
 function regularized_regression_objective(lambda, beta, x, y, p = 2, q = 1)
   norm(discrepancies(beta, x, y), p) + lambda * norm(beta[2:end], q)
@@ -64,20 +64,20 @@ y1 = m1(x1)
 
 # We can now search for the coefficients that minimize the OLS objective
 # with a black-box optimization search like so (we allow coefficients to have
-# a min value of -5.0 and a max value of 5.0, and the search is for 4 
+# a min value of -5.0 and a max value of 5.0, and the search is for 4
 # coefficients, one intercept and three for each of the values of x):
 using BlackBoxOptim
-ols_bestfit, ols_error = bboptimize((betas) -> ols_regression_objective(betas', x1, y1), 
+ols_bestfit, ols_error = bboptimize((betas) -> ols_regression_objective(betas', x1, y1),
   (-10.0, 10.0); dimensions = 4, iterations = 2e4)
 
 # But the really nice thing is that we can easily consider other objectives such as the LAD:
-lad_bestfit, lad_error = bboptimize((betas) -> lad_regression_objective(betas', x1, y1), 
+lad_bestfit, lad_error = bboptimize((betas) -> lad_regression_objective(betas', x1, y1),
   (-10.0, 10.0); dimensions = 4, iterations = 2e4)
 
 # For regularized regression we can optimize for different values of lambda so
 # create a wrapper function that handles this:
 function regularized_opt(lambda, func, x, y, dims, its = 2e4)
-  bboptimize((betas) -> func(lambda, betas', x, y), 
+  bboptimize((betas) -> func(lambda, betas', x, y),
     (-10.0, 10.0); dimensions = dims, iterations = its)
 end
 
@@ -106,7 +106,7 @@ function sprint_predicted_model(bestfit, terms = nothing, skipIfLower = 1e-5)
 
   elems = Any[]
   first_push = true
-  for(i in 1:length(bestfit))
+  for i in 1:length(bestfit)
     if abs(bestfit[i]) > skipIfLower
       str = join([signstr(bestfit[i]), terms[i]])
       if first_push
@@ -122,7 +122,7 @@ function sprint_predicted_model(bestfit, terms = nothing, skipIfLower = 1e-5)
   join(elems)
 end
 
-# Let's try a model which involves a squared terms: 
+# Let's try a model which involves a squared terms:
 #   X1 + 4.13*X2*X2 - 3.14*X3
 function m2(x)
   x[1,:] + (4.13 * x[2,:].^2) - (3.14 * x[3,:])
@@ -133,7 +133,7 @@ x2 = rand(3, 100)
 # and calc the outputs:
 y2 = m2(x2)
 
-# Before we regress we need to encode our beliefs about the general 
+# Before we regress we need to encode our beliefs about the general
 # structure of the model. Let's say we believe there are squared terms but we
 # do not know which ones. So we add one squared term per independent variable:
 x2m = zeros(3+3, 100)
@@ -143,9 +143,9 @@ x2m[5,:] = x2[2,:].^2
 x2m[6,:] = x2[3,:].^2
 
 # With this we can fit models:
-m2_ols_bestfit, m2_ols_error = bboptimize((betas) -> ols_regression_objective(betas', x2m, y2), 
+m2_ols_bestfit, m2_ols_error = bboptimize((betas) -> ols_regression_objective(betas', x2m, y2),
   (-10.0, 10.0); dimensions = 1+3+3, iterations = 5e4)
-m2_lad_bestfit, m2_lad_error = bboptimize((betas) -> lad_regression_objective(betas', x2m, y2), 
+m2_lad_bestfit, m2_lad_error = bboptimize((betas) -> lad_regression_objective(betas', x2m, y2),
   (-10.0, 10.0); dimensions = 1+3+3, iterations = 5e4)
 m2_lasso_bestfit1, m2_lasso_error1 = regularized_opt(1, lasso_regression_objective, x2m, y2, 7, 5e4)
 m2_lasso_bestfit2, m2_lasso_error2 = regularized_opt(2, lasso_regression_objective, x2m, y2, 7, 5e4)

@@ -1,11 +1,11 @@
 facts("Frequency Adaptation") do
 
   context("returns all indices once in the first block") do
-    for(reps in 1:20)
+    for reps in 1:20
       n = rand(1:50)
       fa = BlackBoxOptim.FrequencyAdapter(n)
       block = Int64[]
-      for(i in 1:n)
+      for i in 1:n
         mi = BlackBoxOptim.next(fa)
         @fact mi --> greater_than_or_equal(1)
         @fact mi --> less_than_or_equal(n)
@@ -17,13 +17,13 @@ facts("Frequency Adaptation") do
   end
 
   context("increases the frequency of a method that has higher progress values") do
-    for(reps in 1:20)
+    for reps in 1:20
       n = rand(2:50)
       fa = BlackBoxOptim.FrequencyAdapter(n)
       up1(mi) = BlackBoxOptim.update!(fa, mi, rand() + ((mi == 1) ? 0.4 : 0.0))
       counts = zeros(Int64, n)
       uprep(rs) = begin
-        for(i in 1:rs)
+        for i in 1:rs
           mi = BlackBoxOptim.next(fa)
           counts[mi] += 1
           up1(mi)

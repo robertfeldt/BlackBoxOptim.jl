@@ -73,14 +73,15 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Genetic operators
         GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
-        NoMutation, MutationClock, GibbsMutationOperator, SimpleGibbsMutation,
+        NoMutation, MutationClock, GibbsMutationOperator, UniformMutation,
+        PolynomialMutation,
         FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
         RandomBound,
         SimpleSelector, RadiusLimitedSelector,
         SimulatedBinaryCrossover, SimplexCrossover, UnimodalNormalDistributionCrossover,
         ParentCentricCrossover,
 
-        apply!, adjust!,
+        numparents, numchildren, apply!, adjust!,
 
         # Utilities
         FrequencyAdapter, update!, frequencies,

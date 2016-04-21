@@ -24,6 +24,8 @@ params_std(pop::PopulationMatrix) = std(pop, 1)
 popsize{F}(pop::Vector{Candidate{F}}) = length(pop)
 numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
 
+view(pop::PopulationMatrix, indi_ix) = slice(pop, :, indi_ix)
+
 """
   The default implementation of `PopulationWithFitness{F}`.
 """
@@ -137,6 +139,9 @@ function acquire_candi{F}(pop::FitPopulation{F})
   res.tag = 0
   return res
 end
+
+acquire_candis{F}(pop::FitPopulation{F}, n::Integer) =
+    Candidate{F}[acquire_candi(pop) for _ in 1:n]
 
 # Get an individual from a pool and sets it to ix-th individual from population.
 function acquire_candi(pop::FitPopulation, ix::Int)

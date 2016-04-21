@@ -6,8 +6,13 @@ immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   f::Float64    # scale parameter
 
   DiffEvoRandBin(cr::Number, f::Number) = new(cr, f)
-  DiffEvoRandBin(options::Parameters) = new(options[:cr], options[:f])
+  DiffEvoRandBin(options::Parameters) = new(options[:DEX_cr], options[:DEX_f])
 end
+
+const DEX_DefaultOptions = ParamsDict(
+  :DEX_f => 0.6,
+  :DEX_cr => 0.7
+)
 
 crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover.f
 
@@ -22,7 +27,9 @@ function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index::Int,
   mut_ix = rand(1:length(target))
   @inbounds for i in 1:length(target)
     if i == mut_ix || rand() <= cr
-      target[i] = pop[i,p3ix] + f * (pop[i,p1ix] .- pop[i,p2ix])
+      target[i] = pop[i,p3ix] + f * (pop[i,p1ix] - pop[i,p2ix])
+    elseif target_index == 0
+      target[i] = pop[i,p3ix]
     end
   end
   return target
@@ -37,8 +44,10 @@ function apply!(xover::DiffEvoCrossoverOperator{5,1}, target, target_index::Int,
   @inbounds for i in 1:length(target)
     if i == mut_ix || rand() <= cr
       target[i] = pop[i,p3ix] +
-                f .* (pop[i,p1ix] .- pop[i,p2ix]) +
-                f .* (pop[i,p4ix] .- pop[i,p5ix])
+                f * (pop[i,p1ix] - pop[i,p2ix]) +
+                f * (pop[i,p4ix] - pop[i,p5ix])
+    elseif target_index == 0
+      target[i] = pop[i,p3ix]
     end
   end
   return target

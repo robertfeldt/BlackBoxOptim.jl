@@ -115,10 +115,37 @@ hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme
     hat_compare_ϵ(f2, f1, fs.ϵ, expected)
 
 # ϵ-index of the fitness component for minimizing scheme
-@inline ϵ_index{F}(u::F, ϵ::F, ::Type{Val{true}}) = begin ix=isnan(u) ? typemax(Int) : floor(Int, u/ϵ+10eps(F)); (ix, u-ϵ*ix) end
+@inline function ϵ_index{F}(u::F, ϵ::F, ::Type{Val{true}})
+    if isnan(u)
+        return (typemax(Int), zero(F))
+    else
+        u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
+        ix = floor(Int, u_div_ϵ+10eps(F))
+        return (ix, max(zero(F), u_div_ϵ-ix))
+    end
+end
 
 # ϵ-index of the fitness component for maximizing scheme
-@inline ϵ_index{F}(u::F, ϵ::F, ::Type{Val{false}}) = begin ix=isnan(u) ? typemax(Int) : ceil(Int, u/ϵ); (ix, ϵ*ix-u) end
+@inline function ϵ_index{F}(u::F, ϵ::F, ::Type{Val{false}})
+    if isnan(u)
+        return (typemin(Int), zero(F))
+    else
+        u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
+        ix = ceil(Int, u_div_ϵ)
+        return (ix, ix-u_div_ϵ)
+    end
+end
+
+# vectorized ϵ-index
+@generated function ϵ_index{N,F,MIN}(u::NTuple{N,F}, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
+    quote
+        pairs = Base.Cartesian.@ntuple $N i -> ϵ_index(u[i], ϵ[i], is_minimizing)
+        ix = Base.Cartesian.@ntuple $N i -> pairs[i][1]
+        sqrdist = zero(F)
+        Base.Cartesian.@nexprs $N i -> sqrdist += pairs[i][2]^2
+        return ix, sqrt(sqrdist)
+    end
+end
 
 """
     ϵ-box indexed representation of the N-tuple fitness.
@@ -131,11 +158,9 @@ immutable IndexedTupleFitness{N,F}
     index::NTuple{N,Int}    # ϵ-index vector
     dist::F                 # distance between ϵ-index vector and the original fitness
 
-    # TODO use @generated to avoid loops for N<=8?
     function Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
-        pairs = ntuple(i -> ϵ_index(u[i], ϵ[i], is_minimizing), Val{N}) # FIXME faster?
-        return new{N,F}(u, agg, ntuple(i -> pairs[i][1], Val{N}),
-                        sqrt(sum(pair::Tuple{Int,F} -> pair[2]^2, pairs)))
+        ix, dist = ϵ_index(u, ϵ, is_minimizing)
+        return new{N,F}(u, agg, ix, dist)
     end
     Base.call{N,F,MIN}(::Type{IndexedTupleFitness}, u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) =
         IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
@@ -143,7 +168,12 @@ end
 
 Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitness.orig
 
-@generated nafitness{N,F}(::Type{IndexedTupleFitness{N,F}}) = IndexedTupleFitness(ntuple(_ -> convert(F, NaN), Val{N}), NaN, 1.0, Val{true})
+@generated function nafitness{N,F}(::Type{IndexedTupleFitness{N,F}})
+    quote
+        IndexedTupleFitness(Base.Cartesian.@ntuple($N, _ -> convert($F, NaN)),
+                            NaN, 1.0, Val{true})
+    end
+end
 
 # comparison for minimizing ϵ-box dominance scheme
 """
@@ -153,17 +183,17 @@ Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitn
       * `1`: u≻v
     and whether `u` index fully matches `v` index.
 """
-function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, expected::Int=0)
+function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, is_minimizing::Bool=true, expected::Int=0)
     comp = 0
-    @inbounds for i in 1:N
-        if u.index[i] > v.index[i]
+    @inbounds for (ui, vi) in zip(u.index, v.index)
+        if ui > vi
             if comp == 0
                 comp = 1
                 if expected < 0 return (1, false) end
             elseif comp == -1
                 return (0, false)  # non-dominated
             end
-        elseif u.index[i] < v.index[i]
+        elseif ui < vi
             if comp == 0
                 comp = -1
                 if expected > 0 return (-1, false) end
@@ -172,7 +202,15 @@ function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFit
             end
         end
     end
-    return (comp != 0 ? comp : (u.dist < v.dist ? -1 : u.dist > v.dist ? 1 : 0), comp == 0)
+    if !is_minimizing
+        comp = -comp
+    end
+    if comp != 0
+        return (comp, comp==0)
+    else
+        uv_diff = u.dist - v.dist
+        return (uv_diff < -10eps(F) ? -1 : uv_diff > 10eps(F) ? 1 : 0, comp==0)
+    end
 end
 
 function check_epsbox_ϵ(ϵ::Number, n::Int)
@@ -210,7 +248,6 @@ end
 
 # overloads of the default behaviour, because the actual fitness type is not NTuple{N,F}
 fitness_type{N,F}(::Type{EpsBoxDominanceFitnessScheme{N,F}}) = IndexedTupleFitness{N,F}
-nafitness{N,F}(::EpsDominanceFitnessScheme{N,F}) = nafitness(IndexedTupleFitness{N,F})
 isnafitness{N,F}(f::IndexedTupleFitness{N,F}, ::EpsBoxDominanceFitnessScheme{N,F}) = any(isnan, f.orig) # or any?
 
 Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::F=one(F)) =
@@ -230,13 +267,9 @@ Base.convert{N,F,MIN}(::Type{IndexedTupleFitness}, fitness::NTuple{N,F},
                       fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
     IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
 
-hat_compare{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F,true}, expected::Int=0) =
-    hat_compare_ϵ_box(u, v, expected)
-
-hat_compare{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F,false}, expected::Int=0) =
-    hat_compare_ϵ_box(v, u, expected)
+hat_compare{N,F,MIN}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
+                 fs::EpsBoxDominanceFitnessScheme{N,F,MIN}, expected::Int=0) =
+    hat_compare_ϵ_box(u, v, MIN, expected)
 
 hat_compare{N,F}(u::NTuple{N,F}, v::IndexedTupleFitness{N,F},
                  fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) =

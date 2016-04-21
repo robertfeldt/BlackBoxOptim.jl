@@ -2,7 +2,7 @@ include("common.jl")
 
 facts("Optimize single objective problems in 5, 10, 30 and 100 dimensions with sNES") do
   simple_problems = ["Sphere", "Schwefel2.22", "Schwefel2.22"]
-  for(problem in simple_problems)
+  for problem in simple_problems
     context(problem) do
       p = BlackBoxOptim.Problems.examples[problem]
 
@@ -39,4 +39,3 @@ facts("Optimize single objective problems in 5, 10, 30 and 100 dimensions with s
   end
 
 end
-

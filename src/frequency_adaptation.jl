@@ -69,7 +69,7 @@ function fill_block!(fa::FrequencyAdapter)
   empty!(fa.block)
   # fill the block according to the fa.p and fa.a
   last_pos = 0 # position in the block
-  for(i in 1:fa.n)
+  for i in 1:fa.n
     fa.a[i] += (fa.n * fa.p[i] / fa.psum)
     if fa.a[i] >= 1.0
       # block should have at least one i-th method

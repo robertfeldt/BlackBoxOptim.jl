@@ -20,7 +20,7 @@ type AdaptiveEncoding <: CoordinateTransform
     p = zeros(n, 1)
     C = eye(n, n)
     B = eye(n, n)
-    new(n, sqrt(n), false, c_p, c_mu, c_1, 
+    new(n, sqrt(n), false, c_p, c_mu, c_1,
       p, C, B, zeros(n, 1), zeros(n, 1))
   end
 end
@@ -47,13 +47,13 @@ function update_transform!(ae::AdaptiveEncoding, x::Array{Float64, 2}, us::Array
   # Update evolution path.
   ae.p = (1.0 - ae.c_p) * ae.p + sqrt(ae.c_p * (2 - ae.c_p)) * z0
 
-  # Skip the rank-mu update when you need to save time. 
+  # Skip the rank-mu update when you need to save time.
   # Only do this randomly, at times, then, to save time?
-  xis_minus_m_prev = broadcast(-, xi, m_prev) 
+  xis_minus_m_prev = broadcast(-, xi, m_prev)
   zis = (ae.sqrtn / norm(Binv * xis_minus_m_prev)) * xis_minus_m_prev
   C_mu = zeros(ae.n, ae.n)
   # Should be some simpler way to achieve this... Maybe C_mu = zis * diag(us) * zis'
-  for(i in 1:ae.n)
+  for i in 1:ae.n
     z = zis[:,i]
     C_mu += (us[i] * (z * z'))
   end
