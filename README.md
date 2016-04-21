@@ -123,6 +123,8 @@ This list is not complete though, please refer to the examples and tests directo
   - Simultaneous Perturbation Stochastic Approximation (SPSA): `simultaneous_perturbation_stochastic_approximation`
 * RandomSearch (to compare to): `random_search`
 
+For multi-objective optimization only the [BorgMOEA](http://borgmoea.org/) is supported but it is a good one. :)
+
 # Parallel Function Evaluation
 
 For some (slow) functions being optimized and if you have a multi-core CPU you can gain performance by using parallel evaluation. This typically requires an optimization algorithm that evaluates many candidate points in one batch. The NES family (xnes, dxnes etc) is one such example. See the file
