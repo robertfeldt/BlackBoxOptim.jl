@@ -56,6 +56,34 @@ But if we optimize the same rosenbrock function in, say, 30 dimensions that will
 
 You can find more examples of using BlackBoxOptim in [the examples directory](https://github.com/robertfeldt/BlackBoxOptim.jl/tree/master/examples).
 
+# Multi-objective optimization
+
+Multi-objective evaluation is supported by the BorgMOEA algorithm. Your fitness function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) pareto fitness and specify the number of dimensions. Otherwise the use is similar, here we optimize the Schaffer1 function:
+
+    fitness_schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+    res = bboptimize(fitness_schaffer1; Method=:borg_moea,
+                FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true),
+                SearchRange=(-10.0, 10.0), NumDimensions=3, ϵ=0.05,
+                MaxSteps=50000, TraceInterval=1.0, TraceMode=:verbose);
+
+If we simply want one individual on the frontier the default is to use the sum of the individual objective values to sort them. We can thus access the best solution found and its fitness:
+
+    bs = best_candidate(res)
+    bf = best_fitness(res)
+
+but we can also find the solution with the best value for the first objective like so:
+
+    pf = pareto_frontier(res)
+    best_obj1, idx_obj1 = findmin(map(i -> fitness(i).orig[1], pf))
+    bo1_solution = pf[idx_obj1].params
+
+or for some weighted sum of the two objectives like so:
+
+    weighedfitness(f, w) = f[1]*w + f[2]*(1.0-w)
+    weight = 0.4 # Weight on first objective, so second objective will have weight 1-0.4=0.6
+    best_wfitness, idx = findmin(map(i -> weighedfitness(fitness(i).orig, weight), pf))
+    bsw = pf[idx].params
+
 # Configurable Options
 
 The section above described the basic API for the BlackBoxOptim package. There is a large number of different optimization algorithms that you can select with the `method` keyword (`adaptive_de_rand_1_bin`, `adaptive_de_rand_1_bin_radiuslimited`, `separable_nes`, `xnes`, `de_rand_1_bin`, `de_rand_2_bin`, `de_rand_1_bin_radiuslimited`, `de_rand_2_bin_radiuslimited`, `random_search`, `generating_set_search`, `probabilistic_descent`).
@@ -94,38 +122,6 @@ This list is not complete though, please refer to the examples and tests directo
 * Stochastic Approximation:
   - Simultaneous Perturbation Stochastic Approximation (SPSA): `simultaneous_perturbation_stochastic_approximation`
 * RandomSearch (to compare to): `random_search`
-
-
-## Planned Optimizers
-
-* HillClimbing
-* CMA-ES
-* Accelerated Coordinate Descent
-* Amalgam meta-optimizer (by Vrugt), which takes a set of (at least 2) other optimizers and switches between them dynamically during the search.
-
-## Utilities
-* Latin hypercube sampling for creating initial populations
-* Frequency Adaptation (of methods/strategies/coordinates)
-
-## Planned Utilities
-* Comparison of optimizers based on (Moré's') "data/performance profiles".
-* Running BBOB/COCO comparisons of optimizers
-
-## Problems
-
-* Rosenbrock
-* Sphere
-* Schwefel2.21
-* Schwefel2.22
-* Schwefel1.2
-* Step
-* Rastrigin
-* Ackley
-* Griewank
-* Ellipsoid
-
-...and more, see https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/src/problems/single_objective.jl
-for details.
 
 # Parallel Function Evaluation
 
