@@ -145,8 +145,10 @@ function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     i = findfirst(a.frontier_isoccupied)
     while i > 0
         curtag = tag(a.frontier[i])
-        curcounts = get!(res, curtag, 0.0)
-        res[curtag] = curcounts+θ^(a.n_restarts-a.frontier[i].n_restarts)
+        if curtag > 0
+            curcounts = get!(res, curtag, 0.0)
+            res[curtag] = curcounts+θ^(a.n_restarts-a.frontier[i].n_restarts)
+        end
         i = findnext(a.frontier_isoccupied, i+1)
     end
     return res
