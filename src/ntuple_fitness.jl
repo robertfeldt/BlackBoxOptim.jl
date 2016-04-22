@@ -206,10 +206,11 @@ function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFit
         comp = -comp
     end
     if comp != 0
-        return (comp, comp==0)
+        return (comp, false)
     else
         uv_diff = u.dist - v.dist
-        return (uv_diff < -10eps(F) ? -1 : uv_diff > 10eps(F) ? 1 : 0, comp==0)
+        return (uv_diff < -10eps(F) ? -1 :
+                uv_diff > 10eps(F) ? 1 : 0, true)
     end
 end
 

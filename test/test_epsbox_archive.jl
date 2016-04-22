@@ -92,6 +92,23 @@ facts("EpsBoxArchive") do
         @fact a.best_candidate_ix --> 3
         @fact length(a)           --> 3
     end
+
+    context("handling dulicate elements") do
+        a = EpsBoxArchive(scheme, max_size=100)
+
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (1.25, 0.0), scheme), [0.0, 1.0], 1)
+        @fact a.best_candidate_ix --> 1
+        @fact length(a)           --> 1
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.6, 0.6), scheme), [0.0, 2.0], 2)
+        @fact a.best_candidate_ix --> 2
+        @fact length(a)           --> 2
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.0, 1.3), scheme), [0.0, 3.0], 3)
+        @fact a.best_candidate_ix --> 2
+        @fact length(a)           --> 3
+        BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.6, 0.6), scheme), [0.0, 4.0], 4)
+        @fact a.best_candidate_ix --> 2
+        @fact length(a)           --> 3
+    end
   end
 
   context("shaffer1() Pareto frontier") do
