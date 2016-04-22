@@ -66,18 +66,30 @@ res = bboptimize(fitness_schaffer1; Method=:borg_moea,
             SearchRange=(-10.0, 10.0), NumDimensions=3, ϵ=0.05,
             MaxSteps=50000, TraceInterval=1.0, TraceMode=:verbose);
 ```
-If we simply want one individual on the frontier the default is to use the sum of the individual objective values to sort them. We can thus access the best solution found and its fitness:
+`pareto_frontier(res)` would give a vector of all Pareto-optimal solutions and corresponding fitness values.
+If we simply want to get one individual with the best aggregated fitness:
 ```julia
 bs = best_candidate(res)
 bf = best_fitness(res)
 ```
-but we can also find the solution with the best value for the first objective like so:
+By default, the aggregated fitness is the sum of the individual objective values, but this could be changed when declaring the fitness scheme, e.g.
+the weighted sum with weights `(0.3, 0.7)`:
+```julia
+weightedfitness(f) = f[1]*0.3 + f[2]*0.7
+
+...
+    FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true, aggregator=weightedfitness)
+...
+```
+Of course, once the Pareto set (`pareto_frontier(res)`) is found, one
+can apply different criteria to filter the solutions.
+For example, to find the solution with the minimal first objective:
 ```julia
 pf = pareto_frontier(res)
 best_obj1, idx_obj1 = findmin(map(i -> fitness(i).orig[1], pf))
 bo1_solution = pf[idx_obj1].params
 ```
-or for some weighted sum of the two objectives like so:
+or to use different weighted sums:
 ```julia
 weighedfitness(f, w) = f[1]*w + f[2]*(1.0-w)
 weight = 0.4 # Weight on first objective, so second objective will have weight 1-0.4=0.6
