@@ -12,6 +12,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
   n_restarts::Int
   n_steps::Int
   last_restart_check::Int
+  last_restart::Int
   last_wrecombinate_update::Int
 
   τ::Float64        # tournament size, fraction of the population
@@ -47,7 +48,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
     fit_scheme = convert(EpsBoxDominanceFitnessScheme, fit_scheme, params[:ϵ])
     archive = EpsBoxArchive(fit_scheme, params)
     evaluator = make_evaluator(problem, archive, params)
-    new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0,
+    new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
            params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
            Categorical(ones(length(recombinate))/length(recombinate)),
            params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
@@ -94,6 +95,7 @@ archive(alg::BorgMOEA) = alg.evaluator.archive
 function step!(alg::BorgMOEA)
     alg.n_steps += 1
     if alg.n_steps >= alg.last_restart_check + alg.restart_check_period
+        alg.last_restart_check = alg.n_steps
         # check for restarting conditions
         if (!isempty(archive(alg)) &&
             (abs(popsize(alg.population) - alg.γ * length(archive(alg))) >= alg.γ_δ * length(archive(alg)))) ||
@@ -236,7 +238,7 @@ function restart!(alg::BorgMOEA)
         i += 1
     end
     alg.select.size = min(new_popsize, max(3, ceil(Int, alg.τ * new_popsize)))
-    alg.last_restart_check = alg.n_steps
+    alg.last_restart = alg.n_steps
     alg.n_restarts+=1
     return alg
 end
