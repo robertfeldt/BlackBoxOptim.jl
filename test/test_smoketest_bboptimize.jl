@@ -30,8 +30,8 @@ facts("bboptimize() multi-objective methods smoketest") do
       @fact length(best_candidate(res)) --> 2
       f = best_fitness(res)
       @fact typeof(f) --> NTuple{2,Float64}
-      @fact f[1] --> roughly(2.0, atol=5E-2)
-      @fact f[2] --> roughly(2.0, atol=5E-2)
+      @fact f[1] --> roughly(2.0, atol=8E-2)
+      @fact f[2] --> roughly(2.0, atol=8E-2)
     end
   end
 end
