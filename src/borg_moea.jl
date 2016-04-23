@@ -93,6 +93,13 @@ archive(alg::BorgMOEA) = alg.evaluator.archive
 
 # Take one step of Borg MOEA.
 function step!(alg::BorgMOEA)
+    if alg.n_steps == 0
+        # make sure fitness is calculated for every population member when starting,
+        # it guarantees that no Pareto set elements would be lost when continuing
+        # optimization and using the previous pareto_frontier() as the starting population
+        update_population_fitness!(alg)
+    end
+
     alg.n_steps += 1
     if alg.n_steps >= alg.last_restart_check + alg.restart_check_period
         alg.last_restart_check = alg.n_steps
@@ -197,6 +204,18 @@ function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
     end
 end
 
+function update_population_fitness!(alg::BorgMOEA)
+    fs = fitness_scheme(alg.evaluator.archive)
+    for i in 1:popsize(alg.population)
+        if isnafitness(fitness(alg.population, i), fs)
+            candi = acquire_candi(alg.population, i)
+            update_fitness!(alg.evaluator, candi)
+            alg.population.fitness[candi.index] = candi.fitness
+            release_candi(alg.population, candi)
+        end
+    end
+end
+
 """
   Update recombination operator probabilities based on the archive tag counts.
 """
@@ -215,7 +234,7 @@ function acquire_mutant(alg::BorgMOEA, ix::Int, last_nonmutant::Int)
     mutant.index = ix
     reset_fitness!(mutant, alg.population)
     apply!(alg.modify, mutant.params, ix)
-    # project using one unmodified from the archive as the reference
+    # project using the archived individual as the reference
     apply!(alg.embed, mutant.params, alg.population, rand(1:last_nonmutant))
     mutant
 end
