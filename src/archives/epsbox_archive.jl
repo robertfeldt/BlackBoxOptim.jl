@@ -145,8 +145,10 @@ function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     i = findfirst(a.frontier_isoccupied)
     while i > 0
         curtag = tag(a.frontier[i])
-        curcounts = get!(res, curtag, 0.0)
-        res[curtag] = curcounts+θ^(a.n_restarts-a.frontier[i].n_restarts)
+        if curtag > 0
+            curcounts = get!(res, curtag, 0.0)
+            res[curtag] = curcounts+θ^(a.n_restarts-a.frontier[i].n_restarts)
+        end
         i = findnext(a.frontier_isoccupied, i+1)
     end
     return res
@@ -161,13 +163,12 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
     #info("New fitness: ", cand_fitness.orig, " agg=", cand_fitness.agg)
     #info("Params: ", candidate)
 
-    has_progress = true
+    has_progress = false
     updated_frontier_ix = 0
     i = findfirst(a.frontier_isoccupied)
     while i > 0
         front_fitness = fitness(a.frontier[i])
         hat, index_match = hat_compare(cand_fitness, front_fitness, a.fit_scheme)
-        has_progress = has_progress && !index_match
         if hat < 0
             # new fitness dominates the one in the archive
             if updated_frontier_ix==0
@@ -177,9 +178,15 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
                 new_params = copy!(a.frontier[i].params, candidate)
                 a.frontier[i] = EpsBoxFrontierIndividual(cand_fitness, new_params, tag, num_fevals, a.n_restarts)
                 updated_frontier_ix = i
+                if index_match # we replace the element with the same index, so the domination pattern to the other elements should not change
+                    break
+                else
+                    has_progress = true
+                end
             else
                 # already replaced the other dominated fitness, exclude this one from the frontier
                 #info("Removed the dominated element $i from the frontier")
+                @assert !index_match # if matching, it means that the old frontier[updated_frontier_ix] _was_ dominated by frontier[i]
                 a.frontier_isoccupied[i] = false
                 a.len -= 1
                 if a.best_candidate_ix == i
@@ -187,12 +194,9 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
                     a.best_candidate_ix = updated_frontier_ix
                 end
             end
-        elseif hat > 0 || (hat == 0 && index_match &&
-                           isapprox(cand_fitness.agg, front_fitness.agg, rtol=0.0, atol=100eps(Float64)) &&
-                           isapprox(cand_fitness.dist, front_fitness.dist, rtol=0.0, atol=100eps(Float64)))
-            # the new fitness dominates or is equal to the element in the archive, ignore
-            has_progress = false
-            @assert updated_frontier_ix == 0 # should not be inserted into the frontier before
+        elseif hat > 0 || (hat == 0 && index_match)
+            # the candidate fitness is worse or just the same as in the frontier, don't insert it
+            @assert updated_frontier_ix == 0 # should not have been inserted into the frontier before
             updated_frontier_ix = -1 # just something nonzero to prevent appending
             break
         end
@@ -212,6 +216,7 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
             updated_frontier_ix = length(a.frontier)
         end
         a.len += 1
+        has_progress = true # no existing element with the same index, otherwise it would have been replaced
         #info("Appended non-dominated element to the frontier")
         if length(a.frontier) > a.max_size
             throw(error("Pareto frontier exceeds maximum size"))
