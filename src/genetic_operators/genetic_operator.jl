@@ -98,6 +98,7 @@ include("operators_mixture.jl")
 include("mutation/mutation_clock.jl")
 include("mutation/polynomial_mutation.jl")
 
+include("crossover/mutation_wrapper.jl")
 include("crossover/simulated_binary_crossover.jl")
 include("crossover/simplex_crossover.jl")
 include("crossover/differential_evolution_crossover.jl")
