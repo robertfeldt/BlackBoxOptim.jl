@@ -34,6 +34,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         fitness_type, fitness_eltype, numobjectives,
         is_minimizing, nafitness, isnafitness,
         hat_compare, is_better, is_worse, same_fitness,
+        aggregate,
 
         # Evaluator
         #ProblemEvaluator,
