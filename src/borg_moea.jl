@@ -33,7 +33,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
 
   # Set of operators that together define a specific DE strategy.
   select::TournamentSelector{HatCompare{FS}}         # random individuals selector
-  modify::M         # genetic operator
+  modify::M         # operator to mutate frontier element during restarts
   embed::E          # embedding operator
 
   @compat function (::Type{BorgMOEA}){O<:OptimizationProblem, P<:Population,
