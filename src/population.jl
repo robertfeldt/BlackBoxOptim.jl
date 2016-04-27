@@ -131,7 +131,7 @@ candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 """
 function acquire_candi{F}(pop::FitPopulation{F})
   if isempty(pop.candi_pool)
-    return Candidate{F}(Vector{Float64}(numdims(pop)), -1, pop.nafitness)
+    return Candidate{F}(Individual(numdims(pop)), -1, pop.nafitness)
   end
   res = pop!(pop.candi_pool)
   # reset reference to genetic operation

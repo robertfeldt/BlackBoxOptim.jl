@@ -42,7 +42,7 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
       Normal(0, 1),
       mu_learnrate, sigma_learnrate, max_sigma,
       zeros(d, lambda),
-      Candidate{F}[Candidate{F}(Vector{Float64}(d), i) for i in 1:lambda],
+      Candidate{F}[Candidate{F}(Individual(d), i) for i in 1:lambda],
       # Most modern NES papers use log rather than linear fitness shaping.
       fitness_shaping_utilities_log(lambda),
       Vector{Float64}(lambda))
@@ -255,7 +255,7 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     new(embed, lambda, fitness_shaping_utilities_log(lambda), Vector{Float64}(lambda),
       mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
       ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
-      Candidate{F}[Candidate{F}(Vector{Float64}(d), i) for i in 1:lambda],
+      Candidate{F}[Candidate{F}(Individual(d), i) for i in 1:lambda],
       # temporaries
       zeros(d), zeros(d), zeros(d),
       zeros(d, d),

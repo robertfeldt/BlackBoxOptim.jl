@@ -26,7 +26,7 @@ immutable TopListIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     tag::Int
 
-   @compat (::Type{TopListIndividual}){F}(params::Individual, fitness::F, tag::Int) =
+    @compat (::Type{TopListIndividual}){F}(params::AbstractIndividual, fitness::F, tag::Int) =
         new{F}(params, fitness, tag)
 end
 
@@ -113,7 +113,7 @@ end
 
   Add a candidate with a fitness to the archive (if it is good enough).
 """
-function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, tag::Int=0, num_fevals::Int=-1)
+function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1)
   a.num_fitnesses += 1
   if (num_fevals == -1) num_fevals = a.num_fitnesses end
 
