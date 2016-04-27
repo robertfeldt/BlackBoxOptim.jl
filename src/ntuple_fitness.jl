@@ -263,6 +263,9 @@ Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessSch
 Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::EpsDominanceFitnessScheme{N,F,MIN}, ϵ::Union{F,Vector{F}}=fs.ϵ) =
   EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
 
+Base.convert{N,F<:Number,MIN,AGG}(::Type{ParetoFitnessScheme}, fs::EpsBoxDominanceFitnessScheme{N,F,MIN,AGG}) =
+  ParetoFitnessScheme{N,F}(is_minimizing=MIN, aggregator=fs.aggregator)
+
 Base.convert{N,F,MIN}(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},
                       fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
     IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
