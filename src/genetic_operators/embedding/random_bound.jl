@@ -3,8 +3,8 @@
   between parent's value and the nearest parameter boundary
   to get the new valid value if target's parameter is out-of-bounds.
 """
-type RandomBound{S<:SearchSpace} <: EmbeddingOperator
-    searchSpace::SearchSpace
+immutable RandomBound{S<:SearchSpace} <: EmbeddingOperator
+    searchSpace::S
 end
 
 # outer ctors
