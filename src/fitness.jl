@@ -24,6 +24,9 @@ fitness_eltype{F<:Number}(::Type{FitnessScheme{F}}) = F
 fitness_eltype{F<:Number}(::FitnessScheme{F}) = F
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
 
+# trivial convert() between calculated and archived fitness
+Base.convert{F}(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) = fit
+
 # ordering induced by the fitness scheme
 # FIXME enable once v0.5 issue #14919 is fixed
 # Base.call{F}(fs::FitnessScheme{F}, x::F, y::F) = is_better(x, y, fs)
@@ -43,9 +46,6 @@ abstract RatioFitnessScheme{F} <: FitnessScheme{F}
 """
 immutable ScalarFitnessScheme{MIN} <: RatioFitnessScheme{Float64}
 end
-
-# trivial convert() between calculated and archived fitness
-Base.convert{F}(::Type{F}, f::F, ::ScalarFitnessScheme) = f
 
 const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
 const MaximizingFitnessScheme = ScalarFitnessScheme{false}()
