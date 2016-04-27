@@ -37,8 +37,8 @@ end
 immutable TopListFitness{F<:Number}
     fitness::F            # current fitness
     fitness_improvement_ratio::Float64
-    timestamp::Float64    # when archived
     num_fevals::Int64     # number of fitness evaluations so far
+    timestamp::Float64    # when archived
 end
 
 fitness(f::TopListFitness) = f.fitness
@@ -119,7 +119,7 @@ function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F
 
   if isempty(a.fitness_history) || is_better(fitness, best_fitness(a), fitness_scheme(a))
     # Save fitness history so we can reconstruct the most important events later.
-    push!(a.fitness_history, TopListFitness{F}(fitness, fitness_improvement_ratio(a, fitness), time(), num_fevals))
+    push!(a.fitness_history, TopListFitness{F}(fitness, fitness_improvement_ratio(a, fitness), num_fevals, time()))
   end
 
   if length(a) < capacity(a) ||
