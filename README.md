@@ -89,14 +89,14 @@ can apply different criteria to filter the solutions.
 For example, to find the solution with the minimal first objective:
 ```julia
 pf = pareto_frontier(res)
-best_obj1, idx_obj1 = findmin(map(i -> fitness(i).orig[1], pf))
+best_obj1, idx_obj1 = findmin(map(elm -> fitness(elm)[1], pf))
 bo1_solution = pf[idx_obj1].params
 ```
 or to use different weighted sums:
 ```julia
 weighedfitness(f, w) = f[1]*w + f[2]*(1.0-w)
 weight = 0.4 # Weight on first objective, so second objective will have weight 1-0.4=0.6
-best_wfitness, idx = findmin(map(i -> weighedfitness(fitness(i).orig, weight), pf))
+best_wfitness, idx = findmin(map(elm -> weighedfitness(fitness(elm), weight), pf))
 bsw = pf[idx].params
 ```
 

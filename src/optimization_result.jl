@@ -82,18 +82,33 @@ end
 @compat (::Type{ArchiveOutput})(archive::TopListArchive) = TopListArchiveOutput(archive)
 
 """
+    Wrapper for `FrontierIndividual` that allows easy access to the problem fitness.
+"""
+immutable FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
+    inner::FrontierIndividual{FA}
+    fitness::F
+
+    Base.call{F,FA}(::Type{FrontierIndividualWrapper{F}}, indi::FrontierIndividual{FA}, fit_scheme::FitnessScheme{FA}) =
+        new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
+end
+
+params(indi::FrontierIndividualWrapper) = params(indi.inner)
+archived_fitness(indi::FrontierIndividualWrapper) = fitness(indi.inner)
+
+"""
     `EpsBoxArchive`-specific components of the optimization results.
 """
 immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutput
   best_fitness::NTuple{N,F}
   best_candidate::Individual
-  frontier::Vector{EpsBoxFrontierIndividual{N,F}} # inferred Pareto frontier
+  frontier::Vector{FrontierIndividualWrapper{NTuple{N,F},IndexedTupleFitness{N,F}}} # inferred Pareto frontier
   fit_scheme::FS
 
   @compat function (::Type{EpsBoxArchiveOutput}){N,F}(archive::EpsBoxArchive{N,F})
     fit_scheme = fitness_scheme(archive)
-    new{N,F,typeof(fit_scheme)}(best_fitness(archive), best_candidate(archive),
-                                archive.frontier[archive.frontier_isoccupied], fit_scheme)
+    new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme), best_candidate(archive),
+                                FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}[FrontierIndividualWrapper{NTuple{N,F}}(archive.frontier[i], fit_scheme) for i in find(archive.frontier_isoccupied)],
+                                fit_scheme)
   end
 end
 
