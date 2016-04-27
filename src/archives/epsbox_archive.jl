@@ -1,18 +1,33 @@
 """
-    Individual stored in `EpsBoxArchive`.
+    Individual representing the solution from the Pareto set.
 """
-immutable EpsBoxFrontierIndividual{N,F<:Number} <: ArchivedIndividual{IndexedTupleFitness{N,F}}
-    fitness::IndexedTupleFitness{N,F}
+immutable FrontierIndividual{F} <: ArchivedIndividual{F}
+    fitness::F
     params::Individual
     tag::Int                            # tag of the individual (e.g. gen.op. ID)
     num_fevals::Int                     # number of fitness evaluations so far
     n_restarts::Int                     # the number of method restarts so far
     timestamp::Float64                  # when archived
 
-    @compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
+    FrontierIndividual(fitness::F,
                    params, tag, num_fevals, n_restarts, timestamp=time()) =
-        new{N,F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
+        new(fitness, params, tag, num_fevals, n_restarts, timestamp)
+
+    @compat (::Type{FrontierIndividual}){F}(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) =
+        new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 end
+
+tag(indi::FrontierIndividual) = indi.tag
+
+"""
+    Individual stored in `EpsBoxArchive`.
+"""
+typealias EpsBoxFrontierIndividual{N,F<:Number} FrontierIndividual{IndexedTupleFitness{N,F}}
+
+@compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
+               params, tag, num_fevals, n_restarts, timestamp=time()) =
+    FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
 """
     ϵ-box archive saves only the solutions that are not ϵ-box
