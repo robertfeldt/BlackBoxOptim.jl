@@ -34,6 +34,7 @@ my_tests = [
 
   "test_generating_set_search.jl",
   "test_direct_search_with_probabilistic_descent.jl",
+  "test_solve.jl",
 ]
 
 for t in my_tests
