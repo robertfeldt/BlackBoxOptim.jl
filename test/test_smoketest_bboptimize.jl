@@ -21,12 +21,12 @@ facts("bboptimize() multi-objective methods smoketest") do
 
   for m in keys(BlackBoxOptim.MultiObjectiveMethods)
     context("$(m)") do
-      ctrl = bbsetup(schaffer1; Method = m, MaxSteps=100000,
+      ctrl = bbsetup(schaffer1; Method = m, 
         SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,
         FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.01)
       # run first iteration before the main run to exclude compilation from timing
       bboptimize(ctrl, MaxSteps = 1)
-      res = bboptimize(ctrl, MaxTime = 0.3)
+      res = bboptimize(ctrl, MaxTime = 3.0)
       @fact length(best_candidate(res)) --> 2
       f = best_fitness(res)
       @fact typeof(f) --> NTuple{2,Float64}
