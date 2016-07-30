@@ -3,6 +3,7 @@ TestDir = "test"
 
 # General parameters that the user can set from the command line.
 Julia = ENV["minreps"] || "julia"
+Julia05 = "julia05"
 MinReps = (ENV["minreps"] || 30).to_i
 MaxReps = (ENV["maxreps"] || 1000).to_i
 MaxRepTime = (ENV["maxreptime"] || 1.0).to_f
@@ -21,11 +22,17 @@ task :atest do
 end
 
 Command = "#{Julia} --color=yes -L src/BlackBoxOptim.jl"
+Command05 = "#{Julia05} --color=yes -L src/BlackBoxOptim.jl"
 Command03 = "julia03 --color=yes -L src/BlackBoxOptim.jl"
 
 desc "Run normal (fast) tests"
 task :runtest do
   sh "#{Command} test/runtests.jl"
+end
+
+desc "Run normal (fast) tests on Julia 0.5"
+task :runtest5 do
+  sh "#{Command05} test/runtests.jl"
 end
 
 desc "Run normal (fast) tests on julia 0.3"
