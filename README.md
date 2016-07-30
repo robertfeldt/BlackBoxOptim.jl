@@ -7,6 +7,9 @@ BlackBoxOptim.jl
 
 [![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
 
+[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.4.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
+
+[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.5.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 
 # Installation
 ```julia
