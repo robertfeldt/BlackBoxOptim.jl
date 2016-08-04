@@ -1,5 +1,7 @@
 include("helper.jl")
 
+import Compat.String
+
 my_tests = [
 
   "utilities/test_latin_hypercube_sampling.jl",

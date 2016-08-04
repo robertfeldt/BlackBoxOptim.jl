@@ -4,6 +4,8 @@ module BlackBoxOptim
 
 using Distributions, StatsBase, Compat
 
+import Compat: String, view
+
 # selectively enable parallel evaluation:
 # - Julia v0.3: no RemoteChannel
 # + Julia v0.4

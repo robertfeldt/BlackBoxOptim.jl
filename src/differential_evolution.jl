@@ -8,7 +8,7 @@ const DE_DefaultOptions = chain(DEX_DefaultOptions, ParamsDict(
 # should it be called EvolutionaryOptimizer?
 type DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperator,E<:EmbeddingOperator} <: PopulationOptimizer
   # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
-  name::ASCIIString
+  name::String
 
   population::P
 
@@ -17,9 +17,9 @@ type DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperator,E<:Embed
   modify::M        # genetic operator
   embed::E         # embedding operator
 
-  function Base.call{P<:Population, S<:IndividualsSelector,
+  @compat function (::Type{DiffEvoOpt}){P<:Population, S<:IndividualsSelector,
                      M<:GeneticOperator, E<:EmbeddingOperator}(
-        ::Type{DiffEvoOpt}, name::ASCIIString, pop::P,
+        name::String, pop::P,
         select::S = S(), modify::M = M(), embed::E = E())
     new{P,S,M,E}(name, pop, select, modify, embed)
   end
@@ -133,7 +133,7 @@ end
 # Now we can create specific DE optimizers that are commonly used in the
 # literature.
 
-function diffevo(problem::OptimizationProblem, options::Parameters, name::ASCIIString,
+function diffevo(problem::OptimizationProblem, options::Parameters, name::String,
                  select::IndividualsSelector = SimpleSelector(),
                  crossover::DiffEvoCrossoverOperator = DiffEvoRandBin1(chain(DE_DefaultOptions, options)))
   opts = chain(DE_DefaultOptions, options)

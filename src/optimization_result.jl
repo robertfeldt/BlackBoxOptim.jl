@@ -23,8 +23,8 @@ Base.call(::Type{MethodOutput}, method::Optimizer) = DummyMethodOutput()
   See `make_opt_results()`.
 """
 type OptimizationResults
-  method::ASCIIString           # FIXME symbol instead or flexible?
-  stop_reason::ASCIIString      # FIXME turn into type hierarchy of immutable reasons with their attached info
+  method::String           # FIXME symbol instead or flexible?
+  stop_reason::String      # FIXME turn into type hierarchy of immutable reasons with their attached info
   iterations::Int
   start_time::Float64           # time (seconds) optimization started
   elasped_time::Float64         # time (seconds) optimization finished

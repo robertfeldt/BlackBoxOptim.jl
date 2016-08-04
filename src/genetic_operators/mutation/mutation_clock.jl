@@ -20,7 +20,7 @@ end
 immutable UniformMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
 
-    Base.call{SS<:SearchSpace}(::Type{UniformMutation}, ss::SS) = new{SS}(ss)
+    @compat (::Type{UniformMutation}){SS<:SearchSpace}(ss::SS) = new{SS}(ss)
 end
 
 search_space(m::UniformMutation) = m.ss
@@ -42,7 +42,7 @@ type MutationClock{S<:GibbsMutationOperator} <: MutationOperator
     rate::Float64           # Probability to mutate a dimension
     nextVarToMutate::Int    # dimension index - 1
 
-    Base.call{S<:GibbsMutationOperator}(::Type{MutationClock}, inner::S, rate::Float64 = 0.05) =
+    @compat (::Type{MutationClock}){S<:GibbsMutationOperator}(inner::S, rate::Float64 = 0.05) =
         new{S}(inner, rate, 1 + num_vars_to_next_mutation_point(rate))
 end
 

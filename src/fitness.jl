@@ -19,7 +19,7 @@ abstract FitnessScheme{F}
 """
 fitness_type{F}(::Type{FitnessScheme{F}}) = F
 fitness_type{F}(::FitnessScheme{F}) = F
-fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(super(FS))
+fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(supertype(FS))
 fitness_eltype{F<:Number}(::Type{FitnessScheme{F}}) = F
 fitness_eltype{F<:Number}(::FitnessScheme{F}) = F
 #fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
@@ -95,7 +95,7 @@ same_fitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 immutable HatCompare{FS<:FitnessScheme}
     fs::FS
 
-    Base.call{FS<:FitnessScheme}(::Type{HatCompare}, fs::FS) = new{FS}(fs)
+    @compat (::Type{HatCompare}){FS<:FitnessScheme}(fs::FS) = new{FS}(fs)
 end
 
 Base.call{F}(hc::HatCompare, x::F, y::F) = hat_compare(x, y, hc.fs)
