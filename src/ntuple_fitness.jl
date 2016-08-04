@@ -79,7 +79,7 @@ immutable EpsDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: FitnessScheme{NTuple
         new{N,F,is_minimizing,AGG}(ϵ, aggregator)
     end
 
-    @compat (::Type{EpsDominanceFitnessScheme{N}}){N,F<:Number,AGG}(, ϵ::F; fitness_type::Type{F} = Float64,
+    @compat (::Type{EpsDominanceFitnessScheme{N}}){N,F<:Number,AGG}(ϵ::F; fitness_type::Type{F} = Float64,
                                is_minimizing::Bool=true, aggregator::AGG=sum) =
         EpsDominanceFitnessScheme{N,fitness_type}(ϵ; is_minimizing=is_minimizing, aggegator=aggregator)
 end
@@ -157,11 +157,11 @@ immutable IndexedTupleFitness{N,F}
     index::NTuple{N,Int}    # ϵ-index vector
     dist::F                 # distance between ϵ-index vector and the original fitness
 
-    @compat function (::Type{IndexedTupleFitness}){N,F,MIN}(, u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
+    @compat function (::Type{IndexedTupleFitness}){N,F,MIN}(u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
         ix, dist = ϵ_index(u, ϵ, is_minimizing)
         return new{N,F}(u, agg, ix, dist)
     end
-    @compat (::Type{IndexedTupleFitness}){N,F,MIN}(, u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) =
+    @compat (::Type{IndexedTupleFitness}){N,F,MIN}(u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) =
         IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
 end
 
@@ -241,7 +241,7 @@ immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessSchem
                                is_minimizing::Bool=true, aggregator::AGG=sum) =
         new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 
-    @compat (::Type{EpsBoxDominanceFitnessScheme{N}}){N,F<:Number,AGG}(, ϵ::Union{F,Vector{F}};
+    @compat (::Type{EpsBoxDominanceFitnessScheme{N}}){N,F<:Number,AGG}(ϵ::Union{F,Vector{F}};
                                is_minimizing::Bool=true, aggregator::AGG=sum) =
         new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 end

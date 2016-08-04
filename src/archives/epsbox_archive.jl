@@ -9,7 +9,7 @@ immutable EpsBoxFrontierIndividual{N,F<:Number} <: ArchivedIndividual{IndexedTup
     num_fevals::Int                     # number of fitness evaluations so far
     n_restarts::Int                     # the number of method restarts so far
 
-    @compat (::Type{EpsBoxFrontierIndividual}){F,N}(fitness::IndexedTupleFitness{N,F},
+    @compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
                    params, tag, num_fevals, n_restarts) =
         new{N,F}(fitness, params, tag, time(), num_fevals, n_restarts)
 end
@@ -44,7 +44,7 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},
                                 sizehint!(BitVector(), 64))
   end
 
-  @compat (::Type{EpsBoxArchive}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
+  @compat (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
     EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
 end
 
