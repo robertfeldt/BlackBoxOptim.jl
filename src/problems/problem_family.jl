@@ -20,7 +20,7 @@ type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
   range_per_dim::ParamBounds            # Default range per dimension
   opt_value::FO                         # optional optimal value, or nothing
 
-  function Base.call{FS<:FitnessScheme,FO}(::Type{FunctionBasedProblemFamily}, objfunc::Function, name::String,
+  @compat function (::Type{FunctionBasedProblemFamily}){FS<:FitnessScheme,FO}(objfunc::Function, name::String,
                                         fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
                                         reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE)
     if FO <: Number

@@ -13,7 +13,7 @@ abstract MethodOutput
 immutable DummyMethodOutput <: MethodOutput end
 
 # no method-specific output by default
-Base.call(::Type{MethodOutput}, method::Optimizer) = DummyMethodOutput()
+@compat (::Type{MethodOutput})(method::Optimizer) = DummyMethodOutput()
 
 """
   The results of running optimization method.
@@ -75,11 +75,11 @@ immutable TopListArchiveOutput{F,C} <: ArchiveOutput
   best_fitness::F
   best_candidate::C
 
-  Base.call{F}(::Type{TopListArchiveOutput}, archive::TopListArchive{F}) =
+  @compat (::Type{TopListArchiveOutput}){F}(archive::TopListArchive{F}) =
     new{F,Individual}(best_fitness(archive), best_candidate(archive))
 end
 
-Base.call(::Type{ArchiveOutput}, archive::TopListArchive) = TopListArchiveOutput(archive)
+@compat (::Type{ArchiveOutput})(archive::TopListArchive) = TopListArchiveOutput(archive)
 
 """
     `EpsBoxArchive`-specific components of the optimization results.
@@ -90,14 +90,14 @@ immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOu
   frontier::Vector{EpsBoxFrontierIndividual{N,F}} # inferred Pareto frontier
   fit_scheme::FS
 
-  function Base.call{N,F}(::Type{EpsBoxArchiveOutput}, archive::EpsBoxArchive{N,F})
+  @compat function (::Type{EpsBoxArchiveOutput}){N,F}(archive::EpsBoxArchive{N,F})
     fit_scheme = fitness_scheme(archive)
     new{N,F,typeof(fit_scheme)}(best_fitness(archive), best_candidate(archive),
                                 archive.frontier[archive.frontier_isoccupied], fit_scheme)
   end
 end
 
-Base.call(::Type{ArchiveOutput}, archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
+@compat (::Type{ArchiveOutput})(archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
 
 pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 
@@ -108,10 +108,10 @@ pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 immutable PopulationOptimizerOutput{P} <: MethodOutput
   population::P
 
-  Base.call(::Type{PopulationOptimizerOutput}, method::PopulationOptimizer) =
+  @compat (::Type{PopulationOptimizerOutput})(method::PopulationOptimizer) =
     new{typeof(population(method))}(population(method))
 end
 
-Base.call(::Type{MethodOutput}, optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
+@compat (::Type{MethodOutput})(optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
 
 population(or::OptimizationResults) = or.method_output.population
