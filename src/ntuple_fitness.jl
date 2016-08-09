@@ -285,5 +285,5 @@ hat_compare{N,F}(u::NTuple{N,F}, v::NTuple{N,F},
                 convert(IndexedTupleFitness, v, fs), fs, expected)
 
 # special overload that strips index equality flag
-Base.call{FS<:EpsBoxDominanceFitnessScheme,N,F}(hc::HatCompare{FS},
+@compat (hc::HatCompare{FS}){FS<:EpsBoxDominanceFitnessScheme,N,F}(
         u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}) = hat_compare(u, v, hc.fs)[1]

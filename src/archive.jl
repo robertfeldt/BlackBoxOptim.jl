@@ -30,7 +30,7 @@ immutable TopListIndividual{F} <: ArchivedIndividual{F}
         new{F}(params, fitness, tag)
 end
 
-Base.(:(==)){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
+@compat Base.:(==){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
   (x.fitness == y.fitness) && (x.params == y.params)
 
 " Fitness as stored in `TopListArchive`. "

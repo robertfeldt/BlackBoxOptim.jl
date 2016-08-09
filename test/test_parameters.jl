@@ -53,7 +53,7 @@ facts("DictChain") do
     end
 
     context("using merge!()") do
-      dc = DictChain{Int,ASCIIString}()
+      dc = DictChain{Int,String}()
       @fact_throws merge!(dc, d1) MethodError # incompatible types
 
       dc = DictChain{Symbol,Int}()

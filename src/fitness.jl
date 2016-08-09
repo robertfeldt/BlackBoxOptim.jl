@@ -98,4 +98,4 @@ immutable HatCompare{FS<:FitnessScheme}
     @compat (::Type{HatCompare}){FS<:FitnessScheme}(fs::FS) = new{FS}(fs)
 end
 
-Base.call{F}(hc::HatCompare, x::F, y::F) = hat_compare(x, y, hc.fs)
+@compat (hc::HatCompare){F}(x::F, y::F) = hat_compare(x, y, hc.fs)
