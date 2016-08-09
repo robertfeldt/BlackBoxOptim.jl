@@ -1,6 +1,6 @@
 facts("DictChain") do
   context("Matching keys and type parameters") do
-    dc1 = DictChain{Int,ASCIIString}()
+    dc1 = DictChain{Int,String}()
 
     @fact_throws (dc1[:NotThere] = 3) KeyError
     @fact_throws (dc1[:NotThere] = "abc") KeyError
@@ -10,11 +10,11 @@ facts("DictChain") do
   end
 
   context("merging and chaining") do
-    dc1 = DictChain{Symbol,ASCIIString}()
+    dc1 = DictChain{Symbol,String}()
 
     # incompatible dictionary types
     context("incompatible dictionary types") do
-      dc2 = DictChain{Int,ASCIIString}()
+      dc2 = DictChain{Int,String}()
       @fact_throws chain(dc1, dc2) MethodError
       @fact_throws merge(dc1, dc2) MethodError
       @fact_throws merge!(dc1, dc2) MethodError
@@ -53,7 +53,7 @@ facts("DictChain") do
     end
 
     context("using merge!()") do
-      dc = DictChain{Int,ASCIIString}()
+      dc = DictChain{Int,String}()
       @fact_throws merge!(dc, d1) MethodError # incompatible types
 
       dc = DictChain{Symbol,Int}()

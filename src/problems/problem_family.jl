@@ -14,13 +14,13 @@ abstract ProblemFamily{FS<:FitnessScheme}
 """
 type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
   objfunc::Function                     # Objective function
-  name::ASCIIString
+  name::String
   fitness_scheme::FS
   reserved_ss::RangePerDimSearchSpace   # search space for the first reserved dimensions
   range_per_dim::ParamBounds            # Default range per dimension
   opt_value::FO                         # optional optimal value, or nothing
 
-  function Base.call{FS<:FitnessScheme,FO}(::Type{FunctionBasedProblemFamily}, objfunc::Function, name::ASCIIString,
+  @compat function (::Type{FunctionBasedProblemFamily}){FS<:FitnessScheme,FO}(objfunc::Function, name::String,
                                         fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
                                         reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE)
     if FO <: Number
@@ -61,19 +61,19 @@ end
 
 @deprecate fixed_dim_problem instantiate
 
-MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds, fmin::Float64) =
+MinimizationProblemFamily(f::Function, name::String, range::ParamBounds, fmin::Float64) =
   FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range, fmin)
 
-MinimizationProblemFamily(f::Function, name::ASCIIString, range::ParamBounds) =
+MinimizationProblemFamily(f::Function, name::String, range::ParamBounds) =
   FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range)
 
-minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int) =
+minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int) =
     instantiate(MinimizationProblemFamily(f, name, range), ndim)
 
 minimization_problem(f::Function, range::ParamBounds, ndim::Int) =
     instantiate(MinimizationProblemFamily(f, "<unknown>", range), ndim)
 
-minimization_problem(f::Function, name::ASCIIString, range::ParamBounds, ndim::Int, fmin::Float64) =
+minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int, fmin::Float64) =
     instantiate(MinimizationProblemFamily(f, name, range, fmin), ndim)
 
 """

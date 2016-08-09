@@ -24,7 +24,7 @@ params_std(pop::PopulationMatrix) = std(pop, 1)
 popsize{F}(pop::Vector{Candidate{F}}) = length(pop)
 numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
 
-view(pop::PopulationMatrix, indi_ix) = slice(pop, :, indi_ix)
+viewer(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
 
 """
   The default implementation of `PopulationWithFitness{F}`.
@@ -64,7 +64,7 @@ numdims(pop::FitPopulation) = numdims(pop.individuals)
 # resize the population
 function Base.resize!(pop::FitPopulation, newpopsize::Integer)
     new_individuals = PopulationMatrix(numdims(pop), newpopsize+pop.ntransient)
-    new_individuals[:, 1:min(newpopsize,popsize(pop))] = sub(pop.individuals, :, 1:min(newpopsize,popsize(pop)))
+    new_individuals[:, 1:min(newpopsize,popsize(pop))] = view(pop.individuals, :, 1:min(newpopsize,popsize(pop)))
     pop.individuals = new_individuals
     resize!(pop.fitness, newpopsize + pop.ntransient)
     pop
@@ -74,7 +74,7 @@ end
 @inline persistent_range(pop::FitPopulation) = 1:popsize(pop)
 # indices of the transient individuals
 @inline transient_range(pop::FitPopulation) = popsize(pop):(popsize(pop)+pop.ntransient-1)
-persistent_individuals(pop::FitPopulation) = sub(pop.individuals, :, persistent_range(pop))
+persistent_individuals(pop::FitPopulation) = view(pop.individuals, :, persistent_range(pop))
 
 params_mean(pop::FitPopulation) = mean(persistent_individuals(pop), 1)
 params_std(pop::FitPopulation) = std(persistent_individuals(pop), 1)
@@ -85,13 +85,13 @@ Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
 """
-    view(population, individual_index)
+    viewer(population, individual_index)
 
     Get vector-slice of the population matrix for the specified
     individual.
     Does not allocate any additional space, while still providing the same lookup performance.
 """
-view(pop::FitPopulation, indi_ix) = slice(pop.individuals, :, indi_ix)
+viewer(pop::FitPopulation, indi_ix) = view(pop.individuals, :, indi_ix)
 
 Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, ::Colon, indi_ix::Integer) =
     setindex!(pop, indi, indi_ix)

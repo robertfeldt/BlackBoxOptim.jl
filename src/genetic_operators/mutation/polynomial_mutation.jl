@@ -6,8 +6,8 @@ immutable PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
     η::Float64
 
-    Base.call{SS<:SearchSpace}(::Type{PolynomialMutation}, ss::SS, η = 50.0) = new{SS}(ss, η)
-    Base.call{SS<:SearchSpace}(::Type{PolynomialMutation}, ss::SS, options::Parameters) = new{SS}(ss, options[:PM_η])
+    @compat (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, η = 50.0) = new{SS}(ss, η)
+    @compat (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, options::Parameters) = new{SS}(ss, options[:PM_η])
 end
 
 """

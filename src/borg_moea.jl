@@ -36,9 +36,9 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
   modify::M         # genetic operator
   embed::E          # embedding operator
 
-  function Base.call{O<:OptimizationProblem, P<:Population,
+  @compat function (::Type{BorgMOEA}){O<:OptimizationProblem, P<:Population,
                      M<:GeneticOperator, E<:EmbeddingOperator}(
-        ::Type{BorgMOEA}, problem::O,
+        problem::O,
         pop::P, recombinate::Vector{CrossoverOperator},
         modify::M = M(), embed::E = E(), params = EMPTY_PARAMS)
     # NOTE if ϵ-dominance is used, params[:ϵ] has the priority

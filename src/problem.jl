@@ -29,12 +29,12 @@ fitness_is_within_ftol(p::OptimizationProblem, fitness, atol::Number) = false
 """
 type FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: OptimizationProblem{FS}
   objfunc::Function     # Objective function
-  name::ASCIIString
+  name::String
   fitness_scheme::FS
   ss::SS                # search space
   opt_value::FO         # known optimal value or nothing
 
-  function Base.call{FS<:FitnessScheme,SS<:SearchSpace,FO}(::Type{FunctionBasedProblem}, objfunc::Function, name::ASCIIString, fitness_scheme::FS, ss::SS, opt_value::FO = nothing)
+  @compat function (::Type{FunctionBasedProblem}){FS<:FitnessScheme,SS<:SearchSpace,FO}(objfunc::Function, name::String, fitness_scheme::FS, ss::SS, opt_value::FO = nothing)
     if FO <: Number
       fitness_type(fitness_scheme) == FO || throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))
       if isnafitness(opt_value, fitness_scheme) # if NA fitness is given, the problem is unbouned

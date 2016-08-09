@@ -30,8 +30,8 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
     # project other parents vectors orthogonal to
     # the subspace orthogonal to the selected parent
     other_parents_centered = (eye(size(parents_centered,1)) -
-            A_mul_Bt(slice(parents_centered, :, 1), slice(parents_centered, :, 1))) *
-            sub(parents_centered, :, 2:length(parentIndices))
+            A_mul_Bt(view(parents_centered, :, 1), view(parents_centered, :, 1))) *
+            view(parents_centered, :, 2:length(parentIndices))
     sd = mean(map(sqrt, sumabs2(other_parents_centered, 2)))
     if sd > 1E-8
         svdf = svdfact(other_parents_centered)
@@ -44,9 +44,9 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
         fill!(target, zero(eltype(target)))
     end
 
-    selParent = view(pop, parentIndices[1])
+    selParent = viewer(pop, parentIndices[1])
     selScale = rand(Normal()) * xover.η
-    selParentOffset = sub(parents_centered, :, 1)
+    selParentOffset = view(parents_centered, :, 1)
     @inbounds @simd for i in eachindex(target)
         target[i] += selParent[i] + selScale * selParentOffset[i]
     end

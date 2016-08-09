@@ -36,7 +36,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
   stop_time::Float64  # time optimization stopped, 0 if still running
   last_report_time::Float64 # last time trace_progress() was called
 
-  stop_reason::ASCIIString # the reason for algorithm termination, empty if it's not terminated
+  stop_reason::String # the reason for algorithm termination, empty if it's not terminated
 end
 
 """

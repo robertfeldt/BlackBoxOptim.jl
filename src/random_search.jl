@@ -2,7 +2,7 @@
   Optimize by randomly generating the candidates.
 """
 type RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
-  name::ASCIIString
+  name::String
   search_space::S
   best_fitness          # FIXME fitness type should be known
   best::Individual

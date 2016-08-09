@@ -2,4 +2,4 @@ julia 0.4
 FactCheck
 StatsBase
 Distributions
-Compat
+Compat 0.7.9

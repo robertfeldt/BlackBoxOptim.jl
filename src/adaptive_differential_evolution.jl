@@ -72,7 +72,7 @@ typealias AdaptiveDiffEvoRandBin1 AdaptiveDiffEvoRandBin{3}
 typealias AdaptiveDiffEvoRandBin2 AdaptiveDiffEvoRandBin{5}
 
 function adaptive_diffevo(problem::OptimizationProblem,
-                 options::Parameters, name::ASCIIString,
+                 options::Parameters, name::String,
                  select::IndividualsSelector = SimpleSelector(),
                  crossover::DiffEvoCrossoverOperator =
                     AdaptiveDiffEvoRandBin1(chain(ADE_DefaultOptions, options)))

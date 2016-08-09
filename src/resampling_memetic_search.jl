@@ -20,7 +20,7 @@ const RSDefaultParameters = ParamsDict(
   Search: High Performance Despite the Simplicity", 2013.
 """
 type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
-  name::ASCIIString
+  name::String
   params::Parameters
   evaluator::E
   resampling_func::Function
@@ -33,7 +33,7 @@ type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
 
   # Constructor for RS:
   ResamplingMemeticSearcher(evaluator::E, parameters::Parameters,
-    resampling_function::Function, name::ASCIIString) = begin
+    resampling_function::Function, name::String) = begin
 
     params = chain(RSDefaultParameters, parameters)
 

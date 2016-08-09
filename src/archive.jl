@@ -26,11 +26,11 @@ immutable TopListIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     tag::Int
 
-    Base.call{F}(::Type{TopListIndividual}, params::Individual, fitness::F, tag::Int) =
+   @compat (::Type{TopListIndividual}){F}(params::Individual, fitness::F, tag::Int) =
         new{F}(params, fitness, tag)
 end
 
-Base.(:(==)){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
+@compat Base.:(==){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
   (x.fitness == y.fitness) && (x.params == y.params)
 
 " Fitness as stored in `TopListArchive`. "
@@ -67,7 +67,7 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,F,FS}
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
   fitness_history::Vector{TopListFitness{F}}
 
-  function Base.call{FS}(::Type{TopListArchive}, fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+  @compat function (::Type{TopListArchive}){FS}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
     F = fitness_type(FS)
     new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
   end

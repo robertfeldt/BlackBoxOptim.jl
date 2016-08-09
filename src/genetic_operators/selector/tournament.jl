@@ -5,7 +5,7 @@ type TournamentSelector{H} <: IndividualsSelector
     hat_comp::H     # fitness comparison tri-valued operator
     size::Int       # tournament size
 
-    function Base.call{FS}(::Type{TournamentSelector}, fs::FS, size::Int=2)
+    @compat function (::Type{TournamentSelector}){FS}(fs::FS, size::Int=2)
         h = HatCompare(fs)
         new{typeof(h)}(h, size)
     end
