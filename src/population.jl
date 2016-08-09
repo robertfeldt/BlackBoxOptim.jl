@@ -24,7 +24,7 @@ params_std(pop::PopulationMatrix) = std(pop, 1)
 popsize{F}(pop::Vector{Candidate{F}}) = length(pop)
 numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
 
-view(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
+viewer(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
 
 """
   The default implementation of `PopulationWithFitness{F}`.
@@ -85,13 +85,13 @@ Base.getindex(pop::FitPopulation, rows, cols) = pop.individuals[rows, cols]
 Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 
 """
-    view(population, individual_index)
+    viewer(population, individual_index)
 
     Get vector-slice of the population matrix for the specified
     individual.
     Does not allocate any additional space, while still providing the same lookup performance.
 """
-view(pop::FitPopulation, indi_ix) = view(pop.individuals, :, indi_ix)
+viewer(pop::FitPopulation, indi_ix) = view(pop.individuals, :, indi_ix)
 
 Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, ::Colon, indi_ix::Integer) =
     setindex!(pop, indi, indi_ix)

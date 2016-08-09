@@ -44,7 +44,7 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
         fill!(target, zero(eltype(target)))
     end
 
-    selParent = view(pop, parentIndices[1])
+    selParent = viewer(pop, parentIndices[1])
     selScale = rand(Normal()) * xover.η
     selParentOffset = view(parents_centered, :, 1)
     @inbounds @simd for i in eachindex(target)

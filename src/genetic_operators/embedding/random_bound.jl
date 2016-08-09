@@ -32,7 +32,7 @@ function apply!(eo::RandomBound, target::Individual, ref::AbstractVector)
 end
 
 apply!(eo::RandomBound, target::Individual, pop, refIndex::Int) =
-  apply!(eo, target, view(pop, refIndex))
+  apply!(eo, target, viewer(pop, refIndex))
 
 function apply!(eo::RandomBound, target::Individual, pop, parentIndices::Vector{Int})
   @assert length(parentIndices) == 1
