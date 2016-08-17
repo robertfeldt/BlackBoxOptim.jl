@@ -1,18 +1,33 @@
 """
-    Individual stored in `EpsBoxArchive`.
+    Individual representing the solution from the Pareto set.
 """
-immutable EpsBoxFrontierIndividual{N,F<:Number} <: ArchivedIndividual{IndexedTupleFitness{N,F}}
-    fitness::IndexedTupleFitness{N,F}
+immutable FrontierIndividual{F} <: ArchivedIndividual{F}
+    fitness::F
     params::Individual
     tag::Int                            # tag of the individual (e.g. gen.op. ID)
-    timestamp::Float64                  # when archived
     num_fevals::Int                     # number of fitness evaluations so far
     n_restarts::Int                     # the number of method restarts so far
+    timestamp::Float64                  # when archived
 
-    @compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
-                   params, tag, num_fevals, n_restarts) =
-        new{N,F}(fitness, params, tag, time(), num_fevals, n_restarts)
+    FrontierIndividual(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) =
+        new(fitness, params, tag, num_fevals, n_restarts, timestamp)
+
+    @compat (::Type{FrontierIndividual}){F}(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) =
+        new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 end
+
+tag(indi::FrontierIndividual) = indi.tag
+
+"""
+    Individual stored in `EpsBoxArchive`.
+"""
+typealias EpsBoxFrontierIndividual{N,F<:Number} FrontierIndividual{IndexedTupleFitness{N,F}}
+
+@compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
+               params, tag, num_fevals, n_restarts, timestamp=time()) =
+    FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
 """
     ϵ-box archive saves only the solutions that are not ϵ-box
@@ -21,7 +36,7 @@ end
     It also counts the number of candidate solutions that have been added
     and how many ϵ-box progresses have been made.
 """
-type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},IndexedTupleFitness{N,F},FS}
+type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
   fit_scheme::FS        # Fitness scheme used
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
@@ -52,8 +67,6 @@ const EpsBoxArchive_DefaultParameters = ParamsDict(
   :MaxArchiveSize => 10_000,
 )
 
-fitness_scheme(a::EpsBoxArchive) = a.fit_scheme
-# EpsBoxArchive stores indexed fitness
 Base.length(a::EpsBoxArchive) = a.len
 Base.isempty(a::EpsBoxArchive) = a.len == 0
 capacity(a::EpsBoxArchive) = a.max_size
@@ -240,13 +253,10 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
     return a
 end
 
-archived_fitness{N,F}(fitness::NTuple{N,F}, a::EpsBoxArchive{N,F}) =
-    convert(IndexedTupleFitness, fitness, a.fit_scheme)
-
 # actually this methods should never be called because the fitness
 # is already indexes within the method
 add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
-                    candidate, tag::Int=0, num_fevals::Int=-1) =
+                    candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1) =
     add_candidate!(a, archived_fitness(cand_fitness, a), candidate, tag, num_fevals)
 
 # called by check_stop_condition(e::Evaluator, ctrl)

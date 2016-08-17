@@ -19,24 +19,30 @@ results2 = Float64[]
 
 totaltime = 0.0
 
-for i in 1:(N+1)
+info("MaxTime=$maxtime, N_repeats=$N")
+while length(results1) < N
+  print("Optimization run $(length(results1)+1) of $N: ")
   ctrl = bbsetup(schaffer1; Method = :borg_moea,
     SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,
     FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.01)
   tic()
   @time res = bboptimize(ctrl, MaxTime = maxtime)
   t = toq()
-  if i > 1 # Skip first since there is compile time involved
+  if isapprox(t, maxtime; rtol=0.01, atol=0.01)
     totaltime += t
     f = best_fitness(res)
     push!(results1, f[1])
     push!(results2, f[2])
+  else
+    # Ignore runs with large MaxTime deviation:
+    # usually initial runs have compilation hiccups (both BBO and GC)
+    warn("Run ignored: large MaxTime deviation")
   end
 end
 
 function report(vs, label, t = nothing)
   r(x) = round(x, 3)
-  println(label, ": ", r(mean(vs)), " +/- ", r(std(vs)), 
+  println(label, ": ", r(mean(vs)), " ± ", r(std(vs)),
     " (", r(minimum(vs)), "-", r(maximum(vs)), ")")
   if t != nothing
     println("Time: ", r(t))

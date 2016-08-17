@@ -1,19 +1,25 @@
 """
   Base class for tuple-based fitness schemes.
+
+  `N` is the number of the objectives
+  `F` is the type of each objective
+  `FA` is the actual type of the multi-objective fitness
+  `MIN` if objectives should be minimized or maximized
+  `AGG` the type of aggregator
 """
-abstract TupleFitnessScheme{N,F<:Number,MIN,AGG} <: FitnessScheme{NTuple{N,F}}
+abstract TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA}
 
 @inline numobjectives{N}(::TupleFitnessScheme{N}) = N
 @inline fitness_eltype{N,F}(::TupleFitnessScheme{N,F}) = F
-@inline is_minimizing{N,F,MIN}(::TupleFitnessScheme{N,F,MIN}) = MIN
+@inline is_minimizing{N,F,FA,MIN}(::TupleFitnessScheme{N,F,FA,MIN}) = MIN
 
-@generated nafitness{N,F}(::TupleFitnessScheme{N,F}) = ntuple(_ -> convert(F, NaN), Val{N})
-isnafitness{N,F}(f::NTuple{N,F}, ::TupleFitnessScheme{N,F}) = any(isnan, f) # or any?
+@generated nafitness{N,F}(::TupleFitnessScheme{N,F,NTuple{N,F}}) = ntuple(_ -> convert(F, NaN), Val{N})
+isnafitness{N,F}(f::NTuple{N,F}, ::TupleFitnessScheme{N,F}) = any(isnan, f)
 
 aggregate{N,F}(f::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) = fs.aggregator(f)
 
-@inline is_better{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) = hat_compare(f1, f2, fs, -1) == -1
-@inline is_worse{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) = hat_compare(f1, f2, fs, 1) == 1
+@inline is_better{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) = hat_compare(f1, f2, fs, -1) == -1
+@inline is_worse{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) = hat_compare(f1, f2, fs, 1) == 1
 
 """
   Pareto dominance for `N`-tuple (`N`≧1) fitnesses.
@@ -22,7 +28,7 @@ aggregate{N,F}(f::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) = fs.aggregator(f)
   Might be used for comparisons (or not, depending on the setup).
   Always used when printing fitness vectors though.
 """
-immutable ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,MIN,AGG}
+immutable ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
 
     @compat (::Type{ParetoFitnessScheme{N,F}}){N,F<:Number,AGG}(;is_minimizing::Bool=true, aggregator::AGG=sum) =
@@ -233,7 +239,7 @@ end
   Might be used for comparisons (or not, depending on the setup).
   Always used when printing fitness vectors though.
 """
-immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,MIN,AGG}
+immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,IndexedTupleFitness{N,F},MIN,AGG}
     ϵ::Vector{F}        # per-objective ɛ-domination thresholds
     aggregator::AGG     # fitness aggregation function
 
@@ -246,9 +252,7 @@ immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessSchem
         new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 end
 
-# overloads of the default behaviour, because the actual fitness type is not NTuple{N,F}
-fitness_type{N,F}(::Type{EpsBoxDominanceFitnessScheme{N,F}}) = IndexedTupleFitness{N,F}
-isnafitness{N,F}(f::IndexedTupleFitness{N,F}, ::EpsBoxDominanceFitnessScheme{N,F}) = any(isnan, f.orig) # or any?
+isnafitness{N,F}(f::IndexedTupleFitness{N,F}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}) = isnafitness(f.orig, fit_scheme)
 
 Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::F=one(F)) =
   EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
@@ -259,6 +263,9 @@ Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessSch
 Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::EpsDominanceFitnessScheme{N,F,MIN}, ϵ::Union{F,Vector{F}}=fs.ϵ) =
   EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
 
+Base.convert{N,F<:Number,MIN,AGG}(::Type{ParetoFitnessScheme}, fs::EpsBoxDominanceFitnessScheme{N,F,MIN,AGG}) =
+  ParetoFitnessScheme{N,F}(is_minimizing=MIN, aggregator=fs.aggregator)
+
 Base.convert{N,F,MIN}(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},
                       fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
     IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
@@ -266,6 +273,8 @@ Base.convert{N,F,MIN}(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},
 Base.convert{N,F,MIN}(::Type{IndexedTupleFitness}, fitness::NTuple{N,F},
                       fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
     IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
+
+Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}, fs::EpsBoxDominanceFitnessScheme{N,F}) = fitness.orig
 
 hat_compare{N,F,MIN}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
                  fs::EpsBoxDominanceFitnessScheme{N,F,MIN}, expected::Int=0) =

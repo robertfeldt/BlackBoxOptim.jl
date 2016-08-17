@@ -1,4 +1,25 @@
 """
+    Create `Evaluator` instance for a given `problem`.
+"""
+function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
+    workers = get(params, :Workers, Vector{Int}())
+    if archive===nothing
+        # make the default archive
+        archiveCapacity = get(params, :ArchiveCapacity, 10)
+        archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
+    end
+    if length(workers) > 0
+        if BlackBoxOptim.enable_parallel_methods
+            return ParallelEvaluator(problem, archive, pids=workers)
+        else
+            throw(SystemError("Parallel evaluation disabled"))
+        end
+    else
+        return ProblemEvaluator(problem, archive)
+    end
+end
+
+"""
   Optimization Run Controller.
   Manages problem optimization using the specified method.
 
@@ -68,31 +89,12 @@ function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E
         0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
 end
 
-"""
-    Create `Evaluator` instance for a given `problem`.
-"""
-function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
-    workers = get(params, :Workers, Vector{Int}())
-    if archive===nothing
-        # make the default archive
-        archiveCapacity = get(params, :ArchiveCapacity, 10)
-        archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
-    end
-    if length(workers) > 0
-        if BlackBoxOptim.enable_parallel_methods
-            return ParallelEvaluator(problem, archive, pids=workers)
-        else
-            throw(SystemError("Parallel evaluation disabled"))
-        end
-    else
-        return ProblemEvaluator(problem, archive)
-    end
-end
-
 # stepping optimizer has it's own evaluator, get a reference
-OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, evaluator(optimizer), params)
-# all other optimizers are using ProblemEvaluator by default
-OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) = OptRunController(optimizer, make_evaluator(problem, nothing, params), params)
+OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, params) =
+    OptRunController(optimizer, evaluator(optimizer), params)
+# all other optimizers are using make_evaluator() method to create evaluator by default
+OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) =
+    OptRunController(optimizer, make_evaluator(problem, nothing, params), params)
 
 # logging/tracing
 function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
@@ -254,10 +256,13 @@ setup_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
 setup_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
   setup!(ctrl.optimizer, ctrl.evaluator)
 
-finalize_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
-  finalize!(ctrl.optimizer)
-finalize_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
-  finalize!(ctrl.optimizer, ctrl.evaluator)
+shutdown_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
+  shutdown!(ctrl.optimizer)
+
+function shutdown_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
+  shutdown!(ctrl.optimizer)
+  shutdown!(ctrl.evaluator)
+end
 
 """
   `run!(ctrl::OptRunController)`
@@ -265,35 +270,40 @@ finalize_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
   Run optimization until one of the stopping conditions are satisfied.
 """
 function run!(ctrl::OptRunController)
-  tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
-  setup_optimizer!(ctrl)
+    tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
+    try
+        setup_optimizer!(ctrl)
 
-  ctrl.start_time = time()
-  ctrl.num_steps = 0
-  while isempty(ctrl.stop_reason)
-    # Report on progress every now and then...
-    if (time() - ctrl.last_report_time) > ctrl.trace_interval
-      trace_progress(ctrl)
+        ctrl.start_time = time()
+        ctrl.num_steps = 0
+        while isempty(ctrl.stop_reason)
+            # Report on progress every now and then...
+            if (time() - ctrl.last_report_time) > ctrl.trace_interval
+                trace_progress(ctrl)
+            end
+
+            # update the counters
+            nstep_better = step!(ctrl)
+            ctrl.num_better += nstep_better
+            ctrl.num_better_since_last_report += nstep_better
+            ctrl.num_steps += 1
+            ctrl.num_steps_since_last_report += 1
+            if num_evals(ctrl.evaluator) == ctrl.last_num_fevals
+                ctrl.num_steps_without_fevals += 1
+            else
+                ctrl.num_steps_without_fevals = 0
+            end
+            ctrl.last_num_fevals = num_func_evals(ctrl)
+
+            ctrl.stop_reason = check_stop_condition(ctrl)
+        end
+        ctrl.stop_time = time()
+    finally
+        shutdown_optimizer!(ctrl)
     end
+    tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 
-    # update the counters
-    nstep_better = step!(ctrl)
-    ctrl.num_better += nstep_better
-    ctrl.num_better_since_last_report += nstep_better
-    ctrl.num_steps += 1
-    ctrl.num_steps_since_last_report += 1
-    if num_evals(ctrl.evaluator) == ctrl.last_num_fevals
-        ctrl.num_steps_without_fevals += 1
-    else
-        ctrl.num_steps_without_fevals = 0
-    end
-    ctrl.last_num_fevals = num_func_evals(ctrl)
-
-    ctrl.stop_reason = check_stop_condition(ctrl)
-  end
-  ctrl.stop_time = time()
-  finalize_optimizer!(ctrl)
-  tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
+    return ctrl.stop_reason
 end
 
 function show_report(ctrl::OptRunController, population_stats=false)

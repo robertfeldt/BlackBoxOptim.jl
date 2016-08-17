@@ -7,7 +7,7 @@ abstract Population
   The base abstract types for population that also stores the candidates
   fitness.
 
-  `F` is the type of fitness values.
+  `F` is the fitness type.
 """
 abstract PopulationWithFitness{F} <: Population
 
@@ -93,16 +93,16 @@ Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 """
 viewer(pop::FitPopulation, indi_ix) = view(pop.individuals, :, indi_ix)
 
-Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, ::Colon, indi_ix::Integer) =
+Base.setindex!(pop::FitPopulation, indi::Individual, ::Colon, indi_ix::Integer) =
     setindex!(pop, indi, indi_ix)
 
-function Base.setindex!{F}(pop::FitPopulation{F}, indi::Individual, indi_ix::Integer)
+function Base.setindex!(pop::FitPopulation, indi::Individual, indi_ix::Integer)
     pop.individuals[:, indi_ix] = indi
     pop.fitness[indi_ix] = pop.nafitness
     pop
 end
 
-function Base.setindex!{F}(pop::FitPopulation{F}, indi::ArchivedIndividual{F}, indi_ix::Integer)
+function Base.setindex!{F}(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_ix::Integer)
     pop.individuals[:, indi_ix] = params(indi)
     pop.fitness[indi_ix] = fitness(indi)
     pop
@@ -131,11 +131,11 @@ candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 """
 function acquire_candi{F}(pop::FitPopulation{F})
   if isempty(pop.candi_pool)
-    return Candidate{F}(Vector{Float64}(numdims(pop)), -1, pop.nafitness)
+    return Candidate{F}(Individual(numdims(pop)), -1, pop.nafitness)
   end
   res = pop!(pop.candi_pool)
   # reset reference to genetic operation
-  res.op = NO_GEN_OP
+  res.extra = NO_GEN_OP
   res.tag = 0
   return res
 end

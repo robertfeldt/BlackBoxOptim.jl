@@ -34,6 +34,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         fitness_type, fitness_eltype, numobjectives,
         is_minimizing, nafitness, isnafitness,
         hat_compare, is_better, is_worse, same_fitness,
+        aggregate,
 
         # Evaluator
         #ProblemEvaluator,
@@ -58,7 +59,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         width_of_confidence_interval, fitness_improvement_potential,
 
         # OptimizationResults
-        minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier,
+        minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
 
         # OptController
         numruns, lastrun, problem,
@@ -102,6 +103,8 @@ include("ntuple_fitness.jl")
 include("problem.jl")
 
 include("frequency_adaptation.jl")
+
+include("fit_individual.jl")
 include("archive.jl")
 include("archives/epsbox_archive.jl")
 

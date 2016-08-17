@@ -2,20 +2,24 @@
   `Archive` saves information about promising solutions during an optimization
   run.
 """
-abstract Archive{F,FA,FS<:FitnessScheme}
+abstract Archive{F,FS<:FitnessScheme}
 
 numdims(a::Archive) = a.numdims
 fitness_type{F}(a::Archive{F}) = F
-archived_fitness_type{F,FA}(a::Archive{F,FA}) = FA
-archived_fitness{F}(f::F, a::Archive{F,F}) = f
+fitness_scheme(a::Archive) = a.fit_scheme
 
 """
-    Base class for individuals stored in different archives.
-"""
-abstract ArchivedIndividual{F}
+    archived_fitness(fit, a::Archive)
 
-params(indi::ArchivedIndividual) = indi.params
-fitness(indi::ArchivedIndividual) = indi.fitness
+    Converts given fitness `fit` to the format used by the archive `a`.
+"""
+archived_fitness(fit::Any, a::Archive) = convert(fitness_type(a), fit, fitness_scheme(a))
+
+"""
+    Base class for individuals stored in `Archive`.
+"""
+abstract ArchivedIndividual{F} <: FitIndividual{F}
+
 tag(indi::ArchivedIndividual) = indi.tag
 
 """
@@ -26,7 +30,7 @@ immutable TopListIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     tag::Int
 
-   @compat (::Type{TopListIndividual}){F}(params::Individual, fitness::F, tag::Int) =
+    @compat (::Type{TopListIndividual}){F}(params::AbstractIndividual, fitness::F, tag::Int) =
         new{F}(params, fitness, tag)
 end
 
@@ -37,8 +41,8 @@ end
 immutable TopListFitness{F<:Number}
     fitness::F            # current fitness
     fitness_improvement_ratio::Float64
-    timestamp::Float64    # when archived
     num_fevals::Int64     # number of fitness evaluations so far
+    timestamp::Float64    # when archived
 end
 
 fitness(f::TopListFitness) = f.fitness
@@ -51,7 +55,7 @@ fitness(f::TopListFitness) = f.fitness
   The two last best fitness values could be used to estimate a confidence interval for how much improvement
   potential there is.
 """
-type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,F,FS}
+type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
   fit_scheme::FS        # Fitness scheme used
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
   numdims::Int          # Number of dimensions in the optimization problem. Needed for confidence interval estimation.
@@ -67,7 +71,7 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,F,FS}
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
   fitness_history::Vector{TopListFitness{F}}
 
-  @compat function (::Type{TopListArchive}){FS}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+  @compat function (::Type{TopListArchive}){FS<:FitnessScheme}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
     F = fitness_type(FS)
     new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
   end
@@ -113,13 +117,13 @@ end
 
   Add a candidate with a fitness to the archive (if it is good enough).
 """
-function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate, tag::Int=0, num_fevals::Int=-1)
+function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1)
   a.num_fitnesses += 1
   if (num_fevals == -1) num_fevals = a.num_fitnesses end
 
   if isempty(a.fitness_history) || is_better(fitness, best_fitness(a), fitness_scheme(a))
     # Save fitness history so we can reconstruct the most important events later.
-    push!(a.fitness_history, TopListFitness{F}(fitness, fitness_improvement_ratio(a, fitness), time(), num_fevals))
+    push!(a.fitness_history, TopListFitness{F}(fitness, fitness_improvement_ratio(a, fitness), num_fevals, time()))
   end
 
   if length(a) < capacity(a) ||

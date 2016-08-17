@@ -18,7 +18,17 @@ abstract FixedDimensionSearchSpace <: SearchSpace
 abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
 
 """
-  The point of the `SearchSpace`.
+    The point of the `SearchSpace`.
+
+    The abstract type. It allows different actual implementations to be used,
+    e.g `Vector` or `SubArray`.
+"""
+typealias AbstractIndividual AbstractVector{Float64}
+
+"""
+    The point of the `SearchSpace`.
+
+    The concrete type that could be used for storage.
 """
 typealias Individual Vector{Float64}
 
@@ -60,7 +70,7 @@ end
 """
   Check if given individual lies in the given search space.
 """
-function Base.in(ind, css::ContinuousSearchSpace)
+function Base.in(ind::AbstractIndividual, css::ContinuousSearchSpace)
   @assert length(ind) == numdims(css)
   for i in eachindex(ind)
       if !(mins(css)[i] <= ind[i] <= maxs(css)[i])
@@ -104,7 +114,7 @@ symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(fil
 """
   Projects a given point onto the search space coordinate-wise.
 """
-feasible(v, ss::RangePerDimSearchSpace) = Float64[ clamp( v[i], mins(ss)[i], maxs(ss)[i] ) for i in eachindex(v) ]
+feasible(v::AbstractIndividual, ss::RangePerDimSearchSpace) = Float64[ clamp( v[i], mins(ss)[i], maxs(ss)[i] ) for i in eachindex(v) ]
 
 # concatenates two range-based search spaces
 Base.vcat(ss1::RangePerDimSearchSpace, ss2::RangePerDimSearchSpace) =

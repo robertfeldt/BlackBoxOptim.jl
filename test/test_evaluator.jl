@@ -26,7 +26,7 @@ function evaluator_tests(make_eval::Function)
 
     @fact BlackBoxOptim.best_of(a, b, e) --> (a, 0.25)
     @fact BlackBoxOptim.best_of(b, a, e) --> (a, 0.25)
-
+    BlackBoxOptim.shutdown!(e)
   end
 
   context("update_fitness!()") do
@@ -36,6 +36,7 @@ function evaluator_tests(make_eval::Function)
     BlackBoxOptim.update_fitness!(e, candidates)
     @fact BlackBoxOptim.num_evals(e) --> length(candidates)
     @fact all(c -> isfinite(c.fitness), candidates) --> true
+    BlackBoxOptim.shutdown!(e)
   end
 
   context("rank_by_fitness!()") do
@@ -49,15 +50,29 @@ function evaluator_tests(make_eval::Function)
     BlackBoxOptim.rank_by_fitness!(e, candidates)
     @fact BlackBoxOptim.num_evals(e) --> 10
     @fact sortperm(candidates, by = fitness) --> collect(1:10)
+    BlackBoxOptim.shutdown!(e)
   end
 end
 
 facts("Evaluator") do
   # Set up a small example problem
-  f(x) = sum(x.^2)
+  f(x) = sumabs2(x)
   p = minimization_problem(f, "", (-1.0, 1.0), 2)
   context("ProblemEvaluator") do
     evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
+  end
+
+  context("rank_by_fitness!()") do
+    e = BlackBoxOptim.ProblemEvaluator(p)
+
+    candidates = [BlackBoxOptim.Candidate{Float64}(clamp!(randn(2), -1.0, 1.0)) for i in 1:10]
+    # partially evaluate fitness
+    BlackBoxOptim.update_fitness!(e, candidates[1:5])
+    @fact BlackBoxOptim.num_evals(e) --> 5
+    # complete fitness evaluation and sort by it
+    BlackBoxOptim.rank_by_fitness!(e, candidates)
+    @fact BlackBoxOptim.num_evals(e) --> 10
+    @fact sortperm(candidates, by = fitness) --> collect(1:10)
   end
 
 if BlackBoxOptim.enable_parallel_methods

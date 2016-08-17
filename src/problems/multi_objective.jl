@@ -42,7 +42,7 @@ end
 
     Filter `fitnesses` removing all dominated values.
 """
-function nondominated{N,F}(fitnesses::Vector{IndexedTupleFitness{N,F}}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F})
+function nondominated{N,F}(fitnesses, fit_scheme::EpsBoxDominanceFitnessScheme{N,F})
     arch = EpsBoxArchive(fit_scheme)
     res = sizehint!(Vector{IndexedTupleFitness{N,F}}(), length(fitnesses))
     empty_params = Individual()
@@ -74,24 +74,25 @@ IGD{N,F<:Number}(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}) =
     sum(a -> minimum(b -> distance(a, b), B), A) / length(A)
 
 """
-    IGD(ref::Hypersurface, sol::Vector{EpsBoxFrontierIndividual}, [two_sided=true])
+    IGD(ref::Hypersurface, sol::Vector{FitIndividual}, [two_sided=true])
 
     Average Euclidean distance from the exact Pareto frontier of the problem (`ref`)
     to the solution (`sol`) produced by the optimization method.
     If `two_sided` is on, returns the maximum of `IGD(sol, ref)` and `IGD(nondominated(ref), sol)`.
 """
-function IGD{N,F<:Number,NP}(ref::Hypersurface{N}, sol::Vector{EpsBoxFrontierIndividual{N,F}},
+function IGD{N,F<:Number,T<:FrontierIndividualWrapper,NP}(ref::Hypersurface{N}, sol::AbstractVector{T},
                              fit_scheme::EpsBoxDominanceFitnessScheme{N,F},
                              ::Type{Val{NP}},
                              param_step::Vector{F} = 0.1*fit_scheme.ϵ, two_sided::Bool=true)
-    ref_pts = values(generate(ref, fit_scheme, Val{NP}, param_step))
-    orig_sol_pts = NTuple{N,F}[fitness(candi).orig for candi in sol]
-    nondom_ref_pts = nondominated(IndexedTupleFitness{N,F}[val for val in ref_pts], fit_scheme)
+    @assert fitness_type(sol[1]) == NTuple{N,F}
+    ref_indexed_pts = values(generate(ref, fit_scheme, Val{NP}, param_step))
+    nondom_ref_pts = NTuple{N,F}[val.orig for val in nondominated(ref_indexed_pts, fit_scheme)]
+    orig_sol_pts = NTuple{N,F}[fitness(candi) for candi in sol]
     # how much `sol` should be inflated to contain all nondom_ref_pts
-    res = IGD(NTuple{N,F}[val.orig for val in nondom_ref_pts], orig_sol_pts)
+    res = IGD(nondom_ref_pts, orig_sol_pts)
     if two_sided
         # how much `ref` should be inflated to contain all `sol` points
-        return max(res, IGD(orig_sol_pts, NTuple{N,F}[val.orig for val in ref_pts]))
+        return max(res, IGD(orig_sol_pts, NTuple{N,F}[val.orig for val in ref_indexed_pts]))
     else
         return res
     end

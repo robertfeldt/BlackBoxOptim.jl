@@ -90,16 +90,16 @@ function setup!(o::SteppingOptimizer)
   # Do nothing, override if you need to setup prior to the optimization loop
 end
 
-function finalize!(o::SteppingOptimizer)
-  # Do nothing, override if you need to finalize something after the optimization loop
-end
-
 function setup!(o::AskTellOptimizer, evaluator::Evaluator)
   # Do nothing, override if you need to setup prior to the optimization loop
 end
 
-function finalize!(o::AskTellOptimizer, evaluator::Evaluator)
-  # Do nothing, override if you need to finalize something after the optimization loop
+function shutdown!(o::Optimizer)
+  # Do nothing, override if you need to setup prior to the optimization loop
+end
+
+function shutdown!(o::SteppingOptimizer)
+  shutdown!(evaluator(o)) # shutdown the evaluator
 end
 
 # The standard name function converts the type of the optimizer to a string

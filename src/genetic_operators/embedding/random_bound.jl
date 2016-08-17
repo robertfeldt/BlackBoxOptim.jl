@@ -3,17 +3,18 @@
   between parent's value and the nearest parameter boundary
   to get the new valid value if target's parameter is out-of-bounds.
 """
-type RandomBound{S<:SearchSpace} <: EmbeddingOperator
-    searchSpace::SearchSpace
+immutable RandomBound{S<:SearchSpace} <: EmbeddingOperator
+    searchSpace::S
+
+    @compat (::Type{RandomBound}){S<:SearchSpace}(searchSpace::S) = new{S}(searchSpace)
 end
 
 # outer ctors
-RandomBound{S<:SearchSpace}(searchSpace::S) = RandomBound{S}(searchSpace)
 RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace(dimBounds))
 
 search_space(rb::RandomBound) = rb.searchSpace
 
-function apply!(eo::RandomBound, target::Individual, ref::AbstractVector)
+function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndividual)
   length(target) == length(ref) == numdims(eo.searchSpace) || throw(ArgumentError("Dimensions of problem/individuals do not match"))
   ssmins = mins(eo.searchSpace)
   ssmaxs = maxs(eo.searchSpace)
@@ -31,10 +32,10 @@ function apply!(eo::RandomBound, target::Individual, ref::AbstractVector)
   return target
 end
 
-apply!(eo::RandomBound, target::Individual, pop, refIndex::Int) =
-  apply!(eo, target, viewer(pop, refIndex))
+apply!(eo::RandomBound, target::AbstractIndividual, pop, refIndex::Int) =
+    apply!(eo, target, viewer(pop, refIndex))
 
-function apply!(eo::RandomBound, target::Individual, pop, parentIndices::Vector{Int})
+function apply!(eo::RandomBound, target::AbstractIndividual, pop, parentIndices::AbstractVector{Int})
   @assert length(parentIndices) == 1
   apply!(eo, target, pop, parentIndices[1])
 end
