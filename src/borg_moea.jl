@@ -141,7 +141,7 @@ end
 function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, ref_index::Int)
     apply!(alg.embed, candi.params, alg.population, ref_index)
     reset_fitness!(candi, alg.population)
-    candi.op = alg.recombinate[recomb_op_ix]
+    candi.extra = alg.recombinate[recomb_op_ix]
     candi.tag = recomb_op_ix
     ifitness = fitness(update_fitness!(alg.evaluator, candi)) # implicitly updates the archive
     # test the population

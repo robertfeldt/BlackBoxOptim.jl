@@ -82,41 +82,6 @@ function best_of(candidate1::Individual, candidate2::Individual, e::Evaluator)
   end
 end
 
-"""
-  Candidate solution to the problem.
-
-  Could be either a member of the population (`index` > 0) or
-  a standalone solution (`index` == -1).
-"""
-type Candidate{F}
-    params::Individual
-    index::Int           # index of individual in the population, -1 if unassigned
-    fitness::F           # fitness
-
-    op::GeneticOperator  # genetic operator that was applied to the candidate
-    tag::Int             # additional information set by the genetic operator
-
-    Candidate(params::Individual, index::Int = -1,
-              fitness::F = NaN,
-              op::GeneticOperator = NO_GEN_OP,
-              tag::Int = 0) =
-        new(params, index, fitness, op, tag)
-end
-
-fitness(cand::Candidate) = cand.fitness
-index(cand::Candidate) = cand.index
-
-Base.copy{F}(c::Candidate{F}) = Candidate{F}(copy(c.params), c.index, c.fitness, c.op, c.tag)
-
-function Base.copy!{F}(c::Candidate{F}, o::Candidate{F})
-  copy!(c.params, o.params)
-  c.index = o.index
-  c.fitness = o.fitness # FIXME if vector?
-  c.op = o.op
-  c.tag = o.tag
-  return c
-end
-
 function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA})
   # evaluate fitness if not known yet
   if isnafitness(candidate.fitness, fitness_scheme(e.archive))

@@ -41,7 +41,7 @@ function evolve(de::DiffEvoOpt, op::GeneticOperatorsMixture)
   candidates = evolve(de, sel_op) # use the selected operator of the mixture
   # override what was set by sel_op so that adjust!() gets called for the mixture op
   for candi in candidates
-    candi.op = op
+    candi.extra = op
     candi.tag = tag
   end
   return candidates
@@ -78,7 +78,7 @@ end
 function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F}, op::GeneticOperator, tag::Int = 0)
   # embed the trial parameter vector into the search space
   apply!(de.embed, trial.params, de.population, target.index)
-  target.op = trial.op = op
+  target.extra = trial.extra = op
   target.tag = trial.tag = 0
   if trial.params != target.params
     reset_fitness!(trial, de.population)
@@ -126,7 +126,7 @@ function adjust!(de::DiffEvoOpt, candi::Candidate, is_improved::Bool)
     old_fitness = candi.fitness
   end
 
-  adjust!(candi.op, candi.tag, candi.index, candi.fitness,
+  adjust!(candi.extra::GeneticOperator, candi.tag, candi.index, candi.fitness,
           fitness(population(de), candi.index), is_improved)
 end
 

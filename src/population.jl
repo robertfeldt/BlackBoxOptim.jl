@@ -135,7 +135,7 @@ function acquire_candi{F}(pop::FitPopulation{F})
   end
   res = pop!(pop.candi_pool)
   # reset reference to genetic operation
-  res.op = NO_GEN_OP
+  res.extra = NO_GEN_OP
   res.tag = 0
   return res
 end

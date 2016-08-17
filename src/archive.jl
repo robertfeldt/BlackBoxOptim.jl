@@ -10,12 +10,10 @@ archived_fitness_type{F,FA}(a::Archive{F,FA}) = FA
 archived_fitness{F}(f::F, a::Archive{F,F}) = f
 
 """
-    Base class for individuals stored in different archives.
+    Base class for individuals stored in `Archive`.
 """
-abstract ArchivedIndividual{F}
+abstract ArchivedIndividual{F} <: FitIndividual{F}
 
-params(indi::ArchivedIndividual) = indi.params
-fitness(indi::ArchivedIndividual) = indi.fitness
 tag(indi::ArchivedIndividual) = indi.tag
 
 """
