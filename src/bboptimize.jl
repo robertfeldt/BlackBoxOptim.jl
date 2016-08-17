@@ -28,12 +28,8 @@ function setup_problem(func::Function, parameters::Parameters)
 
   # Now create an optimization problem with the given information. We currently reuse the type
   # from our pre-defined problems so some of the data for the constructor is dummy.
-  if haskey(parameters, :OptimizationValue)
-    problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss, parameters[:OptimizationValue])
-  else
-    problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss)
-  end
-
+  problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss,
+                                 parameters[:OptimalFitness])
 
   # validate fitness: create a random solution from the search space and ensure that fitness(problem) returns fitness_type(problem).
   ind = rand_individual(search_space(problem))

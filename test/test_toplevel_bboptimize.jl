@@ -144,4 +144,17 @@ end
       end
     end
   end
+
+  context("OptimalFitness option works") do
+    # FIXME use the same (fixed?) random seed to guarantee reproducibility
+    result1 = bboptimize(rosenbrock, SearchRange = (-5.0, 5.0), NumDimensions = 5,
+                         Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
+                         MaxSteps = 1000000, TraceMode = :silent,
+                         OptimalFitness = 0.0)
+    result2 = bboptimize(rosenbrock, SearchRange = (-5.0, 5.0), NumDimensions = 5,
+                         Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
+                         MaxSteps = 1000000, TraceMode = :silent)
+    @fact best_fitness(result1) --> less_than(1e-5)
+    @fact result1.iterations --> less_than(result2.iterations)
+  end
 end
