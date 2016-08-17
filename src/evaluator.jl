@@ -17,8 +17,8 @@ shutdown!(e::Evaluator) = e # do nothing
 """
   Default implementation of the `Evaluator`.
 
-  `FP` is the problem's fitness type
-  `FA` is the archive's stored type
+  `FP` is the original problem's fitness type
+  `FA` is the fitness type actually stored by the archive.
 """
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
@@ -30,7 +30,7 @@ type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P
 
   @compat (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
       problem::P, archive::A) =
-    new{fitness_type(fitness_scheme(problem)),archived_fitness_type(archive),A,P}(problem, archive,
+    new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(problem, archive,
         0, nafitness(fitness_scheme(problem)))
 
   @compat (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
@@ -50,12 +50,12 @@ num_evals(e::ProblemEvaluator) = e.num_evals
 
     Returns the fitness in the archived format.
 """
-function fitness{FP,FA}(params::Individual, e::ProblemEvaluator{FP,FA}, tag::Int=0)
-  e.last_fitness = fp = fitness(params, e.problem)
+function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
+  e.last_fitness = fit = fitness(params, e.problem)
   e.num_evals += 1
-  fa = convert(FA, fp, fitness_scheme(e.archive))
-  add_candidate!(e.archive, fa, params, tag, e.num_evals)
-  fa
+  fita = archived_fitness(fit, e.archive)
+  candi = add_candidate!(e.archive, fita, params, tag, e.num_evals)
+  fita
 end
 
 """

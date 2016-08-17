@@ -21,7 +21,7 @@ end
     It also counts the number of candidate solutions that have been added
     and how many ϵ-box progresses have been made.
 """
-type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{NTuple{N,F},IndexedTupleFitness{N,F},FS}
+type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
   fit_scheme::FS        # Fitness scheme used
   start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
@@ -52,8 +52,6 @@ const EpsBoxArchive_DefaultParameters = ParamsDict(
   :MaxArchiveSize => 10_000,
 )
 
-fitness_scheme(a::EpsBoxArchive) = a.fit_scheme
-# EpsBoxArchive stores indexed fitness
 Base.length(a::EpsBoxArchive) = a.len
 Base.isempty(a::EpsBoxArchive) = a.len == 0
 capacity(a::EpsBoxArchive) = a.max_size
@@ -239,9 +237,6 @@ function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFi
     end
     return a
 end
-
-archived_fitness{N,F}(fitness::NTuple{N,F}, a::EpsBoxArchive{N,F}) =
-    convert(IndexedTupleFitness, fitness, a.fit_scheme)
 
 # actually this methods should never be called because the fitness
 # is already indexes within the method
