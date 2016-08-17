@@ -88,8 +88,9 @@ immutable FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
     inner::FrontierIndividual{FA}
     fitness::F
 
-    Base.call{F,FA}(::Type{FrontierIndividualWrapper{F}}, indi::FrontierIndividual{FA}, fit_scheme::FitnessScheme{FA}) =
-        new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
+    @compat (::Type{FrontierIndividualWrapper{F}}){F,FA}(
+        indi::FrontierIndividual{FA}, fit_scheme::FitnessScheme{FA}) =
+            new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
 end
 
 params(indi::FrontierIndividualWrapper) = params(indi.inner)

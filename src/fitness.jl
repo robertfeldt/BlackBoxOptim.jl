@@ -29,7 +29,7 @@ Base.convert{F}(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) = fit
 
 # ordering induced by the fitness scheme
 # FIXME enable once v0.5 issue #14919 is fixed
-# Base.call{F}(fs::FitnessScheme{F}, x::F, y::F) = is_better(x, y, fs)
+# @compat (fs::FitnessScheme{F}){F}(x::F, y::F) = is_better(x, y, fs)
 
 """
   In `RatioFitnessScheme` the fitness values can be ranked on a ratio scale so

@@ -41,11 +41,11 @@ type Candidate{F} <: FitIndividual{F}
              tag::Int = 0) =
         new(params, index, fitness, extra, tag)
 
-    Base.call{F}(::Type{Candidate},
-                 params::Individual, index::Int = -1,
-                 fitness::F = NaN,
-                 extra::Any = Void,
-                 tag::Int = 0) =
+    @compat (::Type{Candidate}){F}(
+            params::Individual, index::Int = -1,
+            fitness::F = NaN,
+            extra::Any = Void,
+            tag::Int = 0) =
         new{F}(params, index, fitness, extra, tag)
 end
 

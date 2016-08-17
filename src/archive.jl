@@ -71,7 +71,7 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
   fitness_history::Vector{TopListFitness{F}}
 
-  @compat function (::Type{TopListArchive}){FS}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+  @compat function (::Type{TopListArchive}){FS<:FitnessScheme}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
     F = fitness_type(FS)
     new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
   end

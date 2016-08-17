@@ -5,7 +5,7 @@
 immutable MutationWrapper{OP<:MutationOperator} <: CrossoverOperator{1,1}
     inner::OP
 
-    Base.call{OP<:MutationOperator}(::Type{MutationWrapper}, mutation::OP) =
+    @compat (::Type{MutationWrapper}){OP<:MutationOperator}(mutation::OP) =
         new{OP}(mutation)
 end
 

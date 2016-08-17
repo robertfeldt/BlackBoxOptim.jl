@@ -5,10 +5,11 @@
 """
 immutable RandomBound{S<:SearchSpace} <: EmbeddingOperator
     searchSpace::S
+
+    @compat (::Type{RandomBound}){S<:SearchSpace}(searchSpace::S) = new{S}(searchSpace)
 end
 
 # outer ctors
-RandomBound{S<:SearchSpace}(searchSpace::S) = RandomBound{S}(searchSpace)
 RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace(dimBounds))
 
 search_space(rb::RandomBound) = rb.searchSpace
