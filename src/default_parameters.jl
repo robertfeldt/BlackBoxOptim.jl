@@ -8,6 +8,7 @@ const DefaultParameters = ParamsDict(
   :SearchRange    => (-1.0, 1.0), # Default search range to use per dimension unless specified
   :SearchSpace    => false, # Search space can be directly specified and will then take precedence over NumDimensions and SearchRange.
   :FitnessScheme  => MinimizingFitnessScheme, # fitness scheme to be used
+  :OptimalFitness => nothing, # optimal (target) fitness, if known
 
   :Method => :adaptive_de_rand_1_bin_radiuslimited,
 
