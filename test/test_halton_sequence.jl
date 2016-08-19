@@ -1,5 +1,4 @@
-haltonnumber = BlackBoxOptim.Utils.haltonnumber
-haltonsequence = BlackBoxOptim.Utils.haltonsequence
+using BlackBoxOptim.Utils: haltonnumber, haltonsequence
 
 # The Halton sequence with base 2 according to http://en.wikipedia.org/wiki/Halton_sequence
 HaltonSequence2 = [

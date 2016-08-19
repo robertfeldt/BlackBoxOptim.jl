@@ -23,7 +23,7 @@ function haltonnumber(base, index)
 
   while (i > 0)
     res += f * (i % base)
-    i = ifloor(i / base)
+    i = floor(Int, i / base)
     f = f / base
   end
 

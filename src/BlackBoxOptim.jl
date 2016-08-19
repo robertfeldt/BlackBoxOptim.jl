@@ -93,6 +93,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 module Utils
   include("utilities/latin_hypercube_sampling.jl")
   include("utilities/assign_ranks.jl")
+  include("utilities/halton_sequence.jl")
 end
 
 include("search_space.jl")

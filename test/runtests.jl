@@ -6,6 +6,7 @@ my_tests = [
 
   "utilities/test_latin_hypercube_sampling.jl",
   "utilities/test_assign_ranks.jl",
+  "utilities/test_halton_sequence.jl",
 
   "test_parameters.jl",
   "test_fitness.jl",
