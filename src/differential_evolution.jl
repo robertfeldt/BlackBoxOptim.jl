@@ -96,7 +96,7 @@ function tell!{F}(de::DiffEvoOpt,
     candi = rankedCandidates[i]
     # accept the modified individuals from the top ranked half
     if i <= n_acceptable_candidates
-      is_improved = candi.params != population(de)[candi.index]
+      is_improved = candi.params != viewer(population(de), candi.index)
       adjust!(de, candi, is_improved)
     else
       is_improved = false
