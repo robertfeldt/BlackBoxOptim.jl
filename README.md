@@ -110,7 +110,7 @@ In addition to the `Method` parameter, there are many other parameters you can c
 * `MaxFuncEvals`: How many evaluations that are allowed of the function being optimized.
 * `TraceMode`: How optimization progress should be displayed (`:silent`, `:compact`, `:verbose`). Defaults to `:compact` that outputs current number of fitness evaluations and best value each `TraceInterval` seconds.
 * `PopulationSize`: How large is the initial population for population-based optimizers? Defaults to `50`.
-* `OptimalFitness`. Allows to specify the value of the best fitness for a given problem. The algorithm stops as soon as the distance between the current `best_fitness()` and `OptimalFitness` is less than `FitnessTolerance`.
+* `TargetFitness`. Allows to specify the value of the best fitness for a given problem. The algorithm stops as soon as the distance between the current `best_fitness()` and `TargetFitness` is less than `FitnessTolerance`.
 This list is not complete though, please refer to the `examples` and `tests` directories for additional examples.
 
 # State of the Library
