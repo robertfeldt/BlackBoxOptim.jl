@@ -29,8 +29,11 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
     broadcast!(-, parents_centered, parents_centered, center)
     # project other parents vectors orthogonal to
     # the subspace orthogonal to the selected parent
-    other_parents_centered = (eye(size(parents_centered,1)) -
-            A_mul_Bt(view(parents_centered, :, 1), view(parents_centered, :, 1))) *
+    tmp_mtx = A_mul_Bt(view(parents_centered, :, 1), view(parents_centered, :, 1))
+    @inbounds for i in 1:size(tmp_mtx, 1)
+        tmp_mtx[i,i] -= 1.0
+    end
+    other_parents_centered = tmp_mtx *
             view(parents_centered, :, 2:length(parentIndices))
     sd = mean(map(sqrt, sumabs2(other_parents_centered, 2)))
     if sd > 1E-8
