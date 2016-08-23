@@ -54,7 +54,7 @@ facts("Top-level interface") do
 
       # Access a few individual solution vectors in the population...
       @fact isa(xpop[1], Array{Float64, 1}) --> true # first solution vector
-      @fact isa(xpop[popsize(xpop)], Array{Float64, 1}) --> true # first solution vector
+      @fact isa(xpop[popsize(xpop)], Array{Float64, 1}) --> true # last solution vector
       rand_solution_idx = rand(1:popsize(xpop))
       @fact isa(xpop[rand_solution_idx], Array{Float64, 1}) --> true # random solution vector
 
