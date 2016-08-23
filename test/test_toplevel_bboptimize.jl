@@ -51,6 +51,21 @@ facts("Top-level interface") do
       @fact isa(xpop, BlackBoxOptim.Population) --> true
       @fact popsize(xpop) --> greater_than(0)
       @fact numdims(xpop) --> 2
+
+      # Access a few individual solution vectors in the population...
+      @fact isa(xpop[1], Array{Float64, 1}) --> true # first solution vector
+      @fact isa(xpop[popsize(xpop)], Array{Float64, 1}) --> true # first solution vector
+      rand_solution_idx = rand(1:popsize(xpop))
+      @fact isa(xpop[rand_solution_idx], Array{Float64, 1}) --> true # random solution vector
+
+      # and to access their fitness values:
+      @fact isa(fitness(xpop, 1), Float64) --> true
+      @fact isa(fitness(xpop, popsize(xpop)), Float64) --> true
+      @fact isa(fitness(xpop, rand_solution_idx), Float64) --> true
+
+      # Ensure the lowest fitness value is the one returned by best_fitness
+      min_fitness_value = minimum(map(i -> fitness(xpop, i), 1:popsize(xpop)))
+      @fact (min_fitness_value == best_fitness(res)) --> true
     end
 
 if BlackBoxOptim.enable_parallel_methods
