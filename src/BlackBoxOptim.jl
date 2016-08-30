@@ -5,12 +5,6 @@ module BlackBoxOptim
 using Distributions, StatsBase, Compat
 using Compat: String, view
 
-# selectively enable parallel evaluation:
-# - Julia v0.3: no RemoteChannel
-# + Julia v0.4
-# - Julia v0.5: incompatible changes in parallel API
-enable_parallel_methods = VERSION >= v"0.4.0" && VERSION < v"0.5.0-"
-
 export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         bboptimize, bbsetup, compare_optimizers,
 
@@ -111,9 +105,7 @@ include("archives/epsbox_archive.jl")
 include("genetic_operators/genetic_operator.jl")
 
 include("evaluator.jl")
-if enable_parallel_methods
 include("parallel_evaluator.jl")
-end
 
 include("population.jl")
 include("optimizer.jl")

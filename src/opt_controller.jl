@@ -9,11 +9,7 @@ function make_evaluator(problem::OptimizationProblem, archive=nothing, params::P
         archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
     end
     if length(workers) > 0
-        if BlackBoxOptim.enable_parallel_methods
-            return ParallelEvaluator(problem, archive, pids=workers)
-        else
-            throw(SystemError("Parallel evaluation disabled"))
-        end
+        return ParallelEvaluator(problem, archive, pids=workers)
     else
         return ProblemEvaluator(problem, archive)
     end
