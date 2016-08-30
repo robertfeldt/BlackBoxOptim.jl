@@ -3,8 +3,7 @@ __precompile__()
 module BlackBoxOptim
 
 using Distributions, StatsBase, Compat
-
-import Compat: String, view
+using Compat: String, view
 
 # selectively enable parallel evaluation:
 # - Julia v0.3: no RemoteChannel
