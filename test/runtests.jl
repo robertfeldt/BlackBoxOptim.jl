@@ -1,3 +1,5 @@
+module BlackBoxOptimTests
+
 startclocktime = time()
 include("helper.jl")
 
@@ -107,3 +109,5 @@ end
 
 elapsedclock = time() - startclocktime
 println("Tested $(numtestfiles) files in $(round(elapsedclock, 1)) seconds.")
+
+end # module BlackBoxOptimTests
