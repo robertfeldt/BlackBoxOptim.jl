@@ -1,3 +1,4 @@
+startclocktime = time()
 include("helper.jl")
 
 import Compat.String
@@ -71,7 +72,10 @@ end
 
 using CPUTime
 
+numtestfiles = 0
 starttime = CPUtime_us()
+@testset "BlackBoxOptim test suite" begin
+
 for t in my_tests
   if isdefined(:TimeTestExecution) && TimeTestExecution
     CPUtic()
@@ -85,6 +89,10 @@ for t in my_tests
   else
     include(t)
   end
+  numtestfiles += 1
+  print("."); flush(STDOUT);
+end
+
 end
 elapsed = float(CPUtime_us() - starttime)/1e6
 
@@ -96,4 +104,5 @@ if isdefined(:TimeTestExecution) && TimeTestExecution
   writetable(TestTimingFileName, timing_data)
 end
 
-exitstatus()
+elapsedclock = time() - startclocktime
+println("Tested $(numtestfiles) files in $(round(elapsedclock, 1)) seconds.")

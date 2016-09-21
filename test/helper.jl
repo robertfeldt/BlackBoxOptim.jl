@@ -1,5 +1,5 @@
 using BlackBoxOptim
-using FactCheck
+using BaseTestNext
 using Compat
 
-NumTestRepetitions = 100
+const NumTestRepetitions = 100

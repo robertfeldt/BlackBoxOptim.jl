@@ -1,84 +1,84 @@
 function evaluator_tests(make_eval::Function)
-  context("Basic evaluation with a single-objective function to be minimized") do
-    e = make_eval()
-    @fact BlackBoxOptim.num_evals(e) --> 0
+    @testset "Basic evaluation with a single-objective function to be minimized" begin
+        e = make_eval()
+        @test BlackBoxOptim.num_evals(e) == 0
 
-    fit1 = fitness([0.0, 1.0], e)
-    @fact BlackBoxOptim.num_evals(e) --> 1
-    @fact BlackBoxOptim.last_fitness(e) --> fit1
+        fit1 = fitness([0.0, 1.0], e)
+        @test BlackBoxOptim.num_evals(e) == 1
+        @test BlackBoxOptim.last_fitness(e) == fit1
 
-    fit2 = fitness([2.0, 1.0], e)
-    @fact BlackBoxOptim.num_evals(e) --> 2
-    @fact BlackBoxOptim.last_fitness(e) --> fit2
+        fit2 = fitness([2.0, 1.0], e)
+        @test BlackBoxOptim.num_evals(e) == 2
+        @test BlackBoxOptim.last_fitness(e) == fit2
 
-    @fact BlackBoxOptim.numdims(e) --> 2
+        @test BlackBoxOptim.numdims(e) == 2
 
-    @fact BlackBoxOptim.is_better(0.0, 1.0, e) --> true
-    @fact BlackBoxOptim.is_better(0.0, -1.0, e) --> false
+        @test BlackBoxOptim.is_better(0.0, 1.0, e)
+        @test BlackBoxOptim.is_better(0.0, -1.0, e) == false
 
-    a, b = [0.0, 0.5], [1.0, 1.0]
+        a, b = [0.0, 0.5], [1.0, 1.0]
 
-    @fact BlackBoxOptim.is_better(a, 1.0, e) --> true
-    @fact BlackBoxOptim.last_fitness(e) --> 0.25
+        @test BlackBoxOptim.is_better(a, 1.0, e)
+        @test BlackBoxOptim.last_fitness(e) == 0.25
 
-    @fact BlackBoxOptim.is_better(b, 1.0, e) --> false
-    @fact BlackBoxOptim.last_fitness(e) --> 2.0
+        @test BlackBoxOptim.is_better(b, 1.0, e) == false
+        @test BlackBoxOptim.last_fitness(e) == 2.0
 
-    @fact BlackBoxOptim.best_of(a, b, e) --> (a, 0.25)
-    @fact BlackBoxOptim.best_of(b, a, e) --> (a, 0.25)
-    BlackBoxOptim.shutdown!(e)
-  end
+        @test BlackBoxOptim.best_of(a, b, e) == (a, 0.25)
+        @test BlackBoxOptim.best_of(b, a, e) == (a, 0.25)
+        BlackBoxOptim.shutdown!(e)
+    end
 
-  context("update_fitness!()") do
-    e = make_eval()
+    @testset "update_fitness!()" begin
+        e = make_eval()
 
-    candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
-    BlackBoxOptim.update_fitness!(e, candidates)
-    @fact BlackBoxOptim.num_evals(e) --> length(candidates)
-    @fact all(c -> isfinite(c.fitness), candidates) --> true
-    BlackBoxOptim.shutdown!(e)
-  end
+        candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
+        BlackBoxOptim.update_fitness!(e, candidates)
+        @test BlackBoxOptim.num_evals(e) == length(candidates)
+        @test all(c -> isfinite(c.fitness), candidates)
+        BlackBoxOptim.shutdown!(e)
+    end
 
-  context("rank_by_fitness!()") do
-    e = make_eval()
+    @testset "rank_by_fitness!()" begin
+        e = make_eval()
 
-    candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
-    # partially evaluate fitness
-    BlackBoxOptim.update_fitness!(e, candidates[1:5])
-    @fact BlackBoxOptim.num_evals(e) --> 5
-    # complete fitness evaluation and sort by it
-    BlackBoxOptim.rank_by_fitness!(e, candidates)
-    @fact BlackBoxOptim.num_evals(e) --> 10
-    @fact sortperm(candidates, by = fitness) --> collect(1:10)
-    BlackBoxOptim.shutdown!(e)
-  end
+        candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
+        # partially evaluate fitness
+        BlackBoxOptim.update_fitness!(e, candidates[1:5])
+        @test BlackBoxOptim.num_evals(e) == 5
+        # complete fitness evaluation and sort by it
+        BlackBoxOptim.rank_by_fitness!(e, candidates)
+        @test BlackBoxOptim.num_evals(e) == 10
+        @test sortperm(candidates, by = fitness) == collect(1:10)
+        BlackBoxOptim.shutdown!(e)
+    end
 end
 
-facts("Evaluator") do
-  # Set up a small example problem
-  f(x) = sumabs2(x)
-  p = minimization_problem(f, "", (-1.0, 1.0), 2)
-  context("ProblemEvaluator") do
-    evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
-  end
+@testset "Evaluator" begin
+    # Set up a small example problem
+    f(x) = sumabs2(x)
+    p = minimization_problem(f, "", (-1.0, 1.0), 2)
+    @testset "ProblemEvaluator" begin
+        evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))
+    end
 
-  context("rank_by_fitness!()") do
-    e = BlackBoxOptim.ProblemEvaluator(p)
+    @testset "rank_by_fitness!()" begin
+        e = BlackBoxOptim.ProblemEvaluator(p)
 
-    candidates = [BlackBoxOptim.Candidate{Float64}(clamp!(randn(2), -1.0, 1.0)) for i in 1:10]
-    # partially evaluate fitness
-    BlackBoxOptim.update_fitness!(e, candidates[1:5])
-    @fact BlackBoxOptim.num_evals(e) --> 5
-    # complete fitness evaluation and sort by it
-    BlackBoxOptim.rank_by_fitness!(e, candidates)
-    @fact BlackBoxOptim.num_evals(e) --> 10
-    @fact sortperm(candidates, by = fitness) --> collect(1:10)
-  end
+        candidates = [BlackBoxOptim.Candidate{Float64}(clamp!(randn(2), -1.0, 1.0)) for i in 1:10]
+        # partially evaluate fitness
+        BlackBoxOptim.update_fitness!(e, candidates[1:5])
+        @test BlackBoxOptim.num_evals(e) == 5
+        # complete fitness evaluation and sort by it
+        BlackBoxOptim.rank_by_fitness!(e, candidates)
+        @test BlackBoxOptim.num_evals(e) == 10
+        @test sortperm(candidates, by = fitness) == collect(1:10)
+    end
 
 if BlackBoxOptim.enable_parallel_methods
-  context("ParallelEvaluator") do
-    evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
-  end
+    @testset "ParallelEvaluator" begin
+        evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
+    end
 end
 
 end

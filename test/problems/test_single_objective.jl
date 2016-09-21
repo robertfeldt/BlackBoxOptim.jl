@@ -1,69 +1,69 @@
-facts("Single objective functions") do
+@testset "Single objective functions" begin
 
-context("Sphere") do
-  p = BlackBoxOptim.example_problems["Sphere"]
-  sphere = objfunc(p)
+@testset "Sphere" begin
+    p = BlackBoxOptim.example_problems["Sphere"]
+    sphere = objfunc(p)
 
-  @fact sphere([0]) --> 0
-  @fact sphere([1]) --> 1
-  @fact sphere([1, 2]) --> 5
-  @fact sphere([1, 2, 3]) --> 14
-  @fact sphere([-1, 2, -3]) --> 14
-  @fact_throws sphere([])
+    @test sphere([0]) == 0
+    @test sphere([1]) == 1
+    @test sphere([1, 2]) == 5
+    @test sphere([1, 2, 3]) == 14
+    @test sphere([-1, 2, -3]) == 14
+    @fact_throws sphere([])
 
-  p2 = instantiate(p, 3)
-  @fact numdims(p2) --> 3
-  @fact ranges(search_space(p2)) --> [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
+    p2 = instantiate(p, 3)
+    @test numdims(p2) == 3
+    @test ranges(search_space(p2)) == [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
-context("Schwefel2.22") do
-  p = BlackBoxOptim.example_problems["Schwefel2.22"]
-  schwefel2_22 = objfunc(p)
+@testset "Schwefel2.22" begin
+    p = BlackBoxOptim.example_problems["Schwefel2.22"]
+    schwefel2_22 = objfunc(p)
 
-  @fact schwefel2_22([0]) --> 0
-  @fact schwefel2_22([1]) --> 2
-  @fact schwefel2_22([1, 2]) --> (1+2)+(1*2)
-  @fact schwefel2_22([1, 2, 3]) --> (1+2+3)+(1*2*3)
-  @fact schwefel2_22([-1, 2, -3]) --> (1+2+3)+(1*2*3)
-  @fact_throws schwefel2_22([])
+    @test schwefel2_22([0]) == 0
+    @test schwefel2_22([1]) == 2
+    @test schwefel2_22([1, 2]) == (1+2)+(1*2)
+    @test schwefel2_22([1, 2, 3]) == (1+2+3)+(1*2*3)
+    @test schwefel2_22([-1, 2, -3]) == (1+2+3)+(1*2*3)
+    @fact_throws schwefel2_22([])
 
-  p2 = instantiate(p, 4)
-  @fact numdims(p2) --> 4
-  @fact ranges(search_space(p2)) --> [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
+    p2 = instantiate(p, 4)
+    @test numdims(p2) == 4
+    @test ranges(search_space(p2)) == [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
-context("Schwefel1.2") do
-  p = BlackBoxOptim.example_problems["Schwefel1.2"]
-  schwefel1_2 = objfunc(p)
+@testset "Schwefel1.2" begin
+    p = BlackBoxOptim.example_problems["Schwefel1.2"]
+    schwefel1_2 = objfunc(p)
 
-  @fact schwefel1_2([0]) --> 0
-  @fact schwefel1_2([1]) --> 1
-  @fact schwefel1_2([1, 2]) --> 1+9
-  @fact schwefel1_2([1, 2, 3]) --> 1+9+36
-  @fact schwefel1_2([-1, 2, -3]) --> 1+1+4
-  @fact schwefel1_2([]) --> 0
+    @test schwefel1_2([0]) == 0
+    @test schwefel1_2([1]) == 1
+    @test schwefel1_2([1, 2]) == 1+9
+    @test schwefel1_2([1, 2, 3]) == 1+9+36
+    @test schwefel1_2([-1, 2, -3]) == 1+1+4
+    @test schwefel1_2([]) == 0
 end
 
-context("Schwefel2.21") do
-  p = BlackBoxOptim.example_problems["Schwefel2.21"]
-  schwefel2_21 = objfunc(p)
+@testset "Schwefel2.21" begin
+    p = BlackBoxOptim.example_problems["Schwefel2.21"]
+    schwefel2_21 = objfunc(p)
 
-  @fact schwefel2_21([0]) --> 0
-  @fact schwefel2_21([1]) --> 1
-  @fact schwefel2_21([1, 2]) --> 2
-  @fact schwefel2_21([1, 2, 3]) --> 3
-  @fact schwefel2_21([-1, 2, -3]) --> 3
-  @fact_throws schwefel2_21([])
+    @test schwefel2_21([0]) == 0
+    @test schwefel2_21([1]) == 1
+    @test schwefel2_21([1, 2]) == 2
+    @test schwefel2_21([1, 2, 3]) == 3
+    @test schwefel2_21([-1, 2, -3]) == 3
+    @fact_throws schwefel2_21([])
 end
 
-context("Rosenbrock") do
-  p = BlackBoxOptim.example_problems["Rosenbrock"]
-  rosenbrock = objfunc(p)
+@testset "Rosenbrock" begin
+    p = BlackBoxOptim.example_problems["Rosenbrock"]
+    rosenbrock = objfunc(p)
 
-  @fact rosenbrock([1, 2]) --> 100
-  @fact rosenbrock([1, 2, 3]) --> 201
-  @fact rosenbrock([-1, 2, -3]) --> 5005
-  @fact_throws rosenbrock([])
+    @test rosenbrock([1, 2]) == 100
+    @test rosenbrock([1, 2, 3]) == 201
+    @test rosenbrock([-1, 2, -3]) == 5005
+    @fact_throws rosenbrock([])
 end
 
 end
