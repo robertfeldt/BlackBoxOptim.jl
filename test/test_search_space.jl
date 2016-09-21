@@ -5,7 +5,7 @@
             ss1 = symmetric_search_space(reps, (0.0, 1.0))
             ind = rand_individual(ss1)
             for j in 1:reps
-                @test (mins(ss1)[j] <= ind[j] <= maxs(ss1)[j]) 
+                @test (mins(ss1)[j] <= ind[j] <= maxs(ss1)[j])
             end
         end
     end
@@ -80,7 +80,7 @@
     end
 
     @testset "rand_individuals correctly handles column-wise generation in assymetric search spaces" begin
-        for i in 1:NumTestRepetitions÷10
+        for _ in 1:NumTestRepetitions÷10
             numdimensions = rand(1:13)
             minbounds = rand(numdimensions)
             ds = rand(1:10, numdimensions) .* rand(numdimensions)
@@ -94,7 +94,7 @@
             # Now generate 100 individuals and make sure they are all within bounds
             inds = rand_individuals(ss, 100)
             @test size(inds, 2) == 100
-            for i in 1:size(inds, 2)
+            @inbounds for i in 1:size(inds, 2)
                 for d in 1:numdimensions
                     @test (minbounds[d] <= inds[d,i] <= maxbounds[d])
                 end
