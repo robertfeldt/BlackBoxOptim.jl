@@ -42,7 +42,7 @@ typealias ParamBounds Tuple{Float64,Float64}
 """
 range_for_dim(css::ContinuousSearchSpace, i) = (mins(css)[i], maxs(css)[i])
 
-ranges(css::ContinuousSearchSpace) = ParamBounds[range_for_dim(css, i) for i in 1:numdims(css)]
+ranges(css::ContinuousSearchSpace) = collect(zip(mins(css), maxs(css)))
 
 """
   Generate `numIndividuals` individuals by random sampling in the search space.
@@ -72,10 +72,8 @@ end
 """
 function Base.in(ind::AbstractIndividual, css::ContinuousSearchSpace)
   @assert length(ind) == numdims(css)
-  for i in eachindex(ind)
-      if !(mins(css)[i] <= ind[i] <= maxs(css)[i])
-        return false
-      end
+  @inbounds for i in eachindex(ind)
+      (mins(css)[i] <= ind[i] <= maxs(css)[i]) || return false
   end
   return true
 end
@@ -109,12 +107,12 @@ diameters(rss::RangePerDimSearchSpace) = deltas(rss)
   Create `RangePerDimSearchSpace` with given number of dimensions
   and given range of valid values for each dimension.
 """
-symmetric_search_space(numdims, range = (0.0, 1.0)) = RangePerDimSearchSpace(fill(range, numdims))
+symmetric_search_space(numdims, range=(0.0, 1.0)) = RangePerDimSearchSpace(fill(range, numdims))
 
 """
   Projects a given point onto the search space coordinate-wise.
 """
-feasible(v::AbstractIndividual, ss::RangePerDimSearchSpace) = Float64[ clamp( v[i], mins(ss)[i], maxs(ss)[i] ) for i in eachindex(v) ]
+feasible(v::AbstractIndividual, ss::RangePerDimSearchSpace) = map(clamp, v, mins(ss), maxs(ss))
 
 # concatenates two range-based search spaces
 Base.vcat(ss1::RangePerDimSearchSpace, ss2::RangePerDimSearchSpace) =
