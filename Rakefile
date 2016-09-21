@@ -32,7 +32,7 @@ end
 
 desc "Run normal (fast) tests, while timing test execution"
 task :timedruntest do
-  sh "#{Command} -L test/helper_timing.jl test/runtests.jl"
+  sh "#{Command} test/timedruntests.jl"
 end
 
 desc "Run normal (fast) tests on Julia 0.5"
@@ -42,7 +42,7 @@ end
 
 desc "Run normal (fast) tests on Julia 0.5, while timing test execution"
 task :timedruntest5 do
-  sh "#{Command05} -L test/helper_timing.jl test/runtests.jl"
+  sh "#{Command05} test/timedruntests.jl"
 end
 
 desc "Run normal (fast) tests on julia 0.3"
