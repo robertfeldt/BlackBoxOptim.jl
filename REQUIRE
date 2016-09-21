@@ -3,3 +3,4 @@ BaseTestNext
 StatsBase
 Distributions
 Compat 0.7.9
+CPUTime
