@@ -30,9 +30,19 @@ task :runtest do
   sh "#{Command} test/runtests.jl"
 end
 
+desc "Run normal (fast) tests, while timing test execution"
+task :timedruntest do
+  sh "#{Command} -L test/helper_timing.jl test/runtests.jl"
+end
+
 desc "Run normal (fast) tests on Julia 0.5"
 task :runtest5 do
   sh "#{Command05} test/runtests.jl"
+end
+
+desc "Run normal (fast) tests on Julia 0.5, while timing test execution"
+task :timedruntest5 do
+  sh "#{Command05} -L test/helper_timing.jl test/runtests.jl"
 end
 
 desc "Run normal (fast) tests on julia 0.3"
