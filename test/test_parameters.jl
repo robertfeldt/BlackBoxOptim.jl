@@ -1,9 +1,10 @@
 @testset "DictChain" begin
-    @testset "Matching keys and type parameters" begin
+    @testset "Matching keys and value types for get()/set() methods" begin
         dc1 = DictChain{Int,String}()
 
-        # Actually throws MethodError: @test_throws KeyError (dc1[:NotThere] = 3)
-        # Actually throws MethodError: @test_throws KeyError (dc1[:NotThere] = "abc")
+        @test_throws KeyError dc1[:NotThere]
+        @test_throws MethodError (dc1[:NotThere] = 3)
+        @test_throws MethodError (dc1[:NotThere] = "abc")
         @test_throws MethodError (dc1[3] = 3)
 
         dc1[3] = "abc"
@@ -131,7 +132,7 @@ end
         ps = ParamsDictChain()
         @test isa(ps, Parameters)
         @test_throws KeyError ps[:NotThere]
-        @test_throws MethodError ps["Neither there"]
+        @test_throws KeyError ps["Neither there"]
 
         ps[:a] = 1
         @test ps[:a] == 1
@@ -142,7 +143,7 @@ end
         @test isa(ps, Parameters)
 
         @test ps[:a] == 1
-        @test_throws MethodError ps["a"] # incorrect key
+        @test_throws KeyError ps["a"] # incorrect key
 
         @test_throws KeyError ps[:A]
         @test_throws KeyError ps[:B]
