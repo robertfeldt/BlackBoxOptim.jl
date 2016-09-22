@@ -1,61 +1,69 @@
 function rosenbrock2d(x)
-  return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+    return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
 end
 
 function rosenbrock(x)
-  return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
+    return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
 end
 
-facts("bboptimize") do
-  context("example 1 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
-    @fact best_fitness(res) < 0.001 --> true
-  end
+@testset "bboptimize" begin
+    @testset "example 1 from README" begin
+        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
+        @test best_fitness(res) < 0.001
+    end
 
-  context("example 2 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
-    @fact best_fitness(res) < 0.001 --> true
-  end
+    @testset "example 2 from README" begin
+        res = bboptimize(rosenbrock2d; SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
+        @test best_fitness(res) < 0.001
+    end
 
-  context("example 3 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, TraceMode = :silent)
-    @fact best_fitness(res) < 0.001 --> true
-  end
+    @testset "example 3 from README" begin
+        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, TraceMode = :silent)
+        @test best_fitness(res) < 0.001
+    end
 
-  context("example 4 from README") do
-    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
-    @fact best_fitness(res) < 0.2 --> true
-  end
+    @testset "example 4 from README" begin
+        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+            Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
+        @test best_fitness(res) < 0.2
+    end
 
-  context("example 5 from README") do
-    BlackBoxOptim.compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 3,
-      MaxTime = 2.0, TraceMode = :compact)
-  end
+    @testset "example 5 from README" begin
+        res = BlackBoxOptim.compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 3,
+            MaxTime = 2.0, TraceMode = :compact)
 
-  context("run one longer example in case there is problem with the reporting in long runs") do
-    res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-      Method = :de_rand_1_bin, TraceMode = :silent, MaxSteps = 25001)
-    @fact best_fitness(res) < 0.001 --> true
-  end
+        # We at least expect the DE optimizers and DX-NES to come out better than random search
+        idx_adaptive_de = findfirst(t -> t[1] == :adaptive_de_rand_1_bin, res)
+        idx_random = findfirst(t -> t[1] == :random_search, res)
+        @test idx_adaptive_de < idx_random
 
-  context("Fixed-dimensional problem takes precedence over search range and related params") do
-    prob = BlackBoxOptim.minimization_problem((x) -> sum(x), "no name", (10.0, 20.0), 3)
-    res = bboptimize(prob; SearchRange = (0.0, 2.0), NumDimensions = 2, TraceMode = :silent)
-    xbest = best_candidate(res)
-    @fact length(xbest) --> 3
-    @fact xbest[1] >= 10.0 --> true
-    @fact xbest[2] >= 10.0 --> true
-    @fact xbest[3] >= 10.0 --> true
-  end
+        idx_dxnes = findfirst(t -> t[1] == :dxnes, res)
+        @test idx_dxnes < idx_random
+    end
 
-  context("fault handling: anydimensional problem") do
-    @fact_throws bboptimize(BlackBoxOptim.anydim_problem("dummy", (x) -> sum(x), 0.0:1.0))
-  end
+    @testset "run one longer example in case there is problem with the reporting in long runs" begin
+        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+            Method = :de_rand_1_bin, TraceMode = :silent, MaxSteps = 25001)
+        @test best_fitness(res) < 0.001
+    end
 
-  context("fault handling: func & search range but not num dimensions") do
-    @fact_throws BlackBoxOptim.setup_problem((x) -> sum(x); search_range = (0.0, 1.0))
-  end
+    @testset "Fixed-dimensional problem takes precedence over search range and related params" begin
+        prob = BlackBoxOptim.minimization_problem((x) -> sum(x), "no name", (10.0, 20.0), 3)
+        res = bboptimize(prob; SearchRange = (0.0, 2.0), NumDimensions = 2, TraceMode = :silent)
+        xbest = best_candidate(res)
+        @test length(xbest) == 3
+        @test xbest[1] >= 10.0
+        @test xbest[2] >= 10.0
+        @test xbest[3] >= 10.0
+    end
+
+    #@testset "fault handling: anydimensional problem" begin
+    #    @test_throws ArgumentError bboptimize(BlackBoxOptim.anydim_problem("dummy", (x) -> sum(x), 0.0:1.0))
+    #end
+
+    @testset "fault handling: func & search range but not num dimensions" begin
+        @test_throws ArgumentError BlackBoxOptim.setup_problem((x) -> sum(x); search_range = (0.0, 1.0))
+    end
 
 #  context("restarting an optimizer again and again should gradually improve") do
 #    optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d,
