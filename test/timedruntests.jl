@@ -1,2 +1,2 @@
-TimeTestExecution = true
+const TimeTestExecution = true
 include("runtests.jl")
