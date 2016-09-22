@@ -124,7 +124,7 @@ end
                 i = 0 # reset the counter, otherwise it will throw in the setup
                 optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
                         MaxSteps=100, TraceMode=:silent, RecoverResults=false)
-                @fact_throws InterruptException bboptimize(optctrl)
+                @test_throws InterruptException bboptimize(optctrl)
             end
     end
 

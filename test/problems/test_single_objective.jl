@@ -9,7 +9,7 @@
     @test sphere([1, 2]) == 5
     @test sphere([1, 2, 3]) == 14
     @test sphere([-1, 2, -3]) == 14
-    @fact_throws sphere([])
+    @test_throws MethodError sphere([])
 
     p2 = instantiate(p, 3)
     @test numdims(p2) == 3
@@ -25,7 +25,7 @@ end
     @test schwefel2_22([1, 2]) == (1+2)+(1*2)
     @test schwefel2_22([1, 2, 3]) == (1+2+3)+(1*2*3)
     @test schwefel2_22([-1, 2, -3]) == (1+2+3)+(1*2*3)
-    @fact_throws schwefel2_22([])
+    @test_throws MethodError schwefel2_22([])
 
     p2 = instantiate(p, 4)
     @test numdims(p2) == 4
@@ -53,7 +53,7 @@ end
     @test schwefel2_21([1, 2]) == 2
     @test schwefel2_21([1, 2, 3]) == 3
     @test schwefel2_21([-1, 2, -3]) == 3
-    @fact_throws schwefel2_21([])
+    @test_throws MethodError schwefel2_21([])
 end
 
 @testset "Rosenbrock" begin
@@ -63,7 +63,7 @@ end
     @test rosenbrock([1, 2]) == 100
     @test rosenbrock([1, 2, 3]) == 201
     @test rosenbrock([-1, 2, -3]) == 5005
-    @fact_throws rosenbrock([])
+    @test_throws MethodError rosenbrock([])
 end
 
 end

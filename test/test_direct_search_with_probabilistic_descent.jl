@@ -51,8 +51,8 @@ end
     @test ds2[:,6] == -ds2[:,3]
 
     # Must be even number of directions
-    @fact_throws BlackBoxOptim.MirroredRandomDirectionGen(10, 1)
-    @fact_throws BlackBoxOptim.MirroredRandomDirectionGen(10, 3)
-    @fact_throws BlackBoxOptim.MirroredRandomDirectionGen(10, 7)
+    @test_throws ArgumentError BlackBoxOptim.MirroredRandomDirectionGen(10, 1)
+    @test_throws ArgumentError BlackBoxOptim.MirroredRandomDirectionGen(10, 3)
+    @test_throws ArgumentError BlackBoxOptim.MirroredRandomDirectionGen(10, 7)
 
 end

@@ -4,14 +4,14 @@
                                             FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true),
                                             SearchRange=(-10.0, 10.0), NumDimensions=2, ϵ=0.01,
                                             MaxSteps=5000, TraceMode=:silent)
-            @fact BlackBoxOptim.IGD(BlackBoxOptim.Schaffer1Family.opt_value, pareto_frontier(res),
-                                fitness_scheme(res), Val{length(best_candidate(res))}) --> less_than(0.05)
+            @test BlackBoxOptim.IGD(BlackBoxOptim.Schaffer1Family.opt_value, pareto_frontier(res),
+                                fitness_scheme(res), Val{length(best_candidate(res))}) < 0.05
         end
         @testset "CEC09_UP8" begin
             res = bboptimize(BlackBoxOptim.CEC09_Unconstrained_Set[8]; Method=:borg_moea,
                                             NumDimensions=4, ϵ=0.025,
                                             MaxSteps=50000, TraceMode=:silent)
-            @fact BlackBoxOptim.IGD(BlackBoxOptim.CEC09_Unconstrained_Set[8].opt_value, pareto_frontier(res),
-                                fitness_scheme(res), Val{length(best_candidate(res))}) --> less_than(0.13)
+            @test BlackBoxOptim.IGD(BlackBoxOptim.CEC09_Unconstrained_Set[8].opt_value, pareto_frontier(res),
+                                fitness_scheme(res), Val{length(best_candidate(res))}) < 0.13
         end
 end
