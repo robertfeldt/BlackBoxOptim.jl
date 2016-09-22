@@ -115,7 +115,12 @@ function step!(alg::BorgMOEA)
     end
     # Select the operators to apply based on their probabilities
     recomb_op_ix = rand(alg.recombinate_distr)
-    recomb_op = alg.recombinate[recomb_op_ix]
+    recombinate!(alg, recomb_op_ix, alg.recombinate[recomb_op_ix])
+    return alg
+end
+
+# "kernel function" of step() that would specialize to given xover operator type
+function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOperator)
     # select parents for recombination
     n_parents = numparents(recomb_op)
     # parent indices
@@ -132,17 +137,15 @@ function step!(alg::BorgMOEA)
     apply!(recomb_op, Individual[child.params for child in children],
            zeros(Int, length(children)), alg.population, parent_indices)
     for child in children
-        process_candidate!(alg, child, recomb_op_ix, parent_indices[1])
+        child.extra = recomb_op
+        child.tag = recomb_op_ix
+        process_candidate!(alg, child, parent_indices[1])
     end
-
-    return alg
 end
 
-function process_candidate!(alg::BorgMOEA, candi::Candidate, recomb_op_ix::Int, ref_index::Int)
+function process_candidate!(alg::BorgMOEA, candi::Candidate, ref_index::Int)
     apply!(alg.embed, candi.params, alg.population, ref_index)
     reset_fitness!(candi, alg.population)
-    candi.extra = alg.recombinate[recomb_op_ix]
-    candi.tag = recomb_op_ix
     ifitness = fitness(update_fitness!(alg.evaluator, candi)) # implicitly updates the archive
     # test the population
     hat_comp = HatCompare(fitness_scheme(archive(alg)))

@@ -79,7 +79,7 @@ function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{
   # embed the trial parameter vector into the search space
   apply!(de.embed, trial.params, de.population, target.index)
   target.extra = trial.extra = op
-  target.tag = trial.tag = 0
+  target.tag = trial.tag = tag
   if trial.params != target.params
     reset_fitness!(trial, de.population)
   end
@@ -96,7 +96,7 @@ function tell!{F}(de::DiffEvoOpt,
     candi = rankedCandidates[i]
     # accept the modified individuals from the top ranked half
     if i <= n_acceptable_candidates
-      is_improved = candi.params != population(de)[candi.index]
+      is_improved = candi.params != viewer(population(de), candi.index)
       adjust!(de, candi, is_improved)
     else
       is_improved = false

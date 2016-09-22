@@ -75,10 +75,8 @@ end
         @test sortperm(candidates, by = fitness) == collect(1:10)
     end
 
-if BlackBoxOptim.enable_parallel_methods
     @testset "ParallelEvaluator" begin
         evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
     end
-end
 
 end

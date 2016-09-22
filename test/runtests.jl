@@ -1,3 +1,9 @@
+if !isdefined(:TimeTestExecution)
+  const TimeTestExecution = false
+end
+
+module BlackBoxOptimTests
+
 startclocktime = time()
 include("helper.jl")
 
@@ -40,7 +46,7 @@ my_tests = [
   "test_direct_search_with_probabilistic_descent.jl",
 ]
 
-if isdefined(:TimeTestExecution) && TimeTestExecution
+if Main.TimeTestExecution
 
 # readstring not available pre 0.5:
 if VERSION < v"0.5.0"
@@ -78,7 +84,7 @@ starttime = CPUtime_us()
 @testset "BlackBoxOptim test suite" begin
 
 for t in my_tests
-  if isdefined(:TimeTestExecution) && TimeTestExecution
+  if Main.TimeTestExecution
     CPUtic()
 
     # Including the test file runs the tests in there...
@@ -97,13 +103,16 @@ end
 end
 elapsed = float(CPUtime_us() - starttime)/1e6
 
-if isdefined(:TimeTestExecution) && TimeTestExecution
+if Main.TimeTestExecution
   datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
   using SHA
   hash = bytes2hex(sha512(join(map(fn -> readstring(open(joinpath("test", fn))), my_tests))))[1:16]
   push!(timing_data, [datestr, versionstr, gitstr, "TOTAL TIME for $(length(my_tests)) test files, $(hash)", elapsed])
   writetable(TestTimingFileName, timing_data)
+  println("Wrote $(nrow(timing_data)) rows to file $TestTimingFileName")
 end
 
 elapsedclock = time() - startclocktime
 println("Tested $(numtestfiles) files in $(round(elapsedclock, 1)) seconds.")
+
+end # module BlackBoxOptimTests

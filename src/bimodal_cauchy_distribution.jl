@@ -1,38 +1,35 @@
 using Distributions
 
 # FIXME implement actual distribution using Distributions.MixtureModel
-typealias BimodalCauchy Tuple{Cauchy, Cauchy}
+"""
+    A mixture of 2 Cauchy distributions.
+    Random values are further constrained to `[0.0, 1.0]` range either by
+    truncating the initial unconstrained value or by generating new random value
+    until it fits the range.
+"""
+immutable BimodalCauchy
+    a::Cauchy
+    b::Cauchy
+    mix_prob::Float64
+    # When sampling it is common to truncate in either or both ends.
+    clampBelow0::Bool
+    clampAbove1::Bool
 
-# In the literature Cauchy distributions have been used for sampling the
-# `f` and `cr` constants used in DE.
-function sample_bimodal_cauchy_once(cauchyDistrs::BimodalCauchy, cutoffProb = 0.5)
-  index = (rand() < cutoffProb) ? 1 : 2
-  rand(cauchyDistrs[index])
+    BimodalCauchy(location1, scale1, location2, scale2;
+                  mix_prob::Number=0.5, clampBelow0::Bool=true, clampAbove1::Bool=true) =
+        new(Cauchy(location1, scale1), Cauchy(location2, scale2),
+            mix_prob, clampBelow0, clampAbove1)
 end
 
-# When sampling it is common to truncate in either or both ends.
-function sample_bimodal_cauchy(cauchyDistrs::BimodalCauchy; cutoffProb = 0.5,
-  truncateAbove1 = true, truncateBelow0 = true)
-  value = sample_bimodal_cauchy_once(cauchyDistrs, cutoffProb)
-  if value > 1.0
-    if truncateAbove1
-      return 1.0
-    else
-      return sample_bimodal_cauchy(cauchyDistrs; cutoffProb = cutoffProb, truncateAbove1 = truncateAbove1, truncateBelow0 = truncateBelow0)
+function Base.rand(distr::BimodalCauchy)
+    while true
+        value = rand(rand() < distr.mix_prob ? distr.a : distr.b)
+        if value >= 1.0
+            distr.clampAbove1 && return 1.0
+        elseif value <= 0.0
+            distr.clampBelow0 && return 0.0
+        else
+            return value
+        end
     end
-  elseif value < 0.0
-    if truncateBelow0
-      return 0.0
-    else
-      return sample_bimodal_cauchy(cauchyDistrs; cutoffProb = cutoffProb, truncateAbove1 = truncateAbove1, truncateBelow0 = truncateBelow0)
-    end
-  else
-    return value
-  end
-end
-
-# For sampling f in DE, bimodal_cauchy(0.65, 0.1, 1.0, 0.1) has been proposed.
-# For sampling cr in DE, bimodal_cauchy(0.1, 0.1, 0.95, 0.1) has been proposed.
-function bimodal_cauchy(location1, scale1, location2, scale2)
-  (Cauchy(location1, scale1), Cauchy(location2, scale2))
 end

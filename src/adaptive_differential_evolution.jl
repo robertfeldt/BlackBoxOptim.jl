@@ -2,8 +2,8 @@ include("bimodal_cauchy_distribution.jl")
 
 const ADE_DefaultOptions = chain(DE_DefaultOptions, ParamsDict(
   # Distributions we will use to generate new F and CR values.
-  :fdistr => bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
-  :crdistr => bimodal_cauchy(0.1, 0.1, 0.95, 0.1),
+  :fdistr => BimodalCauchy(0.65, 0.1, 1.0, 0.1, clampBelow0 = false),
+  :crdistr => BimodalCauchy(0.1, 0.1, 0.95, 0.1, clampBelow0 = false),
   :SearchSpace => symmetric_search_space(1)
 ))
 
@@ -15,6 +15,8 @@ const ADE_DefaultOptions = chain(DE_DefaultOptions, ParamsDict(
 """
 type AdaptiveDiffEvoParameters
   # Distributions we will use to generate new F and CR values.
+  # In the literature Cauchy distributions have been used for sampling the
+  # `f` and `cr` constants
   # FIXME allow any distribution?
   fdistr::BimodalCauchy
   crdistr::BimodalCauchy
@@ -22,10 +24,10 @@ type AdaptiveDiffEvoParameters
   fs::Vector{Float64}   # One f value per individual in population
   crs::Vector{Float64}  # One cr value per individual in population
 
-  function AdaptiveDiffEvoParameters(fdistr::BimodalCauchy = bimodal_cauchy(0.65, 0.1, 1.0, 0.1),
-                                     crdistr::BimodalCauchy = bimodal_cauchy(0.1, 0.1, 0.95, 0.1))
+  function AdaptiveDiffEvoParameters(fdistr::BimodalCauchy, crdistr::BimodalCauchy)
+    @assert !fdistr.clampBelow0 && !crdistr.clampBelow0 # population probs should not be degenerated
     new(fdistr, crdistr,
-        Array(Float64,0), Array(Float64,0)) # start with empty arrays because the population size unknown
+        Vector{Float64}(), Vector{Float64}()) # start with empty arrays because the population size unknown
   end
 end
 
@@ -34,10 +36,10 @@ AdaptiveDiffEvoParameters(options::Parameters) = AdaptiveDiffEvoParameters(optio
 function crossover_parameters(params::AdaptiveDiffEvoParameters, pop::Population, target_index)
   # initialize the f & cr array
   if isempty(params.fs)
-    params.fs = [sample_bimodal_cauchy(params.fdistr; truncateBelow0 = false) for i in 1:popsize(pop)]
+    params.fs = [rand(params.fdistr) for _ in 1:popsize(pop)]
   end
   if isempty(params.crs)
-    params.crs = [sample_bimodal_cauchy(params.crdistr; truncateBelow0 = false) for i in 1:popsize(pop)]
+    params.crs = [rand(params.crdistr) for _ in 1:popsize(pop)]
   end
   return (params.crs[target_index], params.fs[target_index])
 end
@@ -45,8 +47,8 @@ end
 function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)
     if !is_improved
       # The trial vector for this target was not better so we change the f and cr constants.
-      params.fs[index] = sample_bimodal_cauchy(params.fdistr; truncateBelow0 = false)
-      params.crs[index] = sample_bimodal_cauchy(params.crdistr; truncateBelow0 = false)
+      params.fs[index] = rand(params.fdistr)
+      params.crs[index] = rand(params.crdistr)
     end
 end
 

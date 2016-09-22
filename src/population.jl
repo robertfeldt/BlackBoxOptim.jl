@@ -146,7 +146,7 @@ acquire_candis{F}(pop::FitPopulation{F}, n::Integer) =
 # Get an individual from a pool and sets it to ix-th individual from population.
 function acquire_candi(pop::FitPopulation, ix::Int)
     x = acquire_candi(pop)
-    x.params[:] = pop[ix] # FIXME might be suboptimal until Julia has array refs
+    copy!(x.params, viewer(pop, ix))
     x.index = ix
     x.fitness = fitness(pop, ix)
     return x

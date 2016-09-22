@@ -19,18 +19,18 @@ DictChain{K,V}(dict::Associative{K,V}) = DictChain{K,V}(dict)
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}) = DictChain{K,V}(dict1, dict2)
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}, dict3::Associative{K,V}) = DictChain{K,V}(dict1, dict2, dict3)
 
-function Base.show{K,V}(io::IO, dc::DictChain{K,V})
+function Base.show(io::IO, dc::DictChain)
   print(io, typeof(dc), "[")
   for (i, dict) in enumerate(dc.dicts)
-    if i > 1
-      print(",")
-    end
+    (i > 1) && print(io, ",")
     show(io, dict)
   end
   print(io, "]")
 end
 
-function Base.getindex{K,V}(p::DictChain{K,V}, key::K)
+Base.show(io::IO, ::MIME{Symbol("text/plain")}, dc::DictChain) = show(io, dc)
+
+function Base.getindex{K,V}(p::DictChain{K,V}, key)
   for d in p.dicts
     if haskey(d, key)
       return getindex(d, key)
@@ -39,14 +39,14 @@ function Base.getindex{K,V}(p::DictChain{K,V}, key::K)
   throw(KeyError(key))
 end
 
-function Base.setindex!{K,V}(p::DictChain{K,V}, value::V, key::K)
+function Base.setindex!{K,V}(p::DictChain{K,V}, value, key)
   if isempty(p.dicts)
     push!(p.dicts, Dict{K,V}()) # add new dictionary on top
   end
   setindex!(first(p.dicts), value, key)
 end
 
-function Base.haskey{K,V}(p::DictChain{K,V}, key::K)
+function Base.haskey{K,V}(p::DictChain{K,V}, key)
   for d in p.dicts
     if haskey(d, key)
       return true
@@ -55,7 +55,7 @@ function Base.haskey{K,V}(p::DictChain{K,V}, key::K)
   return false
 end
 
-function Base.get{K,V}(p::DictChain{K,V}, key::K, default = nothing)
+function Base.get{K,V}(p::DictChain{K,V}, key, default = nothing)
   return haskey(p, key) ? getindex(p, key) : default
 end
 
@@ -90,7 +90,7 @@ flatten{K,V}(d::DictChain{K,V}) = convert(Dict{K,V}, d)
 
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
 
-function Base.delete!{K,V}(p::DictChain{K,V}, key::K)
+function Base.delete!{K,V}(p::DictChain{K,V}, key)
   for d in p.dicts
     delete!(d, key)
   end

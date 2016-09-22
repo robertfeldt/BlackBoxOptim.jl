@@ -1,9 +1,10 @@
 @testset "DictChain" begin
-    @testset "Matching keys and type parameters" begin
+    @testset "Matching keys and value types for get()/set() methods" begin
         dc1 = DictChain{Int,String}()
 
-        # Actually throws MethodError: @test_throws KeyError (dc1[:NotThere] = 3)
-        # Actually throws MethodError: @test_throws KeyError (dc1[:NotThere] = "abc")
+        @test_throws KeyError dc1[:NotThere]
+        @test_throws MethodError (dc1[:NotThere] = 3)
+        @test_throws MethodError (dc1[:NotThere] = "abc")
         @test_throws MethodError (dc1[3] = 3)
 
         dc1[3] = "abc"
@@ -105,10 +106,9 @@
         d3 = Dict{Symbol,Int}(:a => 3, :b => 5)
 
         dc = DictChain(d1, d2, d3)
-        #iob = IOBuffer()
-        #show(iob, dc) # should output to DevNull, but looks like it's broken currently
-        #@show takebuf_string(iob)
-        #@test takebuf_string(io) == "BlackBoxOptim.DictChain{Symbol,Int64}[Dict(:a=>1),Dict(:a=>2,:b=>4),Dict(:a=>3,:b=>5)]"
+        iob = IOBuffer()
+        show(iob, dc)
+        @test takebuf_string(iob) == "BlackBoxOptim.DictChain{Symbol,Int64}[Dict(:a=>1),Dict(:a=>2,:b=>4),Dict(:a=>3,:b=>5)]"
     end
 
     @testset "flatten" begin
@@ -131,7 +131,7 @@ end
         ps = ParamsDictChain()
         @test isa(ps, Parameters)
         @test_throws KeyError ps[:NotThere]
-        @test_throws MethodError ps["Neither there"]
+        @test_throws KeyError ps["Neither there"]
 
         ps[:a] = 1
         @test ps[:a] == 1
@@ -142,7 +142,7 @@ end
         @test isa(ps, Parameters)
 
         @test ps[:a] == 1
-        @test_throws MethodError ps["a"] # incorrect key
+        @test_throws KeyError ps["a"] # incorrect key
 
         @test_throws KeyError ps[:A]
         @test_throws KeyError ps[:B]
@@ -150,8 +150,8 @@ end
 
     @testset "With parameters in multiple sets" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3),
-                                                ParamsDict(:c => 5))
+                             ParamsDict(:a => 2, :b => 3),
+                             ParamsDict(:c => 5))
         @test isa(ps, Parameters)
 
         @test ps[:a] == 1
@@ -164,8 +164,8 @@ end
 
     @testset "Updating parameters after construction" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3),
-                                                ParamsDict(:c => 5))
+                             ParamsDict(:a => 2, :b => 3),
+                             ParamsDict(:c => 5))
 
         ps[:c] = 6
         ps[:b] = 7
@@ -177,9 +177,9 @@ end
 
     @testset "Constructing from another parameters object" begin
         ps1 = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                    ParamsDict(:a => 2, :b => 3))
+                              ParamsDict(:a => 2, :b => 3))
         ps2 = ParamsDictChain(ParamsDict(:a => 5), ps1,
-                                                    ParamsDict(:c => 6))
+                              ParamsDict(:c => 6))
 
         @test ps1[:a] == 1
         @test ps2[:a] == 5
@@ -188,7 +188,7 @@ end
 
     @testset "Get key without default" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3))
+                             ParamsDict(:a => 2, :b => 3))
         @test get(ps, :a) == 1
         @test get(ps, :b) == 3
         @test get(ps, :d) == nothing
@@ -196,13 +196,13 @@ end
 
     @testset "Get key with default" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3))
+                             ParamsDict(:a => 2, :b => 3))
         @test get(ps, :d, 10) == 10
     end
 
     @testset "Merge with Parameters or Dict" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3))
+                             ParamsDict(:a => 2, :b => 3))
         ps2 = chain(ps, ParamsDict(:d => 5, :a => 20))
         @test ps2[:d] == 5
         @test ps2[:b] == 3

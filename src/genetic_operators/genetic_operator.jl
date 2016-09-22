@@ -43,8 +43,8 @@ apply{T <: Real}(o::MutationOperator, parents::Vector{Vector{T}}) = map(p -> app
 numchildren(o::GeneticOperator) = 1
 numparents(o::MutationOperator) = 1 # But it will apply to each parent separately if given more than one...
 
-numparents{NP,NC}(o::CrossoverOperator{NP,NC}) = NP
-numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC
+numparents{NP,NC}(o::CrossoverOperator{NP,NC}) = NP::Int
+numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC::Int
 
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1

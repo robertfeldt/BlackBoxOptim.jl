@@ -68,7 +68,6 @@
             @test (min_fitness_value == best_fitness(res))
         end
 
-if BlackBoxOptim.enable_parallel_methods
         @testset "using population optimizer and parallel evaluator" begin
             opt = bbsetup(rosenbrock; Method=:adaptive_de_rand_1_bin,
                                         SearchRange = (-5.0, 5.0), NumDimensions = 2,
@@ -76,7 +75,6 @@ if BlackBoxOptim.enable_parallel_methods
             res = bboptimize(opt)
             @test isa(BlackBoxOptim.evaluator(lastrun(opt)), BlackBoxOptim.ParallelEvaluator)
         end
-end
 
     end
 
