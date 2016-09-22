@@ -106,10 +106,9 @@
         d3 = Dict{Symbol,Int}(:a => 3, :b => 5)
 
         dc = DictChain(d1, d2, d3)
-        #iob = IOBuffer()
-        #show(iob, dc) # should output to DevNull, but looks like it's broken currently
-        #@show takebuf_string(iob)
-        #@test takebuf_string(io) == "BlackBoxOptim.DictChain{Symbol,Int64}[Dict(:a=>1),Dict(:a=>2,:b=>4),Dict(:a=>3,:b=>5)]"
+        iob = IOBuffer()
+        show(iob, dc)
+        @test takebuf_string(iob) == "BlackBoxOptim.DictChain{Symbol,Int64}[Dict(:a=>1),Dict(:a=>2,:b=>4),Dict(:a=>3,:b=>5)]"
     end
 
     @testset "flatten" begin

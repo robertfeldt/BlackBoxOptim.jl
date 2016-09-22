@@ -19,16 +19,16 @@ DictChain{K,V}(dict::Associative{K,V}) = DictChain{K,V}(dict)
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}) = DictChain{K,V}(dict1, dict2)
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}, dict3::Associative{K,V}) = DictChain{K,V}(dict1, dict2, dict3)
 
-function Base.show{K,V}(io::IO, dc::DictChain{K,V})
+function Base.show(io::IO, dc::DictChain)
   print(io, typeof(dc), "[")
   for (i, dict) in enumerate(dc.dicts)
-    if i > 1
-      print(",")
-    end
+    (i > 1) && print(io, ",")
     show(io, dict)
   end
   print(io, "]")
 end
+
+Base.show(io::IO, ::MIME{Symbol("text/plain")}, dc::DictChain) = show(io, dc)
 
 function Base.getindex{K,V}(p::DictChain{K,V}, key)
   for d in p.dicts
