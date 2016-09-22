@@ -150,8 +150,8 @@ end
 
     @testset "With parameters in multiple sets" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3),
-                                                ParamsDict(:c => 5))
+                             ParamsDict(:a => 2, :b => 3),
+                             ParamsDict(:c => 5))
         @test isa(ps, Parameters)
 
         @test ps[:a] == 1
@@ -164,8 +164,8 @@ end
 
     @testset "Updating parameters after construction" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3),
-                                                ParamsDict(:c => 5))
+                             ParamsDict(:a => 2, :b => 3),
+                             ParamsDict(:c => 5))
 
         ps[:c] = 6
         ps[:b] = 7
@@ -177,9 +177,9 @@ end
 
     @testset "Constructing from another parameters object" begin
         ps1 = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                    ParamsDict(:a => 2, :b => 3))
+                              ParamsDict(:a => 2, :b => 3))
         ps2 = ParamsDictChain(ParamsDict(:a => 5), ps1,
-                                                    ParamsDict(:c => 6))
+                              ParamsDict(:c => 6))
 
         @test ps1[:a] == 1
         @test ps2[:a] == 5
@@ -188,7 +188,7 @@ end
 
     @testset "Get key without default" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3))
+                             ParamsDict(:a => 2, :b => 3))
         @test get(ps, :a) == 1
         @test get(ps, :b) == 3
         @test get(ps, :d) == nothing
@@ -196,13 +196,13 @@ end
 
     @testset "Get key with default" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3))
+                             ParamsDict(:a => 2, :b => 3))
         @test get(ps, :d, 10) == 10
     end
 
     @testset "Merge with Parameters or Dict" begin
         ps = ParamsDictChain(ParamsDict(:a => 1, :c => 4),
-                                                ParamsDict(:a => 2, :b => 3))
+                             ParamsDict(:a => 2, :b => 3))
         ps2 = chain(ps, ParamsDict(:d => 5, :a => 20))
         @test ps2[:d] == 5
         @test ps2[:b] == 3

@@ -9,7 +9,7 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
 @testset "DiffEvoRandBin1" begin
     @testset "always copies from donor if length is 1" begin
         @test BlackBoxOptim.apply!(BlackBoxOptim.DiffEvoRandBin1(0.0, 0.0),
-                                                            [0.0], 4, DE.population, [1,2,3]) == [3.0]
+                                   [0.0], 4, DE.population, [1,2,3]) == [3.0]
     end
 
     @testset "always copies at least one element from donor" begin
@@ -19,7 +19,7 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
             target = pop[:,1]
             saved_target = copy(target)
             res = BlackBoxOptim.apply!(BlackBoxOptim.DiffEvoRandBin1(0.0, 0.0),
-                                                                target, 1, pop, [2,3,4])
+                                       target, 1, pop, [2,3,4])
             @test (res === target)
             @test ndims( res ) == 1
             @test length( res ) == len
@@ -34,7 +34,7 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
             target = pop[:,1]
             saved_target = copy(target)
             res = BlackBoxOptim.apply!(BlackBoxOptim.DiffEvoRandBin1(0.1, 0.5),
-                                                                target, 1, pop, [2,3,4])
+                                       target, 1, pop, [2,3,4])
             @test any(target .!= saved_target)
             @test any(target .== saved_target)
         end
@@ -55,10 +55,10 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
         pop2 = reshape(collect(1.0:8.0), 4, 2)'
         @test BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(1.0, 0.6),
                                                                 [0.0,0.0], 4, pop2, [1,2,3]) == [3.0 + (0.6 * (1.0 - 2.0)),
-                                                                                                                                7.0 + (0.6 * (5.0 - 6.0))]
+                                                                                                 7.0 + (0.6 * (5.0 - 6.0))]
         @test BlackBoxOptim.apply!( BlackBoxOptim.DiffEvoRandBin1(1.0, 0.6),
                                                                 [0.0,0.0], 4, pop2, [1,2,4]) == [4.0 + (0.6 * (1.0 - 2.0)),
-                                                                                                                                8.0 + (0.6 * (5.0 - 6.0))]
+                                                                                                 8.0 + (0.6 * (5.0 - 6.0))]
     end
 end
 
