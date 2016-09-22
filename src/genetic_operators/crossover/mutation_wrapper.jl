@@ -11,7 +11,7 @@ end
 
 function apply!(wrapper::MutationWrapper, target::Individual, targetIndex::Int, pop, parentIndices)
     @assert length(parentIndices) == 1
-    apply!(wrapper.inner, copy!(target, view(pop, parentIndices[1])), targetIndex)
+    apply!(wrapper.inner, copy!(target, viewer(pop, parentIndices[1])), targetIndex)
 end
 
 Base.show(io::IO, xover::MutationWrapper) = print(io, "MutationWrapper(", xover.inner, ")")

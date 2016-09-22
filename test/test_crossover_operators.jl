@@ -62,4 +62,15 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
     end
 end
 
+@testset "MutationWrapper" begin
+    ss = symmetric_search_space(2, (0.0, 10.0))
+    pop = reshape(collect(1.0:8.0), 2, 4)
+    gibbs = UniformMutation(ss)
+    gibbs_wrapper = BlackBoxOptim.MutationWrapper(gibbs)
+    @test numchildren(gibbs_wrapper) == 1
+    @test numparents(gibbs_wrapper) == 1
+    mut_res = BlackBoxOptim.apply!(gibbs_wrapper, [0.0, 0.0], 1, pop, [2])
+    @test sum(mut_res .== BlackBoxOptim.viewer(pop, 2)) == 0
+end
+
 end
