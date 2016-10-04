@@ -27,7 +27,7 @@ type OptimizationResults
   stop_reason::String      # FIXME turn into type hierarchy of immutable reasons with their attached info
   iterations::Int
   start_time::Float64           # time (seconds) optimization started
-  elasped_time::Float64         # time (seconds) optimization finished
+  elapsed_time::Float64         # time (seconds) optimization finished
   parameters::Parameters        # all user-specified parameters to bboptimize()
   f_calls::Int                  # total number of fitness function evaluations
   fit_scheme::FitnessScheme     # fitness scheme used by the archive

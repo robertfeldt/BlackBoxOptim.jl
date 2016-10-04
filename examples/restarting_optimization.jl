@@ -10,34 +10,29 @@ end
 # to the optimizer, problem and params. Use the function
 # setup_bboptimize instead of bboptimize, but with the same
 # parameters. We just run it for 10 steps though:
-optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d;
-  search_range = (-5.0, 5.0), dimensions = 2,
-  parameters = {:MaxSteps => 10, :TraceMode => :silent});
+opt = bbsetup(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+    MaxSteps = 10, TraceMode = :silent);
 
-# Now we can run it:
-best10, fitness10, termination_reason10, elapsed_time10, params, num_evals10 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
+# Now we can run it (this will do 10 steps):
+res10 = bboptimize(opt)
 
-# And lets run it again:
-best20, fitness20, termination_reason20, elapsed_time20, params, num_evals20 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
+# And lets run it again (another 10 steps):
+res20 = bboptimize(opt)
 
 # Lets run 980 steps this time to try to get more progress:
-params[:MaxSteps] = 980
-best1000, fitness1000, termination_reason1000, elapsed_time1000, params, num_evals1000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
+res1000 = bboptimize(opt; MaxSteps = 980)
 
 # And finish it off with another 9000 steps in batches of 1000:
-params[:MaxSteps] = 1000
-fitness10000 = best10000 = elapsed_time1000b = 1 # Just so saved outside of loop body...
-for i in 1:9
-  best10000, fitness10000, termination_reason10000, elapsed_time1000b, params, num_evals10000 = BlackBoxOptim.run_optimizer_on_problem(optimizer, problem; parameters = params);
-end
+results = [bboptimize(opt; MaxSteps = 1000) for _ in 1:9]
+res10k = results[end]
 
 # Now compare fitness progress:
-println("Fitness progress: ", (fitness10, fitness20, fitness1000, fitness10000))
+println("Fitness progress: ", map(best_fitness, [res10, res20, res1000, res10k]))
 
 # And note that the elapsed time was much larger for first call since things
 # were compiled and that the elapsed time for last two entries should be about the same
 # (since they were with 980 and 1000 steps, respectively):
-println("Elapsed time: ", (elapsed_time10, elapsed_time20, elapsed_time1000, elapsed_time1000b))
+println("Elapsed time: ", map(elapsed_time, [res10, res20, res1000, res10k]))
 
 # And results should approach the Rosenbrock optimum at [1.0, 1.0]:
-println("Best solution progress: ", (best10, best20, best1000, best10000))
+println("Best solution progress: ", map(best_candidate, [res10, res20, res1000, res10k]))
