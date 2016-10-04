@@ -32,7 +32,7 @@ println("Fitness progress: ", map(best_fitness, [res10, res20, res1000, res10k])
 # And note that the elapsed time was much larger for first call since things
 # were compiled and that the elapsed time for last two entries should be about the same
 # (since they were with 980 and 1000 steps, respectively):
-println("Elapsed time: ", map(elapsed_time, [res10, res20, res1000, res10k]))
+println("Elapsed time: ", map(BlackBoxOptim.elapsed_time, [res10, res20, res1000, res10k]))
 
 # And results should approach the Rosenbrock optimum at [1.0, 1.0]:
 println("Best solution progress: ", map(best_candidate, [res10, res20, res1000, res10k]))
