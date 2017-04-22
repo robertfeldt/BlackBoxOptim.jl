@@ -4,7 +4,7 @@
         for reps in 1:20
             n = rand(1:50)
             fa = BlackBoxOptim.FrequencyAdapter(n)
-            block = Int64[]
+            block = Int[]
             for i in 1:n
                 mi = BlackBoxOptim.next(fa)
                 @test mi >= 1
@@ -21,7 +21,7 @@
             n = rand(2:50)
             fa = BlackBoxOptim.FrequencyAdapter(n)
             up1(mi) = BlackBoxOptim.update!(fa, mi, rand() + ((mi == 1) ? 0.4 : 0.0))
-            counts = zeros(Int64, n)
+            counts = zeros(Int, n)
             uprep(rs) = begin
                 for i in 1:rs
                     mi = BlackBoxOptim.next(fa)
@@ -30,7 +30,7 @@
                 end
             end
             uprep(n)
-            @test counts == ones(Int64, n)
+            @test counts == ones(Int, n)
             uprep(20*n)
             @test counts[1] > sum(counts[2:end])/(n-1)
         end

@@ -91,14 +91,14 @@ end
 #  # Current population: 1st column is current solution, 2nd columnn is current
 #  # candidate to consider. 
 #  pop::Array{Float64, 2}
-#  N::Int64      
+#  N::Int      
 #  bias::Array{Float64, 1}   # Bias
 #  diff::Array{Float64, 1}   # Latest Diff vector.
 #  sigma::Float64            # Measure of spread in random sampling. Note! Sigma used in stead of rho=sigma^2
 #  rng::ContinuousMultivariateDistribution
 #  ss::SearchSpace
-#  num_successes::Int64
-#  num_failures::Int64
+#  num_successes::Int
+#  num_failures::Int
 #  state_is_plus::Bool       # Indicates which state we are in, i.e. if next candidate to generate is the plus or the minus candidate.
 #
 #  SolisWetsOptimizer(ss::SearchSpace, x = false; bias = false, sigma = false, rng = false) = begin

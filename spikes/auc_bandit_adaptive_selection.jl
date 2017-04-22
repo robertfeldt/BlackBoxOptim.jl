@@ -12,11 +12,11 @@ abstract AdaptiveSelector
 
 # The default AdaptiveSelector is a random selector.
 type RandomSelector <: AdaptiveSelector
-  item_map::Dict{Int64, Any}
-  next_index::Int64
+  item_map::Dict{Int, Any}
+  next_index::Int
 
   RandomSelector(items = []) = begin
-    rs = new(Dict{Int64, Any}(), 0)
+    rs = new(Dict{Int, Any}(), 0)
     add_items(rs, items)
     rs
   end
@@ -45,7 +45,7 @@ function add_items(a::AdaptiveSelector, items)
 end
 
 # Remove an item given its index.
-function remove_item_with_index(a::AdaptiveSelector, item_index::Int64)
+function remove_item_with_index(a::AdaptiveSelector, item_index::Int)
   delete!(a.item_map, item_index)
 end
 
@@ -75,9 +75,9 @@ end
 # We need a queue of fixed size to keep info about recent rewards.
 type FixedSizeQueue
   queue::Array{Any,1}
-  size::Int64
-  maxsize::Int64
-  index::Int64
+  size::Int
+  maxsize::Int
+  index::Int
 
   FixedSizeQueue(maxsize) = begin
     q = Any[]
@@ -120,16 +120,16 @@ end
 
 type AucBanditSelector <: AdaptiveSelector
   window::FixedSizeQueue  # Window of latest (itemindex, reward) pairs
-  ns::Int64[]             # Number of times each item has been used within the current window.
+  ns::Int[]             # Number of times each item has been used within the current window.
   items::Any[]
-  next_index::Int64
+  next_index::Int
   decay_factor::Float64
   exploration_factor::Float64
 
   AucBanditSelector(items = []; window_size = 50, decay_factor = 1.0,
     exploration_factor = 1.0) = begin
 
-    aucb = new(FixedSizeQueue(window_size), Int64[], Any[], 0, 
+    aucb = new(FixedSizeQueue(window_size), Int[], Any[], 0, 
       decay_factor, exploration_factor)
 
     add_items(aucb, items)
@@ -146,7 +146,7 @@ function add_item(a::AucBanditSelector, item)
 end
 
 # Remove an item given its index.
-function remove_item_with_index(a::AucBanditSelector, item_index::Int64)
+function remove_item_with_index(a::AucBanditSelector, item_index::Int)
   splice!(a.items, item_index)
   splice!(a.ns, item_index)
 end

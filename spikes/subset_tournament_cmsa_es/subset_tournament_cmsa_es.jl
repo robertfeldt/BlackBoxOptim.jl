@@ -65,7 +65,7 @@ function st_cmsa_es(p;
   st_state = :optimization   # Can be either :tournament or :optimization and starts with :optimization to ensure we set up a new tournament
   num_optimization_rounds_for_this_subset = num_rounds_of_optimization_between_tournaments # Also ensures we are end of opt round => new tournament will be set up
   st_current_subset = 1  # When in :tournament mode this is the index to the subset currently being evaluated, can be in range 1-subsets_per_tournament
-  st_subsets = Array{Int64, 1}[] # Subsets that are currently in a tournament
+  st_subsets = Array{Int, 1}[] # Subsets that are currently in a tournament
   num_tournament_rounds_for_this_subset = 0   # Number of eval rounds we have ran with current subset in tournament mode
   fitness_per_tournament_round = zeros(num_rounds_per_tournament, subsets_per_tournament)
 
@@ -236,7 +236,7 @@ function select_new_subsets_based_on_stats(n, num_subsets, subset_size, stats, s
 end
 
 function generate_subset_based_on_stats(subset_size, n, stats, smaller_stats_is_better = false)
-  subset = Int64[]
+  subset = Int[]
   candidates = shuffle(collect(1:n))
   len = n-1
   op = smaller_stats_is_better ? < : >
@@ -260,7 +260,7 @@ function generate_subset_based_on_stats(subset_size, n, stats, smaller_stats_is_
 end
 
 function generate_random_subsets(num_subsets, subset_size, n)
-  new_subsets = Array{Int64, 1}[]
+  new_subsets = Array{Int, 1}[]
   for i in 1:num_subsets
     push!(new_subsets, sort(shuffle(collect(1:n))[1:subset_size]))
   end
@@ -345,7 +345,7 @@ end
 type SubsetCholeskyCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   sqrtC::Array{Float64,2}
-  subset::Array{Int64, 1} # Indices of the currently active subset of variables
+  subset::Array{Int, 1} # Indices of the currently active subset of variables
 
   SubsetCholeskyCovarSampler(n) = begin
     new(eye(n,n), eye(n,n), collect(1:n))

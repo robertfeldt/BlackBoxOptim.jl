@@ -10,12 +10,12 @@
 #
 # Input:
 #  - population is a matrix of Float64 where each column represents one individual in the population
-#  - parent is an Int64 index that points out one column in the population which will act as the parent to be mutated
+#  - parent is an Int index that points out one column in the population which will act as the parent to be mutated
 #  - population_size
 # Output:
 #  - a child that is a diversity-mutated variant of the parent
 #
-function diversity_guided_mutation(population::Array{Float64, 2}, parent::Int64; 
+function diversity_guided_mutation(population::Array{Float64, 2}, parent::Int; 
   sample_size = 10,
   indices = collect(1:size(population, 2)))
 
@@ -26,7 +26,7 @@ function diversity_guided_mutation(population::Array{Float64, 2}, parent::Int64;
   # Calculate the distances from sample_size randomly sampled individuals
   # to the parent.
   distances = zeros(sample_size)
-  subset = zeros(Int64, sample_size)
+  subset = zeros(Int, sample_size)
   di = i = 1
   while di <= sample_size
     si = indices[i]

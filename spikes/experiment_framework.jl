@@ -34,10 +34,10 @@ end
 function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
   problems = collect(problem_set)
   num_problems = length(problems)
-  fevals = zeros(Int64, num_runs, num_problems)
+  fevals = zeros(Int, num_runs, num_problems)
   fbests = zeros(num_runs, num_problems)
   times = zeros(num_runs, num_problems)
-  reason_counts = [Dict{ASCIIString, Int64}() for i in 1:num_problems]
+  reason_counts = [Dict{ASCIIString, Int}() for i in 1:num_problems]
 
   file_prefix = strftime("$(experiment)_%Y%m%d_%H%M%S", time())
 

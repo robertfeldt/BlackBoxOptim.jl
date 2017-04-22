@@ -26,8 +26,8 @@ function Base.broadcast{Tv,Ti}(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti})
 end
 
 type SparseCholeskyCovarSampler <: CovarianceMatrixSampler
-  C::SparseMatrixCSC{Float64,Int64}
-  sqrtC::SparseMatrixCSC{Float64,Int64}
+  C::SparseMatrixCSC{Float64,Int}
+  sqrtC::SparseMatrixCSC{Float64,Int}
 
   SparseCholeskyCovarSampler(n) = begin
     new(speye(n,n), speye(n,n))
