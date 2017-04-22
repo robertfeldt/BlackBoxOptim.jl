@@ -58,7 +58,7 @@ end
 # found so far for a multi-objective search/optimization problem.
 type EpsilonBoxArchive
   epsilon
-  numsolutions::Int64
+  numsolutions::Int
   solutions::Matrix{Float64}       # solutions in this archive, one solution per column
 
   # For speedup we cache the boxes and leftpoints of all solutions. They have the same index as in

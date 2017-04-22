@@ -24,7 +24,7 @@ end
 
 # Average number of func evaluations to reach a target value divided by success rate.
 function bbob_sp1(func, targetValue, P, nonImprovementBudget = 1, reps = 10, MaxEval = 1e4*P)
-  nfevals = zeros(Int64, reps)
+  nfevals = zeros(Int, reps)
   fitnesses = zeros(reps)
   times = zeros(reps)
   for r in 1:reps

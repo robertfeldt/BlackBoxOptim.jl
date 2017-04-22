@@ -29,7 +29,7 @@ times = zeros(Reps, 1)
       # Put it somewhere around the middle
       #i = ifloor(rand(0.45N:0.55*N))
       i = rand(1:N)
-      array[:,i] = MaxValue * ones(Int64, Rows, 1)
+      array[:,i] = MaxValue * ones(Int, Rows, 1)
     end
 
     tic()

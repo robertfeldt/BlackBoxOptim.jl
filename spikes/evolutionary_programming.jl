@@ -16,9 +16,9 @@ abstract EvolutionaryProgrammingStrategy
 type PopulationBasedEvolutionaryProgramming <: PopulationOptimizer
   parameters::Parameters
 
-  generation::Int64
-  dimension::Int64
-  population_size::Int64
+  generation::Int
+  dimension::Int
+  population_size::Int
 
   # Pre-calc the tau values so we do not have to recalc it again and again during evolution.
   tau::Float64
@@ -97,7 +97,7 @@ end
 
 function mutate_individual(ep::EvolutionaryProgrammingStrategy, 
   population::Array{Float64, 2}, sigmas::Array{Float64, 2}, 
-  i::Int64, dims::Int64, tauprim::Float64, tau::Float64)
+  i::Int, dims::Int, tauprim::Float64, tau::Float64)
 
   tauprimconst = tauprim * sample_tauprimconst_distribution(ep)
 
@@ -113,12 +113,12 @@ function sample_tauprimconst_distribution(ep::EvolutionaryProgrammingStrategy)
 end
 
 # The standard distribution is a Gaussian(0, 1)
-function sample_mutation_distribution(ep::EvolutionaryProgrammingStrategy, numsamples::Int64)
+function sample_mutation_distribution(ep::EvolutionaryProgrammingStrategy, numsamples::Int)
   randn(numsamples) # Standard is to use a N(0, 1) gaussians...
 end
 
 # The standard distribution for mutating the sigmas is a Gaussian(0, 1) for each dimension.
-function sample_sigma_distribution(ep::EvolutionaryProgrammingStrategy, numsamples::Int64)
+function sample_sigma_distribution(ep::EvolutionaryProgrammingStrategy, numsamples::Int)
   randn(numsamples) # Standard is to use a N(0, 1) gaussians...
 end
 

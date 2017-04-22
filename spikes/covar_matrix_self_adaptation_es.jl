@@ -7,9 +7,9 @@
 #  decomposer::Function    # Function that decomposes covar matrix into sqrtC
 #
 #  # Constants that we save for performance reasons
-#  n::Int64
-#  mu::Int64
-#  lambda::Int64
+#  n::Int
+#  mu::Int
+#  lambda::Int
 #  tau::Float64
 #  tau_c::Float64
 #

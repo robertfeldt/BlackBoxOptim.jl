@@ -41,7 +41,7 @@ end
 immutable TopListFitness{F<:Number}
     fitness::F            # current fitness
     fitness_improvement_ratio::Float64
-    num_fevals::Int64     # number of fitness evaluations so far
+    num_fevals::Int     # number of fitness evaluations so far
     timestamp::Float64    # when archived
 end
 

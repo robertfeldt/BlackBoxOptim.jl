@@ -39,7 +39,7 @@ for run in 1:num_runs_per_dim
               end
 
               for mu in mus
-                if typeof(mu) != Int64
+                if typeof(mu) != Int
                   mu = int(mu * l)
                 end
                 if mu < l

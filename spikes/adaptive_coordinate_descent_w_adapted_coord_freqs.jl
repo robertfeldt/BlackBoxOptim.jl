@@ -202,7 +202,7 @@ type AdaptiveEncoding
   diagD
   ps
   iter
-  AdaptiveEncoding(mu::Int64, P::Int64, B::Matrix{Float64}, population = randn(P, mu)) = begin
+  AdaptiveEncoding(mu::Int, P::Int, B::Matrix{Float64}, population = randn(P, mu)) = begin
     # We assume B is orthogonal!
     weights = ones(mu) / mu # Can also try non-uniform weights here...
     new(mu, P, B, B, B',
@@ -222,7 +222,7 @@ type AdaptiveEncoding
       0  # iter
     )
   end
-  AdaptiveEncoding(mu::Int64, P::Int64) = begin
+  AdaptiveEncoding(mu::Int, P::Int) = begin
     AdaptiveEncoding(mu, P, generate_random_orthogonal_transformation(P))
   end
 end
