@@ -12,7 +12,7 @@ end
 function count_events_per_bin(delta, sorteddata)
   minv = sorteddata[1]
   numbins = floor(Int, (sorteddata[end] - minv) / delta) + 1
-  counts = zeros(Int64, numbins)
+  counts = zeros(Int, numbins)
 
   current_bin = 1
   next_bin_start = minv + delta

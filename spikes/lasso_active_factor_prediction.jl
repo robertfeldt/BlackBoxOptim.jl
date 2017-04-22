@@ -41,7 +41,7 @@ end
 # Count how many times each factor was found by the lasso.
 function most_active_factors_from_lasso(xs, y; alpha = 1.0)
   lasso_factors = active_factors_from_lasso(xs, y; alpha = alpha)
-  factor_counts = Dict{Int64, Int64}()
+  factor_counts = Dict{Int, Int}()
   for i in 1:length(lasso_factors)
     factors = map((t) -> t[2], lasso_factors[i])
     for f in factors
@@ -70,7 +70,7 @@ function eval_if_lasso_finds_active_factors(N, K, S, reps = 100;
 
   # We want to count how many times the predicted factors (ranked based on how
   # often they were in the lasso factor set) are among the actually active factors.
-  factor_found_counts = Dict{Int64, Int64}()
+  factor_found_counts = Dict{Int, Int}()
 
   for rep in 1:reps
     # Now lets sample

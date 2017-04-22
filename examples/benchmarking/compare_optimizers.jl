@@ -64,7 +64,7 @@ function main(args)
         help = "name of optimizer or optimizer set"
 
       "--numreps", "-n"
-        arg_type = Int64
+        arg_type = Int
         default = 10
         help = "number of repetitions per problem and optimizer"
 

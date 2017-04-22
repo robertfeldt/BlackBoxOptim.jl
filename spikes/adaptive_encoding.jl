@@ -2,7 +2,7 @@ abstract CoordinateTransform
 
 # Based on the pseudo-code on page 156 in Loschchilov's PhD Thesis from 2013.
 type AdaptiveEncoding <: CoordinateTransform
-  n::Int64
+  n::Int
   sqrtn::Float64
   initialized::Bool
   c_p::Float64

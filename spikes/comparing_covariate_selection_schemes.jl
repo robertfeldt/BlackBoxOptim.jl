@@ -12,7 +12,7 @@ function sphere(x)
 end
 
 type SparseShiftedProblem
-  active_factors::Array{Int64, 1}
+  active_factors::Array{Int, 1}
   shift::Array{Float64, 2}
   func::Function
 

@@ -124,7 +124,7 @@ end
     * path discount
     * current Z scale
 """
-function calculate_evol_path_params(n::Int64, u::Vector{Float64})
+function calculate_evol_path_params(n::Int, u::Vector{Float64})
   lambda = length(u)
   mu = 1/sum(i -> (u[i]+1/lambda)^2, 1:(lambda÷2))
   c = (mu + 2.0)/(sqrt(n)*(n+mu+5.0))

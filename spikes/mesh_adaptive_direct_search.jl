@@ -1,11 +1,11 @@
 abstract MeshAdaptiveDirectSearch
 
 type LTMADS <: MeshAdaptiveDirectSearch
-  n::Int64
-  D::Array{Int64,2}
+  n::Int
+  D::Array{Int,2}
   tau::Float64
-  wminus::Int64
-  wplus::Int64
+  wminus::Int
+  wplus::Int
   delta_m::Float64
   delta_p::Float64
   directionGenerator
@@ -40,10 +40,10 @@ end
 
 # From box on page 203 in Audet2006:
 type LTMADSDirectionGenerator
-  cache::Dict{Int64, Array{Int64, 1}}  # Cache of previous directions used
+  cache::Dict{Int, Array{Int, 1}}  # Cache of previous directions used
 
   LTMADSDirectionGenerator() = begin
-    new(Dict{Int64, Array{Int64, 1}}())
+    new(Dict{Int, Array{Int, 1}}())
   end
 end
 
