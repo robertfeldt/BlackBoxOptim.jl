@@ -42,6 +42,6 @@ end
 penalized_points15(x) = points15(x) + penalty(x, (0.0, 1.0))
 
 # Run XNES
-#best, fitness = bboptimize(penalized_points15; search_range = (0.0, 1.0), dimensions = 45,
-#  max_time = MaxMinutes * 60, method = :xnes)
-#println("xNES points15 fitness = ", points15(best))
+best, fitness = bboptimize(penalized_points15; SearchRange = (0.0, 1.0), NumDimensions = Dims,
+  MaxTime = MaxMinutes * 60, Method = :xnes)
+println("xNES points15 fitness = ", points15(best))
