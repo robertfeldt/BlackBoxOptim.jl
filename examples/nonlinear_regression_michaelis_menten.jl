@@ -26,7 +26,6 @@ MicMenRate = MicMenData[:, 2];
 function mic_men_fitness(params)
     Vm, K = params
     yhat = Float64[michaelis_menten_model(c, Vm, K) for c in MicMenConcentration]
-    #sum((MicMenRate .- yhat).^2)
     sumabs2(MicMenRate .- yhat)
 end
 
