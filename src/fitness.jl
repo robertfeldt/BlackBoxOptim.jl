@@ -71,7 +71,7 @@ end
 worst_fitness(fs::FitnessScheme) = is_minimizing(fs) ? Inf : (-Inf)
 best_fitness(fs::FitnessScheme) = -worst_fitness(fs)
 
-hat_compare(a1::Number, a2::Number) = (a1 < a2) ? -1 : ((a1 > a2) ? 1 : 0)
+hat_compare(a1::Number, a2::Number) = (a1 < a2) ? -1 : ((a1 > a2) ? 1 : (isnan(a1) ? (isnan(a2) ? 0 : 1) : (isnan(a2) ? -1 : 0)))
 
 """
   Check whether `f1` or `f2` fitness is better.
