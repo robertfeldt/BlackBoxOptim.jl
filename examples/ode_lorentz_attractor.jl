@@ -33,7 +33,7 @@ rho   = 28.0
 beta  = 8.0/3.0
 real_params = [sigma, rho, beta]
 
-# "Play" and ODE from a starting point and into the future given a time interval.
+# "Play" an ODE from a starting point and into the future given a sequence of time steps.
 function calc_state_vectors(params::Vector{Float64}, odefunc::Function, 
     startx::Vector{Float64}, times::Vector{Float64}; states = nothing)
 
