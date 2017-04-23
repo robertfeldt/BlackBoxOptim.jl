@@ -108,6 +108,11 @@ res1 = bboptimize(params -> lorentz_fitness(params, origstates1, times1);
 res2 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015); 
     SearchRange = Xiang2015Bounds, MaxSteps = 11e3) # They allow 12k fitness evals for 3-param estimation
 
+# But lets also try with less tight bounds
+LooserBounds = Tuple{Float64, Float64}[(0, 22), (0, 60), (1, 6)]
+res3 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015); 
+    SearchRange = LooserBounds, MaxSteps = 11e3) # They allow 12k fitness evals for 3-param estimation
+
 println("Results on the long time sequence from Paulo Marques:")
 estfitness = lorentz_fitness(best_candidate(res1), origstates, t)
 @show (estfitness, best_candidate(res1), best_fitness(res1))
@@ -117,5 +122,11 @@ origfitness = lorentz_fitness(real_params, origstates, t)
 println("Results on the short time sequence used in [Xiang2015] paper:")
 estfitness = lorentz_fitness(best_candidate(res2), origstates_Xiang2015, t_Xiang2015)
 @show (estfitness, best_candidate(res2), best_fitness(res2))
+origfitness = lorentz_fitness(real_params, origstates_Xiang2015, t_Xiang2015)
+@show (origfitness, real_params)
+
+println("Results on the short time sequence used in [Xiang2015] paper, but with looser bounds:")
+estfitness = lorentz_fitness(best_candidate(res3), origstates_Xiang2015, t_Xiang2015)
+@show (estfitness, best_candidate(res3), best_fitness(res3))
 origfitness = lorentz_fitness(real_params, origstates_Xiang2015, t_Xiang2015)
 @show (origfitness, real_params)
