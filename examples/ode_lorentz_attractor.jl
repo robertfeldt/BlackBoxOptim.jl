@@ -53,9 +53,9 @@ function calc_state_vectors(params::Vector{Float64}, odefunc::Function,
     states[:, 1] = startx
     tprev = times[1]
     for i in 2:numsamples
-        derivatives = odefunc(params, states[:, (i-1)])
-        tnow = times[i]
-        states[:, i] = states[:, (i-1)] .+ derivatives * (tnow - tprev)
+        @inbounds derivatives = odefunc(params, states[:, (i-1)])
+        @inbounds tnow = times[i]
+        @inbounds states[:, i] = states[:, (i-1)] .+ derivatives * (tnow - tprev)
         tprev = tnow
     end
 
