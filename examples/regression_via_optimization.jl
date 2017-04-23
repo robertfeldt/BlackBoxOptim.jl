@@ -17,10 +17,8 @@
 # We get different types of regression depending on which objective function
 # we select. Common to many of them is that they first calculate the deviances
 # between the model and the actual values the model should predict:
-function discrepancies(beta, x, y)
-  beta0 = beta[1]
-  ncols = size(x, 2)
-  y - ( (ones(1, ncols) * beta0) .+ sum(beta[2:end] .* x, 1) )
+function discrepancies(betas, x, y)
+  y' .- ( betas[1] + sum(broadcast(*, betas[2:end], x), 1) )
 end
 
 # Given this setup we can now create an objective function for
@@ -67,34 +65,37 @@ y1 = m1(x1)
 # a min value of -5.0 and a max value of 5.0, and the search is for 4
 # coefficients, one intercept and three for each of the values of x):
 using BlackBoxOptim
-ols_bestfit, ols_error = bboptimize((betas) -> ols_regression_objective(betas', x1, y1),
-  (-10.0, 10.0); dimensions = 4, iterations = 2e4)
+olsresult = bboptimize(b -> ols_regression_objective(b, x1, y1); 
+  SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2e4)
+@show (best_fitness(olsresult), best_candidate(olsresult))
 
 # But the really nice thing is that we can easily consider other objectives such as the LAD:
-lad_bestfit, lad_error = bboptimize((betas) -> lad_regression_objective(betas', x1, y1),
-  (-10.0, 10.0); dimensions = 4, iterations = 2e4)
+ladresult = bboptimize(b -> lad_regression_objective(b, x1, y1); 
+  SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2e4)
+@show (best_fitness(ladresult), best_candidate(ladresult))
 
 # For regularized regression we can optimize for different values of lambda so
 # create a wrapper function that handles this:
 function regularized_opt(lambda, func, x, y, dims, its = 2e4)
-  bboptimize((betas) -> func(lambda, betas', x, y),
-    (-10.0, 10.0); dimensions = dims, iterations = its)
+  bboptimize((b) -> func(lambda, b, x, y);
+    SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2e4)
 end
 
-lasso_bestfit1, lasso_error1 = regularized_opt(1, lasso_regression_objective, x1, y1, 4)
-lasso_bestfit2, lasso_error2 = regularized_opt(2, lasso_regression_objective, x1, y1, 4)
-lasso_bestfit3, lasso_error3 = regularized_opt(3, lasso_regression_objective, x1, y1, 4)
+lassores1 = regularized_opt(1, lasso_regression_objective, x1, y1, 4)
+lassores2 = regularized_opt(2, lasso_regression_objective, x1, y1, 4)
+lassores3 = regularized_opt(3, lasso_regression_objective, x1, y1, 4)
 
-ridge_bestfit1, ridge_error1 = regularized_opt(1, ridge_regression_objective, x1, y1, 4)
-ridge_bestfit2, ridge_error2 = regularized_opt(2, ridge_regression_objective, x1, y1, 4)
-ridge_bestfit3, ridge_error3 = regularized_opt(3, ridge_regression_objective, x1, y1, 4)
+ridgeres1 = regularized_opt(1, ridge_regression_objective, x1, y1, 4)
+ridgeres2 = regularized_opt(2, ridge_regression_objective, x1, y1, 4)
+ridgeres3 = regularized_opt(3, ridge_regression_objective, x1, y1, 4)
 
 # Now lets create some support functions for printing models nicely.
 linear_terms(num) = [@sprintf(" * X%d", i) for i in 1:num]
 squared_terms(num) = [@sprintf(" * X%d^2", i) for i in 1:num]
 linsq_terms(num) = vcat(linear_terms(num), squared_terms(num))
 
-function sprint_predicted_model(bestfit, terms = nothing, skipIfLower = 1e-5)
+function sprint_predicted_model(fitresult, terms = nothing, skipIfLower = 1e-5)
+  bestfit = best_candidate(fitresult)
   if terms == nothing
     terms = linear_terms(length(bestfit)-1)
   end
@@ -143,40 +144,40 @@ x2m[5,:] = x2[2,:].^2
 x2m[6,:] = x2[3,:].^2
 
 # With this we can fit models:
-m2_ols_bestfit, m2_ols_error = bboptimize((betas) -> ols_regression_objective(betas', x2m, y2),
-  (-10.0, 10.0); dimensions = 1+3+3, iterations = 5e4)
-m2_lad_bestfit, m2_lad_error = bboptimize((betas) -> lad_regression_objective(betas', x2m, y2),
-  (-10.0, 10.0); dimensions = 1+3+3, iterations = 5e4)
-m2_lasso_bestfit1, m2_lasso_error1 = regularized_opt(1, lasso_regression_objective, x2m, y2, 7, 5e4)
-m2_lasso_bestfit2, m2_lasso_error2 = regularized_opt(2, lasso_regression_objective, x2m, y2, 7, 5e4)
-m2_lasso_bestfit3, m2_lasso_error3 = regularized_opt(3, lasso_regression_objective, x2m, y2, 7, 5e4)
-m2_ridge_bestfit1, m2_ridge_error1 = regularized_opt(1, ridge_regression_objective, x2m, y2, 7, 5e4)
-m2_ridge_bestfit2, m2_ridge_error2 = regularized_opt(2, ridge_regression_objective, x2m, y2, 7, 5e4)
-m2_ridge_bestfit3, m2_ridge_error3 = regularized_opt(3, ridge_regression_objective, x2m, y2, 7, 5e4)
+#m2_ols_bestfit, m2_ols_error = bboptimize((betas) -> ols_regression_objective(betas', x2m, y2),
+#  (-10.0, 10.0); dimensions = 1+3+3, iterations = 5e4)
+#m2_lad_bestfit, m2_lad_error = bboptimize((betas) -> lad_regression_objective(betas', x2m, y2),
+#  (-10.0, 10.0); dimensions = 1+3+3, iterations = 5e4)
+#m2_lasso_bestfit1, m2_lasso_error1 = regularized_opt(1, lasso_regression_objective, x2m, y2, 7, 5e4)
+#m2_lasso_bestfit2, m2_lasso_error2 = regularized_opt(2, lasso_regression_objective, x2m, y2, 7, 5e4)
+#m2_lasso_bestfit3, m2_lasso_error3 = regularized_opt(3, lasso_regression_objective, x2m, y2, 7, 5e4)
+#m2_ridge_bestfit1, m2_ridge_error1 = regularized_opt(1, ridge_regression_objective, x2m, y2, 7, 5e4)
+#m2_ridge_bestfit2, m2_ridge_error2 = regularized_opt(2, ridge_regression_objective, x2m, y2, 7, 5e4)
+#m2_ridge_bestfit3, m2_ridge_error3 = regularized_opt(3, ridge_regression_objective, x2m, y2, 7, 5e4)
 
 # And now lets print our models nicely so user can see the results...
 
 println("Model1 = 1.000 * X1 + 2.000 * X2 - 1.000 * X3")
-println("OLS best fit: ", sprint_predicted_model(ols_bestfit))
-println("LAD best fit: ", sprint_predicted_model(lad_bestfit))
-println("LASSO best fit, lambda = 1: ", sprint_predicted_model(lasso_bestfit1))
-println("LASSO best fit, lambda = 2: ", sprint_predicted_model(lasso_bestfit2))
-println("LASSO best fit, lambda = 3: ", sprint_predicted_model(lasso_bestfit3))
-println("Ridge best fit, lambda = 1: ", sprint_predicted_model(ridge_bestfit1))
-println("Ridge best fit, lambda = 2: ", sprint_predicted_model(ridge_bestfit2))
-println("Ridge best fit, lambda = 3: ", sprint_predicted_model(ridge_bestfit3))
+println("OLS best fit: ", sprint_predicted_model(olsresult))
+println("LAD best fit: ", sprint_predicted_model(ladresult))
+println("LASSO best fit, lambda = 1: ", sprint_predicted_model(lassores1))
+println("LASSO best fit, lambda = 2: ", sprint_predicted_model(lassores2))
+println("LASSO best fit, lambda = 3: ", sprint_predicted_model(lassores3))
+println("Ridge best fit, lambda = 1: ", sprint_predicted_model(ridgeres1))
+println("Ridge best fit, lambda = 2: ", sprint_predicted_model(ridgeres2))
+println("Ridge best fit, lambda = 3: ", sprint_predicted_model(ridgeres3))
 
-terms = linsq_terms(3)
-println("")
-println("Model2 = 1.000 * X1 - 3.140 * X3 + 4.130 * X2^2 ")
-println("OLS best fit: ", sprint_predicted_model(m2_ols_bestfit, terms))
-println("LAD best fit: ", sprint_predicted_model(m2_lad_bestfit, terms))
-println("LASSO best fit, lambda = 1: ", sprint_predicted_model(m2_lasso_bestfit1, terms))
-println("LASSO best fit, lambda = 2: ", sprint_predicted_model(m2_lasso_bestfit2, terms))
-println("LASSO best fit, lambda = 3: ", sprint_predicted_model(m2_lasso_bestfit3, terms))
-println("Ridge best fit, lambda = 1: ", sprint_predicted_model(m2_ridge_bestfit1, terms))
-println("Ridge best fit, lambda = 2: ", sprint_predicted_model(m2_ridge_bestfit2, terms))
-println("Ridge best fit, lambda = 3: ", sprint_predicted_model(m2_ridge_bestfit3, terms))
+#terms = linsq_terms(3)
+#println("")
+#println("Model2 = 1.000 * X1 - 3.140 * X3 + 4.130 * X2^2 ")
+#println("OLS best fit: ", sprint_predicted_model(m2_ols_bestfit, terms))
+#println("LAD best fit: ", sprint_predicted_model(m2_lad_bestfit, terms))
+#println("LASSO best fit, lambda = 1: ", sprint_predicted_model(m2_lasso_bestfit1, terms))
+#println("LASSO best fit, lambda = 2: ", sprint_predicted_model(m2_lasso_bestfit2, terms))
+#println("LASSO best fit, lambda = 3: ", sprint_predicted_model(m2_lasso_bestfit3, terms))
+#println("Ridge best fit, lambda = 1: ", sprint_predicted_model(m2_ridge_bestfit1, terms))
+#println("Ridge best fit, lambda = 2: ", sprint_predicted_model(m2_ridge_bestfit2, terms))
+#println("Ridge best fit, lambda = 3: ", sprint_predicted_model(m2_ridge_bestfit3, terms))
 
 # Conclusion: With black-box optimization you can easily fit regression models
 # from very different paradigms without having to implement very much code.
