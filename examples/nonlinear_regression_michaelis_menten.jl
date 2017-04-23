@@ -35,7 +35,7 @@ result = bboptimize(mic_men_fitness;
 Vm, K = best_candidate(result)
 RSS = best_fitness(result)
 
-println("NLReg.jl uses specific MicMen object and fit method to finds:")
+println("NLReg.jl uses specific MicMen object and fit method to find:")
 println("Vm = 212.684, K = 0.0641212, RSS = 1195.45")
-println("\nUsing BlackBoxOpt.jl we find:")
+println("\nUsing BlackBoxOptim.jl we find:")
 println("Vm = $(Vm), K = $(K), RSS = $(RSS)")
