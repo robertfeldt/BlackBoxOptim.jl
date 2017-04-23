@@ -17,11 +17,19 @@ function lorentz_equations(params::Vector{Float64}, r::Vector{Float64})
     Float64[dx_dt, dy_dt, dz_dt]
 end
 
-# Define time vector and interval grid
+# Define time vector and interval grid.
 dt = 0.001
 tf = 100.0
 tinterval = 0:dt:tf
 t  = collect(tinterval)
+
+# But in order to compare to [Xiang2015] paper we use their choice instead:
+h = 0.01
+M = 300
+tstart = 0.0
+tstop = tstart + M * h
+tinterval_Xiang2015 = 0:h:tstop
+t_Xiang2015 = collect(tinterval_Xiang2015)
 
 # Initial position in space
 r0 = [0.1; 0.0; 0.0]
@@ -67,6 +75,7 @@ end
 # Calculate the actual/original state vectors that we will use for parameter
 # estimation:
 origstates = calc_state_vectors(real_params, lorentz_equations, r0, t)
+origstates_Xiang2015 = calc_state_vectors(real_params, lorentz_equations, r0, t_Xiang2015)
 
 function subsample(origstates::Array{Float64, 2}, times::Vector{Float64}, lenratio = 0.25)
     @assert size(origstates, 2) == length(times)
@@ -91,12 +100,22 @@ end
 # But optimizing all states in each optimization step is too much so lets
 # sample a small subset and use for first opt iteration.
 origstates1, times1 = subsample(origstates, t, 0.04); # Sample only first 4%
+origstates1_Xiang2015, times1_Xiang2015 = subsample(origstates_Xiang2015, t_Xiang2015, 1.00);
 
 res1 = bboptimize(params -> lorentz_fitness(params, origstates1, times1); 
     SearchRange = Xiang2015Bounds, MaxSteps = 8e3)
 
+res2 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015); 
+    SearchRange = Xiang2015Bounds, MaxSteps = 11e3) # They allow 12k fitness evals for 3-param estimation
+
+println("Results on the long time sequence from Paulo Marques:")
 estfitness = lorentz_fitness(best_candidate(res1), origstates, t)
 @show (estfitness, best_candidate(res1), best_fitness(res1))
-
 origfitness = lorentz_fitness(real_params, origstates, t)
+@show (origfitness, real_params)
+
+println("Results on the short time sequence used in [Xiang2015] paper:")
+estfitness = lorentz_fitness(best_candidate(res2), origstates_Xiang2015, t_Xiang2015)
+@show (estfitness, best_candidate(res2), best_fitness(res2))
+origfitness = lorentz_fitness(real_params, origstates_Xiang2015, t_Xiang2015)
 @show (origfitness, real_params)
