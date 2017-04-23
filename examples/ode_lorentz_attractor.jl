@@ -93,9 +93,10 @@ end
 origstates1, times1 = subsample(origstates, t, 0.04); # Sample only first 4%
 
 res1 = bboptimize(params -> lorentz_fitness(params, origstates1, times1); 
-    SearchRange = Xiang2015Bounds, MaxSteps = 5e3)
+    SearchRange = Xiang2015Bounds, MaxSteps = 8e3)
 
-@show (best_fitness(res1), best_candidate(res1))
+estfitness = lorentz_fitness(best_candidate(res1), origstates, t)
+@show (estfitness, best_candidate(res1), best_fitness(res1))
 
-f = lorentz_fitness(real_params, origstates, t)
-@show (f, real_params)
+origfitness = lorentz_fitness(real_params, origstates, t)
+@show (origfitness, real_params)
