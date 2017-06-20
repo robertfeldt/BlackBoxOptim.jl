@@ -54,7 +54,7 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
       moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
       zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
       zeros(d, lambda),
-      Candidate{F}[Candidate{F}(Array(Float64, d), i) for i in 1:lambda],
+      Candidate{F}[Candidate{F}(Array{Float64}(d), i) for i in 1:lambda],
       # temporaries
       zeros(d), zeros(d), zeros(d),
       zeros(d, d),

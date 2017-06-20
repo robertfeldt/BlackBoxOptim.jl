@@ -3,7 +3,7 @@
 # Base functions.
 #####################################################################
 function sphere(x)
-  sumabs2(x)
+  sum(abs2, x)
 end
 
 """
@@ -71,12 +71,12 @@ function griewank(x)
 end
 
 function schwefel2_22(x)
-  ax = abs(x)
+  ax = abs.(x)
   sum(ax) + prod(ax)
 end
 
 function schwefel2_21(x)
-  maximum(abs(x))
+  maximum(abs.(x))
 end
 
 # I'm unsure about this one since it does not return the expected minima at
@@ -240,7 +240,7 @@ end
 """
 function deceptive_cuccu2011(l, w)
   (x) -> begin
-    absx = abs(x)
+    absx = abs.(x)
     sumabsx = sum(absx)
     if sumabsx <= 1
       return sum(x.^2)
@@ -263,5 +263,5 @@ deceptive_cuccu2011_30_2 = deceptive_cuccu2011(30, 2)
  the original paper used this as a 4-dimensional problem but here it is generalized.
 """
 function energy_tsallis1996(x::Array)
-  return sumabs2(x.^2 - 8.0) + 5.0*sum(x) + 57.3276
+  return sum(abs2, x.^2 - 8.0) + 5.0*sum(x) + 57.3276
 end

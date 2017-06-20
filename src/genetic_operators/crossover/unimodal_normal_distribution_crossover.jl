@@ -29,7 +29,7 @@ function apply!{NP}(xover::UnimodalNormalDistributionCrossover{NP}, target::Indi
     parents = pop[:, parentIndices]
     center = mean(parents, 2)
     broadcast!(-, parents, parents, center)
-    sd = mean(map(sqrt, sumabs2(parents, 2)))
+    sd = mean(map(sqrt, sum(abs2, parents, 2)))
     svdf = svdfact(parents)
     svals = svdf.S / norm(svdf.S)
     @inbounds for (i,s) in enumerate(svals)

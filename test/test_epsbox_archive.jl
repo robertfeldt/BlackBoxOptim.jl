@@ -128,7 +128,7 @@
     end
 
     @testset "shaffer1() Pareto frontier" begin
-            schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+            schaffer1(x) = (sum(abs2, x), sum(abs2, x .- 2.0))
             scheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=true)
             a = EpsBoxArchive(scheme)
 

@@ -1,5 +1,5 @@
 @testset "Testing methods diagnostic tracing" begin
-        rosenbrock(x) = 100.0*sumabs2(x[2:end] - x[1:end-1].^2) + sumabs2(x[1:end-1]-1.0)
+        rosenbrock(x) = 100.0*sum(abs2, x[2:end] - x[1:end-1].^2) + sum(abs2, x[1:end-1]-1.0)
         schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
 
         @testset "trace_state()" begin

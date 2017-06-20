@@ -147,7 +147,7 @@ const CEC09_Unconstrained_Set = Dict{Int,FunctionBasedProblemFamily}(
                                     symmetric_search_space(2, (0.0, 1.0)))
 )
 
-schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+schaffer1(x) = (sum(abs2, x), sum(abs2, x .- 2.0))
 schaffer1_PF{NP}(t, ::Type{Val{NP}}) = (NP*t[1]^2, NP*(2-t[1])^2)
 
 const Schaffer1Family = FunctionBasedProblemFamily(schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing=true),

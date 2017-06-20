@@ -1,5 +1,5 @@
 using BlackBoxOptim
-using BaseTestNext
+using Base.Test
 using Compat
 
 const NumTestRepetitions = 100

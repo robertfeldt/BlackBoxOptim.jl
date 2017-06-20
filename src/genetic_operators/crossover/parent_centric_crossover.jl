@@ -35,7 +35,7 @@ function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targe
     end
     other_parents_centered = tmp_mtx *
             view(parents_centered, :, 2:length(parentIndices))
-    sd = mean(map(sqrt, sumabs2(other_parents_centered, 2)))
+    sd = mean(map(sqrt, sum(abs2, other_parents_centered, 2)))
     if sd > 1E-8
         svdf = svdfact(other_parents_centered)
         svals_norm = norm(svdf.S)

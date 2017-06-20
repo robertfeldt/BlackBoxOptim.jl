@@ -1,5 +1,4 @@
-julia 0.4
-BaseTestNext
+julia 0.6
 StatsBase
 Distributions
 Compat 0.7.9
