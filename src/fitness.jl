@@ -9,7 +9,7 @@
   `FitnessScheme` could also be used as a function that defines the fitness
   ordering, i.e. `fs(x, y) == true` iff fitness `x` is better than `y`.
 """
-abstract FitnessScheme{F}
+abstract type FitnessScheme{F} end
 
 """
   `fitness_type(fs::FitnessScheme)`
@@ -37,7 +37,7 @@ Base.convert{F}(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) = fit
   The default scale used is the aggregate of the fitness components.
 """
 # FIXME
-abstract RatioFitnessScheme{F} <: FitnessScheme{F}
+abstract type RatioFitnessScheme{F} <: FitnessScheme{F} end
 
 """
   `Float64`-valued scalar fitness scheme.

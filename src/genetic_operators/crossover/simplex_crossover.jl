@@ -10,8 +10,8 @@
 immutable SimplexCrossover{NP} <: CrossoverOperator{NP,1}
     ϵ::Float64      # inflation rate
 
-    SimplexCrossover(ϵ::Number = Math.sqrt(NP + 1)) = new(ϵ)
-    SimplexCrossover(params::Parameters) = new(params[:SPX_ϵ])
+    SimplexCrossover{NP}(ϵ::Number = Math.sqrt(NP + 1)) where NP = new(ϵ)
+    SimplexCrossover{NP}(params::Parameters) where NP = new(params[:SPX_ϵ])
 end
 
 const SPX_DefaultOptions = ParamsDict(

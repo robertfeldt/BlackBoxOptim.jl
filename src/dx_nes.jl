@@ -30,11 +30,11 @@ type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   tmp_Zu::Matrix{Float64}
   tmp_sBZ::Matrix{Float64}
 
-  function DXNESOpt(embed::E; lambda::Int = 0,
+  function DXNESOpt{F,E}(embed::E; lambda::Int = 0,
                    mu_learnrate::Float64 = 1.0,
                    ini_x = nothing, ini_sigma::Float64 = 1.0,
                    ini_lnB = nothing,
-                   max_sigma::Float64 = 1.0E+10)
+                   max_sigma::Float64 = 1.0E+10) where {F,E}
     iseven(lambda) || throw(ArgumentError("lambda needs to be even"))
     d = numdims(search_space(embed))
     if lambda == 0

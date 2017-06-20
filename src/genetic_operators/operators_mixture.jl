@@ -4,7 +4,7 @@
 """
 type FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operations
-    weights::WeightVec{Float64}        # fixed weights
+    weights::Weights{Float64}        # fixed weights
 
     function FixedGeneticOperatorsMixture{GO<:GeneticOperator}(
         operators::AbstractVector{GO},

@@ -7,7 +7,7 @@ type RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
   best_fitness          # FIXME fitness type should be known
   best::Individual
 
-  RandomSearcher(searchSpace::S) = new("Random Search", searchSpace, nothing)
+  RandomSearcher{S}(searchSpace::S) where S = new("Random Search", searchSpace, nothing)
 end
 
 RandomSearcher{S<:SearchSpace}(searchSpace::S) = RandomSearcher{S}(searchSpace)

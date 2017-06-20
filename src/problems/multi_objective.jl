@@ -130,7 +130,7 @@ end
    Parameterized by t[1]=f[1] and t[2]=f[2].
 """
 function CEC09_UP8_PF{NP}(t::Vector{Float64}, ::Type{Val{NP}})
-    d=sumabs2(t)
+    d = sum(abs2, t)
     (t[1], t[2], d <= 1.0 ? (1.0 - d)^(1/3) : NaN)
 end
 

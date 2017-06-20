@@ -8,12 +8,12 @@ immutable ParentCentricCrossover{NP} <: CrossoverOperator{NP,1}
 	ζ::Float64 # sd for the orthogonal directions defined by 2nd,3rd etc parents
     η::Float64 # sd for the direction of the 1st parent
 
-    function ParentCentricCrossover(ζ::Number, η::Number)
+    function ParentCentricCrossover{NP}(ζ::Number, η::Number) where NP
         ζ > 0 || throw(ArgumentError("ζ must be positive"))
         η > 0 || throw(ArgumentError("η must be non-negative"))
         new(ζ, η)
     end
-    ParentCentricCrossover(params::Parameters) = new(params[:PCX_ζ], params[:PCX_η])
+    ParentCentricCrossover{NP}(params::Parameters) where NP = new(params[:PCX_ζ], params[:PCX_η])
 end
 
 const PCX_DefaultOptions = ParamsDict(

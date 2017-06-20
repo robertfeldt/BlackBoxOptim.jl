@@ -4,18 +4,18 @@
   The base abstract class has very few restrictions
   and can allow varying number of dimensions etc.
 """
-abstract SearchSpace
+abstract type SearchSpace end
 
 """
   `SearchSpace` with a fixed finite number of dimensions.
   Applicable to the vast majority of problems.
 """
-abstract FixedDimensionSearchSpace <: SearchSpace
+abstract type FixedDimensionSearchSpace <: SearchSpace end
 
 """
   Fixed-dimensional space, each dimension has a continuous range of valid values.
 """
-abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
+abstract type ContinuousSearchSpace <: FixedDimensionSearchSpace end
 
 """
     The point of the `SearchSpace`.
@@ -23,19 +23,19 @@ abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
     The abstract type. It allows different actual implementations to be used,
     e.g `Vector` or `SubArray`.
 """
-typealias AbstractIndividual AbstractVector{Float64}
+const AbstractIndividual = AbstractVector{Float64}
 
 """
     The point of the `SearchSpace`.
 
     The concrete type that could be used for storage.
 """
-typealias Individual Vector{Float64}
+const Individual = Vector{Float64}
 
 """
   The valid range of values for a specific dimension in a `SearchSpace`.
 """
-typealias ParamBounds Tuple{Float64,Float64}
+const ParamBounds = Tuple{Float64,Float64}
 
 """
   Get the range of valid values for a specific dimension.

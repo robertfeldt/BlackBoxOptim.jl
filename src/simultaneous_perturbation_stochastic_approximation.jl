@@ -1,7 +1,7 @@
 """
   `AskTellOptimizer` that utilizes randomization to generate the candidates.
 """
-abstract StochasticApproximationOptimizer <: AskTellOptimizer
+abstract type StochasticApproximationOptimizer <: AskTellOptimizer end
 
 const SPSADefaultParameters = ParamsDict(
   :Alpha => 0.602,  # The optimal value is 1.0 but values down to 0.602 often can give faster convergence
@@ -28,7 +28,7 @@ function SimultaneousPerturbationSA2{E<:EmbeddingOperator}(problem::Optimization
 end
 
 # by default use RandomBound embedder
-SimultaneousPerturbationSA2(problem::OptimizationProblem, parameters::Parameters) = SimultaneousPerturbationSA2(problem, RandomBound(search_space(problem)), parameters)
+SimultaneousPerturbationSA2{E}(problem::OptimizationProblem, parameters::Parameters) where E = SimultaneousPerturbationSA2(problem, RandomBound(search_space(problem)), parameters)
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 

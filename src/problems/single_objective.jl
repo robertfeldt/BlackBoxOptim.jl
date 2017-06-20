@@ -51,7 +51,7 @@ const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
 
   The concrete derived types must implement a `sub_problem()` method.
 """
-abstract TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS}
+abstract type TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS} end
 
 search_space(tp::TransformedProblem) = search_space(sub_problem(tp))
 is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(tp))
@@ -69,8 +69,8 @@ type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
   funcshift::Float64
   subp::OptimizationProblem{FS}
 
-  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem{FS};
-    xshift = false, funcshift = 0.0) = begin
+  ShiftedAndBiasedProblem{FS}(sub_problem::OptimizationProblem{FS};
+    xshift = false, funcshift = 0.0) where FS = begin
     xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
     new(xshift[:], funcshift, sub_problem)
   end

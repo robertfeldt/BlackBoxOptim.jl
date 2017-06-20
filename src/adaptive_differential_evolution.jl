@@ -58,9 +58,9 @@ end
 type AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   params::AdaptiveDiffEvoParameters
 
-  AdaptiveDiffEvoRandBin(params::AdaptiveDiffEvoParameters) = new(params)
+  AdaptiveDiffEvoRandBin{N}(params::AdaptiveDiffEvoParameters) where N = new(params)
 
-  AdaptiveDiffEvoRandBin(options::Parameters) = new(AdaptiveDiffEvoParameters(options))
+  AdaptiveDiffEvoRandBin{N}(options::Parameters) where N = new(AdaptiveDiffEvoParameters(options))
 end
 
 crossover_parameters(xover::AdaptiveDiffEvoRandBin, pop::Population, target_index) =
@@ -70,8 +70,8 @@ adjust!{F}(xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
                  new_fitness::F, old_fitness::F, is_improved::Bool) =
     adjust!(xover.params, candi_index, is_improved)
 
-typealias AdaptiveDiffEvoRandBin1 AdaptiveDiffEvoRandBin{3}
-typealias AdaptiveDiffEvoRandBin2 AdaptiveDiffEvoRandBin{5}
+const AdaptiveDiffEvoRandBin1 = AdaptiveDiffEvoRandBin{3}
+const AdaptiveDiffEvoRandBin2 = AdaptiveDiffEvoRandBin{5}
 
 function adaptive_diffevo(problem::OptimizationProblem,
                  options::Parameters, name::String,

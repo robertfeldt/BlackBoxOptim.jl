@@ -9,8 +9,8 @@ immutable FrontierIndividual{F} <: ArchivedIndividual{F}
     n_restarts::Int                     # the number of method restarts so far
     timestamp::Float64                  # when archived
 
-    FrontierIndividual(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) =
+    FrontierIndividual{F}(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
         new(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
     @compat (::Type{FrontierIndividual}){F}(fitness::F,
@@ -23,7 +23,7 @@ tag(indi::FrontierIndividual) = indi.tag
 """
     Individual stored in `EpsBoxArchive`.
 """
-typealias EpsBoxFrontierIndividual{N,F<:Number} FrontierIndividual{IndexedTupleFitness{N,F}}
+EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
 
 @compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
                params, tag, num_fevals, n_restarts, timestamp=time()) =

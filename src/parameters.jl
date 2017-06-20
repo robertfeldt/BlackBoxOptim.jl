@@ -5,12 +5,12 @@
 type DictChain{K,V} <: Associative{K,V}
   dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
 
-  DictChain(dicts::Vector{Associative{K,V}}) = new(dicts)
+  DictChain{K,V}(dicts::Vector{Associative{K,V}}) where {K,V} = new(dicts)
 
   # empty dicts vector
-  DictChain() = new(Array(Associative{K,V}, 0))
+  DictChain{K,V}() where {K,V} = new(Array{Associative{K,V}}(0))
 
-  DictChain(dicts::Associative{K,V}...) = new(Associative{K,V}[dict for dict in dicts])
+  DictChain{K,V}(dicts::Associative{K,V}...) where {K,V} = new(Associative{K,V}[dict for dict in dicts])
 end
 
 # (Associative{K,V}...) ctor is not triggered, so here's 1-, 2- and 3-argument
@@ -100,13 +100,13 @@ end
 """
   The parameters storage type for `BlackBoxOptim`.
 """
-typealias Parameters Associative{Symbol,Any}
+const Parameters = Associative{Symbol,Any}
 
 """
   The default parameters storage in `BlackBoxOptim`.
 """
-typealias ParamsDict Dict{Symbol,Any}
-typealias ParamsDictChain DictChain{Symbol,Any}
+const ParamsDict = Dict{Symbol,Any}
+const ParamsDictChain = DictChain{Symbol,Any}
 
 """
   The default placeholder value for parameters argument.

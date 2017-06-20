@@ -5,13 +5,13 @@
 #
 
 """ A supertype for all generating set searcher-like algorithms. """
-abstract DirectSearcher <: SteppingOptimizer
+abstract type DirectSearcher <: SteppingOptimizer end
 
 """
   `DirectionGenerator` generates the search directions to use at each step of
   a GSS search.
 """
-abstract DirectionGenerator
+abstract type DirectionGenerator end
 
 immutable ConstantDirectionGen <: DirectionGenerator
   directions::Matrix{Float64}
@@ -80,7 +80,7 @@ function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Embedding
 end
 
 # by default use RandomBound embedder
-function GeneratingSetSearcher(problem::OptimizationProblem, parameters::Parameters)
+function GeneratingSetSearcher{V,D,E}(problem::OptimizationProblem, parameters::Parameters) where {V,D,E}
   params = chain(GSSDefaultParameters, parameters)
   GeneratingSetSearcher(ProblemEvaluator(problem),
                         get(params, :DirectionGenerator, compass_search_directions(numdims(problem))),

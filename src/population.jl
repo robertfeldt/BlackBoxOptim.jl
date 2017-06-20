@@ -2,19 +2,19 @@
   The base abstract type for the collection of candidate solutions
   in the population-based optimization methods.
 """
-abstract Population
+abstract type Population end
 """
   The base abstract types for population that also stores the candidates
   fitness.
 
   `F` is the fitness type.
 """
-abstract PopulationWithFitness{F} <: Population
+abstract type PopulationWithFitness{F} <: Population end
 
 """
   The simplest `Population` implementation -- a matrix of floats, each column is an individual.
 """
-typealias PopulationMatrix Matrix{Float64}
+const PopulationMatrix = Matrix{Float64}
 
 popsize(pop::PopulationMatrix) = size(pop, 2)
 numdims(pop::PopulationMatrix) = size(pop, 1)
@@ -39,7 +39,7 @@ type FitPopulation{F} <: PopulationWithFitness{F}
 
   candi_pool::Vector{Candidate{F}} # pool of reusable candidates
 
-  function FitPopulation(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F}; ntransient::Integer=0)
+  function FitPopulation{F}(individuals::PopulationMatrix, nafitness::F, fitness::Vector{F}; ntransient::Integer=0) where F
     popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
     new(individuals, nafitness, fitness, ntransient, Vector{Candidate{F}}())
   end

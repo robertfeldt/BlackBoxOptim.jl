@@ -1,35 +1,35 @@
 """
   Abstract genetic operator that transforms individuals in the population.
 """
-abstract GeneticOperator
+abstract type GeneticOperator end
 
 """
   Modifies (mutates) one individual.
 
   The concrete implementations must provide `apply!()` method.
 """
-abstract MutationOperator <: GeneticOperator
+abstract type MutationOperator <: GeneticOperator end
 
 """
   Modifies `NC` "children" by transferring some information from `NP` "parents".
 
   The concrete implementations must provide `apply!()` method.
 """
-abstract CrossoverOperator{NP,NC} <: GeneticOperator
+abstract type CrossoverOperator{NP,NC} <: GeneticOperator end
 
 """
   Embeds(projects) the individual into the search space.
 
   The concrete implementations must provide `apply!()` method.
 """
-abstract EmbeddingOperator <: GeneticOperator
+abstract type EmbeddingOperator <: GeneticOperator end
 
 """
   Selects the individuals from the population.
 
   The concrete implementations must provide `select()` method.
 """
-abstract IndividualsSelector
+abstract type IndividualsSelector end
 
 """
   `select(selector<:IndividualsSelector, population, numSamples::Int)`
@@ -91,7 +91,7 @@ function trace_state(io::IO, op::GeneticOperator, mode::Symbol) end
   A mixture of genetic operators,
   use `next()` to choose the next operator from the mixture.
 """
-abstract GeneticOperatorsMixture <: GeneticOperator
+abstract type GeneticOperatorsMixture <: GeneticOperator end
 
 include("operators_mixture.jl")
 

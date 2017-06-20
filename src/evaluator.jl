@@ -2,7 +2,7 @@
   The abstract base for types that manage the objective function evaluation.
   `P` is the optimization problem it is used for.
 """
-abstract Evaluator{P <: OptimizationProblem}
+abstract type Evaluator{P <: OptimizationProblem} end
 
 fitness_scheme(e::Evaluator) = fitness_scheme(problem(e))
 fitness_type(e::Evaluator) = fitness_type(fitness_scheme(e))

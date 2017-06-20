@@ -1,4 +1,4 @@
-abstract NaturalEvolutionStrategyOpt <: PopulationOptimizer
+abstract type NaturalEvolutionStrategyOpt <: PopulationOptimizer end
 
 """
   Separable Natural Evolution Strategy (sNES) optimizer.
@@ -18,11 +18,11 @@ type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   sortedUtilities::Vector{Float64}# the fitness shaping utility vector
   tmp_Utilities::Vector{Float64}   # the fitness shaping utility vector sorted by current population fitness
 
-  function SeparableNESOpt(embed::E;
+  function SeparableNESOpt{F,E}(embed::E;
     lambda::Int = 0,
     mu_learnrate::Float64 = 1.0,
     sigma_learnrate::Float64 = 0.0,
-    ini_x = nothing, max_sigma::Float64 = 1.0E+10)
+    ini_x = nothing, max_sigma::Float64 = 1.0E+10) where {F,E}
     d = numdims(search_space(embed))
 
     if lambda == 0
@@ -139,7 +139,7 @@ end
   ```
 where `B` is an exponential of some symmetric matrix `lnB`, `tr(lnB)==0.0`
 """
-abstract ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt
+abstract type ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt end
 
 function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Matrix)
   B = expm(exnes.ln_B)
@@ -231,10 +231,10 @@ type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   tmp_Zu::Matrix{Float64}
   tmp_sBZ::Matrix{Float64}
 
-  function XNESOpt(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
+  function XNESOpt{F,E}(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
                    sigma_learnrate = 0.0, B_learnrate::Float64 = 0.0,
                    ini_x = nothing, ini_sigma::Float64 = 1.0, ini_lnB = nothing,
-                   max_sigma::Float64 = 1.0E+10)
+                   max_sigma::Float64 = 1.0E+10) where {F,E}
     d = numdims(search_space(embed))
     if lambda == 0
       lambda = 4 + 3*floor(Int, log(d))
