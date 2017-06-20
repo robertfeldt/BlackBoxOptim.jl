@@ -2,7 +2,7 @@
 
 ss = symmetric_search_space(1, (0.0, 10.0))
 fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", MinimizingFitnessScheme, ss)
-fake_pop = collect(1.0:10.0)'
+fake_pop = convert(Array{Float64,2}, collect(1.0:10.0)')
 
 @testset "SimpleSelector" begin
     @test popsize(fake_pop) == 10
@@ -39,7 +39,7 @@ end
 
 @testset "Tournament" begin
         sel = BlackBoxOptim.TournamentSelector(MinimizingFitnessScheme, 3)
-        fake_pop = FitPopulation(collect(1.0:10.0)', NaN, collect(1.0:10.0))
+        fake_pop = FitPopulation(fake_pop, NaN, collect(1.0:10.0))
 
         @testset "tournament()" begin
                 for i in 1:NumTestRepetitions
