@@ -17,7 +17,7 @@
 end
 
 @testset "bboptimize() multi-objective methods smoketest" begin
-    schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+    schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
 
     for m in keys(BlackBoxOptim.MultiObjectiveMethods)
         @testset "$(m)" begin

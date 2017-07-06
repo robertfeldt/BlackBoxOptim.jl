@@ -12,7 +12,7 @@
 """
 function sample_unit_hypersphere(n, num = 1)
   X = randn(n, num)
-  sqrootsums = 1 ./ sqrt(sum( X.^2, 1 ))
+  sqrootsums = 1 ./ sqrt.(sum(abs2, X, 1))
   broadcast(*, sqrootsums, X)
 end
 

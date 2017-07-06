@@ -56,7 +56,7 @@ end
 
 @testset "Evaluator" begin
     # Set up a small example problem
-    f(x) = sumabs2(x)
+    f(x) = sum(abs2, x)
     p = minimization_problem(f, "", (-1.0, 1.0), 2)
     @testset "ProblemEvaluator" begin
         evaluator_tests(() -> BlackBoxOptim.ProblemEvaluator(p))

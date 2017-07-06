@@ -1,6 +1,6 @@
 @testset "Testing methods diagnostic tracing" begin
-        rosenbrock(x) = 100.0*sumabs2(x[2:end] - x[1:end-1].^2) + sumabs2(x[1:end-1]-1.0)
-        schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+        rosenbrock(x) = 100.0*sum(i -> abs2(x[i+1] - x[i]^2), 1:length(x)-1) + sum(i -> abs2(x[i] - 1.0), 1:length(x)-1)
+        schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
 
         @testset "trace_state()" begin
                 for mode in [:silent, :compact, :verbose]
