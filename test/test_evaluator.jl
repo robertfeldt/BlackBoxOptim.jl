@@ -32,7 +32,7 @@ function evaluator_tests(make_eval::Function)
     @testset "update_fitness!()" begin
         e = make_eval()
 
-        candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
+        candidates = [random_candidate(2, -1.0, 1.0) for i in 1:10]
         BlackBoxOptim.update_fitness!(e, candidates)
         @test BlackBoxOptim.num_evals(e) == length(candidates)
         @test all(c -> isfinite(c.fitness), candidates)
@@ -42,7 +42,7 @@ function evaluator_tests(make_eval::Function)
     @testset "rank_by_fitness!()" begin
         e = make_eval()
 
-        candidates = BlackBoxOptim.Candidate{Float64}[BlackBoxOptim.Candidate{Float64}(clamp(randn(2), -1.0, 1.0)) for i in 1:10]
+        candidates = [random_candidate(2, -1.0, 1.0) for i in 1:10]
         # partially evaluate fitness
         BlackBoxOptim.update_fitness!(e, candidates[1:5])
         @test BlackBoxOptim.num_evals(e) == 5
@@ -65,7 +65,7 @@ end
     @testset "rank_by_fitness!()" begin
         e = BlackBoxOptim.ProblemEvaluator(p)
 
-        candidates = [BlackBoxOptim.Candidate{Float64}(clamp!(randn(2), -1.0, 1.0)) for i in 1:10]
+        candidates = [random_candidate(2, -1.0, 1.0) for i in 1:10]
         # partially evaluate fitness
         BlackBoxOptim.update_fitness!(e, candidates[1:5])
         @test BlackBoxOptim.num_evals(e) == 5

@@ -32,7 +32,7 @@ SimultaneousPerturbationSA2(problem::OptimizationProblem, parameters::Parameters
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 
-sample_bernoulli_vector(n::Int) = 2.0 * round(rand(n)) - 1.0
+sample_bernoulli_vector(n::Int) = [2.0*round(rand()) - 1.0 for _ in 1:n]
 
 function ask(spsa::SimultaneousPerturbationSA2)
   delta = sample_bernoulli_vector(spsa.n)

@@ -89,7 +89,7 @@
             ss = RangePerDimSearchSpace(parambounds)
             @test mins(ss) == minbounds
             @test maxs(ss) == maxbounds
-            @test round(deltas(ss), 6) == round(ds, 6)
+            @test round.(deltas(ss), 6) == round.(ds, 6)
 
             # Now generate 100 individuals and make sure they are all within bounds
             inds = rand_individuals(ss, 100)
