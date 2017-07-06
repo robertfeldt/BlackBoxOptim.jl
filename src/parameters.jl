@@ -8,7 +8,7 @@ type DictChain{K,V} <: Associative{K,V}
   DictChain(dicts::Vector{Associative{K,V}}) = new(dicts)
 
   # empty dicts vector
-  DictChain() = new(Array(Associative{K,V}, 0))
+  DictChain() = new(Vector{Associative{K,V}}())
 
   DictChain(dicts::Associative{K,V}...) = new(Associative{K,V}[dict for dict in dicts])
 end
