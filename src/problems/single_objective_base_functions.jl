@@ -85,15 +85,17 @@ cigtab(x) = x[1]^2 + 1e8 * x[end]^2 + 1e4 * sum(abs2, view(x, 2:length(x)-1))
   Generic function to define `ShekelN` problems.
 """
 function shekel(x, a, c)
-  sum = 0.0
-  for i in 1:length(c)
-    den = 0.0
-    for j in 1:size(a, 2)
-      den += (x[j] - a[i,j])^2
+    @assert length(x) == size(a, 2)
+    @assert length(c) == size(a, 1)
+    sum = 0.0
+    @inbounds for i in eachindex(c)
+        den = 0.0
+        for j in 1:size(a, 2)
+            den += abs2(x[j] - a[i,j])
+        end
+        sum = sum - 1 / (den + c[i])
     end
-    sum = sum - 1 / (den + c[i])
-  end
-  return sum
+    return sum
 end
 
 # constants for `Shekel10`
@@ -133,15 +135,18 @@ shekel5(x) = shekel(x, Shekel5_A, Shekel5_C)
   Generic function for `Hartman N` problem family.
 """
 function hartman(x, alpha, A, P)
-  sum = 0.0
-  for i in 1:length(alpha)
-    isum = 0.0
-    for j in 1:size(A, 2)
-      isum += A[i,j] * (x[j] - P[i,j])^2
+    @assert size(A) == size(P)
+    @assert length(x) == size(P, 2)
+    @assert length(alpha) == size(P, 1)
+    res = 0.0
+    @inbounds for i in 1:length(alpha)
+        isum = 0.0
+        for j in 1:size(A, 2)
+            isum += A[i,j] * (x[j] - P[i,j])^2
+        end
+        res -= alpha[i] * exp(-isum)
     end
-    sum -= alpha[i] * exp(-isum)
-  end
-  sum
+    res
 end
 
 # constants for `Hartman6`
