@@ -5,7 +5,7 @@ immutable Hypersurface{N,SS<:SearchSpace}
     manifold::Function
     parameter_space::SS
 
-    @compat function (::Type{Hypersurface}){SS<:SearchSpace}(manifold::Function, parameter_space::SS)
+    function (::Type{Hypersurface}){SS<:SearchSpace}(manifold::Function, parameter_space::SS)
         N = numdims(parameter_space)+1
         int_pt = manifold(0.5*(mins(parameter_space)+maxs(parameter_space)), Val{1})
         length(int_pt) == N || throw(DimensionMismatch())

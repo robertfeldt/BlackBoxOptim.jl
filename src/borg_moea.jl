@@ -36,7 +36,7 @@ type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<
   modify::M         # operator to mutate frontier element during restarts
   embed::E          # embedding operator
 
-  @compat function (::Type{BorgMOEA}){O<:OptimizationProblem, P<:Population,
+  function (::Type{BorgMOEA}){O<:OptimizationProblem, P<:Population,
                      M<:GeneticOperator, E<:EmbeddingOperator}(
         problem::O,
         pop::P, recombinate::Vector{CrossoverOperator},

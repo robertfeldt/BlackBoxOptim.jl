@@ -28,12 +28,12 @@ type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P
   num_evals::Int
   last_fitness::FP
 
-  @compat (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
+  (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
       problem::P, archive::A) =
     new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(problem, archive,
         0, nafitness(fitness_scheme(problem)))
 
-  @compat (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
+  (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
       problem::P; archiveCapacity::Int = 10) =
     ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
 

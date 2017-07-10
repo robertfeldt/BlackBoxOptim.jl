@@ -6,7 +6,7 @@
 immutable RandomBound{S<:SearchSpace} <: EmbeddingOperator
     searchSpace::S
 
-    @compat (::Type{RandomBound}){S<:SearchSpace}(searchSpace::S) = new{S}(searchSpace)
+    (::Type{RandomBound}){S<:SearchSpace}(searchSpace::S) = new{S}(searchSpace)
 end
 
 # outer ctors

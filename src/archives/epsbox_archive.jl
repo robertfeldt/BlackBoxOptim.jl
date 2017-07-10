@@ -13,7 +13,7 @@ immutable FrontierIndividual{F} <: ArchivedIndividual{F}
                    params, tag, num_fevals, n_restarts, timestamp=time()) =
         new(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
-    @compat (::Type{FrontierIndividual}){F}(fitness::F,
+    (::Type{FrontierIndividual}){F}(fitness::F,
                    params, tag, num_fevals, n_restarts, timestamp=time()) =
         new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 end
@@ -25,7 +25,7 @@ tag(indi::FrontierIndividual) = indi.tag
 """
 typealias EpsBoxFrontierIndividual{N,F<:Number} FrontierIndividual{IndexedTupleFitness{N,F}}
 
-@compat (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
+(::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
                params, tag, num_fevals, n_restarts, timestamp=time()) =
     FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
@@ -53,13 +53,13 @@ type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTuple
   frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
   frontier_isoccupied::BitVector # true if given frontier element is occupied
 
-  @compat function (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
+  function (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
     new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
                                 sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
                                 sizehint!(BitVector(), 64))
   end
 
-  @compat (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
+  (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
     EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
 end
 
@@ -77,7 +77,7 @@ numdims(a::EpsBoxArchive) = !isempty(a.frontier) ? length(a.frontier[1].params) 
 """
 immutable EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
     archive::A
-    @compat (::Type{EpsBoxArchiveFrontierIterator}){A<:EpsBoxArchive}(a::A) = new{A}(a)
+    (::Type{EpsBoxArchiveFrontierIterator}){A<:EpsBoxArchive}(a::A) = new{A}(a)
 end
 
 @inline Base.length(it::EpsBoxArchiveFrontierIterator) = length(it.archive)

@@ -41,7 +41,7 @@ type Candidate{F} <: FitIndividual{F}
              tag::Int = 0) =
         new(params, index, fitness, extra, tag)
 
-    @compat (::Type{Candidate}){F}(
+    (::Type{Candidate}){F}(
             params::Individual, index::Int = -1,
             fitness::F = NaN,
             extra::Any = Void,

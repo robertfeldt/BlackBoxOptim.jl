@@ -4,7 +4,7 @@
 immutable ParallelEvaluatorWorker{P<:OptimizationProblem}
   problem::P
 
-  @compat (::Type{ParallelEvaluatorWorker}){P}(problem::P) = new{P}(problem)
+  (::Type{ParallelEvaluatorWorker}){P}(problem::P) = new{P}(problem)
 end
 
 fitness(params::Individual, worker::ParallelEvaluatorWorker) =
@@ -30,7 +30,7 @@ type ParallelEvaluationState{F, FS}
                                     # fitness calculation
   next_index::Int                   # index of the next candidate to calculate fitness
 
-  @compat function (::Type{ParallelEvaluationState}){FS<:FitnessScheme}(fitness_scheme::FS, nworkers::Int)
+  function (::Type{ParallelEvaluationState}){FS<:FitnessScheme}(fitness_scheme::FS, nworkers::Int)
     F = fitness_type(fitness_scheme)
     new{F,FS}(fitness_scheme, Vector{Candidate{F}}(),
               fill(false, nworkers), Vector{Int}(), Condition(), 0)

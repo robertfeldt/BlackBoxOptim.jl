@@ -17,7 +17,7 @@ type DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperator,E<:Embed
   modify::M        # genetic operator
   embed::E         # embedding operator
 
-  @compat function (::Type{DiffEvoOpt}){P<:Population, S<:IndividualsSelector,
+  function (::Type{DiffEvoOpt}){P<:Population, S<:IndividualsSelector,
                      M<:GeneticOperator, E<:EmbeddingOperator}(
         name::String, pop::P,
         select::S = S(), modify::M = M(), embed::E = E())
