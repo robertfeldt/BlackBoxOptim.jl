@@ -34,14 +34,14 @@ end
 AdaptiveDiffEvoParameters(options::Parameters) = AdaptiveDiffEvoParameters(options[:fdistr], options[:crdistr])
 
 function crossover_parameters(params::AdaptiveDiffEvoParameters, pop::Population, target_index)
-  # initialize the f & cr array
-  if isempty(params.fs)
-    params.fs = [rand(params.fdistr) for _ in 1:popsize(pop)]
-  end
-  if isempty(params.crs)
-    params.crs = [rand(params.crdistr) for _ in 1:popsize(pop)]
-  end
-  return (params.crs[target_index], params.fs[target_index])
+    # initialize the f & cr array
+    if isempty(params.fs)
+        params.fs = rand!(params.fdistr, Vector{Float64}(popsize(pop)))
+    end
+    if isempty(params.crs)
+        params.crs = rand!(params.crdistr, Vector{Float64}(popsize(pop)))
+    end
+    return (params.crs[target_index], params.fs[target_index])
 end
 
 function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)

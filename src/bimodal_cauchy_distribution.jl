@@ -33,3 +33,10 @@ function Base.rand(distr::BimodalCauchy)
         end
     end
 end
+
+function Base.rand!(distr::BimodalCauchy, A::AbstractArray)
+    for i in eachindex(A)
+        @inbounds A[i] = rand(distr)
+    end
+    return A
+end
