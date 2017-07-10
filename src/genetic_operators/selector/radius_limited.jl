@@ -25,11 +25,5 @@ function select(sel::RadiusLimitedSelector, population, numSamples::Int)
     deme_start = rand(1:psize)
     ixs = rand_indexes(deme_start:(deme_start+radius-1), numSamples)
     # Ensure they are not out of bounds by wrapping over at the end.
-    map(ixs) do ix
-        if ix > psize
-            mod(ix-1, psize) + 1 # We have to increase by 1 since Julia arrays start indices at 1
-        else
-            ix
-        end
-    end
+    map!(ix -> mod1(ix, psize), ixs, ixs)
 end
