@@ -23,7 +23,7 @@ end
 
 function Base.rand(distr::BimodalCauchy)
     while true
-        value = rand(rand() < distr.mix_prob ? distr.a : distr.b)
+        value = rand() < distr.mix_prob ? rand(distr.a) : rand(distr.b)
         if value >= 1.0
             distr.clampAbove1 && return 1.0
         elseif value <= 0.0
