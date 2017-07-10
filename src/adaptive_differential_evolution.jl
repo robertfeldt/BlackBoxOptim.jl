@@ -46,9 +46,9 @@ end
 
 function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)
     if !is_improved
-      # The trial vector for this target was not better so we change the f and cr constants.
-      params.fs[index] = rand(params.fdistr)
-      params.crs[index] = rand(params.crdistr)
+        # The trial vector for this target was not better so we change the f and cr constants.
+        @inbounds params.fs[index] = rand(params.fdistr)
+        @inbounds params.crs[index] = rand(params.crdistr)
     end
 end
 
