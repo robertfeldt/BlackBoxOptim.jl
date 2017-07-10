@@ -14,7 +14,7 @@ end
 # selection using `n_tours` tournaments
 function select(sel::TournamentSelector, population, n_tours::Int)
     n_candidates = min(popsize(population), sel.size*n_tours)
-    all_candidates = sample(1:popsize(population), n_candidates; replace=false)
+    all_candidates = rand_indexes(1:popsize(population), n_candidates)
 
     res = Vector{Int}(n_tours)
     tour_candidates = Vector{Int}(sel.size)

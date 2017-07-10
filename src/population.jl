@@ -26,6 +26,24 @@ numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
 
 viewer(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
 
+# select random indexes
+# FIXME use sample() when Julia keyarg inference problem (https://github.com/JuliaLang/julia/issues/9551) would be solved
+# at the moment it's just an extract from SampleBase.sample!() for ordered=false, replace=false
+function rand_indexes(a::AbstractArray{Int}, k::Int)
+    n = length(a)
+    x = Vector{Int}(k)
+    if k == 1
+        @inbounds x[1] = sample(a)
+    elseif k == 2
+        @inbounds (x[1], x[2]) = StatsBase.samplepair(a)
+    elseif n < k * 24
+        StatsBase.fisher_yates_sample!(a, x)
+    else
+        StatsBase.self_avoid_sample!(a, x)
+    end
+    return x
+end
+
 """
   The default implementation of `PopulationWithFitness{F}`.
 """
