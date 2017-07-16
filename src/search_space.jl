@@ -4,18 +4,18 @@
   The base abstract class has very few restrictions
   and can allow varying number of dimensions etc.
 """
-abstract SearchSpace
+@compat abstract type SearchSpace end
 
 """
   `SearchSpace` with a fixed finite number of dimensions.
   Applicable to the vast majority of problems.
 """
-abstract FixedDimensionSearchSpace <: SearchSpace
+@compat abstract type FixedDimensionSearchSpace <: SearchSpace end
 
 """
   Fixed-dimensional space, each dimension has a continuous range of valid values.
 """
-abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
+@compat abstract type ContinuousSearchSpace <: FixedDimensionSearchSpace end
 
 """
     The point of the `SearchSpace`.

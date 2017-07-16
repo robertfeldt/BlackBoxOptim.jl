@@ -1,4 +1,4 @@
-abstract NaturalEvolutionStrategyOpt <: PopulationOptimizer
+@compat abstract type NaturalEvolutionStrategyOpt <: PopulationOptimizer end
 
 """
   Separable Natural Evolution Strategy (sNES) optimizer.
@@ -141,7 +141,7 @@ end
   ```
 where `B` is an exponential of some symmetric matrix `lnB`, `tr(lnB)==0.0`
 """
-abstract ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt
+@compat abstract type ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt end
 
 function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Matrix)
   B = expm(exnes.ln_B)

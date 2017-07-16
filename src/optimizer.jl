@@ -1,13 +1,13 @@
 """
   Base abstract class for black-box optimization algorithms.
 """
-abstract Optimizer
+@compat abstract type Optimizer end
 
 """
     Optimizers derived from `SteppingOptimizer` implement classical iterative optimization scheme
     `step!()` → `step!()` → …
 """
-abstract SteppingOptimizer <: Optimizer
+@compat abstract type SteppingOptimizer <: Optimizer end
 evaluator(so::SteppingOptimizer) = so.evaluator
 
 """
@@ -22,7 +22,7 @@ function step! end # FIXME avoid defining 0-arg function
   `ask()` → ..eval fitness.. → `tell!()`
   sequence at each step.
 """
-abstract AskTellOptimizer <: Optimizer
+@compat abstract type AskTellOptimizer <: Optimizer end
 
 """
   `ask(ato::AskTellOptimizer)`
@@ -81,7 +81,7 @@ function tell! end # FIXME avoid defining 0-arg function
 """
   Base class for population-based optimization methods.
 """
-abstract PopulationOptimizer <: AskTellOptimizer
+@compat abstract type PopulationOptimizer <: AskTellOptimizer end
 
 population(popopt::PopulationOptimizer) = popopt.population
 popsize(popopt::PopulationOptimizer) = popsize(population(popopt))

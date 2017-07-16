@@ -1,4 +1,4 @@
-abstract MeshAdaptiveDirectSearch
+@compat abstract type MeshAdaptiveDirectSearch end
 
 type LTMADS <: MeshAdaptiveDirectSearch
   n::Int

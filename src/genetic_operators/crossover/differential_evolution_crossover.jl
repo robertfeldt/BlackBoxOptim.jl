@@ -1,4 +1,4 @@
-abstract DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC}
+@compat abstract type DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC} end
 
 # FIXME is it possible somehow to do arithmetic operations with N?
 immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}

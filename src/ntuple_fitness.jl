@@ -7,7 +7,7 @@
   `MIN` if objectives should be minimized or maximized
   `AGG` the type of aggregator
 """
-abstract TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA}
+@compat abstract type TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA} end
 
 @inline numobjectives{N}(::TupleFitnessScheme{N}) = N
 @inline fitness_eltype{N,F}(::TupleFitnessScheme{N,F}) = F

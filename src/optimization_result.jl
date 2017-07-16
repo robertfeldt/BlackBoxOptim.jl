@@ -2,13 +2,13 @@
     Base class for archive-specific component
     of the `OptimizationResults`.
 """
-abstract ArchiveOutput
+@compat abstract type ArchiveOutput end
 
 """
     Base class for method-specific component
     of the `OptimizationResults`.
 """
-abstract MethodOutput
+@compat abstract type MethodOutput end
 
 immutable DummyMethodOutput <: MethodOutput end
 

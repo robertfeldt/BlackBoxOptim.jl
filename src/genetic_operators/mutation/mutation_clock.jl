@@ -4,7 +4,7 @@ num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / prob
     Provides `apply()` operator that mutates one specified dimension of a parameter
     vector.
 """
-abstract GibbsMutationOperator <: MutationOperator
+@compat abstract type GibbsMutationOperator <: MutationOperator end
 
 # apply operator to each dimension
 function apply!{T<:Real}(m::GibbsMutationOperator, params::AbstractVector{T}, target_index::Int)

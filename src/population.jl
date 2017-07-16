@@ -2,14 +2,14 @@
   The base abstract type for the collection of candidate solutions
   in the population-based optimization methods.
 """
-abstract Population
+@compat abstract type Population end
 """
   The base abstract types for population that also stores the candidates
   fitness.
 
   `F` is the fitness type.
 """
-abstract PopulationWithFitness{F} <: Population
+@compat abstract type PopulationWithFitness{F} <: Population end
 
 """
   The simplest `Population` implementation -- a matrix of floats, each column is an individual.

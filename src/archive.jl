@@ -2,7 +2,7 @@
   `Archive` saves information about promising solutions during an optimization
   run.
 """
-abstract Archive{F,FS<:FitnessScheme}
+@compat abstract type Archive{F,FS<:FitnessScheme} end
 
 numdims(a::Archive) = a.numdims
 fitness_type{F}(a::Archive{F}) = F
@@ -18,7 +18,7 @@ archived_fitness(fit::Any, a::Archive) = convert(fitness_type(a), fit, fitness_s
 """
     Base class for individuals stored in `Archive`.
 """
-abstract ArchivedIndividual{F} <: FitIndividual{F}
+@compat abstract type ArchivedIndividual{F} <: FitIndividual{F} end
 
 tag(indi::ArchivedIndividual) = indi.tag
 

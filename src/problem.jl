@@ -2,7 +2,7 @@
   The base abstract type for all optimization problems.
   `FS` is a type of a problem's `FitnessScheme`.
 """
-abstract OptimizationProblem{FS<:FitnessScheme}
+@compat abstract type OptimizationProblem{FS<:FitnessScheme} end
 
 # common definitions for `OptimizationProblem`
 # (enforce field names of subtypes)

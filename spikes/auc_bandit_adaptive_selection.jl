@@ -8,7 +8,7 @@
 # operators, values etc. It does not have any info about what the things it selects
 # between are, below we call them items. The set of items the selector selects
 # from is typically static but might not be.
-abstract AdaptiveSelector
+@compat abstract type AdaptiveSelector end
 
 # The default AdaptiveSelector is a random selector.
 type RandomSelector <: AdaptiveSelector
