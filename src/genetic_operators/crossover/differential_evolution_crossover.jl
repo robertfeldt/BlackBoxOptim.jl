@@ -16,8 +16,8 @@ const DEX_DefaultOptions = ParamsDict(
 
 crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover.f
 
-typealias DiffEvoRandBin1 DiffEvoRandBin{3}
-typealias DiffEvoRandBin2 DiffEvoRandBin{5}
+@compat const DiffEvoRandBin1 = DiffEvoRandBin{3}
+@compat const DiffEvoRandBin2 = DiffEvoRandBin{5}
 
 function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index::Int, pop, parentIndices)
   @assert length(parentIndices) == 3

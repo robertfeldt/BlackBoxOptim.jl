@@ -23,19 +23,19 @@ abstract ContinuousSearchSpace <: FixedDimensionSearchSpace
     The abstract type. It allows different actual implementations to be used,
     e.g `Vector` or `SubArray`.
 """
-typealias AbstractIndividual AbstractVector{Float64}
+@compat const AbstractIndividual = AbstractVector{Float64}
 
 """
     The point of the `SearchSpace`.
 
     The concrete type that could be used for storage.
 """
-typealias Individual Vector{Float64}
+@compat const Individual = Vector{Float64}
 
 """
   The valid range of values for a specific dimension in a `SearchSpace`.
 """
-typealias ParamBounds Tuple{Float64,Float64}
+@compat const ParamBounds = Tuple{Float64,Float64}
 
 """
   Get the range of valid values for a specific dimension.

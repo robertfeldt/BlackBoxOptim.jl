@@ -14,7 +14,7 @@ abstract PopulationWithFitness{F} <: Population
 """
   The simplest `Population` implementation -- a matrix of floats, each column is an individual.
 """
-typealias PopulationMatrix Matrix{Float64}
+@compat const PopulationMatrix = Matrix{Float64}
 
 popsize(pop::PopulationMatrix) = size(pop, 2)
 numdims(pop::PopulationMatrix) = size(pop, 1)

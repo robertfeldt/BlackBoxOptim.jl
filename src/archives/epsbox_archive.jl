@@ -23,7 +23,7 @@ tag(indi::FrontierIndividual) = indi.tag
 """
     Individual stored in `EpsBoxArchive`.
 """
-typealias EpsBoxFrontierIndividual{N,F<:Number} FrontierIndividual{IndexedTupleFitness{N,F}}
+@compat const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
 
 (::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
                params, tag, num_fevals, n_restarts, timestamp=time()) =

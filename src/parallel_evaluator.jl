@@ -10,8 +10,8 @@ end
 fitness(params::Individual, worker::ParallelEvaluatorWorker) =
   fitness(params, worker.problem)
 
-typealias ChannelRef{T} @compat RemoteChannel{Channel{T}}
-typealias ParallelEvaluatorWorkerRef{P} ChannelRef{ParallelEvaluatorWorker{P}}
+@compat const ChannelRef{T} = @compat RemoteChannel{Channel{T}}
+@compat const ParallelEvaluatorWorkerRef{P} = ChannelRef{ParallelEvaluatorWorker{P}}
 
 fitness{P}(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) =
   fitness(params, fetch(fetch(worker_ref))::ParallelEvaluatorWorker{P})
