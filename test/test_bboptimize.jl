@@ -6,7 +6,7 @@ function rosenbrock(x)
 end
 
 @testset "bboptimize" begin
-    @testset "README examples"
+    @testset "README examples" begin
         @testset "example #1" begin
             res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
             @test best_fitness(res) < 0.001
@@ -59,7 +59,7 @@ end
         @test xbest[3] >= 10.0
     end
 
-    @testset "Fault Handling"
+    @testset "Fault Handling" begin
         #@testset "anydimensional problem" begin
         #    @test_throws ArgumentError bboptimize(BlackBoxOptim.anydim_problem("dummy", (x) -> sum(x), 0.0:1.0))
         #end
