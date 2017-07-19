@@ -4,7 +4,6 @@ using BlackBoxOptim
 using ArgParse
 using CPUTime
 using Compat
-using PValueAdjust
 
 global logfilehandle = nothing
 function log(color::Symbol, str)
@@ -145,7 +144,7 @@ function format_time(t)
   end
 end
 
-ProblemSets = Dict{ASCIIString,Any}(
+ProblemSets = Dict{String,Any}(
   "easy" => [
     # ProblemName, NumDims, PopSize, MaxFevals
     ("Sphere",        5, 20, 5e3),
@@ -197,7 +196,7 @@ ProblemSets = Dict{ASCIIString,Any}(
 )
 ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 
-OptimizerSets = Dict{ASCIIString,Any}(
+OptimizerSets = Dict{String,Any}(
   "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
   "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
   "nes" => [:xnes, :separable_nes, :dxnes],
