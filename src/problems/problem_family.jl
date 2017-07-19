@@ -6,7 +6,7 @@
     number of the search space dimensions) that allows
     to instantiate `OptimizationProblem` for the concrete parameters.
 """
-abstract ProblemFamily{FS<:FitnessScheme}
+@compat abstract type ProblemFamily{FS<:FitnessScheme} end
 
 """
   Family of `FunctionBasedProblem` optimization problems
@@ -20,7 +20,7 @@ type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
   range_per_dim::ParamBounds            # Default range per dimension
   opt_value::FO                         # optional optimal value, or nothing
 
-  @compat function (::Type{FunctionBasedProblemFamily}){FS<:FitnessScheme,FO}(objfunc::Function, name::String,
+  function (::Type{FunctionBasedProblemFamily}){FS<:FitnessScheme,FO}(objfunc::Function, name::String,
                                         fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
                                         reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE)
     if FO <: Number

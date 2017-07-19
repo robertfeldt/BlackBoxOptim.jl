@@ -23,7 +23,7 @@ end
 
 function Base.rand(distr::BimodalCauchy)
     while true
-        value = rand(rand() < distr.mix_prob ? distr.a : distr.b)
+        value = rand() < distr.mix_prob ? rand(distr.a) : rand(distr.b)
         if value >= 1.0
             distr.clampAbove1 && return 1.0
         elseif value <= 0.0
@@ -32,4 +32,11 @@ function Base.rand(distr::BimodalCauchy)
             return value
         end
     end
+end
+
+function Base.rand!(distr::BimodalCauchy, A::AbstractArray)
+    for i in eachindex(A)
+        @inbounds A[i] = rand(distr)
+    end
+    return A
 end

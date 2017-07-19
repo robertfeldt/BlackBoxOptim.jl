@@ -2,7 +2,7 @@
   The abstract base for types that manage the objective function evaluation.
   `P` is the optimization problem it is used for.
 """
-abstract Evaluator{P <: OptimizationProblem}
+@compat abstract type Evaluator{P <: OptimizationProblem} end
 
 fitness_scheme(e::Evaluator) = fitness_scheme(problem(e))
 fitness_type(e::Evaluator) = fitness_type(fitness_scheme(e))
@@ -28,12 +28,12 @@ type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P
   num_evals::Int
   last_fitness::FP
 
-  @compat (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
+  (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
       problem::P, archive::A) =
     new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(problem, archive,
         0, nafitness(fitness_scheme(problem)))
 
-  @compat (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
+  (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
       problem::P; archiveCapacity::Int = 10) =
     ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
 

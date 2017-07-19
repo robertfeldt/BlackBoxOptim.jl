@@ -5,7 +5,7 @@ type TournamentSelector{H} <: IndividualsSelector
     hat_comp::H     # fitness comparison tri-valued operator
     size::Int       # tournament size
 
-    @compat function (::Type{TournamentSelector}){FS}(fs::FS, size::Int=2)
+    function (::Type{TournamentSelector}){FS}(fs::FS, size::Int=2)
         h = HatCompare(fs)
         new{typeof(h)}(h, size)
     end
@@ -14,7 +14,7 @@ end
 # selection using `n_tours` tournaments
 function select(sel::TournamentSelector, population, n_tours::Int)
     n_candidates = min(popsize(population), sel.size*n_tours)
-    all_candidates = sample(1:popsize(population), n_candidates; replace=false)
+    all_candidates = rand_indexes(1:popsize(population), n_candidates)
 
     res = Vector{Int}(n_tours)
     tour_candidates = Vector{Int}(sel.size)

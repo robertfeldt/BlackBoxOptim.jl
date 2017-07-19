@@ -2,7 +2,7 @@
   `Archive` saves information about promising solutions during an optimization
   run.
 """
-abstract Archive{F,FS<:FitnessScheme}
+@compat abstract type Archive{F,FS<:FitnessScheme} end
 
 numdims(a::Archive) = a.numdims
 fitness_type{F}(a::Archive{F}) = F
@@ -18,7 +18,7 @@ archived_fitness(fit::Any, a::Archive) = convert(fitness_type(a), fit, fitness_s
 """
     Base class for individuals stored in `Archive`.
 """
-abstract ArchivedIndividual{F} <: FitIndividual{F}
+@compat abstract type ArchivedIndividual{F} <: FitIndividual{F} end
 
 tag(indi::ArchivedIndividual) = indi.tag
 
@@ -30,11 +30,11 @@ immutable TopListIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     tag::Int
 
-    @compat (::Type{TopListIndividual}){F}(params::AbstractIndividual, fitness::F, tag::Int) =
+    (::Type{TopListIndividual}){F}(params::AbstractIndividual, fitness::F, tag::Int) =
         new{F}(params, fitness, tag)
 end
 
-@compat Base.:(==){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
+Base.:(==){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
   (x.fitness == y.fitness) && (x.params == y.params)
 
 " Fitness as stored in `TopListArchive`. "
@@ -71,7 +71,7 @@ type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
   # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
   fitness_history::Vector{TopListFitness{F}}
 
-  @compat function (::Type{TopListArchive}){FS<:FitnessScheme}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+  function (::Type{TopListArchive}){FS<:FitnessScheme}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
     F = fitness_type(FS)
     new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
   end

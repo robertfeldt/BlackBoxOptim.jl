@@ -48,11 +48,6 @@ my_tests = [
 
 if Main.TimeTestExecution
 
-# readstring not available pre 0.5:
-if VERSION < v"0.5.0"
-  readstring(stream) = readall(stream)
-end
-
 function get_git_remote_and_branch()
   lines = split(readstring(`git remote -v show`), "\n")
   remote = match(r"[a-z0-9]+\s+([^\s]+)", lines[1]).captures[1]

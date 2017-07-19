@@ -2,18 +2,18 @@
     Base class for archive-specific component
     of the `OptimizationResults`.
 """
-abstract ArchiveOutput
+@compat abstract type ArchiveOutput end
 
 """
     Base class for method-specific component
     of the `OptimizationResults`.
 """
-abstract MethodOutput
+@compat abstract type MethodOutput end
 
 immutable DummyMethodOutput <: MethodOutput end
 
 # no method-specific output by default
-@compat (::Type{MethodOutput})(method::Optimizer) = DummyMethodOutput()
+(::Type{MethodOutput})(method::Optimizer) = DummyMethodOutput()
 
 """
   The results of running optimization method.
@@ -75,11 +75,11 @@ immutable TopListArchiveOutput{F,C} <: ArchiveOutput
   best_fitness::F
   best_candidate::C
 
-  @compat (::Type{TopListArchiveOutput}){F}(archive::TopListArchive{F}) =
+  (::Type{TopListArchiveOutput}){F}(archive::TopListArchive{F}) =
     new{F,Individual}(best_fitness(archive), best_candidate(archive))
 end
 
-@compat (::Type{ArchiveOutput})(archive::TopListArchive) = TopListArchiveOutput(archive)
+(::Type{ArchiveOutput})(archive::TopListArchive) = TopListArchiveOutput(archive)
 
 """
     Wrapper for `FrontierIndividual` that allows easy access to the problem fitness.
@@ -88,7 +88,7 @@ immutable FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
     inner::FrontierIndividual{FA}
     fitness::F
 
-    @compat (::Type{FrontierIndividualWrapper{F}}){F,FA}(
+    (::Type{FrontierIndividualWrapper{F}}){F,FA}(
         indi::FrontierIndividual{FA}, fit_scheme::FitnessScheme{FA}) =
             new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
 end
@@ -105,7 +105,7 @@ immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOu
   frontier::Vector{FrontierIndividualWrapper{NTuple{N,F},IndexedTupleFitness{N,F}}} # inferred Pareto frontier
   fit_scheme::FS
 
-  @compat function (::Type{EpsBoxArchiveOutput}){N,F}(archive::EpsBoxArchive{N,F})
+  function (::Type{EpsBoxArchiveOutput}){N,F}(archive::EpsBoxArchive{N,F})
     fit_scheme = fitness_scheme(archive)
     new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme), best_candidate(archive),
                                 FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}[FrontierIndividualWrapper{NTuple{N,F}}(archive.frontier[i], fit_scheme) for i in find(archive.frontier_isoccupied)],
@@ -113,7 +113,7 @@ immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOu
   end
 end
 
-@compat (::Type{ArchiveOutput})(archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
+(::Type{ArchiveOutput})(archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
 
 pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 
@@ -124,10 +124,10 @@ pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 immutable PopulationOptimizerOutput{P} <: MethodOutput
   population::P
 
-  @compat (::Type{PopulationOptimizerOutput})(method::PopulationOptimizer) =
+  (::Type{PopulationOptimizerOutput})(method::PopulationOptimizer) =
     new{typeof(population(method))}(population(method))
 end
 
-@compat (::Type{MethodOutput})(optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
+(::Type{MethodOutput})(optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
 
 population(or::OptimizationResults) = or.method_output.population

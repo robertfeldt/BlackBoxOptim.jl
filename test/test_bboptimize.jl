@@ -1,47 +1,49 @@
-function rosenbrock2d(x)
-    return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
+rosenbrock2d(x) = 100.0*(x[2] - x[1]^2)^2 + (x[1] - 1.0)^2
 
 function rosenbrock(x)
-    return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
+    @inbounds res = sum(i -> 100.0*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1.0), 1:length(x)-1)
+    return res
 end
 
 @testset "bboptimize" begin
-    @testset "example 1 from README" begin
-        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
-        @test best_fitness(res) < 0.001
+    @testset "README examples"
+        @testset "example #1" begin
+            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
+            @test best_fitness(res) < 0.001
+        end
+
+        @testset "example #2" begin
+            res = bboptimize(rosenbrock2d; SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
+            @test best_fitness(res) < 0.001
+        end
+
+        @testset "example #3" begin
+            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, TraceMode = :silent)
+            @test best_fitness(res) < 0.001
+        end
+
+        @testset "example #4" begin
+            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                            Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
+            @test best_fitness(res) < 0.2
+        end
+
+        @testset "example #5" begin
+            res = BlackBoxOptim.compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 3,
+                            MaxTime = 2.0, TraceMode = :compact)
+
+            # We at least expect the DE optimizers and DX-NES to come out better than random search
+            idx_adaptive_de = findfirst(t -> t[1] == :adaptive_de_rand_1_bin, res)
+            idx_random = findfirst(t -> t[1] == :random_search, res)
+            @test idx_adaptive_de < idx_random
+
+            idx_dxnes = findfirst(t -> t[1] == :dxnes, res)
+            @test idx_dxnes < idx_random
+        end
     end
 
-    @testset "example 2 from README" begin
-        res = bboptimize(rosenbrock2d; SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
-        @test best_fitness(res) < 0.001
-    end
-
-    @testset "example 3 from README" begin
-        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, TraceMode = :silent)
-        @test best_fitness(res) < 0.001
-    end
-
-    @testset "example 4 from README" begin
-        res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-            Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
-        @test best_fitness(res) < 0.2
-    end
-
-    @testset "example 5 from README" begin
-        res = BlackBoxOptim.compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 3,
-            MaxTime = 2.0, TraceMode = :compact)
-
-        # We at least expect the DE optimizers and DX-NES to come out better than random search
-        idx_adaptive_de = findfirst(t -> t[1] == :adaptive_de_rand_1_bin, res)
-        idx_random = findfirst(t -> t[1] == :random_search, res)
-        @test idx_adaptive_de < idx_random
-
-        idx_dxnes = findfirst(t -> t[1] == :dxnes, res)
-        @test idx_dxnes < idx_random
-    end
-
-    @testset "run one longer example in case there is problem with the reporting in long runs" begin
+    # run one longer example in case there is problem with the reporting in long runs
+    @testset "long runs reporting" begin
         res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
             Method = :de_rand_1_bin, TraceMode = :silent, MaxSteps = 25001)
         @test best_fitness(res) < 0.001
@@ -57,15 +59,17 @@ end
         @test xbest[3] >= 10.0
     end
 
-    #@testset "fault handling: anydimensional problem" begin
-    #    @test_throws ArgumentError bboptimize(BlackBoxOptim.anydim_problem("dummy", (x) -> sum(x), 0.0:1.0))
-    #end
+    @testset "Fault Handling"
+        #@testset "anydimensional problem" begin
+        #    @test_throws ArgumentError bboptimize(BlackBoxOptim.anydim_problem("dummy", (x) -> sum(x), 0.0:1.0))
+        #end
 
-    @testset "fault handling: func & search range but not num dimensions" begin
-        @test_throws ArgumentError BlackBoxOptim.setup_problem((x) -> sum(x); search_range = (0.0, 1.0))
+        @testset "func & SearchRange given but no NumDimensions specified" begin
+            @test_throws KeyError BlackBoxOptim.setup_problem(sum, ParamsDict(:SearchRange => (0.0, 1.0)))
+        end
     end
 
-#  context("restarting an optimizer again and again should gradually improve") do
+#  @testset "restarting an optimizer again and again should gradually improve" begin
 #    optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d,
 #      {:SearchRange => (-5.0, 5.0), :NumDimensions => 2,
 #        :MaxSteps => 10, :TraceMode => :silent})
@@ -80,9 +84,9 @@ end
 #    end
 #
 #    # Fitness is not worse in sub-sequent runs
-#    @fact (fitness10 >= fitness20 >= fitness1000 >= fitness10000) --> true
+#    @test fitness10 >= fitness20 >= fitness1000 >= fitness10000
 #
 #    # and it should (almost) always be better after 10000 steps than after 10:
-#    @fact (fitness10 > fitness10000) --> true
+#    @test fitness10 > fitness10000
 #  end
 end

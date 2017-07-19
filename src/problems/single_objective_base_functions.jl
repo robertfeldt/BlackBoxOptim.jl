@@ -2,9 +2,7 @@
 #####################################################################
 # Base functions.
 #####################################################################
-function sphere(x)
-  sumabs2(x)
-end
+sphere(x) = sum(abs2, x)
 
 """
   Schwefel's ellipsoid.
@@ -28,16 +26,16 @@ end
 
 function rastrigin(x)
   D = length(x)
-  10 * D + sum( x.^2 ) - 10 * sum( cos( 2 * π * x ) )
+  10 * D + sum(abs2, x) - 10 * sum(xx -> cos(2π * xx), x)
 end
 
 function ackley(x)
   D = length(x)
   try
-    20 - 20.*exp(-0.2.*sqrt(sum(x.^2)/D)) - exp(sum(cos(2 * π * x))/D) + e
-  catch e
+    20 - 20.*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + e
+  catch ex
     # Sometimes we have gotten a DomainError from the cos function so we protect this call
-    println(e)
+    println(ex)
     println("For input x = ", x)
     # Return a very large fitness value to indicate that this is NOT the solution we want.
     # TODO: Fix better way to handle this!
@@ -53,60 +51,51 @@ function schwefel1_2(x)
     partsum += x[i]
     partsums[i] = partsum
   end
-  sum(partsums.^2)
+  sum(abs2, partsums)
 end
 
 function rosenbrock(x)
   n = length(x)
-  return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
+  return( sum(100*(view(x, 2:n) - view(x, 1:(n-1)).^2).^2 + (view(x, 1:(n-1)) - 1).^2) )
 end
 
-function step(x)
-  sum(ceil(x + 0.5))
-end
+step(x) = sum(xx -> ceil(xx + 0.5), x)
 
 function griewank(x)
   n = length(x)
-  1 + (1/4000)*sum(x.^2) - prod(cos(x ./ sqrt(1:n)))
+  1 + (1/4000)*sum(abs2, x) - prod(cos(x ./ sqrt(1:n)))
 end
 
-function schwefel2_22(x)
-  ax = abs(x)
-  sum(ax) + prod(ax)
-end
+schwefel2_22(x) = sum(abs, x) + prod(abs, x)
 
-function schwefel2_21(x)
-  maximum(abs(x))
-end
+schwefel2_21(x) = maximum(abs, x)
 
 # I'm unsure about this one since it does not return the expected minima at
 # [1.0, 1.0].
 function schwefel2_26(x)
   D = length(x)
-  418.98288727243369 * D - sum(x .* sin(sqrt(abs(x))))
+  418.98288727243369 * D - sum(xx -> xx * sin(sqrt(abs(xx))), x)
 end
 
-function cigar(x)
-  x[1]^2 + 1e6 * sum(x[2:end].^2)
-end
+cigar(x) = x[1]^2 + 1e6 * sum(abs2, view(x, 2:length(x)))
 
-function cigtab(x)
-  x[1]^2 + 1e8 * x[end]^2 + 1e4 * sum(x[2:(end-1)].^2)
-end
+cigtab(x) = x[1]^2 + 1e8 * x[end]^2 + 1e4 * sum(abs2, view(x, 2:length(x)-1))
 
 """
   Generic function to define `ShekelN` problems.
 """
 function shekel(x, a, c)
-  sum = 0.0
-  for i in 1:length(c)
-    den = 0.0
-    for j in 1:size(a, 2)
-      den += (x[j] - a[i,j])^2
+    @assert length(x) == size(a, 2)
+    @assert length(c) == size(a, 1)
+    sum = 0.0
+    @inbounds for i in eachindex(c)
+        den = 0.0
+        for j in 1:size(a, 2)
+            den += abs2(x[j] - a[i,j])
+        end
+        sum = sum - 1 / (den + c[i])
     end
-    sum = sum - 1 / (den + c[i])
-  end
-  return sum
+    return sum
 end
 
 # constants for `Shekel10`
@@ -146,15 +135,18 @@ shekel5(x) = shekel(x, Shekel5_A, Shekel5_C)
   Generic function for `Hartman N` problem family.
 """
 function hartman(x, alpha, A, P)
-  sum = 0.0
-  for i in 1:length(alpha)
-    isum = 0.0
-    for j in 1:size(A, 2)
-      isum += A[i,j] * (x[j] - P[i,j])^2
+    @assert size(A) == size(P)
+    @assert length(x) == size(P, 2)
+    @assert length(alpha) == size(P, 1)
+    res = 0.0
+    @inbounds for i in 1:length(alpha)
+        isum = 0.0
+        for j in 1:size(A, 2)
+            isum += A[i,j] * (x[j] - P[i,j])^2
+        end
+        res -= alpha[i] * exp(-isum)
     end
-    sum -= alpha[i] * exp(-isum)
-  end
-  sum
+    res
 end
 
 # constants for `Hartman6`
@@ -191,13 +183,9 @@ function quartic(x)
   sum( (1:D) .* x.^4 )
 end
 
-function noisy_quartic(x)
-  quartic(x) + rand()
-end
+noisy_quartic(x) = quartic(x) + rand()
 
-function s2_step(x)
-  sum( ceil(x + 0.5).^2 )
-end
+s2_step(x) = sum(xx -> abs2(ceil(xx + 0.5)), x)
 
 #####################################################################
 # Misc other interesting optimization functions and families.
@@ -240,14 +228,13 @@ end
 """
 function deceptive_cuccu2011(l, w)
   (x) -> begin
-    absx = abs(x)
-    sumabsx = sum(absx)
+    sumabsx = sum(abs, x)
     if sumabsx <= 1
-      return sum(x.^2)
+      return sum(abs2, x)
     elseif sumabsx >= l+1
-      return sum((absx - l).^2)
+      return sum(xx -> abs2(abs(xx) - l), x)
     else
-      return (1 - 0.5 * sum(sin( (π * w * (absx - 1)) / l ).^2))
+      return (1 - 0.5 * sum(xx -> abs2(sin( (π * w * (abs(xx) - 1)) / l )), x))
     end
   end
 end
@@ -262,6 +249,4 @@ deceptive_cuccu2011_30_2 = deceptive_cuccu2011(30, 2)
   available from http://www.if.ufrgs.br/~stariolo/publications/TsSt96_PhysA233_395_1996.pdf
  the original paper used this as a 4-dimensional problem but here it is generalized.
 """
-function energy_tsallis1996(x::Array)
-  return sumabs2(x.^2 - 8.0) + 5.0*sum(x) + 57.3276
-end
+energy_tsallis1996(x::AbstractArray) = sum(xx -> abs2(xx^2 - 8.0), x) + 5.0*sum(x) + 57.3276

@@ -1,4 +1,4 @@
-abstract DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC}
+@compat abstract type DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC} end
 
 # FIXME is it possible somehow to do arithmetic operations with N?
 immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
@@ -16,8 +16,8 @@ const DEX_DefaultOptions = ParamsDict(
 
 crossover_parameters(xover::DiffEvoRandBin, pop, target_index) = xover.cr, xover.f
 
-typealias DiffEvoRandBin1 DiffEvoRandBin{3}
-typealias DiffEvoRandBin2 DiffEvoRandBin{5}
+@compat const DiffEvoRandBin1 = DiffEvoRandBin{3}
+@compat const DiffEvoRandBin2 = DiffEvoRandBin{5}
 
 function apply!(xover::DiffEvoCrossoverOperator{3,1}, target, target_index::Int, pop, parentIndices)
   @assert length(parentIndices) == 3

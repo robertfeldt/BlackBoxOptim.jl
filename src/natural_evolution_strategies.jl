@@ -1,4 +1,4 @@
-abstract NaturalEvolutionStrategyOpt <: PopulationOptimizer
+@compat abstract type NaturalEvolutionStrategyOpt <: PopulationOptimizer end
 
 """
   Separable Natural Evolution Strategy (sNES) optimizer.
@@ -101,8 +101,10 @@ function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F
   # Update the mean and sigma vectors based on the gradient
   old_mu = copy(snes.mu)
   snes.mu += snes.mu_learnrate * (snes.sigma .* gradient_mu)
-  snes.sigma .*= exp(snes.sigma_learnrate / 2 * gradient_sigma)
-  snes.sigma = clamp(snes.sigma, 0.0, snes.max_sigma)
+  @inbounds for i in eachindex(snes.sigma)
+      snes.sigma[i] = clamp(snes.sigma[i] * exp(0.5 * snes.sigma_learnrate * gradient_sigma[i]),
+                            0.0, snes.max_sigma)
+  end
   apply!(snes.embed, snes.mu, old_mu)
 
   # There is no notion of how many was better in NES so return 0
@@ -139,7 +141,7 @@ end
   ```
 where `B` is an exponential of some symmetric matrix `lnB`, `tr(lnB)==0.0`
 """
-abstract ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt
+@compat abstract type ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt end
 
 function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Matrix)
   B = expm(exnes.ln_B)

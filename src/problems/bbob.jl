@@ -4,7 +4,7 @@
 module COCO
 
 # BBOB test functions are optimization problems
-abstract BBOBFunction <: OptimizationProblem
+@compat abstract type BBOBFunction <: OptimizationProblem end
 
 # Number of dimensions.
 ndims(f::BBOBFunction) = f.ndims
@@ -67,7 +67,7 @@ end
 # we can use Julia's type system to model the noise functions in a better
 # way than how it is done in Python. Thus a noise function need not be a
 # BBOBFunction.
-abstract BBOBNoiseFunction
+@compat abstract type BBOBNoiseFunction end
 
 # Different types depending on the noise function used.
 type BBOBNfreeFunction <: BBOBNoiseFunction
@@ -92,7 +92,7 @@ type BBOBCauchyFunction <: BBOBNoiseFunction
 end
 noise(f::BBOBCauchyFunction, ftrue) = fCauchy(ftrue, f.cauchyalpha, f.cauchyp)
 
-abstract FSphere{NoiseFunc} <: BBOBFunction
+@compat abstract type FSphere{NoiseFunc} <: BBOBFunction end
 compute_core(f::FSphere, x) = sum(x.^2)
 
 # Sphere without noise

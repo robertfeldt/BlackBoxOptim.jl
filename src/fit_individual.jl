@@ -4,7 +4,7 @@
 
   `F` is the original problem's fitness type
 """
-abstract FitIndividual{F}
+@compat abstract type FitIndividual{F} end
 
 fitness_type{F}(indi::FitIndividual{F}) = F
 
@@ -41,7 +41,7 @@ type Candidate{F} <: FitIndividual{F}
              tag::Int = 0) =
         new(params, index, fitness, extra, tag)
 
-    @compat (::Type{Candidate}){F}(
+    (::Type{Candidate}){F}(
             params::Individual, index::Int = -1,
             fitness::F = NaN,
             extra::Any = Void,

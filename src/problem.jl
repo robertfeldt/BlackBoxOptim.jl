@@ -2,7 +2,7 @@
   The base abstract type for all optimization problems.
   `FS` is a type of a problem's `FitnessScheme`.
 """
-abstract OptimizationProblem{FS<:FitnessScheme}
+@compat abstract type OptimizationProblem{FS<:FitnessScheme} end
 
 # common definitions for `OptimizationProblem`
 # (enforce field names of subtypes)
@@ -34,7 +34,7 @@ type FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: OptimizationP
   ss::SS                # search space
   opt_value::FO         # known optimal value or nothing
 
-  @compat function (::Type{FunctionBasedProblem}){FS<:FitnessScheme,SS<:SearchSpace,FO}(objfunc::Function, name::String, fitness_scheme::FS, ss::SS, opt_value::FO = nothing)
+  function (::Type{FunctionBasedProblem}){FS<:FitnessScheme,SS<:SearchSpace,FO}(objfunc::Function, name::String, fitness_scheme::FS, ss::SS, opt_value::FO = nothing)
     if FO <: Number
       fitness_type(fitness_scheme) == FO || throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))
       if isnafitness(opt_value, fitness_scheme) # if NA fitness is given, the problem is unbouned

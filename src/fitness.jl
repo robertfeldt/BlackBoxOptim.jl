@@ -9,7 +9,7 @@
   `FitnessScheme` could also be used as a function that defines the fitness
   ordering, i.e. `fs(x, y) == true` iff fitness `x` is better than `y`.
 """
-abstract FitnessScheme{F}
+@compat abstract type FitnessScheme{F} end
 
 """
   `fitness_type(fs::FitnessScheme)`
@@ -29,7 +29,7 @@ Base.convert{F}(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) = fit
 
 # ordering induced by the fitness scheme
 # FIXME enable once v0.5 issue #14919 is fixed
-# @compat (fs::FitnessScheme{F}){F}(x::F, y::F) = is_better(x, y, fs)
+# (fs::FitnessScheme{F}){F}(x::F, y::F) = is_better(x, y, fs)
 
 """
   In `RatioFitnessScheme` the fitness values can be ranked on a ratio scale so
@@ -37,7 +37,7 @@ Base.convert{F}(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) = fit
   The default scale used is the aggregate of the fitness components.
 """
 # FIXME
-abstract RatioFitnessScheme{F} <: FitnessScheme{F}
+@compat abstract type RatioFitnessScheme{F} <: FitnessScheme{F} end
 
 """
   `Float64`-valued scalar fitness scheme.
@@ -95,7 +95,7 @@ same_fitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 immutable HatCompare{FS<:FitnessScheme}
     fs::FS
 
-    @compat (::Type{HatCompare}){FS<:FitnessScheme}(fs::FS) = new{FS}(fs)
+    (::Type{HatCompare}){FS<:FitnessScheme}(fs::FS) = new{FS}(fs)
 end
 
-@compat (hc::HatCompare){F}(x::F, y::F) = hat_compare(x, y, hc.fs)
+(hc::HatCompare){F}(x::F, y::F) = hat_compare(x, y, hc.fs)

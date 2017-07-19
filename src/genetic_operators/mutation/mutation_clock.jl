@@ -4,7 +4,7 @@ num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / prob
     Provides `apply()` operator that mutates one specified dimension of a parameter
     vector.
 """
-abstract GibbsMutationOperator <: MutationOperator
+@compat abstract type GibbsMutationOperator <: MutationOperator end
 
 # apply operator to each dimension
 function apply!{T<:Real}(m::GibbsMutationOperator, params::AbstractVector{T}, target_index::Int)
@@ -20,7 +20,7 @@ end
 immutable UniformMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
 
-    @compat (::Type{UniformMutation}){SS<:SearchSpace}(ss::SS) = new{SS}(ss)
+    (::Type{UniformMutation}){SS<:SearchSpace}(ss::SS) = new{SS}(ss)
 end
 
 search_space(m::UniformMutation) = m.ss
@@ -42,7 +42,7 @@ type MutationClock{S<:GibbsMutationOperator} <: MutationOperator
     rate::Float64           # Probability to mutate a dimension
     nextVarToMutate::Int    # dimension index - 1
 
-    @compat (::Type{MutationClock}){S<:GibbsMutationOperator}(inner::S, rate::Float64 = 0.05) =
+    (::Type{MutationClock}){S<:GibbsMutationOperator}(inner::S, rate::Float64 = 0.05) =
         new{S}(inner, rate, 1 + num_vars_to_next_mutation_point(rate))
 end
 

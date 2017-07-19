@@ -5,13 +5,13 @@
 #
 
 """ A supertype for all generating set searcher-like algorithms. """
-abstract DirectSearcher <: SteppingOptimizer
+@compat abstract type DirectSearcher <: SteppingOptimizer end
 
 """
   `DirectionGenerator` generates the search directions to use at each step of
   a GSS search.
 """
-abstract DirectionGenerator
+@compat abstract type DirectionGenerator end
 
 immutable ConstantDirectionGen <: DirectionGenerator
   directions::Matrix{Float64}

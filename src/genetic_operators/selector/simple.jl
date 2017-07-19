@@ -6,6 +6,5 @@
 immutable SimpleSelector <: IndividualsSelector
 end
 
-function select(::SimpleSelector, population, numSamples::Int)
-  sample(1:popsize(population), numSamples; replace = false)
-end
+select(::SimpleSelector, population, numSamples::Int) =
+    rand_indexes(1:popsize(population), numSamples)

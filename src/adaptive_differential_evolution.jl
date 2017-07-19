@@ -34,21 +34,21 @@ end
 AdaptiveDiffEvoParameters(options::Parameters) = AdaptiveDiffEvoParameters(options[:fdistr], options[:crdistr])
 
 function crossover_parameters(params::AdaptiveDiffEvoParameters, pop::Population, target_index)
-  # initialize the f & cr array
-  if isempty(params.fs)
-    params.fs = [rand(params.fdistr) for _ in 1:popsize(pop)]
-  end
-  if isempty(params.crs)
-    params.crs = [rand(params.crdistr) for _ in 1:popsize(pop)]
-  end
-  return (params.crs[target_index], params.fs[target_index])
+    # initialize the f & cr array
+    if isempty(params.fs)
+        params.fs = rand!(params.fdistr, Vector{Float64}(popsize(pop)))
+    end
+    if isempty(params.crs)
+        params.crs = rand!(params.crdistr, Vector{Float64}(popsize(pop)))
+    end
+    return (params.crs[target_index], params.fs[target_index])
 end
 
 function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)
     if !is_improved
-      # The trial vector for this target was not better so we change the f and cr constants.
-      params.fs[index] = rand(params.fdistr)
-      params.crs[index] = rand(params.crdistr)
+        # The trial vector for this target was not better so we change the f and cr constants.
+        @inbounds params.fs[index] = rand(params.fdistr)
+        @inbounds params.crs[index] = rand(params.crdistr)
     end
 end
 
@@ -70,8 +70,8 @@ adjust!{F}(xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
                  new_fitness::F, old_fitness::F, is_improved::Bool) =
     adjust!(xover.params, candi_index, is_improved)
 
-typealias AdaptiveDiffEvoRandBin1 AdaptiveDiffEvoRandBin{3}
-typealias AdaptiveDiffEvoRandBin2 AdaptiveDiffEvoRandBin{5}
+@compat const AdaptiveDiffEvoRandBin1 = AdaptiveDiffEvoRandBin{3}
+@compat const AdaptiveDiffEvoRandBin2 = AdaptiveDiffEvoRandBin{5}
 
 function adaptive_diffevo(problem::OptimizationProblem,
                  options::Parameters, name::String,

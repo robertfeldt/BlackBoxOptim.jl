@@ -3,7 +3,7 @@ using DataFrames
 
 include(joinpath("..", "src", "problems", "single_objective_base_functions.jl"))
 
-abstract Evaluator
+@compat abstract type Evaluator end
 
 type NonGradientEvaluator <: Evaluator
   func::Function
