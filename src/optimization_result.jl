@@ -61,6 +61,20 @@ best_fitness(or::OptimizationResults) = or.archive_output.best_fitness
 # FIXME doesn't work if there's no best candidate
 numdims(or::OptimizationResults) = length(best_candidate(or))
 
+function general_stop_reason(or::OptimizationResults)
+  detailed_reason = stop_reason(or)
+
+  if ismatch(r"Fitness .* within tolerance .* of optimum", detailed_reason)
+    return "Within fitness tolerance of optimum"
+  end
+
+  if ismatch(r"Delta fitness .* below tolerance .*", detailed_reason)
+    return "Delta fitness below tolerance"
+  end
+
+  return detailed_reason
+end
+
 # Alternative nomenclature that mimics Optim.jl more closely.
 # FIXME should be it be enabled only for MinimizingFitnessScheme?
 Base.minimum(or::OptimizationResults) = best_candidate(or)

@@ -28,6 +28,7 @@ my_tests = [
   "test_frequency_adaptation.jl",
   "test_archive.jl",
   "test_epsbox_archive.jl",
+  "test_optimizationresult.jl",
 
   "test_random_search.jl",
   "test_differential_evolution.jl",
