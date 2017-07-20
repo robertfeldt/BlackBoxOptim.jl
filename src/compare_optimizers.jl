@@ -13,7 +13,7 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
 
   sorted = sort( results, by = (t) -> t[3] )
 
-  if parameters[:TraceMode] != :silent
+  if get(parameters, :TraceMode, :compact) != :silent
     println("\n********************************************************************************")
     #println(describe(evaluator))
     for i in 1:length(sorted)
