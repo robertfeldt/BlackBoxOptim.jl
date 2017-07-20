@@ -18,7 +18,7 @@ end
         end
 
         @testset "example #3" begin
-            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, method = :de_rand_1_bin, TraceMode = :silent)
+            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :de_rand_1_bin, TraceMode = :silent)
             @test best_fitness(res) < 0.001
         end
 

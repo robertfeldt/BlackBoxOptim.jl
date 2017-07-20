@@ -109,8 +109,10 @@ function report_from_result_dict(statsdict)
   report_on_values("Fitness", statsdict[:fitnesses], "  ")
   report_on_values("Time", statsdict[:times], "  ")
   report_on_values("Num function evals", statsdict[:numevals], "  ")
-  println("  Success rate: ", round(pdict["Within fitness tolerance of optimum"], 3), "%\n")
-  pdict["Within fitness tolerance of optimum"]
+
+  success_rate = round(get(pdict, "Within fitness tolerance of optimum", 0.0), 3)
+  println("  Success rate: ", success_rate, "%\n")
+  success_rate
 end
 
 function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false,
@@ -139,7 +141,7 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
   rank_result_dicts_by(result_dicts, (d) -> median(d[:fitnesses]), "fitness"; descsummary = "median")
   rank_result_dicts_by(result_dicts, (d) -> median(d[:times]), "time (in seconds)";
     descsummary = "median", rpad = " secs")
-  rank_result_dicts_by(result_dicts, (d) -> int(median(d[:numevals])), "num function evals"; descsummary = "median")
+  rank_result_dicts_by(result_dicts, (d) -> round(Int, median(d[:numevals])), "num function evals"; descsummary = "median")
 
   for rd in result_dicts
     report_from_result_dict(rd)
@@ -147,7 +149,7 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
 
 end
 
-function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, parameters::Parameters = EMPTY_PARAMS)
+function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, extraparams::Parameters = EMPTY_PARAMS)
 
   fp = instantiate(problem, dim)
   result_dicts = ParamsDict[]
@@ -155,26 +157,25 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
   # Just so they are declared
   ps = best_so_far = nothing
 
-  params = chain(parameters, ParamsDict(:FitnessTolerance => ftol))
+  params = chain(extraparams, ParamsDict(:FitnessTolerance => ftol))
 
   for m in methods
 
     ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int, numrepeats)
-    rcounts = Dict{String,Int}("Within fitness tolerance of optimum" => 0)
+    rcounts = Dict{String,Int}()
 
-    for i in 1:numrepeats
-      p = fp # BlackBoxOptim.ShiftedAndBiasedProblem(fp)
-      best, fs[i], reason, ts[i], ps, nes[i] = bboptimize(p; max_time = max_time,
-        method = m, parameters = params)
+    results = map(1:numrepeats) do i
+      result = bboptimize(fp, params; MaxTime = max_time, Method = m)
+
+      # Save key data about this run:
+      ts[i]  = elapsed_time(result)
+      fs[i]  = best_fitness(result)
+      nes[i] = f_calls(result)
+
+      # And count only the general stop reasons
+      reason = general_stop_reason(result)
       rcounts[reason] = 1 + get(rcounts, reason, 0)
     end
-
-    if best_so_far == nothing
-      best_so_far = worst_fitness(ps[:Evaluator])
-    end
-
-    # ???
-    best_so_far =
 
     rdict = ParamsDict(:method => m, :fitnesses => fs, :times => ts, :numevals => nes, :reasoncounts => rcounts)
     rdict[:success_rate] = report_from_result_dict(rdict)

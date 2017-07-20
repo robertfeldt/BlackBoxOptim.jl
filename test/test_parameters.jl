@@ -85,6 +85,14 @@
             dc = chain(d3, d1, d2)
             @test (dc[:a], dc[:b], dc[:c]) == (2, 4, 5)
         end
+
+        @testset "Check chaining from real use case" begin
+            # This sequence is used in compare_optimizers.jl:repeated_bboptimize
+            parameters = BlackBoxOptim.EMPTY_PARAMS
+            ftol = 1e-5
+            params = chain(parameters, ParamsDict(:FitnessTolerance => ftol))
+            @test params[:FitnessTolerance] == ftol
+        end
     end
 
     @testset "converting to Dict" begin
