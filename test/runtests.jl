@@ -95,7 +95,7 @@ for t in my_tests
   numtestfiles += 1
   print("."); flush(STDOUT);
 end
-
+println() # So Base.Test summary is correctly aligned...
 end
 elapsed = float(CPUtime_us() - starttime)/1e6
 
