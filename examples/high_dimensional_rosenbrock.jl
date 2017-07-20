@@ -20,13 +20,12 @@ function fitness_for_opt(problemname, numDimensions, populationSize, numSteps, m
 
   println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
 
-  best, fitness = bboptimize(problem; method = method, parameters = {
-    :NumDimensions => numDimensions,
-    :PopulationSize => populationSize,
-    :MaxSteps => numSteps
-    })
+  result = bboptimize(problem; Method = method, 
+    NumDimensions = numDimensions, PopulationSize = populationSize,
+    MaxSteps = numSteps
+  )
 
-  fitness
+  best_fitness(result)
 end
 
 problemname = "Rosenbrock"
