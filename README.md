@@ -92,14 +92,14 @@ For example, to find the solution with the minimal first objective:
 ```julia
 pf = pareto_frontier(res)
 best_obj1, idx_obj1 = findmin(map(elm -> fitness(elm)[1], pf))
-bo1_solution = pf[idx_obj1].params
+bo1_solution = params(pf[idx_obj1]) # get the solution candidate itself...
 ```
 or to use different weighted sums:
 ```julia
 weighedfitness(f, w) = f[1]*w + f[2]*(1.0-w)
 weight = 0.4 # Weight on first objective, so second objective will have weight 1-0.4=0.6
 best_wfitness, idx = findmin(map(elm -> weighedfitness(fitness(elm), weight), pf))
-bsw = pf[idx].params
+bsw = params(pf[idx])
 ```
 
 # Configurable Options
