@@ -112,10 +112,12 @@
             end
             @testset ":RecoverResults on" begin
                 i = 0
+                redirect_stderr() # We don't want to show the warning while testing...
                 optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
                         MaxSteps=100, TraceMode=:silent, RecoverResults=true)
                 res = bboptimize(optctrl)
                 @test BlackBoxOptim.stop_reason(res) == (@sprintf "%s" InterruptException())
+                redirect_stderr(STDERR)
             end
 
             @testset ":RecoverResults off" begin
