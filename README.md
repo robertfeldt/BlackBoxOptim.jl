@@ -35,7 +35,12 @@ end
 ```
 We can now call the `bboptimize()` function, specifying the function to be optimized (here: `rosenbrock2d()`) and the range of values allowed for each of the dimensions of the input:
 ```julia
-bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2)
+res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2)
+```
+We get back an optimization result object that we can query to, for example, get the best fitness and solution candidate:
+```julia
+best_fitness(res) < 0.001        # Fitness is typically very close to zero here...
+length(best_candidate(res)) == 2 # We get back a Float64 vector of dimension 2
 ```
 `BlackBoxOptim` will default to using an adaptive differential evolution optimizer in this case and use it to try to locate a solution where both elements can be Floats in the range -5.0:5.0. If you wanted a different range of allowed values for the second dimension of the solution you can specify that with a range of allowed values. In this case you do not need to specify the number of dimensions since that is implicit from the number of ranges supplied:
 ```julia

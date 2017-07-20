@@ -10,6 +10,7 @@ end
         @testset "example #1" begin
             res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, TraceMode = :silent)
             @test best_fitness(res) < 0.001
+            @test length(best_candidate(res)) == 2
         end
 
         @testset "example #2" begin
