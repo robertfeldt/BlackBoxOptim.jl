@@ -8,11 +8,9 @@ function trefethen(p)
              sin(sin(80 * y)) - sin(10 * (x + y)) + (x^2 + y^2)/4
 end
 
-p = BlackBoxOptim.fixeddim_problem(trefethen; range = (-1.0, 1.0), dims = 2, name = "trefethen")
-
-# To just run one optimization:
-bboptimize(p; max_time = 2.0, method = :generating_set_search, 
-  parameters = {:SaveFitnessTraceToCsv => true})
+bboptimize(trefethen; SearchRange = (-1.0, 1.0), NumDimensions = 2,
+    MaxTime = 2.0, 
+    Method = :generating_set_search)
 
 # To compare several methods in several repetitions:
 #BlackBoxOptim.repeated_bboptimize(5, p, 2, [
