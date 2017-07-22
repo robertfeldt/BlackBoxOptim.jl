@@ -56,8 +56,13 @@ task :runslowtest do
   sh "#{Command} test/runslowtests.jl"
 end
 
+desc "Run examples as tests"
+task :runexamplesastests do
+  sh "#{Command} test/run_examples_as_tests.jl"
+end
+
 desc "Run all tests"
-task :runalltest => [:runtest, :runslowtest]
+task :runalltest => [:runtest, :runslowtest, :runexamplesastests]
 
 desc "Compare optimizers on standard, example problems"
 task :compare_optimizers do
