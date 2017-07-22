@@ -1,12 +1,12 @@
 using BlackBoxOptim
 
 # The functions being optimized need to return a float so trying
-# to optimize this function will throw an error:
+# to optimize this function throws an error:
 function int_returning_opt_func(x::Vector{Float64})
     round(Int, sumabs(x))
 end
 
-# Throws an error if uncommented:
+# Let's try it
 try
     bboptimize(int_returning_opt_func;
         SearchRange = (-5.0, 5.0), NumDimensions = 3, TraceMode = :silent)
