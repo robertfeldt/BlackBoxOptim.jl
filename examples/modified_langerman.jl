@@ -44,10 +44,12 @@ end
 
 using BlackBoxOptim
 
-p = BlackBoxOptim.fixeddim_problem(modLangerman; range = (0.0, 10.0), dims = 10, 
-  name = "Modified Langerman", fmins = [-0.9650])
+mod_lang_problem = BlackBoxOptim.MinimizationProblemFamily(modLangerman, "ModifiedLangerman", 
+  (0.0, 10.0), -0.9650)
 
-BlackBoxOptim.repeated_bboptimize(30, p, 10, [
-  :generating_set_search,
-  :adaptive_de_rand_1_bin_radiuslimited],
-  10.0, 1e-5, {:MinDeltaFitnessTolerance => 1e-50})
+BlackBoxOptim.repeated_bboptimize(5, mod_lang_problem, 10, [
+  :generating_set_search, # GSS not very good on this one
+  :adaptive_de_rand_1_bin_radiuslimited # While DE is at least better
+  ],
+  10.0, 1e-5, Dict{Symbol,Any}(
+    :MinDeltaFitnessTolerance => 1e-50))
