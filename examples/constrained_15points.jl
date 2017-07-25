@@ -42,6 +42,16 @@ result = bboptimize(penalized_points15; SearchRange = (0.0, 1.0), NumDimensions 
   MaxTime = MaxMinutes * 60, Method = :dxnes)
 best_dxnes = best_candidate(result)
 
+# Run the default (Adaptive DE) method for same amount of time on penalized function
+result = bboptimize(penalized_points15; SearchRange = (0.0, 1.0), NumDimensions = Dims,
+  MaxTime = MaxMinutes * 60)
+best_de_pen = best_candidate(result)
+
+# But DE need no penalization since it respects search range bounds:
+result = bboptimize(points15; SearchRange = (0.0, 1.0), NumDimensions = Dims,
+  MaxTime = MaxMinutes * 60)
+best_de = best_candidate(result)
+
 # Run several methods several times:
 BlackBoxOptim.repeated_bboptimize(2, prob, Dims, [
   :generating_set_search,
@@ -52,3 +62,5 @@ BlackBoxOptim.repeated_bboptimize(2, prob, Dims, [
 
 println("xNES points15 fitness = ", points15(best_xnes))
 println("dxNES points15 fitness = ", points15(best_dxnes))
+println("Adaptive DE (default, penalized) points15 fitness = ", points15(best_de_pen))
+println("Adaptive DE (default) points15 fitness = ", points15(best_de))
