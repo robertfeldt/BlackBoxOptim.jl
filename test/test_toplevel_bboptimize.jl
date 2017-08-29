@@ -100,6 +100,18 @@
         @test parameters(res2)[:MaxTime] == 1.0
     end
 
+    @testset "fitness decrease monotonically if optimizing with same optctrl repeatedly" begin
+        # When MAxSteps is 10 this consistently fails...
+        optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+            MaxSteps = 1000, TraceMode = :silent)
+        optresults = [bboptimize(optctrl) for _ in 1:10]
+        bestfitnesses = map(best_fitness, optresults)
+        @show bestfitnesses
+        for i in 1:(length(optresults)-1)
+            @test bestfitnesses[i] >= bestfitnesses[i+1]
+        end
+    end
+
     @testset "return results after interruption" begin
             i = 0
             function rosenbrock_throwing(x)
@@ -112,12 +124,10 @@
             end
             @testset ":RecoverResults on" begin
                 i = 0
-                redirect_stderr() # We don't want to show the warning while testing...
                 optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
                         MaxSteps=100, TraceMode=:silent, RecoverResults=true)
                 res = bboptimize(optctrl)
                 @test BlackBoxOptim.stop_reason(res) == (@sprintf "%s" InterruptException())
-                redirect_stderr(STDERR)
             end
 
             @testset ":RecoverResults off" begin
