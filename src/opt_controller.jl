@@ -91,6 +91,9 @@ OptRunController(optimizer::SteppingOptimizer, problem::OptimizationProblem, par
 # all other optimizers are using make_evaluator() method to create evaluator by default
 OptRunController(optimizer::Optimizer, problem::OptimizationProblem, params) =
     OptRunController(optimizer, make_evaluator(problem, nothing, params), params)
+# We reuse evaluator and optimizer from a previous run if set up from such a run.
+OptRunController(orc::OptRunController, params) =
+    OptRunController(optimizer(orc), evaluator(orc), params)
 
 # logging/tracing
 function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
@@ -404,7 +407,15 @@ end
   Start a new optimization run, possibly with new parameters and report on results.
 """
 function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
-  ctrl = OptRunController(oc.optimizer, oc.problem, oc.parameters)
+
+  # If this is not the first run we create the controller based on the previous one
+  # to reuse the archive etc, otherwise create it based on the problem.
+  ctrl = if numruns(oc) > 0
+    OptRunController(lastrun(oc), oc.parameters)
+  else
+    # No previous run controller so create a new one from optimizer and problem.
+    OptRunController(oc.optimizer, oc.problem, oc.parameters)
+  end
   push!(oc.runcontrollers, ctrl)
 
   # If this is the first run we might have to init the RNG.

@@ -8,46 +8,48 @@ function rosenbrock2d(x)
 end
 
 # If you want to restart optimization you need to get a handle
-# to the optimizer, problem and params. Use the function
-# setup_bboptimize instead of bboptimize, but with the same
-# parameters. We just run it for 10 steps though:
-optimizer, problem, params = BlackBoxOptim.setup_bboptimize(rosenbrock2d;
-  search_range = (-5.0, 5.0), dimensions = 2,
-  parameters = {:MaxSteps => 100, :TraceMode => :silent});
+# to an optimization controller. Use the function bbsetup
+# instead of bboptimize, but with the same parameters. 
+# We just run it for 100 steps though:
+optctrl = bbsetup(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+    MaxSteps = 100, TraceMode = :silent);
 
 # Now we can run it:
-b100, f100, tr100, time100, params, ne100 = BlackBoxOptim.run_optimizer_on_problem(
-  optimizer, problem; parameters = params);
+res100 = bboptimize(optctrl)
 
-# Print a randomly selected individual so we can ensure it's the same later:
-popsize, dims = size(optimizer.population)
-random_individual = rand(1:popsize)
-println("Individual $random_individual (orig): ", optimizer.population[random_individual, :])
+# Print the best and a randomly selected candidate solution so we can ensure
+# they are the same later.
+best100  = best_candidate(res100)
+idx = rand(1:popsize(optctrl.optimizer.population))
+acand100 = optctrl.optimizer.population[idx]
+println("Best candidate: ", best100)
+println("Candidate num $(idx): ", acand100)
 
 # Now serialize to a temp file:
-tempfilename = "./temp" * string(rand(1:int(1e8))) * ".tmp"
+tempfilename = "./temp" * string(rand(1:Int(1e8))) * ".tmp"
 fh = open(tempfilename, "w")
-serialize(fh, (optimizer, problem, params))
+serialize(fh, (optctrl, res100))
 close(fh)
 
 # Read back in from file:
 fh = open(tempfilename, "r")
-opt2, prob2, params2 = deserialize(fh)
+optctrlb, res100b = deserialize(fh);
 close(fh)
 
-# Print the same randomly selected individual so we can ensure it's the same:
-println("Individual $random_individual (read): ", opt2.population[random_individual, :])
+# Print the same candidates:
+best100b  = best_candidate(res100b)
+acand100b = optctrlb.optimizer.population[idx]
+println("Best candidate after load: ", best100)
+println("Candidate num $(idx) after load: ", acand100)
 
 # Clean up the temp file:
 rm(tempfilename)
 
 # Now restart the optimization (but run more steps):
-params2[:MaxSteps] = 900
-b1000, f1000, tr1000, time1000, params, ne1000 = BlackBoxOptim.run_optimizer_on_problem(
-  opt2, prob2; parameters = params2);
+res1100 = bboptimize(optctrlb; MaxSteps = 1000)
 
 # And print the fitness progress:
-println("Fitness progress: ", (f100, f1000))
+println("Fitness progress: ", (best_fitness(res100), best_fitness(res1100)))
 
 # NOTE! This method is not guaranteed to give stable results when you change
 # version of julia between saving and loading the data.

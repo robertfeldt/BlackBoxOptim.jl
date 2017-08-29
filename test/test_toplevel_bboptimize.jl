@@ -101,14 +101,15 @@
     end
 
     @testset "fitness decrease monotonically if optimizing with same optctrl repeatedly" begin
-        # When MAxSteps is 10 this consistently fails...
+        # There was a bug in 0.3.0 that did not give monotonically decreasing
+        # fitness with repeated runs. The bug only happened for very short MaxSteps 
+        # lengths, such as 10. This test ensures it does not resurface.
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-            MaxSteps = 1000, TraceMode = :silent)
+            MaxSteps = 10, TraceMode = :silent)
         optresults = [bboptimize(optctrl) for _ in 1:10]
         bestfitnesses = map(best_fitness, optresults)
-        @show bestfitnesses
-        for i in 1:(length(optresults)-1)
-            @test bestfitnesses[i] >= bestfitnesses[i+1]
+        for i in 2:length(optresults)
+            @test bestfitnesses[i-1] >= bestfitnesses[i]
         end
     end
 
