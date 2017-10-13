@@ -1,6 +1,6 @@
 """
-  An ordered set of dicts that are examined one after another to find the parameter value.
-  Returns nothing if no param setting is found in any of the dicts.
+An ordered set of dicts that are examined one after another to find the parameter value.
+Returns nothing if no param setting is found in any of the dicts.
 """
 type DictChain{K,V} <: Associative{K,V}
   dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
@@ -98,18 +98,18 @@ function Base.delete!{K,V}(p::DictChain{K,V}, key)
 end
 
 """
-  The parameters storage type for `BlackBoxOptim`.
+The parameters storage type for `BlackBoxOptim`.
 """
 const Parameters = Associative{Symbol,Any}
 
 """
-  The default parameters storage in `BlackBoxOptim`.
+The default parameters storage in `BlackBoxOptim`.
 """
 const ParamsDict = Dict{Symbol,Any}
 const ParamsDictChain = DictChain{Symbol,Any}
 
 """
-  The default placeholder value for parameters argument.
+The default placeholder value for parameters argument.
 """
 const EMPTY_PARAMS = ParamsDict()
 

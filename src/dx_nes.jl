@@ -1,5 +1,5 @@
 """
-  DX-NES: distance-weighted extensions of xNES by Fukushima et al.
+DX-NES: distance-weighted extensions of xNES by Fukushima et al.
 """
 type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
@@ -117,12 +117,12 @@ function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
 end
 
 """
-  Calculate the parameters for evolutionary path.
+Calculate the parameters for evolutionary path.
 
-  Returns the tuple:
-    * moving threshold
-    * path discount
-    * current Z scale
+Returns the tuple:
+  * moving threshold
+  * path discount
+  * current Z scale
 """
 function calculate_evol_path_params(n::Int, u::Vector{Float64})
   lambda = length(u)

@@ -1,39 +1,39 @@
 """
-  Base abstract class for black-box optimization algorithms.
+Base abstract class for black-box optimization algorithms.
 """
 abstract type Optimizer end
 
 """
-    Optimizers derived from `SteppingOptimizer` implement classical iterative optimization scheme
-    `step!()` → `step!()` → …
+Optimizers derived from `SteppingOptimizer` implement classical iterative optimization scheme
+`step!()` → `step!()` → …
 """
 abstract type SteppingOptimizer <: Optimizer end
 evaluator(so::SteppingOptimizer) = so.evaluator
 
 """
-  `step!(opt::SteppingOptimizer)`
+    step!(opt::SteppingOptimizer)
 
-  Do one iteration of the method.
+Do one iteration of the method.
 """
 function step! end # FIXME avoid defining 0-arg function
 
 """
-  Base abstract class for optimizers that perform
-  `ask()` → ..eval fitness.. → `tell!()`
-  sequence at each step.
+Base abstract class for optimizers that perform
+`ask()` → ..eval fitness.. → `tell!()`
+sequence at each step.
 """
 abstract type AskTellOptimizer <: Optimizer end
 
 """
-  `ask(ato::AskTellOptimizer)`
+    ask(ato::AskTellOptimizer)
 
-  Ask for a new candidate solution to be generated, and a list of individuals
-  it should be ranked with.
+Ask for a new candidate solution to be generated, and a list of individuals
+it should be ranked with.
 
-  The individuals are supplied as an array of tuples
-  with the individual and its index.
+The individuals are supplied as an array of tuples
+with the individual and its index.
 
-  See also `tell!()`
+See also `tell!()`
 """
 function ask end # FIXME avoid defining 0-arg function
 
@@ -68,18 +68,18 @@ function ask end # FIXME avoid defining 0-arg function
 # approximation of it. Different archival strategies can be implemented.
 
 """
-  `tell!(ato::AskTellOptimizer, rankedCandidates)`
+    tell!(ato::AskTellOptimizer, rankedCandidates)
 
-  Tell the optimizer about the ranking of candidates.
-  Returns the number of `rankedCandidates` that were inserted into the population,
-  because of the improved fitness.
+Tell the optimizer about the ranking of candidates.
+Returns the number of `rankedCandidates` that were inserted into the population,
+because of the improved fitness.
 
-  See also `ask()`.
+See also `ask()`.
 """
 function tell! end # FIXME avoid defining 0-arg function
 
 """
-  Base class for population-based optimization methods.
+Base class for population-based optimization methods.
 """
 abstract type PopulationOptimizer <: AskTellOptimizer end
 
@@ -114,11 +114,11 @@ function name(o::Optimizer)
 end
 
 """
-  `trace_state(io::IO, optimizer::Optimizer, mode::Symbol)`
+    trace_state(io::IO, optimizer::Optimizer, mode::Symbol)
 
-  Trace the current optimization state to a given IO stream.
-  Called by `OptRunController` `trace_progress()`.
+Trace the current optimization state to a given IO stream.
+Called by `OptRunController` `trace_progress()`.
 
-  Override it for your optimizer to generate method-specific diagnostic traces.
+Override it for your optimizer to generate method-specific diagnostic traces.
 """
 function trace_state(io::IO, optimizer::Optimizer, mode::Symbol) end

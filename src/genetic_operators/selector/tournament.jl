@@ -1,5 +1,5 @@
 """
-  Tournament selector.
+Tournament selector.
 """
 type TournamentSelector{H} <: IndividualsSelector
     hat_comp::H     # fitness comparison tri-valued operator
@@ -26,9 +26,9 @@ function select(sel::TournamentSelector, population, n_tours::Int)
 end
 
 """
-    Simulate tournament among specified `candidates`.
+Simulate tournament among specified `candidates`.
 
-    Returns the index of the winner.
+Returns the index of the winner.
 """
 function tournament(sel::TournamentSelector, population, candidates)
     if isempty(candidates)

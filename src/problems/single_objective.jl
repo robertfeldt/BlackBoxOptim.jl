@@ -15,11 +15,11 @@ Hartman6 = minimization_problem(hartman6, "Hartman6", (0.0, 1.0), 6, -3.32237)
 Hartman3 = minimization_problem(hartman3, "Hartman3", (0.0, 1.0), 3, -3.860038442)
 
 """
-  JADE collection of optimization problems.
+JADE collection of optimization problems.
 
-  We skip (for now) `f12` and `f13` in the JADE paper since they are penalized
-  functions which are quite nonstandard. We also skip `f8` since we are unsure
-  about its proper implementation.
+We skip (for now) `f12` and `f13` in the JADE paper since they are penalized
+functions which are quite nonstandard. We also skip `f8` since we are unsure
+about its proper implementation.
 """
 const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
   1   => MinimizationProblemFamily(sphere, "Sphere", (-100.0, 100.0), 0.0),
@@ -46,10 +46,10 @@ const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
 #####################################################################
 
 """
-  A `TransformedProblem` just makes a few changes in an original problem but refers
-  most func calls to it.
+A `TransformedProblem` just makes a few changes in an original problem but refers
+most func calls to it.
 
-  The concrete derived types must implement a `sub_problem()` method.
+The concrete derived types must implement a `sub_problem()` method.
 """
 abstract type TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS} end
 
@@ -61,8 +61,8 @@ fmins(tp::TransformedProblem) = fmins(sub_problem(tp))
 name(tp::TransformedProblem) = name(sub_problem(tp))
 
 """
-  A `TransformedProblem` subclass that shifts the minimum value and biases the returned
-  function values.
+A `TransformedProblem` subclass that shifts the minimum value and biases the returned
+function values.
 """
 type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
   xshift::Vector{Float64}
@@ -81,7 +81,7 @@ sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
 is_fixed_dimensional(p::ShiftedAndBiasedProblem) = is_fixed_dimensional(sub_problem(p))
 
 """
-  Evaluate fitness by first shifting `x` and then biasing the returned function value.
+Evaluate fitness by first shifting `x` and then biasing the returned function value.
 """
 evalfunc(x, i, sp::ShiftedAndBiasedProblem) = begin
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
@@ -125,7 +125,7 @@ s1_rosenbrock = rosenbrock
 #####################################################################
 
 """
-  Transform symmetric `f` into asymmetric objective function.
+Transform symmetric `f` into asymmetric objective function.
 """
 function t_asy(f, beta)
   D = length(f)
@@ -138,7 +138,7 @@ function t_asy(f, beta)
 end
 
 """
-  Transform `f` into objective function with ill-conditioning effect.
+Transform `f` into objective function with ill-conditioning effect.
 """
 function t_diag(f, alpha)
   D = length(f)
@@ -147,7 +147,7 @@ function t_diag(f, alpha)
 end
 
 """
-  Transform `f` into objective function with smooth local irregularities.
+Transform `f` into objective function with smooth local irregularities.
 """
 function t_irreg(f)
    a = 0.1

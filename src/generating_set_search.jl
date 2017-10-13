@@ -4,12 +4,14 @@
 #  SIAM review 45.3 (2003): 385-482.
 #
 
-""" A supertype for all generating set searcher-like algorithms. """
+"""
+A supertype for all generating set searcher-like algorithms.
+"""
 abstract type DirectSearcher <: SteppingOptimizer end
 
 """
-  `DirectionGenerator` generates the search directions to use at each step of
-  a GSS search.
+`DirectionGenerator` generates the search directions to use at each step of
+a GSS search.
 """
 abstract type DirectionGenerator end
 
@@ -41,10 +43,10 @@ const GSSDefaultParameters = ParamsDict(
 calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
 
 """
-  Generating Set Search as described in Kolda2003:
-    Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization
-    by direct search: New perspectives on some classical and modern methods."
-    SIAM review 45.3 (2003): 385-482.
+Generating Set Search as described in Kolda2003:
+  Kolda, Tamara G., Robert Michael Lewis, and Virginia Torczon. "Optimization
+  by direct search: New perspectives on some classical and modern methods."
+  SIAM review 45.3 (2003): 385-482.
 """
 type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
   direction_gen::D

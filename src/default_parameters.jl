@@ -1,7 +1,7 @@
 """
-  Default parameters for all convenience methods that are exported to the end user.
+Default parameters for all convenience methods that are exported to the end user.
 
-  See `OptRunController` for the description.
+See `OptRunController` for the description.
 """
 const DefaultParameters = ParamsDict(
   :NumDimensions  => :NotSpecified, # Dimension of problem to be optimized

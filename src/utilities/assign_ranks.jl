@@ -1,6 +1,6 @@
 """
-  Assign ranks to the values but keeps the rank the same if the values are within
-  tolerance of each other.
+Assign ranks to the values but keeps the rank the same if the values are within
+tolerance of each other.
 """
 function assign_ranks_within_tolerance(values; by = (x) -> x, tolerance = 1e-5, rev = false)
 

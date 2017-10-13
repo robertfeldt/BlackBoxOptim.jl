@@ -76,16 +76,16 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
 end
 
 """
-  Summarize a vector of float values by stating its mean, std dev and median.
+Summarize a vector of float values by stating its mean, std dev and median.
 """
 function report_on_values(desc, v, lpad = "", rpad = "", digits = 3)
   println("$(lpad)$(desc): $(signif(mean(v), digits)) (std. dev = $(signif(std(v), digits)), median = $(signif(median(v), digits)))")
 end
 
 """
-  Report the number of times each key was encountered in a count `dict`.
+Report the number of times each key was encountered in a count `dict`.
 
-  Returns a percentage dict calculated while iterating over the counted items.
+Returns a percentage dict calculated while iterating over the counted items.
 """
 function count_dict_report(dict, desc, lpad = "", rpad = "")
   println(desc, ":")
@@ -99,9 +99,9 @@ function count_dict_report(dict, desc, lpad = "", rpad = "")
 end
 
 """
-  Print a report based on a result dict from one set of repeated runs of
-  an optimization method. Returns the success rate, i.e. number of times the
-  termination reason was "Within fitness tolerance...".
+Print a report based on a result dict from one set of repeated runs of
+an optimization method. Returns the success rate, i.e. number of times the
+termination reason was "Within fitness tolerance...".
 """
 function report_from_result_dict(statsdict)
   println("Method: $(statsdict[:method])")

@@ -1,8 +1,8 @@
 """
-    Parent Centric Crossover (PCX).
+Parent Centric Crossover (PCX).
 
-    See
-        Deb, K., Anand, A., and Joshi, D., "A Computationally Efficient Evolutionary Algorithm for Real-Parameter Optimization," Evolutionary Computation, vol. 10, no. 4, pp. 371-395, 2002.
+See
+    Deb, K., Anand, A., and Joshi, D., "A Computationally Efficient Evolutionary Algorithm for Real-Parameter Optimization," Evolutionary Computation, vol. 10, no. 4, pp. 371-395, 2002.
 """
 immutable ParentCentricCrossover{NP} <: CrossoverOperator{NP,1}
 	ζ::Float64 # sd for the orthogonal directions defined by 2nd,3rd etc parents

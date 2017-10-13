@@ -1,16 +1,16 @@
 
 """
-    Base class for problem families.
+Base class for problem families.
 
-    It is an abstraction for problem parameterization (e.g by the
-    number of the search space dimensions) that allows
-    to instantiate `OptimizationProblem` for the concrete parameters.
+It is an abstraction for problem parameterization (e.g by the
+number of the search space dimensions) that allows
+to instantiate `OptimizationProblem` for the concrete parameters.
 """
 abstract type ProblemFamily{FS<:FitnessScheme} end
 
 """
-  Family of `FunctionBasedProblem` optimization problems
-  parameterized by the number of search space dimensions.
+Family of `FunctionBasedProblem` optimization problems
+parameterized by the number of search space dimensions.
 """
 type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
   objfunc::Function                     # Objective function
@@ -35,7 +35,7 @@ objfunc(family::FunctionBasedProblemFamily) = family.objfunc
 """
     instantiate(family::FunctionBasedProblemFamily, ndim::Int)
 
-    Construct search space for `FunctionBasedProblem` with the given number of dimensions.
+Construct search space for `FunctionBasedProblem` with the given number of dimensions.
 """
 function instantiate_search_space(family::FunctionBasedProblemFamily, ndim::Int)
     ndim >= numdims(family.reserved_ss) ||
@@ -46,7 +46,7 @@ end
 """
     instantiate(family::FunctionBasedProblemFamily, ndim::Int)
 
-    Construct `FunctionBasedProblem` with the given number of dimensions.
+Construct `FunctionBasedProblem` with the given number of dimensions.
 """
 instantiate(family::FunctionBasedProblemFamily, ndim::Int) =
     FunctionBasedProblem(family.objfunc, family.name, family.fitness_scheme,
@@ -77,12 +77,12 @@ minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int, f
     instantiate(MinimizationProblemFamily(f, name, range, fmin), ndim)
 
 """
-  `problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Union{Int,Vector{Int}})`
+    problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Union{Int,Vector{Int}})
 
-  Construct a fixed-dimensional version of each problem from `ps`
-  for each dimension given in `dims`.
+Construct a fixed-dimensional version of each problem from `ps`
+for each dimension given in `dims`.
 
-  Returns a dictionary of problems.
+Returns a dictionary of problems.
 """
 function problem_set(ps::Dict{Any, FunctionBasedProblemFamily}, dims::Vector{Int})
   next_free_index = 1

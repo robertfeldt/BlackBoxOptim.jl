@@ -1,5 +1,5 @@
 """
-    Individual representing the solution from the Pareto set.
+Individual representing the solution from the Pareto set.
 """
 immutable FrontierIndividual{F} <: ArchivedIndividual{F}
     fitness::F
@@ -21,7 +21,7 @@ end
 tag(indi::FrontierIndividual) = indi.tag
 
 """
-    Individual stored in `EpsBoxArchive`.
+Individual stored in `EpsBoxArchive`.
 """
 const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
 
@@ -30,11 +30,11 @@ const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFit
     FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
 """
-    ϵ-box archive saves only the solutions that are not ϵ-box
-    dominated by any other solutions in the archive.
+ϵ-box archive saves only the solutions that are not ϵ-box
+dominated by any other solutions in the archive.
 
-    It also counts the number of candidate solutions that have been added
-    and how many ϵ-box progresses have been made.
+It also counts the number of candidate solutions that have been added
+and how many ϵ-box progresses have been made.
 """
 type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
   fit_scheme::FS        # Fitness scheme used
@@ -73,7 +73,7 @@ capacity(a::EpsBoxArchive) = a.max_size
 numdims(a::EpsBoxArchive) = !isempty(a.frontier) ? length(a.frontier[1].params) : 0
 
 """
-    Iterates occupied elements of the `archive.frontier`.
+Iterates occupied elements of the `archive.frontier`.
 """
 immutable EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
     archive::A
@@ -86,7 +86,7 @@ end
 @inline Base.next(it::EpsBoxArchiveFrontierIterator, ix::Integer) = (it.archive.frontier[ix], findnext(it.archive.frontier_isoccupied, ix+1))
 
 """
-    Get the iterator to the individuals on the Pareto frontier.
+Get the iterator to the individuals on the Pareto frontier.
 """
 pareto_frontier(a::EpsBoxArchive) = EpsBoxArchiveFrontierIterator(a)
 
@@ -102,8 +102,8 @@ function occupied_frontier_indices(a::EpsBoxArchive)
 end
 
 """
-    Get random occupied Pareto frontier index.
-    Returns 0 if frontier is empty.
+Get random occupied Pareto frontier index.
+Returns 0 if frontier is empty.
 """
 function rand_frontier_index(a::EpsBoxArchive)
     if a.len == 0
@@ -122,11 +122,11 @@ function rand_frontier_index(a::EpsBoxArchive)
 end
 
 """
-    `noprogress_streak(a::EpsBoxArchive, [since_restart])`
+    noprogress_streak(a::EpsBoxArchive, [since_restart])
 
-    Get the number of `add_candidate!()` calls since the last ϵ-progress.
-    If `since_restart` is specified, the number is relative to the last
-    restart.
+Get the number of `add_candidate!()` calls since the last ϵ-progress.
+If `since_restart` is specified, the number is relative to the last
+restart.
 """
 noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
     since_restart ?
@@ -145,12 +145,12 @@ function notify!(a::EpsBoxArchive, event::Symbol)
 end
 
 """
-    `tagcounts(a::EpsBoxArchive)`
+    tagcounts(a::EpsBoxArchive)
 
-    Count the tags of individuals on the ϵ-box frontier.
-    Each restart the individual remains in the frontier discounts it by `θ`.
+Count the tags of individuals on the ϵ-box frontier.
+Each restart the individual remains in the frontier discounts it by `θ`.
 
-    Returns the `tag`→`count` dictionary.
+Returns the `tag`→`count` dictionary.
 """
 function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     (0.0 < θ <= 1.0) || throw(ArgumentError("θ ($θ) should be in (0.0, 1.0] range"))

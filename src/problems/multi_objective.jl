@@ -1,5 +1,5 @@
 """
-  ``(N-1)``-dimensional manifold in ``N``-dimensional space.
+``(N-1)``-dimensional manifold in ``N``-dimensional space.
 """
 immutable Hypersurface{N,SS<:SearchSpace}
     manifold::Function
@@ -16,8 +16,8 @@ end
 """
     generate(surf::Hypersurface, fs::EpsBoxDominanceFitnessScheme, param_step = 0.1*fs.ϵ)
 
-    Generate the points of the hypersurface using the
-    discretization defined by ϵ-box fitness schema.
+Generate the points of the hypersurface using the
+discretization defined by ϵ-box fitness schema.
 """
 @generated function generate{N,F,NP}(surf::Hypersurface{N}, fs::EpsBoxDominanceFitnessScheme{N,F}, ::Type{Val{NP}}, param_step::Vector{F} = 0.1*fs.ϵ)
     quote
@@ -40,7 +40,7 @@ end
 """
     nondominated(fitnesses, fit_scheme)
 
-    Filter `fitnesses` removing all dominated values.
+Filter `fitnesses` removing all dominated values.
 """
 function nondominated{N,F}(fitnesses, fit_scheme::EpsBoxDominanceFitnessScheme{N,F})
     arch = EpsBoxArchive(fit_scheme)
@@ -55,7 +55,7 @@ end
 """
     distance(a::NTuple{N,F}, b::NTuple{N,F})
 
-    Euclidean distance from `a` to `b`.
+Euclidean distance from `a` to `b`.
 """
 @generated function distance{N,F}(a::NTuple{N,F}, b::NTuple{N,F})
     quote
@@ -68,7 +68,7 @@ end
 """
     IGD(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}, [two_sided=true])
 
-    The average Euclidean distance from the points of `A` to the points of `B`.
+The average Euclidean distance from the points of `A` to the points of `B`.
 """
 IGD{N,F<:Number}(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}) =
     sum(a -> minimum(b -> distance(a, b), B), A) / length(A)
@@ -76,9 +76,9 @@ IGD{N,F<:Number}(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}) =
 """
     IGD(ref::Hypersurface, sol::Vector{FitIndividual}, [two_sided=true])
 
-    Average Euclidean distance from the exact Pareto frontier of the problem (`ref`)
-    to the solution (`sol`) produced by the optimization method.
-    If `two_sided` is on, returns the maximum of `IGD(sol, ref)` and `IGD(nondominated(ref), sol)`.
+Average Euclidean distance from the exact Pareto frontier of the problem (`ref`)
+to the solution (`sol`) produced by the optimization method.
+If `two_sided` is on, returns the maximum of `IGD(sol, ref)` and `IGD(nondominated(ref), sol)`.
 """
 function IGD{N,F<:Number,T<:FrontierIndividualWrapper,NP}(ref::Hypersurface{N}, sol::AbstractVector{T},
                              fit_scheme::EpsBoxDominanceFitnessScheme{N,F},
@@ -99,7 +99,7 @@ function IGD{N,F<:Number,T<:FrontierIndividualWrapper,NP}(ref::Hypersurface{N}, 
 end
 
 """
-   CEC09 Unconstrained Problem 8 objective function.
+CEC09 Unconstrained Problem 8 objective function.
 """
 function CEC09_UP8(x::Vector{Float64})
     N = length(x)
@@ -126,8 +126,8 @@ function CEC09_UP8(x::Vector{Float64})
 end
 
 """
-   CEC09 Unconstrained Problem 8 Pareto Frontier.
-   Parameterized by t[1]=f[1] and t[2]=f[2].
+CEC09 Unconstrained Problem 8 Pareto Frontier.
+Parameterized by t[1]=f[1] and t[2]=f[2].
 """
 function CEC09_UP8_PF{NP}(t::Vector{Float64}, ::Type{Val{NP}})
     d=sum(abs2, t)
@@ -135,10 +135,10 @@ function CEC09_UP8_PF{NP}(t::Vector{Float64}, ::Type{Val{NP}})
 end
 
 """
-   The collection of CEC09 unconstrained
-   multi-objective problems.
+The collection of CEC09 unconstrained
+multi-objective problems.
 
-   See http://dces.essex.ac.uk/staff/zhang/MOEAcompetition/cec09testproblem0904.pdf.pdf
+See http://dces.essex.ac.uk/staff/zhang/MOEAcompetition/cec09testproblem0904.pdf.pdf
 """
 const CEC09_Unconstrained_Set = Dict{Int,FunctionBasedProblemFamily}(
     8 => FunctionBasedProblemFamily(CEC09_UP8, "CEC09 UP8",  ParetoFitnessScheme{3}(is_minimizing=true),

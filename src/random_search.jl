@@ -1,5 +1,5 @@
 """
-  Optimize by randomly generating the candidates.
+Optimize by randomly generating the candidates.
 """
 type RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
   name::String

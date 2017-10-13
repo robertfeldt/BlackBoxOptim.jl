@@ -6,9 +6,8 @@
 #
 
 """
-  Generate `num` random vectors on the `n`-dimensional, unit (hyper)sphere.
-  This is the Muller-Marsaglia method as described on the page:
-    http://mathworld.wolfram.com/HyperspherePointPicking.html
+Generate `num` random vectors on the `n`-dimensional, unit (hyper)sphere.
+This is the Muller-Marsaglia method as described [here](http://mathworld.wolfram.com/HyperspherePointPicking.html).
 """
 function sample_unit_hypersphere(n, num = 1)
   X = randn(n, num)
@@ -26,8 +25,8 @@ function directions_for_k(rdg::RandomDirectionGen, k)
 end
 
 """
-  Generate half of the directions randomly and then
-  mirrors by negating them.
+Generate half of the directions randomly and then
+mirrors by negating them.
 """
 immutable MirroredRandomDirectionGen <: DirectionGenerator
   numDimensions::Int

@@ -1,5 +1,6 @@
-# Several genetic operators can be chained together.
-
+"""
+Several genetic operators chained together.
+"""
 type OperatorPipeline <: GeneticOperator
   ops::Vector{GeneticOperator}
   OperatorPipeline(operators...) = begin

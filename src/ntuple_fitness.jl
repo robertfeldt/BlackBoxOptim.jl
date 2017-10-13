@@ -1,11 +1,12 @@
 """
-  Base class for tuple-based fitness schemes.
+Base class for tuple-based fitness schemes.
 
-  `N` is the number of the objectives
-  `F` is the type of each objective
-  `FA` is the actual type of the multi-objective fitness
-  `MIN` if objectives should be minimized or maximized
-  `AGG` the type of aggregator
+Type parameters:
+  * `N` is the number of the objectives
+  * `F` is the type of each objective
+  * `FA` is the actual type of the multi-objective fitness
+  * `MIN` if objectives should be minimized or maximized
+  * `AGG` the type of aggregator
 """
 abstract type TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA} end
 
@@ -22,11 +23,11 @@ aggregate{N,F}(f::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) = fs.aggregator(f)
 @inline is_worse{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) = hat_compare(f1, f2, fs, 1) == 1
 
 """
-  Pareto dominance for `N`-tuple (`N`≧1) fitnesses.
+Pareto dominance for `N`-tuple (`N`≧1) fitnesses.
 
-  `aggregator::AGG` is a function mapping tuple fitness to a single numerical value.
-  Might be used for comparisons (or not, depending on the setup).
-  Always used when printing fitness vectors though.
+`aggregator::AGG` is a function mapping tuple fitness to a single numerical value.
+Might be used for comparisons (or not, depending on the setup).
+Always used when printing fitness vectors though.
 """
 immutable ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
@@ -69,11 +70,11 @@ hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::ParetoFitnessScheme{N,F,f
     hat_compare_pareto(f2, f1, expected)
 
 """
-  ϵ-dominance for `N`-tuple (`N`≧1) fitnesses.
+ϵ-dominance for `N`-tuple (`N`≧1) fitnesses.
 
-  `aggregator::AGG` is a function mapping tuple fitness to a single numerical value.
-  Might be used for comparisons (or not, depending on the setup).
-  Always used when printing fitness vectors though.
+`aggregator::AGG` is a function mapping tuple fitness to a single numerical value.
+Might be used for comparisons (or not, depending on the setup).
+Always used when printing fitness vectors though.
 """
 immutable EpsDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: FitnessScheme{NTuple{N,F}}
     ϵ::F              # ɛ-domination threshold
@@ -153,9 +154,9 @@ end
 end
 
 """
-    ϵ-box indexed representation of the N-tuple fitness.
+ϵ-box indexed representation of the N-tuple fitness.
 
-    Used together with `EpsBoxDominanceFitnessScheme`.
+Used together with `EpsBoxDominanceFitnessScheme`.
 """
 immutable IndexedTupleFitness{N,F}
     orig::NTuple{N,F}       # original fitness
@@ -182,11 +183,11 @@ end
 
 # comparison for minimizing ϵ-box dominance scheme
 """
-    Returns a tuple of `u` and `v` comparison:
-      * `-1`: u≺v
-      * `0`: u and v non-dominating
-      * `1`: u≻v
-    and whether `u` index fully matches `v` index.
+Returns a tuple of `u` and `v` comparison:
+  * `-1`: u≺v
+  * `0`: u and v non-dominating
+  * `1`: u≻v
+and whether `u` index fully matches `v` index.
 """
 function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, is_minimizing::Bool=true, expected::Int=0)
     comp = 0
@@ -231,13 +232,13 @@ function check_epsbox_ϵ{F<:Number}(ϵ::Vector{F}, n::Int)
 end
 
 """
-  `EpsBoxDominanceFitnessScheme` defines ϵ-box dominance for
-  `N`-tuple (`N`≧1) fitnesses.
-  It operates with fitnesses of type `IndexedTupleFitness`.
+`EpsBoxDominanceFitnessScheme` defines ϵ-box dominance for
+`N`-tuple (`N`≧1) fitnesses.
+It operates with fitnesses of type `IndexedTupleFitness`.
 
-  `aggregator::AGG` is a function mapping tuple fitness to a single numerical value.
-  Might be used for comparisons (or not, depending on the setup).
-  Always used when printing fitness vectors though.
+`aggregator::AGG` is a function mapping tuple fitness to a single numerical value.
+Might be used for comparisons (or not, depending on the setup).
+Always used when printing fitness vectors though.
 """
 immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,IndexedTupleFitness{N,F},MIN,AGG}
     ϵ::Vector{F}        # per-objective ɛ-domination thresholds

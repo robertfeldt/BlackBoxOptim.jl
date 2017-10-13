@@ -1,5 +1,5 @@
 """
-  Polynomial mutation as presented in the paper:
+Polynomial mutation as presented in the paper:
     Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
 """
 immutable PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
@@ -11,7 +11,7 @@ immutable PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
 end
 
 """
-   Default parameters for `PolynomialMutation`.
+Default parameters for `PolynomialMutation`.
 """
 const PM_DefaultOptions = ParamsDict(
   :PM_η => 50.0,

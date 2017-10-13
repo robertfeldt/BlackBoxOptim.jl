@@ -1,31 +1,31 @@
 """
-    A point in the problem's search space with the
-    corresponding fitness value.
+A point in the problem's search space with the
+corresponding fitness value.
 
-  `F` is the original problem's fitness type
+`F` is the original problem's fitness type
 """
 abstract type FitIndividual{F} end
 
 fitness_type{F}(indi::FitIndividual{F}) = F
 
 """
-    Get the problem parameters (a point in the search space) of the individual.
+Get the problem parameters (a point in the search space) of the individual.
 """
 params(indi::FitIndividual) = indi.params
 
 """
     fitness(indi::FitIndividual)
 
-    Gets the fitness of the individual.
+Gets the fitness of the individual.
 """
 fitness(indi::FitIndividual) = indi.fitness
 
 """
-  Candidate solution to the problem.
+Candidate solution to the problem.
 
-  Candidate can be either a member of the population (`index` > 0) or
-  a standalone solution (`index` == -1).
-  Can carry additional information, like the `tag` or the genetic operator applied (`extra`).
+Candidate can be either a member of the population (`index` > 0) or
+a standalone solution (`index` == -1).
+Can carry additional information, like the `tag` or the genetic operator applied (`extra`).
 """
 type Candidate{F} <: FitIndividual{F}
     params::Individual

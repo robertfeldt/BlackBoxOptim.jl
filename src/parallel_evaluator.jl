@@ -1,5 +1,5 @@
 """
-  Internal data for the worker process of the parallel evaluator.
+Internal data for the worker process of the parallel evaluator.
 """
 immutable ParallelEvaluatorWorker{P<:OptimizationProblem}
   problem::P
@@ -17,7 +17,7 @@ fitness{P}(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) =
   fitness(params, fetch(fetch(worker_ref))::ParallelEvaluatorWorker{P})
 
 """
-  Current state of fitness function evaluation for the vector of candidates.
+Current state of fitness function evaluation for the vector of candidates.
 """
 type ParallelEvaluationState{F, FS}
   fitness_scheme::FS
@@ -42,8 +42,8 @@ is_stopped(estate::ParallelEvaluationState) = estate.next_index == 0
 abort!(estate::ParallelEvaluationState) = (estate.next_index = 0)
 
 """
-  Reset the current `ParallelEvaluationState` and the vector
-  of candidates that need fitness evaluation.
+Reset the current `ParallelEvaluationState` and the vector
+of candidates that need fitness evaluation.
 """
 function reset!{F}(estate::ParallelEvaluationState{F}, candidates::Vector{Candidate{F}})
   estate.candidates = candidates
@@ -54,8 +54,8 @@ function reset!{F}(estate::ParallelEvaluationState{F}, candidates::Vector{Candid
 end
 
 """
-  Get the index of the next candidate for evaluation
-  based on the Base.pmap() code.
+Get the index of the next candidate for evaluation
+based on the Base.pmap() code.
 """
 function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
     @assert !estate.worker_busy[worker_ix]
@@ -94,7 +94,7 @@ function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
 end
 
 """
-  Notify that the worker process is finished and reset its busy flag.
+Notify that the worker process is finished and reset its busy flag.
 """
 function worker_finished!(estate::ParallelEvaluationState, worker_ix::Int)
   @assert estate.worker_busy[worker_ix]
@@ -104,8 +104,8 @@ function worker_finished!(estate::ParallelEvaluationState, worker_ix::Int)
 end
 
 """
-  Fitness evaluator that distributes candidates fitness calculation
-  among several worker processes.
+Fitness evaluator that distributes candidates fitness calculation
+among several worker processes.
 """
 type ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
   problem::P

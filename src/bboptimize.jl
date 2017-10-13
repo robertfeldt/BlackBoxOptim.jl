@@ -1,10 +1,10 @@
 """
-  `setup_problem(problem, parameters::Parameters)`
+    setup_problem(problem, parameters::Parameters)
 
-  Set up a fixed-dimensional optimization problem.
+Set up a fixed-dimensional optimization problem.
 
-  There are several `setup_problem()` method that accept different type of
-  `problem` argument:
+There are several `setup_problem()` method that accept different type of
+`problem` argument:
     * `OptimizationProblem`
     * function (`:NumDimensions` has to be specified in `parameters`)
     * `FunctionBasedProblemFamily` (`:NumDimensions` has to be specified in `parameters`)
@@ -44,19 +44,19 @@ function setup_problem(func::Function, parameters::Parameters)
 end
 
 """
-  `bboptimize(problem[; parameters::Associative, kwargs...])`
+    bboptimize(problem[; parameters::Associative, kwargs...])
 
-  Solve given optimization `problem`.
+Solve given optimization `problem`.
 
-  See `setup_problem()` for the types of `problem` supported.
-  In addition, the `problem` could be `OptController` containing the
-  results of the previous optimization runs.
+See `setup_problem()` for the types of `problem` supported.
+In addition, the `problem` could be `OptController` containing the
+results of the previous optimization runs.
 
-  The optimization method parameters could be specified via `kwargs` or `parameters` arguments.
+The optimization method parameters could be specified via `kwargs` or `parameters` arguments.
 
-  Returns `OptimizationResults` instance.
+Returns `OptimizationResults` instance.
 
-  See also `bbsetup()`.
+See also `bbsetup()`.
 """
 function bboptimize(optctrl::OptController; kwargs...)
   if length(kwargs) > 0
@@ -71,15 +71,15 @@ function bboptimize(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kw
 end
 
 """
-  `bbsetup(problem[; parameters::Associative, kwargs...])`
+    bbsetup(problem[; parameters::Associative, kwargs...])
 
-  Set up optimization method for a given problem.
+Set up optimization method for a given problem.
 
-  See `setup_problem()` for the types of `problem` supported.
-  The optimization method parameters could be specified via `kwargs` or `parameters` arguments.
+See `setup_problem()` for the types of `problem` supported.
+The optimization method parameters could be specified via `kwargs` or `parameters` arguments.
 
-  Returns the initialized `OptController` instance. To actually run the method
-  call `bboptimize()` or `run!()`.
+Returns the initialized `OptController` instance. To actually run the method
+call `bboptimize()` or `run!()`.
 """
 function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
   parameters = chain(convert(ParamsDict, parameters), convert(ParamsDict, kwargs))

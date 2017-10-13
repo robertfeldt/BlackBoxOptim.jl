@@ -73,7 +73,7 @@ function evolve(de::DiffEvoOpt, crossover::CrossoverOperator)
 end
 
 """
-  Post-process the evolved pair.
+Post-process the evolved pair.
 """
 function evolved_pair{F}(de::DiffEvoOpt, target::Candidate{F}, trial::Candidate{F}, op::GeneticOperator, tag::Int = 0)
   # embed the trial parameter vector into the search space
@@ -117,7 +117,7 @@ function tell!{F}(de::DiffEvoOpt,
 end
 
 """
-  Adjust the parameters of the method after the candidate evaluation.
+Adjust the parameters of the method after the candidate evaluation.
 """
 function adjust!(de::DiffEvoOpt, candi::Candidate, is_improved::Bool)
   # adjust the parameters of the operation
@@ -142,7 +142,9 @@ function diffevo(problem::OptimizationProblem, options::Parameters, name::String
              RandomBound(search_space(problem)))
 end
 
-""" The most used `DE/rand/1/bin` variant of differential evolution. """
+"""
+The most used `DE/rand/1/bin` variant of differential evolution.
+"""
 de_rand_1_bin(problem::OptimizationProblem,
               options::Parameters = EMPTY_PARAMS,
               name = "DE/rand/1/bin") = diffevo(problem, options, name)
@@ -153,7 +155,9 @@ de_rand_2_bin(problem::OptimizationProblem,
                                                 SimpleSelector(),
                                                 DiffEvoRandBin2(chain(DE_DefaultOptions, options)))
 
-""" The most used `DE/rand/1/bin` variant with "local geography" via radius-limited sampling. """
+"""
+The most used `DE/rand/1/bin` variant with "local geography" via radius-limited sampling.
+"""
 de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
                             options::Parameters = EMPTY_PARAMS,
                             name = "DE/rand/1/bin/radiuslimited") =

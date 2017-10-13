@@ -1,7 +1,7 @@
 abstract type NaturalEvolutionStrategyOpt <: PopulationOptimizer end
 
 """
-  Separable Natural Evolution Strategy (sNES) optimizer.
+Separable Natural Evolution Strategy (sNES) optimizer.
 """
 type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
@@ -112,13 +112,13 @@ function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F
 end
 
 """
-  `assign_weights!(weights, rankedCandidates, sortedWeights)`
+    assign_weights!(weights, rankedCandidates, sortedWeights)
 
-  Assigns the candidate `weights` according to the candidate index.
-  `rankedCandidates` are ranked by their fitness, `sortedWeights` are
-  the corresponding weights.
+Assigns the candidate `weights` according to the candidate index.
+`rankedCandidates` are ranked by their fitness, `sortedWeights` are
+the corresponding weights.
 
-  Returns candidate weights sorted by the individual's index in the population.
+Returns candidate weights sorted by the individual's index in the population.
 """
 function assign_weights!{F}(weights::Vector{Float64}, rankedCandidates::Vector{Candidate{F}}, sortedWeights::Vector{Float64})
   @assert length(weights) == length(sortedWeights) && length(rankedCandidates) == length(weights)
@@ -135,10 +135,10 @@ function trace_state(io::IO, snes::SeparableNESOpt, mode::Symbol)
 end
 
 """
-  Abstract type for a family of NES methods that represent population as
-  ```
-   x = μ + σ B⋅Z,
-  ```
+Abstract type for a family of NES methods that represent population as
+```
+x = μ + σ B⋅Z,
+```
 where `B` is an exponential of some symmetric matrix `lnB`, `tr(lnB)==0.0`
 """
 abstract type ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt end
@@ -195,7 +195,7 @@ end
 ini_xnes_B(ss::SearchSpace) = eye(numdims(ss), numdims(ss))
 
 """
-  Calculates the initial ``log B`` matrix for `xNES` based on the deltas of each dimension.
+Calculates the initial ``log B`` matrix for `xNES` based on the deltas of each dimension.
 """
 function ini_xnes_B(ss::RangePerDimSearchSpace)
   diag = map(log, deltas(ss))
@@ -204,9 +204,9 @@ function ini_xnes_B(ss::RangePerDimSearchSpace)
 end
 
 """
-  `xNES` method.
+`xNES` method.
 
-  Nice but scales badly with increasing dimensions.
+Nice but scales badly with increasing dimensions.
 """
 type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
   embed::E                        # operator embedding into the search space
@@ -303,9 +303,9 @@ function trace_state(io::IO, xnes::XNESOpt, mode::Symbol)
 end
 
 """
-  `fitness_shaping_utilities_log(n)`
+    fitness_shaping_utilities_log(n)
 
-  Calculate the `n`-dimensional fitness shaping utilities vector using the "log" method.
+Calculate the `n`-dimensional fitness shaping utilities vector using the "log" method.
 """
 function fitness_shaping_utilities_log(n::Int)
   u = [max(0.0, log(n / 2 + 1.0) - log(i)) for i in 1:n]
@@ -313,10 +313,10 @@ function fitness_shaping_utilities_log(n::Int)
 end
 
 """
-  `fitness_shaping_utilities_linear(n)`
+    fitness_shaping_utilities_linear(n)
 
-  Calculate the `n`-dimensional fitness shaping utilities vector
-  using the "steps" method.
+Calculate the `n`-dimensional fitness shaping utilities vector
+using the "steps" method.
 """
 function fitness_shaping_utilities_linear(n::Int)
   # Second half has zero utility.

@@ -1,6 +1,6 @@
 """
-    Wraps the mutation operator, so that it could
-    be used as crossover operator.
+Wraps the mutation operator, so that it could
+be used as crossover operator.
 """
 immutable MutationWrapper{OP<:MutationOperator} <: CrossoverOperator{1,1}
     inner::OP

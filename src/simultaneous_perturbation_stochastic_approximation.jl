@@ -1,5 +1,5 @@
 """
-  `AskTellOptimizer` that utilizes randomization to generate the candidates.
+`AskTellOptimizer` that utilizes randomization to generate the candidates.
 """
 abstract type StochasticApproximationOptimizer <: AskTellOptimizer end
 

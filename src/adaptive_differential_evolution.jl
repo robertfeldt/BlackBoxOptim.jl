@@ -8,10 +8,10 @@ const ADE_DefaultOptions = chain(DE_DefaultOptions, ParamsDict(
 ))
 
 """
-  Specific data and functions for adaptation
-  An Adaptive DE typically changes parameters of the search dynamically. This is
-  typically done in the `tell!()` function when we know if the trial vector
-  was better than the target vector.
+Specific data and functions for adaptation
+An Adaptive DE typically changes parameters of the search dynamically. This is
+typically done in the `tell!()` function when we know if the trial vector
+was better than the target vector.
 """
 type AdaptiveDiffEvoParameters
   # Distributions we will use to generate new F and CR values.
@@ -53,7 +53,7 @@ function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)
 end
 
 """
-  An Adaptive DE crossover operator changes `cr` and `f` parameters of the search dynamically.
+An Adaptive DE crossover operator changes `cr` and `f` parameters of the search dynamically.
 """
 type AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
   params::AdaptiveDiffEvoParameters

@@ -1,40 +1,40 @@
 """
-  Abstract genetic operator that transforms individuals in the population.
+Abstract genetic operator that transforms individuals in the population.
 """
 abstract type GeneticOperator end
 
 """
-  Modifies (mutates) one individual.
+Modifies (mutates) one individual.
 
-  The concrete implementations must provide `apply!()` method.
+The concrete implementations must provide `apply!()` method.
 """
 abstract type MutationOperator <: GeneticOperator end
 
 """
-  Modifies `NC` "children" by transferring some information from `NP` "parents".
+Modifies `NC` "children" by transferring some information from `NP` "parents".
 
-  The concrete implementations must provide `apply!()` method.
+The concrete implementations must provide `apply!()` method.
 """
 abstract type CrossoverOperator{NP,NC} <: GeneticOperator end
 
 """
-  Embeds(projects) the individual into the search space.
+Embeds(projects) the individual into the search space.
 
-  The concrete implementations must provide `apply!()` method.
+The concrete implementations must provide `apply!()` method.
 """
 abstract type EmbeddingOperator <: GeneticOperator end
 
 """
-  Selects the individuals from the population.
+Selects the individuals from the population.
 
-  The concrete implementations must provide `select()` method.
+The concrete implementations must provide `select()` method.
 """
 abstract type IndividualsSelector end
 
 """
-  `select(selector<:IndividualsSelector, population, numSamples::Int)`
+    select(selector<:IndividualsSelector, population, numSamples::Int)
 
-  Select `numSamples` random candidates from the `population`.
+Select `numSamples` random candidates from the `population`.
 """
 function select(::IndividualsSelector, population, numSamples::Int) end
 
@@ -59,37 +59,37 @@ function apply!{NP,I<:AbstractIndividual}(xover::CrossoverOperator{NP,1}, target
 end
 
 """
-  `MutationOperator` that does nothing.
+`MutationOperator` that does nothing.
 """
 immutable NoMutation <: MutationOperator end
 apply!(mo::NoMutation, target, target_index) = target
 
 """
-  Placeholder for no-effect genetic operations.
+Placeholder for no-effect genetic operations.
 """
 const NO_GEN_OP = NoMutation()
 
 """
-  Adjust the internal parameters of the genetic operator `op` taking into account
-  the fitness change.
+Adjust the internal parameters of the genetic operator `op` taking into account
+the fitness change.
 
-  The default implementation does nothing.
+The default implementation does nothing.
 """
 function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool) end
 
 """
-  `trace_state(io, op::GeneticOperator, mode::Symbol)`
+    trace_state(io, op::GeneticOperator, mode::Symbol)
 
-  Trace the state of the operator.
-  Called by `trace_progress()` during `OptRunController` run by some of the genetic optimizers.
+Trace the state of the operator.
+Called by `trace_progress()` during `OptRunController` run by some of the genetic optimizers.
 
-  Override the method to trace the state of your genetic operator.
+Override the method to trace the state of your genetic operator.
 """
 function trace_state(io::IO, op::GeneticOperator, mode::Symbol) end
 
 """
-  A mixture of genetic operators,
-  use `next()` to choose the next operator from the mixture.
+A mixture of genetic operators,
+use `next()` to choose the next operator from the mixture.
 """
 abstract type GeneticOperatorsMixture <: GeneticOperator end
 

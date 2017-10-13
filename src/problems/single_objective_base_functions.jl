@@ -5,7 +5,7 @@
 sphere(x) = sum(abs2, x)
 
 """
-  Schwefel's ellipsoid.
+Schwefel's ellipsoid.
 """
 function ellipsoid(x)
     res = 0.0
@@ -82,7 +82,7 @@ cigar(x) = x[1]^2 + 1e6 * sum(abs2, view(x, 2:length(x)))
 cigtab(x) = x[1]^2 + 1e8 * x[end]^2 + 1e4 * sum(abs2, view(x, 2:length(x)-1))
 
 """
-  Generic function to define `ShekelN` problems.
+Generic function to define `ShekelN` problems.
 """
 function shekel(x, a, c)
     @assert length(x) == size(a, 2)
@@ -103,9 +103,9 @@ Shekel10_A = [4 4 4 4; 1 1 1 1; 8 8 8 8; 6 6 6 6; 3 7 3 7; 2 9 2 9; 5 5 3 3; 8 1
 Shekel10_C = [0.1, 0.2, 0.2, 0.4, 0.4, 0.6, 0.3, 0.7, 0.5, 0.5]
 
 """
-  `Shekel10` is a 4D, multi-minima, non-separable test problem. Our implementation
-  is based on the C code in:
-    http://www.math.ntu.edu.tw/~wwang/cola_lab/test_problems/multiple_opt/multiopt_prob/Shekel10/Shekel10.c
+`Shekel10` is a 4D, multi-minima, non-separable test problem. Our implementation
+is based on the C code in:
+http://www.math.ntu.edu.tw/~wwang/cola_lab/test_problems/multiple_opt/multiopt_prob/Shekel10/Shekel10.c
 """
 shekel10(x) = shekel(x, Shekel10_A, Shekel10_C)
 
@@ -114,9 +114,9 @@ Shekel7_A = [4 4 4 4; 1 1 1 1; 8 8 8 8; 6 6 6 6; 3 7 3 7; 2 9 2 9; 5 5 3 3]
 Shekel7_C = [0.1, 0.2, 0.2, 0.4, 0.4, 0.6, 0.3]
 
 """
-  `Shekel7` is a 4D, multi-minima, non-separable test problem. Our implementation
-  is based on the C code in:
-    http://www.math.ntu.edu.tw/~wwang/cola_lab/test_problems/multiple_opt/multiopt_prob/Shekel7/Shekel7.c
+`Shekel7` is a 4D, multi-minima, non-separable test problem. Our implementation
+is based on the C code in:
+http://www.math.ntu.edu.tw/~wwang/cola_lab/test_problems/multiple_opt/multiopt_prob/Shekel7/Shekel7.c
 """
 shekel7(x) = shekel(x, Shekel7_A, Shekel7_C)
 
@@ -125,14 +125,14 @@ Shekel5_A = [4 4 4 4; 1 1 1 1; 8 8 8 8; 6 6 6 6; 3 7 3 7]
 Shekel5_C = [0.1, 0.2, 0.2, 0.4, 0.4]
 
 """
-  `Shekel5` is a 4D, multi-minima, non-separable test problem. Our implementation
-  is based on the C code in:
-    http://www.math.ntu.edu.tw/~wwang/cola_lab/test_problems/multiple_opt/multiopt_prob/Shekel5/Shekel5.c
+`Shekel5` is a 4D, multi-minima, non-separable test problem. Our implementation
+is based on the C code in:
+http://www.math.ntu.edu.tw/~wwang/cola_lab/test_problems/multiple_opt/multiopt_prob/Shekel5/Shekel5.c
 """
 shekel5(x) = shekel(x, Shekel5_A, Shekel5_C)
 
 """
-  Generic function for `Hartman N` problem family.
+Generic function for `Hartman N` problem family.
 """
 function hartman(x, alpha, A, P)
     @assert size(A) == size(P)
@@ -155,8 +155,8 @@ Hartman6_A = [10 3 17 3.50 1.7 8; 0.05 10 17 0.1 8 14; 3 3.5 1.7 10 17 8; 17 8 0
 Hartman6_P = 1e-4 * [1312 1696 5569 124 8283 5886; 2329 4135 8307 3736 1004 9991; 2348 1451 3522 2883 3047 6650; 4047 8828 8732 5743 1091 381]
 
 """
-  `Hartman 6D` is a multi-minima, non-separable test problem. Our implementation is based on:
-    http://www.sfu.ca/~ssurjano/hart6.html
+`Hartman 6D` is a multi-minima, non-separable test problem. Our implementation is based on:
+http://www.sfu.ca/~ssurjano/hart6.html
 """
 hartman6(x) = hartman(x, Hartman6_alpha, Hartman6_A, Hartman6_P)
 
@@ -166,10 +166,10 @@ Hartman3_A = [3.0 10 30; 0.1 10 35; 3.0 10 30; 0.1 10 36]
 Hartman3_P = 1e-4 * [3689 1170 2673; 4699 4387 7470; 1091 8732 5547; 381 5743 8828]
 
 """
-  `Hartman 3D` is a multi-minima, non-separable test problem. Our implementation is based on:
-    http://www.sfu.ca/~ssurjano/hart3.html
-  However, we get a different global minima than the one stated on that page.
-  The minima should be -3.86278 but we get a different one so use that in the problem spec:
+`Hartman 3D` is a multi-minima, non-separable test problem. Our implementation is based on:
+http://www.sfu.ca/~ssurjano/hart3.html
+However, we get a different global minima than the one stated on that page.
+The minima should be -3.86278 but we get a different one so use that in the problem spec:
 """
 hartman3(x) = hartman(x, Hartman3_alpha, Hartman3_A, Hartman3_P)
 
@@ -216,15 +216,15 @@ s2_step(x) = sum(xx -> abs2(ceil(xx + 0.5)), x)
 #end
 
 """
-  Generator for the family of deceptive functions from the
-  Cuccu2011 paper on novelty-based restarts. We have vectorized it to allow
-  more than 1D versions. The Cuccu2011 paper uses the following values for
+Generator for the family of deceptive functions from the
+Cuccu2011 paper on novelty-based restarts. We have vectorized it to allow
+more than 1D versions. The Cuccu2011 paper uses the following values for
 ```
-  (l, w) = [(5, 0),  (15, 0),  (30, 0),
-           (5, 2),  (15, 2),  (30, 2),
-           (5, 10), (15, 10), (30, 10)]
+(l, w) = [(5, 0),  (15, 0),  (30, 0),
+          (5, 2),  (15, 2),  (30, 2),
+          (5, 10), (15, 10), (30, 10)]
 ```
-  and notes that `(15, 2)` and `(30, 2)` are the most difficult instances.
+and notes that `(15, 2)` and `(30, 2)` are the most difficult instances.
 """
 function deceptive_cuccu2011(l, w)
   (x) -> begin
@@ -244,9 +244,9 @@ deceptive_cuccu2011_15_2 = deceptive_cuccu2011(15, 2)
 deceptive_cuccu2011_30_2 = deceptive_cuccu2011(30, 2)
 
 """
-  From section 3, page 7, of Tsallis1996 paper:
+From section 3, page 7, of Tsallis1996 paper:
     Tsallis and Stariolo, "Generalized simulated annealing", Physica A, 1996.
-  available from http://www.if.ufrgs.br/~stariolo/publications/TsSt96_PhysA233_395_1996.pdf
- the original paper used this as a 4-dimensional problem but here it is generalized.
+available from http://www.if.ufrgs.br/~stariolo/publications/TsSt96_PhysA233_395_1996.pdf
+the original paper used this as a 4-dimensional problem but here it is generalized.
 """
 energy_tsallis1996(x::AbstractArray) = sum(xx -> abs2(xx^2 - 8.0), x) + 5.0*sum(x) + 57.3276

@@ -1,8 +1,8 @@
 num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / probMutation)
 
 """
-    Provides `apply()` operator that mutates one specified dimension of a parameter
-    vector.
+Provides `apply()` operator that mutates one specified dimension of a parameter
+vector.
 """
 abstract type GibbsMutationOperator <: MutationOperator end
 
@@ -15,7 +15,7 @@ function apply!{T<:Real}(m::GibbsMutationOperator, params::AbstractVector{T}, ta
 end
 
 """
-    Uniform mutation of a parameter vector.
+Uniform mutation of a parameter vector.
 """
 immutable UniformMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
@@ -29,13 +29,12 @@ search_space(m::UniformMutation) = m.ss
     return (mins(m.ss)[dim] + rand() * deltas(m.ss)[dim])
 
 """
-  Mutation clock operator is a more efficient way to mutate vectors than to generate
-  a random value per variable in the vectors. It instead generates the number of variables
-  to skip until the next mutation. Then it uses a sub-mutation operator to do the actual
-  mutation. This is based on the paper:
-
+Mutation clock operator is a more efficient way to mutate vectors than to generate
+a random value per variable in the vectors. It instead generates the number of variables
+to skip until the next mutation. Then it uses a sub-mutation operator to do the actual
+mutation. This is based on the paper:
     Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
-  but we use a Poisson distribution.
+but we use a Poisson distribution.
 """
 type MutationClock{S<:GibbsMutationOperator} <: MutationOperator
     inner::S

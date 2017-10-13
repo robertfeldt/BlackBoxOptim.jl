@@ -1,6 +1,6 @@
 """
-  The abstract base for types that manage the objective function evaluation.
-  `P` is the optimization problem it is used for.
+The abstract base for types that manage the objective function evaluation.
+`P` is the optimization problem it is used for.
 """
 abstract type Evaluator{P <: OptimizationProblem} end
 
@@ -15,10 +15,10 @@ problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 shutdown!(e::Evaluator) = e # do nothing
 
 """
-  Default implementation of the `Evaluator`.
+Default implementation of the `Evaluator`.
 
-  `FP` is the original problem's fitness type
-  `FA` is the fitness type actually stored by the archive.
+`FP` is the original problem's fitness type
+`FA` is the fitness type actually stored by the archive.
 """
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
@@ -45,10 +45,10 @@ num_evals(e::ProblemEvaluator) = e.num_evals
 """
     fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
 
-    Evaluate the fitness and implicitly update the archive with the provided
-    parameters and calculated fitness.
+Evaluate the fitness and implicitly update the archive with the provided
+parameters and calculated fitness.
 
-    Returns the fitness in the archived format.
+Returns the fitness in the archived format.
 """
 function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
   e.last_fitness = fit = fitness(params, e.problem)
@@ -61,10 +61,10 @@ end
 """
     last_fitness(e::Evaluator)
 
-  Get the fitness of the last evaluated candidate.
+Get the fitness of the last evaluated candidate.
 
-  Leads to nicer code if we can first test if it is better or worse than existing candidates
-  and only want the fitness itself if the criteria fulfilled.
+Leads to nicer code if we can first test if it is better or worse than existing candidates
+and only want the fitness itself if the criteria fulfilled.
 """
 last_fitness(e::Evaluator) = e.last_fitness
 

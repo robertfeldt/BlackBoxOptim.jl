@@ -1,18 +1,19 @@
 """
-  The base abstract type for the collection of candidate solutions
-  in the population-based optimization methods.
+The base abstract type for the collection of candidate solutions
+in the population-based optimization methods.
 """
 abstract type Population end
-"""
-  The base abstract types for population that also stores the candidates
-  fitness.
 
-  `F` is the fitness type.
+"""
+The base abstract types for population that also stores the candidates
+fitness.
+
+`F` is the fitness type.
 """
 abstract type PopulationWithFitness{F} <: Population end
 
 """
-  The simplest `Population` implementation -- a matrix of floats, each column is an individual.
+The simplest `Population` implementation -- a matrix of floats, each column is an individual.
 """
 const PopulationMatrix = Matrix{Float64}
 
@@ -45,7 +46,7 @@ function rand_indexes(a::AbstractArray{Int}, k::Int)
 end
 
 """
-  The default implementation of `PopulationWithFitness{F}`.
+The default implementation of `PopulationWithFitness{F}`.
 """
 type FitPopulation{F} <: PopulationWithFitness{F}
   # The population is a matrix of floats, each column being an individual.
@@ -105,9 +106,9 @@ Base.getindex(pop::FitPopulation, indi_ixs) = pop.individuals[:, indi_ixs]
 """
     viewer(population, individual_index)
 
-    Get vector-slice of the population matrix for the specified
-    individual.
-    Does not allocate any additional space, while still providing the same lookup performance.
+Get vector-slice of the population matrix for the specified
+individual.
+Does not allocate any additional space, while still providing the same lookup performance.
 """
 viewer(pop::FitPopulation, indi_ix) = view(pop.individuals, :, indi_ix)
 
@@ -141,11 +142,11 @@ fitness_type{F}(pop::FitPopulation{F}) = F
 candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
 
 """
-  `acquire_candi(pop::FitPopulation[, {ix::Int, candi::Candidate}])`
+    acquire_candi(pop::FitPopulation[, {ix::Int, candi::Candidate}])
 
-  Get individual from a pool, or create one if the pool is empty.
-  By default the individual is not initialized, but if `ix` or `candi` is specified,
-  the corresponding fields of the new candidate are set to the given values.
+Get individual from a pool, or create one if the pool is empty.
+By default the individual is not initialized, but if `ix` or `candi` is specified,
+the corresponding fields of the new candidate are set to the given values.
 """
 function acquire_candi{F}(pop::FitPopulation{F})
   if isempty(pop.candi_pool)
@@ -174,13 +175,13 @@ end
 acquire_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) = copy!(acquire_candi(pop), candi)
 
 """
-  Put the candidate back to the pool.
+Put the candidate back to the pool.
 """
 release_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) = push!(pop.candi_pool, candi)
 
 """
-  Put the candidate back into the pool and copy the values
-  into the corresponding individual of the population (`candi.index` should be set).
+Put the candidate back into the pool and copy the values
+into the corresponding individual of the population (`candi.index` should be set).
 """
 function accept_candi!{F}(pop::FitPopulation{F}, candi::Candidate{F})
   pop.individuals[:, candi.index] = candi.params
@@ -189,10 +190,10 @@ function accept_candi!{F}(pop::FitPopulation{F}, candi::Candidate{F})
 end
 
 """
-  Reset the candidate fitness.
+Reset the candidate fitness.
 
-  Need it when the candidate parameters have changed, but the stored fitness
-  is still for the old parameter set.
+Need it when the candidate parameters have changed, but the stored fitness
+is still for the old parameter set.
 """
 function reset_fitness!{F}(candi::Candidate{F}, pop::FitPopulation{F})
   candi.fitness = pop.nafitness
@@ -202,9 +203,9 @@ end
 candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
 
 """
-  Generate a population for a given problem.
+Generate a population for a given problem.
 
-  The default method to generate a population, uses Latin Hypercube Sampling.
+The default method to generate a population, uses Latin Hypercube Sampling.
 """
 function population{F}(problem::OptimizationProblem,
                        options::Parameters = EMPTY_PARAMS,

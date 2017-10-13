@@ -1,6 +1,6 @@
 """
-  The base abstract type for all optimization problems.
-  `FS` is a type of a problem's `FitnessScheme`.
+The base abstract type for all optimization problems.
+`FS` is a type of a problem's `FitnessScheme`.
 """
 abstract type OptimizationProblem{FS<:FitnessScheme} end
 
@@ -14,18 +14,18 @@ search_space(p::OptimizationProblem) = p.ss
 numdims(p::OptimizationProblem) = numdims(search_space(p))
 
 """
-  Checks if the current best fitness is within the given range
-  of a known best fitness.
-  By default the best fitness is unknown.
+Checks if the current best fitness is within the given range
+of a known best fitness.
+By default the best fitness is unknown.
 """
 fitness_is_within_ftol(p::OptimizationProblem, fitness, atol::Number) = false
 
 """
-  `OptimizationProblem` with the objective function
-   defined by some Julia `Function` and search space.
+`OptimizationProblem` with the objective function
+defined by some Julia `Function` and search space.
 
-   Optionally, a known optimal value could be provided to terminate
-   the optimization once it is reached.
+Optionally, a known optimal value could be provided to terminate
+the optimization once it is reached.
 """
 type FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: OptimizationProblem{FS}
   objfunc::Function     # Objective function
@@ -49,9 +49,9 @@ end
 objfunc(p::FunctionBasedProblem) = p.objfunc
 
 """
-  `fitness(x, p::OptimizationProblem)`
+    fitness(x, p::OptimizationProblem)
 
-  Evaluates the fitness of a candidate.
+Evaluates the fitness of a candidate.
 """
 fitness(x, p::FunctionBasedProblem) = objfunc(p)(x)
 

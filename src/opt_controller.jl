@@ -1,5 +1,5 @@
 """
-    Create `Evaluator` instance for a given `problem`.
+Create `Evaluator` instance for a given `problem`.
 """
 function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
     workers = get(params, :Workers, Vector{Int}())
@@ -16,10 +16,10 @@ function make_evaluator(problem::OptimizationProblem, archive=nothing, params::P
 end
 
 """
-  Optimization Run Controller.
-  Manages problem optimization using the specified method.
+Optimization Run Controller.
+Manages problem optimization using the specified method.
 
-  See `OptController`.
+See `OptController`.
 """
 type OptRunController{O<:Optimizer, E<:Evaluator}
   optimizer::O   # optimization algorithm
@@ -57,7 +57,7 @@ type OptRunController{O<:Optimizer, E<:Evaluator}
 end
 
 """
-    Create `OptRunController` for a given problem using specified `optimizer`.
+Create `OptRunController` for a given problem using specified `optimizer`.
 
 #Arguments
     * `optimizer` initialized optimization method
@@ -130,9 +130,9 @@ best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
 """
     show_fitness(io, fit, [problem::OptimizationProblem])
 
-    Output fitness to the given IO stream.
-    `show_fitness()` method could be overridden for a specific problem, e.g.
-    to print the names of each objective.
+Output fitness to the given IO stream.
+`show_fitness()` method could be overridden for a specific problem, e.g.
+to print the names of each objective.
 """
 show_fitness(io::IO, fit::Number) = @printf(io, "%.9f", fit)
 
@@ -160,8 +160,8 @@ show_fitness{FA}(io::IO, fit::FA, problem::OptimizationProblem) = show_fitness(i
 """
     format_fitness(fit, [problem::OptimizationProblem])
 
-    Format fitness into a string.
-    Calls `show_fitness()` under the hood.
+Format fitness into a string.
+Calls `show_fitness()` under the hood.
 """
 function format_fitness(fit::Any, problem::OptimizationProblem)
     buf = IOBuffer(false, true)
@@ -264,9 +264,9 @@ function shutdown_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
 end
 
 """
-  `run!(ctrl::OptRunController)`
+    run!(ctrl::OptRunController)
 
-  Run optimization until one of the stopping conditions are satisfied.
+Run optimization until one of the stopping conditions are satisfied.
 """
 function run!(ctrl::OptRunController)
     tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
@@ -337,13 +337,13 @@ function write_result(ctrl::OptRunController, filename = "")
 end
 
 """
-  Optimization Controller.
+Optimization Controller.
 
-  Applies specific optimization method to a given problem.
-  Supports restarts and modifying parameter of the method between runs.
-  `runcontrollers` field maintains the list of `OptRunController` instances applied so far.
+Applies specific optimization method to a given problem.
+Supports restarts and modifying parameter of the method between runs.
+`runcontrollers` field maintains the list of `OptRunController` instances applied so far.
 
-  See `OptRunController`.
+See `OptRunController`.
 """
 type OptController{O<:Optimizer, P<:OptimizationProblem}
   optimizer::O   # optimization algorithm
@@ -353,11 +353,11 @@ type OptController{O<:Optimizer, P<:OptimizationProblem}
 end
 
 """
-    Create `OptController` for a given `optimizer` and a `problem`.
+Create `OptController` for a given `optimizer` and a `problem`.
 
-    `params` are any of `OptRunController` parameters plus
-        * `:RngSeed` and `:RandomizeRngSeed` params for controlling the random seed
-        * `:RecoverResults` if intermediate results are returned upon `InterruptException()` (on by default)
+`params` are any of `OptRunController` parameters plus
+    * `:RngSeed` and `:RandomizeRngSeed` params for controlling the random seed
+    * `:RecoverResults` if intermediate results are returned upon `InterruptException()` (on by default)
 """
 function OptController{O<:Optimizer, P<:OptimizationProblem}(optimizer::O, problem::P,
   params::ParamsDictChain)
@@ -369,9 +369,9 @@ numruns(oc::OptController) = length(oc.runcontrollers)
 lastrun(oc::OptController) = oc.runcontrollers[end]
 
 """
-  `update_parameters!(oc::OptController, parameters::Associative)`
+    update_parameters!(oc::OptController, parameters::Associative)
 
-  Update the `OptController` parameters.
+Update the `OptController` parameters.
 """
 function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P},
   parameters::Parameters = EMPTY_DICT)
@@ -402,9 +402,9 @@ function init_rng!(parameters::Parameters)
 end
 
 """
-  `run!(oc::OptController)`
+    run!(oc::OptController)
 
-  Start a new optimization run, possibly with new parameters and report on results.
+Start a new optimization run, possibly with new parameters and report on results.
 """
 function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
 

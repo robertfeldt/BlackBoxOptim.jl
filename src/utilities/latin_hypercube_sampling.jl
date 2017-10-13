@@ -1,8 +1,8 @@
 """
     latin_hypercube_sampling(mins, maxs, numSamples)
 
-    Randomly sample `numSamples` values from the parallelogram defined
-    by `mins` and `maxs` using the Latin hypercube algorithm.
+Randomly sample `numSamples` values from the parallelogram defined
+by `mins` and `maxs` using the Latin hypercube algorithm.
 """
 function latin_hypercube_sampling{T}(mins::AbstractVector{T}, maxs::AbstractVector{T}, numSamples::Integer)
     dims = length(mins)

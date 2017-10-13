@@ -1,7 +1,7 @@
 """
-   Single objective optimization methods accepted by `bboptimize()`.
+Single objective optimization methods accepted by `bboptimize()`.
 
-   The values are the method initialization routines or types derived from `Optimizer`.
+The values are the method initialization routines or types derived from `Optimizer`.
 """
 const SingleObjectiveMethods = ParamsDict(
   :random_search => random_search,
@@ -24,9 +24,9 @@ const SingleObjectiveMethods = ParamsDict(
 const SingleObjectiveMethodNames = sort!(collect(keys(SingleObjectiveMethods)))
 
 """
-   Multi-objective optimization methods accepted by `bboptimize()`.
+Multi-objective optimization methods accepted by `bboptimize()`.
 
-   The values are the method initialization routines or types derived from `Optimizer`.
+The values are the method initialization routines or types derived from `Optimizer`.
 """
 const MultiObjectiveMethods = ParamsDict(
   :borg_moea => borg_moea
@@ -35,8 +35,8 @@ const MultiObjectiveMethods = ParamsDict(
 const MultiObjectiveMethodNames = sort!(collect(keys(MultiObjectiveMethods)))
 
 """
-  Names of optimization methods accepted by `bboptimize()`,
-  `:Method` keyword argument.
+Names of optimization methods accepted by `bboptimize()`,
+`:Method` keyword argument.
 """
 const MethodNames = sort!(vcat(SingleObjectiveMethodNames,
                                MultiObjectiveMethodNames))

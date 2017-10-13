@@ -1,6 +1,5 @@
 """
-  `Archive` saves information about promising solutions during an optimization
-  run.
+`Archive` saves information about promising solutions during an optimization run.
 """
 abstract type Archive{F,FS<:FitnessScheme} end
 
@@ -11,19 +10,19 @@ fitness_scheme(a::Archive) = a.fit_scheme
 """
     archived_fitness(fit, a::Archive)
 
-    Converts given fitness `fit` to the format used by the archive `a`.
+Converts given fitness `fit` to the format used by the archive `a`.
 """
 archived_fitness(fit::Any, a::Archive) = convert(fitness_type(a), fit, fitness_scheme(a))
 
 """
-    Base class for individuals stored in `Archive`.
+Base class for individuals stored in `Archive`.
 """
 abstract type ArchivedIndividual{F} <: FitIndividual{F} end
 
 tag(indi::ArchivedIndividual) = indi.tag
 
 """
-    Individual stored in `TopListArchive`.
+Individual stored in `TopListArchive`.
 """
 immutable TopListIndividual{F} <: ArchivedIndividual{F}
     params::Individual
@@ -37,7 +36,9 @@ end
 Base.:(==){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
   (x.fitness == y.fitness) && (x.params == y.params)
 
-" Fitness as stored in `TopListArchive`. "
+"""
+Fitness as stored in `TopListArchive`.
+"""
 immutable TopListFitness{F<:Number}
     fitness::F            # current fitness
     fitness_improvement_ratio::Float64
@@ -48,12 +49,12 @@ end
 fitness(f::TopListFitness) = f.fitness
 
 """
-  Archive that maintains a top list of the best performing (best fitness)
-  candidates seen so far.
+Archive that maintains a top list of the best performing (best fitness)
+candidates seen so far.
 
 
-  The two last best fitness values could be used to estimate a confidence interval for how much improvement
-  potential there is.
+The two last best fitness values could be used to estimate a confidence interval for how much improvement
+potential there is.
 """
 type TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
   fit_scheme::FS        # Fitness scheme used
@@ -87,9 +88,9 @@ best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[
 last_top_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[end]) : nafitness(fitness_scheme(a))
 
 """
-  `delta_fitness(a::TopListArchive)`
+    delta_fitness(a::TopListArchive)
 
-  The difference between the current best fitness and the former best fitness.
+The difference between the current best fitness and the former best fitness.
 """
 function delta_fitness(a::TopListArchive)
   if length(a.fitness_history) < 2
@@ -113,9 +114,9 @@ function check_stop_condition(a::TopListArchive, p::OptimizationProblem, ctrl)
 end
 
 """
-  `add_candidate!(a::TopListArchive, fitness::F, candidate[, tag=0][, num_fevals=-1])`
+    add_candidate!(a::TopListArchive, fitness::F, candidate[, tag=0][, num_fevals=-1])
 
-  Add a candidate with a fitness to the archive (if it is good enough).
+Add a candidate with a fitness to the archive (if it is good enough).
 """
 function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1)
   a.num_fitnesses += 1
@@ -141,8 +142,8 @@ function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F
 end
 
 """
-  Get a tuple of the sign and the magnitude of the value rounded to the first digit.
-  Used for archiving candidates separately for each magnitude class.
+Get a tuple of the sign and the magnitude of the value rounded to the first digit.
+Used for archiving candidates separately for each magnitude class.
 """
 function magnitude_class(f)
   f = float(f)
@@ -163,7 +164,7 @@ function fitness_improvement_ratio(a::Archive, newFitness)
 end
 
 """
-  Get the distance from a fitness value to the optimum/best known fitness value.
+Get the distance from a fitness value to the optimum/best known fitness value.
 """
 function distance_to_optimum(fitness, bestfitness)
   abs(fitness - bestfitness)
@@ -212,10 +213,10 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
 end
 
 """
-  `merge_fitness_histories(histories)`
+    merge_fitness_histories(histories)
 
-  Merge the collection of multiple fitness histories and calculate the `min`, `max`, `avg` and `median`
-  values for fitness and FIR (fitness improvement ratio) at each point where the fitness is changing.
+Merge the collection of multiple fitness histories and calculate the `min`, `max`, `avg` and `median`
+values for fitness and FIR (fitness improvement ratio) at each point where the fitness is changing.
 """
 function merge_fitness_histories(histories)
   numhist = length(histories)
@@ -248,24 +249,24 @@ end
 #end
 
 """
-  Calculate the width of the confidence interval at a certain `p`-value.
-  This is based on the paper:
+Calculate the width of the confidence interval at a certain `p`-value.
+This is based on the paper:
     Carvalho (2011), "Confidence intervals for the minimum of a
     function using extreme value statistics"
 
-  This means that the current estimate of the confidence interval for the minimum
-  of the optimized function lies within the interval
+This means that the current estimate of the confidence interval for the minimum
+of the optimized function lies within the interval
 
-  ```
-     ] l1 - w, l1 [
-  ```
+```
+] l1 - w, l1 [
+```
 
-  with probability ``(1-p)`` as the number of sampled function points goes to infinity,
-  where
-  ```
-    w = width_of_confidence_interval(a, p)
-    l1 = best_fitness(a)
-  ```
+with probability ``(1-p)`` as the number of sampled function points goes to infinity,
+where
+```
+w = width_of_confidence_interval(a, p)
+l1 = best_fitness(a)
+```
 """
 function width_of_confidence_interval(a::Archive, p = 0.01)
   if length(a) < 2
@@ -279,13 +280,13 @@ function width_of_confidence_interval(a::Archive, p = 0.01)
 end
 
 """
-  `fitness_improvement_potential(a::Archive[, p = 0.01])`
+    fitness_improvement_potential(a::Archive[, p = 0.01])
 
-  Calculate the solution improvement potential.
+Calculate the solution improvement potential.
 
-  The percentage improvement that can be expected from the current fitness value at a given `p`-value.
-  In theory, an optimization run should be terminated when this value is very
-  small, i.e. there is little improvement potential left in the run.
+The percentage improvement that can be expected from the current fitness value at a given `p`-value.
+In theory, an optimization run should be terminated when this value is very
+small, i.e. there is little improvement potential left in the run.
 """
 function fitness_improvement_potential(a::Archive, p = 0.01)
   width_of_confidence_interval(a, p) / abs(best_fitness(a))

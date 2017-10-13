@@ -1,7 +1,9 @@
-# A BonesaTuner has state for optimizing a certain algorithm on a set of
-# parameters described by a ParameterSet. The parameter vectors that are tuned
-# only take values in [0.0, 1.0] and it is up to the ParameterSet to translate
-# that to meaningful ranges.
+"""
+A `BonesaTuner` has state for optimizing a certain algorithm on a set of
+parameters described by a ParameterSet. The parameter vectors that are tuned
+only take values in [0.0, 1.0] and it is up to the ParameterSet to translate
+that to meaningful ranges.
+"""
 type BonesaTuner
   numvectors::Int                     # Current num of param vectors in archive
   parameter_vectors::Matrix{Float64}  # Archive of param vectors, each column is one vector
