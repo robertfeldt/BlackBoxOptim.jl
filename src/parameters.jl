@@ -112,5 +112,5 @@ The default placeholder value for parameters argument.
 """
 const EMPTY_PARAMS = ParamsDict()
 
-Base.convert(::Type{Dict{Symbol,Any}}, kwargs::Vector{Any}) =
+kwargs2dict(kwargs::Vector{Any}) =
     Dict(Tuple{Symbol,Any}[(convert(Symbol, k), convert(Any,v)) for (k,v) in kwargs])

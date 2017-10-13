@@ -1,7 +1,7 @@
 function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
     Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
-    parameters = chain(convert(ParamsDict, parameters), convert(ParamsDict, kwargs))
+    parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))
 
     results = Any[]
     for m in Methods
@@ -28,7 +28,7 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
                             parameters::Parameters = EMPTY_PARAMS;
                             Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
-    parameters = chain(convert(ParamsDict, parameters), convert(ParamsDict, kwargs))
+    parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))
 
     # Lets create an array where we will save how the methods ranks per problem.
     ranks = zeros(length(Methods), length(problems))

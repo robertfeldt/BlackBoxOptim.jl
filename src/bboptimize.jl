@@ -60,7 +60,7 @@ See also `bbsetup()`.
 """
 function bboptimize(optctrl::OptController; kwargs...)
     if length(kwargs) > 0
-        update_parameters!(optctrl, convert(ParamsDict, kwargs))
+        update_parameters!(optctrl, kwargs2dict(kwargs))
     end
     run!(optctrl)
 end
@@ -82,7 +82,7 @@ Returns the initialized `OptController` instance. To actually run the method
 call `bboptimize()` or `run!()`.
 """
 function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
-    parameters = chain(convert(ParamsDict, parameters), convert(ParamsDict, kwargs))
+    parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))
     problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
     check_valid!(params)
 
