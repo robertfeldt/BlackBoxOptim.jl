@@ -4,7 +4,7 @@
 
   `F` is the original problem's fitness type
 """
-@compat abstract type FitIndividual{F} end
+abstract type FitIndividual{F} end
 
 fitness_type{F}(indi::FitIndividual{F}) = F
 

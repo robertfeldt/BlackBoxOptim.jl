@@ -1,7 +1,7 @@
 """
   `AskTellOptimizer` that utilizes randomization to generate the candidates.
 """
-@compat abstract type StochasticApproximationOptimizer <: AskTellOptimizer end
+abstract type StochasticApproximationOptimizer <: AskTellOptimizer end
 
 const SPSADefaultParameters = ParamsDict(
   :Alpha => 0.602,  # The optimal value is 1.0 but values down to 0.602 often can give faster convergence

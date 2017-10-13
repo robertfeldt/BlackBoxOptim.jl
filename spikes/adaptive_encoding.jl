@@ -1,4 +1,4 @@
-@compat abstract type CoordinateTransform end
+abstract type CoordinateTransform end
 
 # Based on the pseudo-code on page 156 in Loschchilov's PhD Thesis from 2013.
 type AdaptiveEncoding <: CoordinateTransform

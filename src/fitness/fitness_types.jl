@@ -1,8 +1,8 @@
-@compat abstract type NewFitness end
+abstract type NewFitness end
 
-@compat abstract type SingleObjectiveFitness <: NewFitness end
+abstract type SingleObjectiveFitness <: NewFitness end
 
-@compat abstract type MultiObjectiveFitness <: NewFitness end
+abstract type MultiObjectiveFitness <: NewFitness end
 
 # Some evaluators go through several stages of fitness evaluation:
 #   1. a candidate is simulated -> *simulation(s)*

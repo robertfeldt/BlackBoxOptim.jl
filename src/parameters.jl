@@ -100,13 +100,13 @@ end
 """
   The parameters storage type for `BlackBoxOptim`.
 """
-@compat const Parameters = Associative{Symbol,Any}
+const Parameters = Associative{Symbol,Any}
 
 """
   The default parameters storage in `BlackBoxOptim`.
 """
-@compat const ParamsDict = Dict{Symbol,Any}
-@compat const ParamsDictChain = DictChain{Symbol,Any}
+const ParamsDict = Dict{Symbol,Any}
+const ParamsDictChain = DictChain{Symbol,Any}
 
 """
   The default placeholder value for parameters argument.

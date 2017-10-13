@@ -10,8 +10,8 @@ end
 fitness(params::Individual, worker::ParallelEvaluatorWorker) =
   fitness(params, worker.problem)
 
-@compat const ChannelRef{T} = @compat RemoteChannel{Channel{T}}
-@compat const ParallelEvaluatorWorkerRef{P} = ChannelRef{ParallelEvaluatorWorker{P}}
+const ChannelRef{T} = RemoteChannel{Channel{T}}
+const ParallelEvaluatorWorkerRef{P} = ChannelRef{ParallelEvaluatorWorker{P}}
 
 fitness{P}(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) =
   fitness(params, fetch(fetch(worker_ref))::ParallelEvaluatorWorker{P})
@@ -124,7 +124,7 @@ function ParallelEvaluator{P<:OptimizationProblem}(
     ParallelEvaluator{fitness_type(fs), typeof(fs), P}(problem,
         archive,
         0, nafitness(fs),
-        [@compat RemoteChannel(function ()
+        [RemoteChannel(function ()
                      # create fake channel and put problem there
                      ch = Channel{ParallelEvaluatorWorker{P}}(1)
                      put!(ch, ParallelEvaluatorWorker(copy(problem)))
@@ -152,7 +152,7 @@ function update_fitness!{F}(e::ParallelEvaluator{F}, candidates::Vector{Candidat
                 while (candi_ix = next_candidate!(e.eval_state, widx)) != 0
                     try
                         candi = candidates[candi_ix]
-                        candi.fitness = @compat remotecall_fetch(fitness, wref.where, candi.params, wref)
+                        candi.fitness = remotecall_fetch(fitness, wref.where, candi.params, wref)
                         e.last_fitness = candi.fitness
                         e.num_evals += 1
                         add_candidate!(e.archive, candi.fitness, candi.params, e.num_evals)

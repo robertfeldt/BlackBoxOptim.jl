@@ -70,8 +70,8 @@ adjust!{F}(xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
                  new_fitness::F, old_fitness::F, is_improved::Bool) =
     adjust!(xover.params, candi_index, is_improved)
 
-@compat const AdaptiveDiffEvoRandBin1 = AdaptiveDiffEvoRandBin{3}
-@compat const AdaptiveDiffEvoRandBin2 = AdaptiveDiffEvoRandBin{5}
+const AdaptiveDiffEvoRandBin1 = AdaptiveDiffEvoRandBin{3}
+const AdaptiveDiffEvoRandBin2 = AdaptiveDiffEvoRandBin{5}
 
 function adaptive_diffevo(problem::OptimizationProblem,
                  options::Parameters, name::String,

@@ -1,6 +1,6 @@
 # A direction generator generates the search directions to use at each step of
 # a GSS search.
-@compat abstract type DirectionGenerator end
+abstract type DirectionGenerator end
 
 type ConstantDirectionGen <: DirectionGenerator
   directions::Array{Float64, 2}

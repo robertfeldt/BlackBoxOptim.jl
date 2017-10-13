@@ -6,7 +6,7 @@
     number of the search space dimensions) that allows
     to instantiate `OptimizationProblem` for the concrete parameters.
 """
-@compat abstract type ProblemFamily{FS<:FitnessScheme} end
+abstract type ProblemFamily{FS<:FitnessScheme} end
 
 """
   Family of `FunctionBasedProblem` optimization problems
