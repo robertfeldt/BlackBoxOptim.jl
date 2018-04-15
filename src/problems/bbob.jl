@@ -23,8 +23,8 @@ evaluate(f::BBOBFunction, x) = evalfull(f, x)[0]
 
 # Returns a float penalty for being outside of boundaries [-5, 5]
 function defaultboundaryhandling(x, fac = 1.0)
-  xoutside = maximum(vcat(zeros(size(x)), abs(x) - 5), 1) .* sign(x)
-  fac * sum(xoutside.^2)
+    xoutside = maximum(vcat(zeros(size(x)), abs(x) - 5), 1) .* sign(x)
+    return fac * sum(xoutside.^2)
 end
 
 # Most functions do not have a penalty outside the boundaries though so return
@@ -32,31 +32,31 @@ end
 boundaryhandling(f::BBOBFunction, x) = 0
 
 function evalfull(f::BBOBFunction, x)
-  fadd = getfopt(f)
-  curshape, dim = size(x)
-  # it is assumed x are row vectors
+    fadd = getfopt(f)
+    curshape, dim = size(x)
+    # it is assumed x are row vectors
 
-  if f.lastshape != curshape
-    initwithsize(curshape, dim)
-  end
+    if f.lastshape != curshape
+      initwithsize(curshape, dim)
+    end
 
-  # BOUNDARY HANDLING
-  fadd += boundaryhandling(f, x)
+    # BOUNDARY HANDLING
+    fadd += boundaryhandling(f, x)
 
-  # TRANSFORMATION IN SEARCH SPACE
-  x = x - arrxopt(f) # cannot be replaced with x -= arrxopt! RF: Why???
+    # TRANSFORMATION IN SEARCH SPACE
+    x = x - arrxopt(f) # cannot be replaced with x -= arrxopt! RF: Why???
 
-  # COMPUTATION core
-  ftrue = compute_core(f, x)
-  fval = noise(f.noisefunc, ftrue)
+    # COMPUTATION core
+    ftrue = compute_core(f, x)
+    fval = noise(f.noisefunc, ftrue)
 
-  # FINALIZE
-  ftrue += fadd
-  fval += fadd
-  return (fval, ftrue)
+    # FINALIZE
+    ftrue += fadd
+    fval += fadd
+    return (fval, ftrue)
 end
 
-# All BBOBFunction functions must implement evalfull, which return noisy and 
+# All BBOBFunction functions must implement evalfull, which return noisy and
 # noise-free value, the latter for recording purpose.
 # evalfull(f::BBOBFunction, x) = ...
 
@@ -75,20 +75,20 @@ end
 noise(f::BBOBNfreeFunction, ftrue) = copy(ftrue) # no noise added
 
 type BBOBGaussFunction <: BBOBNoiseFunction
-  gaussbeta::Float64
+    gaussbeta::Float64
 end
 noise(f::BBOBGaussFunction, ftrue) = fGauss(ftrue, f.gaussbeta)
 
 type BBOBUniformFunction <: BBOBNoiseFunction
-  unifalphafac::Float64
-  unifbeta::Float64
+    unifalphafac::Float64
+    unifbeta::Float64
 end
-noise(f::BBOBUniformFunction, ftrue) = 
-  fUniform(ftrue, f.unifalphafac * (0.49 + 1. / f.dim), f.unifbeta)
+noise(f::BBOBUniformFunction, ftrue) =
+    fUniform(ftrue, f.unifalphafac * (0.49 + 1. / f.dim), f.unifbeta)
 
 type BBOBCauchyFunction <: BBOBNoiseFunction
-  cauchyalpha::Float64
-  cauchyp::Float64
+    cauchyalpha::Float64
+    cauchyp::Float64
 end
 noise(f::BBOBCauchyFunction, ftrue) = fCauchy(ftrue, f.cauchyalpha, f.cauchyp)
 
@@ -97,17 +97,17 @@ compute_core(f::FSphere, x) = sum(x.^2)
 
 # Sphere without noise
 type F1 <: FSphere{BBOBNfreeFunction}
-  funId::Int
-  noisefunc::BBOBNoiseFunction
-  F1() = new(1, BBOBNfreeFunction())
+    funId::Int
+    noisefunc::BBOBNoiseFunction
+    F1() = new(1, BBOBNfreeFunction())
 end
 boundaryhandling(f::F1, x) = 0
 
 # Sphere with Gaussian noise
 type F101 <: FSphere{BBOBGaussFunction}
-  funId::Int
-  noisefunc::BBOBNoiseFunction
-  F101 = new(101, BBOBGaussFunction(0.01))
+    funId::Int
+    noisefunc::BBOBNoiseFunction
+    F101 = new(101, BBOBGaussFunction(0.01))
 end
 
 # Run an optimizer like in the COCO (COmparing Continuous Optimizers) sw,
@@ -116,7 +116,7 @@ end
 # COCO method: MY_OPTIMIZER in MY_OPTIMIZER.m
 # COCO differences:
 #  - We send in an optimizer instead of changing the code each time we want to evaluate an optimizer.
-#function coco_run_optimizer(optimizer, problem, numDimensions, 
+#function coco_run_optimizer(optimizer, problem, numDimensions,
 #  funcTarget, maxFunevals; populationSize = 200)
 #  maxfunevals = min(1e8 * numDimensions, maxFunevals)
 #  popsize = min(maxFunevals, populationSize)
@@ -132,7 +132,7 @@ end
 #    if feval(FUN, 'fbest') < ftarget         % COCO-task achieved
 #      break;                                 % (works also for noisy functions)
 #    end
-#  end  
+#  end
 #end
 #
 #function coco

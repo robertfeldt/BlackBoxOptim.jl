@@ -14,56 +14,56 @@ function ellipsoid(x)
         cumsum += xx
         res += cumsum^2
     end
-    res
+    return res
 end
 
 function elliptic(x)
-  D = length(x)
-  condition = 1e+6
-  coefficients = condition .^ linspace(0, 1, D)
-  sum(coefficients .* x.^2)
+    D = length(x)
+    condition = 1e+6
+    coefficients = condition .^ linspace(0, 1, D)
+    return sum(coefficients .* x.^2)
 end
 
 function rastrigin(x)
-  D = length(x)
-  10 * D + sum(abs2, x) - 10 * sum(xx -> cos(2π * xx), x)
+    D = length(x)
+    10 * D + sum(abs2, x) - 10 * sum(xx -> cos(2π * xx), x)
 end
 
 function ackley(x)
-  D = length(x)
-  try
-    20 - 20.*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + e
-  catch ex
-    # Sometimes we have gotten a DomainError from the cos function so we protect this call
-    println(ex)
-    println("For input x = ", x)
-    # Return a very large fitness value to indicate that this is NOT the solution we want.
-    # TODO: Fix better way to handle this!
-    9.99e100
-  end
+    D = length(x)
+    try
+        return 20 - 20.*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + e
+    catch ex
+        # Sometimes we have gotten a DomainError from the cos function so we protect this call
+        println(ex)
+        println("For input x = ", x)
+        # Return a very large fitness value to indicate that this is NOT the solution we want.
+        # TODO: Fix better way to handle this!
+        return 9.99e100
+    end
 end
 
 function schwefel1_2(x)
-  D = length(x)
-  partsums = zeros(D)
-  partsum = 0
-  for i in 1:D
-    partsum += x[i]
-    partsums[i] = partsum
-  end
-  sum(abs2, partsums)
+    D = length(x)
+    partsums = zeros(D)
+    partsum = 0
+    for i in 1:D
+        partsum += x[i]
+        partsums[i] = partsum
+    end
+    return sum(abs2, partsums)
 end
 
 function rosenbrock(x)
-  n = length(x)
-  return( sum(100*(view(x, 2:n) - view(x, 1:(n-1)).^2).^2 + (view(x, 1:(n-1)) - 1).^2) )
+    n = length(x)
+    return sum(100*(view(x, 2:n) - view(x, 1:(n-1)).^2).^2 + (view(x, 1:(n-1)) - 1).^2)
 end
 
 step(x) = sum(xx -> ceil(xx + 0.5), x)
 
 function griewank(x)
-  n = length(x)
-  1 + (1/4000)*sum(abs2, x) - prod(cos(x ./ sqrt(1:n)))
+    n = length(x)
+    1 + (1/4000)*sum(abs2, x) - prod(cos(x ./ sqrt(1:n)))
 end
 
 schwefel2_22(x) = sum(abs, x) + prod(abs, x)
@@ -73,8 +73,8 @@ schwefel2_21(x) = maximum(abs, x)
 # I'm unsure about this one since it does not return the expected minima at
 # [1.0, 1.0].
 function schwefel2_26(x)
-  D = length(x)
-  418.98288727243369 * D - sum(xx -> xx * sin(sqrt(abs(xx))), x)
+    D = length(x)
+    418.98288727243369 * D - sum(xx -> xx * sin(sqrt(abs(xx))), x)
 end
 
 cigar(x) = x[1]^2 + 1e6 * sum(abs2, view(x, 2:length(x)))
@@ -178,10 +178,7 @@ hartman3(x) = hartman(x, Hartman3_alpha, Hartman3_A, Hartman3_P)
 # in table II of the JADE paper: http://150.214.190.154/EAMHCO/pdf/JADE.pdf
 #####################################################################
 
-function quartic(x)
-  D = length(x)
-  sum( (1:D) .* x.^4 )
-end
+quartic(x) = sum((i,x) -> i*x^4, enumerate(x))
 
 noisy_quartic(x) = quartic(x) + rand()
 
@@ -227,16 +224,16 @@ more than 1D versions. The Cuccu2011 paper uses the following values for
 and notes that `(15, 2)` and `(30, 2)` are the most difficult instances.
 """
 function deceptive_cuccu2011(l, w)
-  (x) -> begin
-    sumabsx = sum(abs, x)
-    if sumabsx <= 1
-      return sum(abs2, x)
-    elseif sumabsx >= l+1
-      return sum(xx -> abs2(abs(xx) - l), x)
-    else
-      return (1 - 0.5 * sum(xx -> abs2(sin( (π * w * (abs(xx) - 1)) / l )), x))
+    (x) -> begin
+        sumabsx = sum(abs, x)
+        if sumabsx <= 1
+            return sum(abs2, x)
+        elseif sumabsx >= l+1
+            return sum(xx -> abs2(abs(xx) - l), x)
+        else
+            return (1 - 0.5 * sum(xx -> abs2(sin( (π * w * (abs(xx) - 1)) / l )), x))
+        end
     end
-  end
 end
 
 # Deceptive/hardest instances:

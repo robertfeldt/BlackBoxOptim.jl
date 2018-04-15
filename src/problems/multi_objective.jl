@@ -19,13 +19,17 @@ end
 Generate the points of the hypersurface using the
 discretization defined by ϵ-box fitness schema.
 """
-@generated function generate{N,F,NP}(surf::Hypersurface{N}, fs::EpsBoxDominanceFitnessScheme{N,F}, ::Type{Val{NP}}, param_step::Vector{F} = 0.1*fs.ϵ)
+@generated function generate{N,F,NP}(surf::Hypersurface{N},
+                                     fs::EpsBoxDominanceFitnessScheme{N,F},
+                                     ::Type{Val{NP}},
+                                     param_step::Vector{F} = 0.1*fs.ϵ)
     quote
         #archive = EpsBoxArchive(fs)
         pf = Dict{NTuple{N,Int}, IndexedTupleFitness{N,F}}()
         param = Vector{Float64}(N-1)
         #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N-1) t d->linspace(surf.parameter_space.mins[d], surf.parameter_space.maxs[d], ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
+        Base.Cartesian.@nloops $(N-1) t d->linspace(surf.parameter_space.mins[d], surf.parameter_space.maxs[d],
+                                                    ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
             fit = surf.manifold(param, Val{NP})
             if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
                 ifit = convert(IndexedTupleFitness, fit, fs)

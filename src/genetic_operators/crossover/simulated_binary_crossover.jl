@@ -28,7 +28,9 @@ function randbeta(xover::SimulatedBinaryCrossover)
     return (u < 0.5 ? 2*u : 1/(2*(1-u)))^xover.η_exp
 end
 
-function apply!(xover::SimulatedBinaryCrossover, targets::Vector{Individual}, targetIndices::Vector{Int}, pop, parentIndices)
+function apply!(xover::SimulatedBinaryCrossover,
+                targets::Vector{Individual}, targetIndices::Vector{Int},
+                pop, parentIndices)
     @assert length(targets) == 2
     @assert length(targetIndices) == 2
     @assert length(parentIndices) == 2

@@ -15,27 +15,29 @@ RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace
 search_space(rb::RandomBound) = rb.searchSpace
 
 function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndividual)
-  length(target) == length(ref) == numdims(eo.searchSpace) || throw(ArgumentError("Dimensions of problem/individuals do not match"))
-  ssmins = mins(eo.searchSpace)
-  ssmaxs = maxs(eo.searchSpace)
+    length(target) == length(ref) == numdims(eo.searchSpace) ||
+        throw(ArgumentError("Dimensions of problem/individuals do not match"))
+    ssmins = mins(eo.searchSpace)
+    ssmaxs = maxs(eo.searchSpace)
 
-  @inbounds for i in 1:length(target)
-    l, u = ssmins[i], ssmaxs[i]
+    @inbounds for i in 1:length(target)
+        l, u = ssmins[i], ssmaxs[i]
 
-    if target[i] < l
-      target[i] = l + rand() * (ref[i] - l)
-    elseif target[i] > u
-      target[i] = u + rand() * (ref[i] - u)
+        if target[i] < l
+            target[i] = l + rand() * (ref[i] - l)
+        elseif target[i] > u
+            target[i] = u + rand() * (ref[i] - u)
+        end
+        @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
     end
-    @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
-  end
-  return target
+    return target
 end
 
 apply!(eo::RandomBound, target::AbstractIndividual, pop, refIndex::Int) =
     apply!(eo, target, viewer(pop, refIndex))
 
-function apply!(eo::RandomBound, target::AbstractIndividual, pop, parentIndices::AbstractVector{Int})
-  @assert length(parentIndices) == 1
-  apply!(eo, target, pop, parentIndices[1])
+function apply!(eo::RandomBound, target::AbstractIndividual,
+                pop, parentIndices::AbstractVector{Int})
+    @assert length(parentIndices) == 1
+    apply!(eo, target, pop, parentIndices[1])
 end

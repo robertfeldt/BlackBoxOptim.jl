@@ -7,14 +7,15 @@ immutable PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
     η::Float64
 
     (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, η = 50.0) = new{SS}(ss, η)
-    (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, options::Parameters) = new{SS}(ss, options[:PM_η])
+    (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, options::Parameters) =
+        new{SS}(ss, options[:PM_η])
 end
 
 """
 Default parameters for `PolynomialMutation`.
 """
 const PM_DefaultOptions = ParamsDict(
-  :PM_η => 50.0,
+    :PM_η => 50.0,
 )
 
 function apply(m::PolynomialMutation, v::Number, dim::Int, target_index::Int)

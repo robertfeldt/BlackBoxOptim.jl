@@ -3,14 +3,14 @@ An ordered set of dicts that are examined one after another to find the paramete
 Returns nothing if no param setting is found in any of the dicts.
 """
 type DictChain{K,V} <: Associative{K,V}
-  dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
+    dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
 
-  DictChain(dicts::Vector{Associative{K,V}}) = new(dicts)
+    DictChain(dicts::Vector{Associative{K,V}}) = new(dicts)
 
-  # empty dicts vector
-  DictChain() = new(Vector{Associative{K,V}}())
+    # empty dicts vector
+    DictChain() = new(Vector{Associative{K,V}}())
 
-  DictChain(dicts::Associative{K,V}...) = new(Associative{K,V}[dict for dict in dicts])
+    DictChain(dicts::Associative{K,V}...) = new(Associative{K,V}[dict for dict in dicts])
 end
 
 # (Associative{K,V}...) ctor is not triggered, so here's 1-, 2- and 3-argument
@@ -20,44 +20,37 @@ DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}) = DictChain{K,V
 DictChain{K,V}(dict1::Associative{K,V}, dict2::Associative{K,V}, dict3::Associative{K,V}) = DictChain{K,V}(dict1, dict2, dict3)
 
 function Base.show(io::IO, dc::DictChain)
-  print(io, typeof(dc), "[")
-  for (i, dict) in enumerate(dc.dicts)
-    (i > 1) && print(io, ",")
-    show(io, dict)
-  end
-  print(io, "]")
+    print(io, typeof(dc), "[")
+    for (i, dict) in enumerate(dc.dicts)
+        (i > 1) && print(io, ",")
+        show(io, dict)
+    end
+    print(io, "]")
 end
 
 Base.show(io::IO, ::MIME{Symbol("text/plain")}, dc::DictChain) = show(io, dc)
 
 function Base.getindex{K,V}(p::DictChain{K,V}, key)
-  for d in p.dicts
-    if haskey(d, key)
-      return getindex(d, key)
+    for d in p.dicts
+        haskey(d, key) && return getindex(d, key)
     end
-  end
-  throw(KeyError(key))
+    throw(KeyError(key))
 end
 
 function Base.setindex!{K,V}(p::DictChain{K,V}, value, key)
-  if isempty(p.dicts)
-    push!(p.dicts, Dict{K,V}()) # add new dictionary on top
-  end
-  setindex!(first(p.dicts), value, key)
+    isempty(p.dicts) && push!(p.dicts, Dict{K,V}()) # add new dictionary on top
+    setindex!(first(p.dicts), value, key)
 end
 
 function Base.haskey{K,V}(p::DictChain{K,V}, key)
-  for d in p.dicts
-    if haskey(d, key)
-      return true
+    for d in p.dicts
+        haskey(d, key) && return true
     end
-  end
-  return false
+    return false
 end
 
-function Base.get{K,V}(p::DictChain{K,V}, key, default = nothing)
-  return haskey(p, key) ? getindex(p, key) : default
-end
+Base.get{K,V}(p::DictChain{K,V}, key, default = nothing) =
+    return haskey(p, key) ? getindex(p, key) : default
 
 # In a merge the last parameter should be prioritized since this is the way
 # the normal Julia merge() of dicts works.
@@ -66,14 +59,15 @@ Base.merge{K,V}(p1::DictChain{K,V}, p2::DictChain{K,V}) = DictChain{K,V}([p2.dic
 Base.merge{K,V}(p1::Dict{K,V}, p2::DictChain{K,V}) = DictChain{K,V}([p2.dicts; p1])
 
 function Base.merge!{K,V}(dc::DictChain{K,V}, d::Dict{K,V})
-  insert!(dc.dicts, 1, d); dc
+    insert!(dc.dicts, 1, d)
+    return dc
 end
 
 function Base.merge!{K,V}(d::Dict{K,V}, dc::DictChain{K,V})
-  for dict in reverse(dc.dicts)
-    merge!(d, dict)
-  end
-  return d
+    for dict in reverse(dc.dicts)
+        merge!(d, dict)
+    end
+    return d
 end
 
 # since Base.merge(Dict, Dict) generates Dict, we need another name
@@ -91,10 +85,10 @@ flatten{K,V}(d::DictChain{K,V}) = convert(Dict{K,V}, d)
 Base.convert{K,V}(::Type{Dict{K,V}}, dc::DictChain{K,V}) = merge!(Dict{K,V}(), dc)
 
 function Base.delete!{K,V}(p::DictChain{K,V}, key)
-  for d in p.dicts
-    delete!(d, key)
-  end
-  p
+    for d in p.dicts
+        delete!(d, key)
+    end
+    return p
 end
 
 """

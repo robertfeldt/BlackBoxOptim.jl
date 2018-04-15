@@ -31,9 +31,7 @@ Simulate tournament among specified `candidates`.
 Returns the index of the winner.
 """
 function tournament(sel::TournamentSelector, population, candidates)
-    if isempty(candidates)
-        return 0
-    end
+    isempty(candidates) && return 0
     @inbounds begin
         winner_ix = candidates[1]
         best_fitness = fitness(population, winner_ix)

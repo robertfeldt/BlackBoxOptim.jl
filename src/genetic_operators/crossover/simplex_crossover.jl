@@ -15,12 +15,14 @@ immutable SimplexCrossover{NP} <: CrossoverOperator{NP,1}
 end
 
 const SPX_DefaultOptions = ParamsDict(
-  :SPX_ϵ => 1.1 # how much to inflate
+    :SPX_ϵ => 1.1 # how much to inflate
 )
 
 #masscenter(pop, parentIndices) = mapslices(mean, pop[:, parentIndices], 2)
 
-function apply!{NP}(xover::SimplexCrossover{NP}, target::Individual, targetIndex::Int, pop, parentIndices)
+function apply!{NP}(xover::SimplexCrossover{NP},
+                    target::Individual, targetIndex::Int,
+                    pop, parentIndices)
     @assert length(parentIndices) == NP
 
     offset = zeros(target)

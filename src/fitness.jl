@@ -75,7 +75,8 @@ end
 worst_fitness(fs::FitnessScheme) = is_minimizing(fs) ? Inf : (-Inf)
 best_fitness(fs::FitnessScheme) = -worst_fitness(fs)
 
-hat_compare(a1::Number, a2::Number) = (a1 < a2) ? -1 : ((a1 > a2) ? 1 : (isnan(a1) ? (isnan(a2) ? 0 : 1) : (isnan(a2) ? -1 : 0)))
+hat_compare(a1::Number, a2::Number) =
+    (a1 < a2) ? -1 : ((a1 > a2) ? 1 : (isnan(a1) ? (isnan(a2) ? 0 : 1) : (isnan(a2) ? -1 : 0)))
 
 """
 Check whether `f1` or `f2` fitness is better.
@@ -86,11 +87,11 @@ Returns
   * `0` if `f1` and `f2` are equal.
 """
 function hat_compare(f1, f2, s::RatioFitnessScheme)
-  if is_minimizing(s)
-    hat_compare(aggregate(f1, s), aggregate(f2, s))
-  else
-    hat_compare(aggregate(f2, s), aggregate(f1, s))
-  end
+    if is_minimizing(s)
+        hat_compare(aggregate(f1, s), aggregate(f2, s))
+    else
+        hat_compare(aggregate(f2, s), aggregate(f1, s))
+    end
 end
 
 is_better(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == -1

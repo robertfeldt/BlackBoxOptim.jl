@@ -14,15 +14,18 @@ immutable UnimodalNormalDistributionCrossover{NP} <: CrossoverOperator{NP,1}
         η >= 0 || throw(ArgumentError("η must be non-negative"))
         new(ζ, η)
     end
-    UnimodalNormalDistributionCrossover(params::Parameters) = new(params[:UNDX_ζ], params[:UNDX_η])
+    UnimodalNormalDistributionCrossover(params::Parameters) =
+        new(params[:UNDX_ζ], params[:UNDX_η])
 end
 
 const UNDX_DefaultOptions = ParamsDict(
-  :UNDX_ζ => 0.5,
-  :UNDX_η => 0.1
+    :UNDX_ζ => 0.5,
+    :UNDX_η => 0.1
 )
 
-function apply!{NP}(xover::UnimodalNormalDistributionCrossover{NP}, target::Individual, targetIndex::Int, pop, parentIndices)
+function apply!{NP}(xover::UnimodalNormalDistributionCrossover{NP},
+                    target::Individual, targetIndex::Int,
+                    pop, parentIndices)
     @assert length(parentIndices) == NP
 
     parents = pop[:, parentIndices]

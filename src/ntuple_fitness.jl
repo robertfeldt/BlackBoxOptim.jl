@@ -32,7 +32,7 @@ Always used when printing fitness vectors though.
 immutable ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
 
-    (::Type{ParetoFitnessScheme{N,F}}){N,F<:Number,AGG}(;is_minimizing::Bool=true, aggregator::AGG=sum) =
+    (::Type{ParetoFitnessScheme{N,F}}){N,F<:Number,AGG}(; is_minimizing::Bool=true, aggregator::AGG=sum) =
         new{N,F,is_minimizing,AGG}(aggregator)
 
     (::Type{ParetoFitnessScheme{N}}){N,F<:Number,AGG}(; fitness_type::Type{F} = Float64,
@@ -189,7 +189,10 @@ Returns a tuple of `u` and `v` comparison:
   * `1`: u≻v
 and whether `u` index fully matches `v` index.
 """
-function hat_compare_ϵ_box{N,F}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}, is_minimizing::Bool=true, expected::Int=0)
+function hat_compare_ϵ_box{N,F}(
+        u::IndexedTupleFitness{N,F},
+        v::IndexedTupleFitness{N,F},
+        is_minimizing::Bool=true, expected::Int=0)
     comp = 0
     @inbounds for (ui, vi) in zip(u.index, v.index)
         if ui > vi
@@ -222,13 +225,13 @@ end
 
 function check_epsbox_ϵ(ϵ::Number, n::Int)
     ϵ>0.0 || throw(ArgumentError("ϵ must be positive"))
-    fill(ϵ, n)
+    return fill(ϵ, n)
 end
 
 function check_epsbox_ϵ{F<:Number}(ϵ::Vector{F}, n::Int)
     length(ϵ)==n || throw(ArgumentError("The length of ϵ vector ($(length(ϵ))) does not match the specified fitness dimensions ($n)"))
     all(isposdef, ϵ) || throw(ArgumentError("ϵ must be positive"))
-    ϵ
+    return ϵ
 end
 
 """

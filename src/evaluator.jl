@@ -23,20 +23,19 @@ Default implementation of the `Evaluator`.
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
 type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
-  problem::P
-  archive::A
-  num_evals::Int
-  last_fitness::FP
+    problem::P
+    archive::A
+    num_evals::Int
+    last_fitness::FP
 
-  (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
-      problem::P, archive::A) =
-    new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(problem, archive,
-        0, nafitness(fitness_scheme(problem)))
+    (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
+            problem::P, archive::A) =
+        new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(problem, archive,
+                0, nafitness(fitness_scheme(problem)))
 
-  (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
-      problem::P; archiveCapacity::Int = 10) =
-    ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
-
+    (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
+            problem::P; archiveCapacity::Int = 10) =
+        ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
 end
 
 problem(e::Evaluator) = e.problem
@@ -51,11 +50,11 @@ parameters and calculated fitness.
 Returns the fitness in the archived format.
 """
 function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
-  e.last_fitness = fit = fitness(params, e.problem)
-  e.num_evals += 1
-  fita = archived_fitness(fit, e.archive)
-  candi = add_candidate!(e.archive, fita, params, tag, e.num_evals)
-  fita
+    e.last_fitness = fit = fitness(params, e.problem)
+    e.num_evals += 1
+    fita = archived_fitness(fit, e.archive)
+    candi = add_candidate!(e.archive, fita, params, tag, e.num_evals)
+    return fita
 end
 
 """
@@ -73,35 +72,35 @@ is_better{F}(f1::F, f2::F, e::Evaluator) = is_better(f1, f2, fitness_scheme(e))
 is_better(candidate, f, e::Evaluator) = is_better(fitness(candidate, e), f, fitness_scheme(e))
 
 function best_of(candidate1::Individual, candidate2::Individual, e::Evaluator)
-  f1 = fitness(candidate1, e)
-  f2 = fitness(candidate2, e)
-  if is_better(f1, f2, e)
-    return candidate1, f1
-  else
-    return candidate2, f2
-  end
+    f1 = fitness(candidate1, e)
+    f2 = fitness(candidate2, e)
+    if is_better(f1, f2, e)
+        return candidate1, f1
+    else
+        return candidate2, f2
+    end
 end
 
 function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA})
-  # evaluate fitness if not known yet
-  if isnafitness(candidate.fitness, fitness_scheme(e.archive))
-      candidate.fitness = fitness(candidate.params, e, candidate.tag)
-  end
-  candidate
+    # evaluate fitness if not known yet
+    if isnafitness(candidate.fitness, fitness_scheme(e.archive))
+        candidate.fitness = fitness(candidate.params, e, candidate.tag)
+    end
+    return candidate
 end
 
 function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidates::Vector{Candidate{FA}})
-  @inbounds for candidate in candidates
-      update_fitness!(e, candidate)
-  end
-  candidates
+    @inbounds for candidate in candidates
+        update_fitness!(e, candidate)
+    end
+    return candidates
 end
 
 function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates::Vector{Candidate{F}})
-  fs = fitness_scheme(e)
-  sort!(update_fitness!(e, candidates);
-        # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed
-        by=fitness, lt=(x, y) -> is_better(x, y, fs))
+    fs = fitness_scheme(e)
+    sort!(update_fitness!(e, candidates);
+          # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed
+          by=fitness, lt=(x, y) -> is_better(x, y, fs))
 end
 
 # called by check_stop_condition(OptRunController)

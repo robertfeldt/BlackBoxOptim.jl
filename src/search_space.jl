@@ -47,25 +47,21 @@ ranges(css::ContinuousSearchSpace) = collect(zip(mins(css), maxs(css)))
 """
 Generate `numIndividuals` individuals by random sampling in the search space.
 """
-function rand_individuals(css::ContinuousSearchSpace, numIndividuals)
-    # Basically min + delta * rand(), individuals are stored in columns
-    broadcast(+, mins(css), broadcast(*, deltas(css), rand(numdims(css), numIndividuals)))
-end
+rand_individuals(css::ContinuousSearchSpace, numIndividuals) =
+    mins(css) .+ deltas(css) .* rand(numdims(css), numIndividuals)
 
 """
 Generate `numIndividuals` individuals by latin hypercube sampling (LHS).
 This should be the default way to create the initial population.
 """
-function rand_individuals_lhs(css::ContinuousSearchSpace, numIndividuals)
+rand_individuals_lhs(css::ContinuousSearchSpace, numIndividuals) =
     Utils.latin_hypercube_sampling(mins(css), maxs(css), numIndividuals)
-end
 
 """
 Generate one random candidate.
 """
-function rand_individual(css::ContinuousSearchSpace)
-    squeeze(rand_individuals(css, 1), 2)
-end
+rand_individual(css::ContinuousSearchSpace) =
+    mins(css) .+ deltas(css) .* rand(numdims(css))
 
 """
 Check if given individual lies in the given search space.
@@ -116,7 +112,7 @@ feasible(v::AbstractIndividual, ss::RangePerDimSearchSpace) = map(clamp, v, mins
 
 # concatenates two range-based search spaces
 Base.vcat(ss1::RangePerDimSearchSpace, ss2::RangePerDimSearchSpace) =
-  RangePerDimSearchSpace(vcat(mins(ss1), mins(ss2)), vcat(maxs(ss1), maxs(ss2)))
+    RangePerDimSearchSpace(vcat(mins(ss1), mins(ss2)), vcat(maxs(ss1), maxs(ss2)))
 
 """
 0-dimensional search space.

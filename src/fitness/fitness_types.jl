@@ -23,11 +23,11 @@ characteristics(f::NewFitness) = fitnessvalues(f)
 evaluator(f::NewFitness) = nothing
 
 type SingleNumberFitness{T <: Real} <: SingleObjectiveFitness
-  fvalue::T
+    fvalue::T
 end
 
 type VectorFitness{T <: Real} <: MultiObjectiveFitness
-  fvalues::Vector{T}
+    fvalues::Vector{T}
 end
 
 makefitness{T <: Real}(fvalue::T) = SingleNumberFitness(fvalue)

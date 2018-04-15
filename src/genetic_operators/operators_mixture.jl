@@ -18,14 +18,15 @@ end
 """
 Default implementation of `apply!()` for operators mixture.
 """
-function apply!{T<:Real}(opmix::GeneticOperatorsMixture, v::Vector{T}, target_index::Int)
-  op, tag = next(opmix)
-  apply!(op, v, target_index)
+function apply!{T<:Real}(opmix::GeneticOperatorsMixture,
+                         v::Vector{T}, target_index::Int)
+    op, tag = next(opmix)
+    apply!(op, v, target_index)
 end
 
 function Base.next(opmix::FixedGeneticOperatorsMixture)
-  i = sample(1:length(opmix.operators), opmix.weights)
-  return opmix.operators[i], i
+    i = sample(1:length(opmix.operators), opmix.weights)
+    return opmix.operators[i], i
 end
 
 """
@@ -35,29 +36,29 @@ type FAGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operators
     fa::FrequencyAdapter               # adapter of operator frequencies
 
-    function FAGeneticOperatorsMixture{GO<:GeneticOperator}(
+    FAGeneticOperatorsMixture{GO<:GeneticOperator}(
         operators::AbstractVector{GO};
         c = 1E-2, eta = 1E-2, pmin = 0.01, pmax = 1.0
-    )
-      new(GeneticOperator[op for op in operators],
-          FrequencyAdapter(length(operators); c = c, eta = eta, pmin = pmin, pmax = pmax))
-    end
+    ) = new(GeneticOperator[op for op in operators],
+            FrequencyAdapter(length(operators);
+                             c = c, eta = eta, pmin = pmin, pmax = pmax))
 end
 
 frequencies(opmix::FAGeneticOperatorsMixture) = frequencies(opmix.fa)
 
 function Base.next(opmix::FAGeneticOperatorsMixture)
-  i = next(opmix.fa)
-  return opmix.operators[i], i
+    i = next(opmix.fa)
+    return opmix.operators[i], i
 end
 
-function adjust!{F}(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::Int, new_fitness::F, old_fitness::F, is_improved::Bool)
-  # KLUDGE we don't know the fitness scheme, but if there is no improvement in fitness,
-  # new_fitness==old_fitness, so it's ok to take the abs()
-  update!(opmix.fa, op_index, is_improved ? abs(new_fitness-old_fitness) : 0.0)
+function adjust!{F}(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::Int,
+                    new_fitness::F, old_fitness::F, is_improved::Bool)
+    # KLUDGE we don't know the fitness scheme, but if there is no improvement in fitness,
+    # new_fitness==old_fitness, so it's ok to take the abs()
+    update!(opmix.fa, op_index, is_improved ? abs(new_fitness-old_fitness) : 0.0)
 
-  # also adjust the actual operator
-  adjust!(opmix.operators[op_index], 0, candi_index, new_fitness, old_fitness, is_improved)
+    # also adjust the actual operator
+    adjust!(opmix.operators[op_index], 0, candi_index, new_fitness, old_fitness, is_improved)
 end
 
 function trace_state(io::IO, fa::FAGeneticOperatorsMixture, mode::Symbol)

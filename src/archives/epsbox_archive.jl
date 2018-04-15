@@ -37,34 +37,34 @@ It also counts the number of candidate solutions that have been added
 and how many ϵ-box progresses have been made.
 """
 type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
-  fit_scheme::FS        # Fitness scheme used
-  start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
+    fit_scheme::FS        # Fitness scheme used
+    start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
-  num_candidates::Int               # Number of calls to add_candidate!()
-  best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
-  last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
-  last_restart::Int                 # when (wrt num_dlast) last restart has occured
-  n_restarts::Int                   # the counter of the method restarts
+    num_candidates::Int               # Number of calls to add_candidate!()
+    best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
+    last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
+    last_restart::Int                 # when (wrt num_dlast) last restart has occured
+    n_restarts::Int                   # the counter of the method restarts
 
-  len::Int              # current frontier size
-  max_size::Int         # maximal frontier size
-  # TODO allow different frontier containers?
-  # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
-  frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
-  frontier_isoccupied::BitVector # true if given frontier element is occupied
+    len::Int              # current frontier size
+    max_size::Int         # maximal frontier size
+    # TODO allow different frontier containers?
+    # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
+    frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
+    frontier_isoccupied::BitVector # true if given frontier element is occupied
 
-  function (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
-    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
-                                sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
-                                sizehint!(BitVector(), 64))
-  end
+    function (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
+        new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
+                                    sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
+                                    sizehint!(BitVector(), 64))
+    end
 
-  (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
-    EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
+    (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
+        EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
 end
 
 const EpsBoxArchive_DefaultParameters = ParamsDict(
-  :MaxArchiveSize => 10_000,
+    :MaxArchiveSize => 10_000,
 )
 
 Base.length(a::EpsBoxArchive) = a.len
@@ -135,6 +135,7 @@ noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
 
 best_candidate(a::EpsBoxArchive) = a.frontier[a.best_candidate_ix].params
 best_fitness(a::EpsBoxArchive) = a.best_candidate_ix > 0 ? fitness(a.frontier[a.best_candidate_ix]) : nafitness(fitness_scheme(a))
+
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
         a.n_restarts += 1
@@ -261,6 +262,7 @@ add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
 
 # called by check_stop_condition(e::Evaluator, ctrl)
 function check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl)
-    ctrl.max_steps_without_progress > 0 && noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress ?
+    ctrl.max_steps_without_progress > 0 &&
+    noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress ?
         "No epsilon-progress for more than $(ctrl.max_steps_without_progress) iterations" : ""
 end

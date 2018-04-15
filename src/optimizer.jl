@@ -87,30 +87,29 @@ population(popopt::PopulationOptimizer) = popopt.population
 popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
 function setup!(o::SteppingOptimizer)
-  # Do nothing, override if you need to setup prior to the optimization loop
+    # Do nothing, override if you need to setup prior to the optimization loop
 end
 
 function setup!(o::AskTellOptimizer, evaluator::Evaluator)
-  # Do nothing, override if you need to setup prior to the optimization loop
+    # Do nothing, override if you need to setup prior to the optimization loop
 end
 
 function shutdown!(o::Optimizer)
-  # Do nothing, override if you need to setup prior to the optimization loop
+    # Do nothing, override if you need to setup prior to the optimization loop
 end
 
-function shutdown!(o::SteppingOptimizer)
+shutdown!(o::SteppingOptimizer) =
   shutdown!(evaluator(o)) # shutdown the evaluator
-end
 
 # The standard name function converts the type of the optimizer to a string
 # and strips off trailing "Opt".
 function name(o::Optimizer)
-  s = string(typeof(o))
-  if s[end-2:end] == "Opt"
-    return s[1:end-3]
-  else
-    return s
-  end
+    s = string(typeof(o))
+    if s[end-2:end] == "Opt"
+        return s[1:end-3]
+    else
+        return s
+    end
 end
 
 """

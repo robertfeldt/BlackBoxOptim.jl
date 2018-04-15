@@ -13,15 +13,18 @@ immutable ParentCentricCrossover{NP} <: CrossoverOperator{NP,1}
         η > 0 || throw(ArgumentError("η must be non-negative"))
         new(ζ, η)
     end
-    ParentCentricCrossover(params::Parameters) = new(params[:PCX_ζ], params[:PCX_η])
+    ParentCentricCrossover(params::Parameters) =
+        new(params[:PCX_ζ], params[:PCX_η])
 end
 
 const PCX_DefaultOptions = ParamsDict(
-  :PCX_ζ => 0.1,
-  :PCX_η => 0.5
+    :PCX_ζ => 0.1,
+    :PCX_η => 0.5
 )
 
-function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targetIndex::Int, pop, parentIndices)
+function apply!{NP}(xover::ParentCentricCrossover{NP},
+                    target::Individual, targetIndex::Int,
+                    pop, parentIndices)
     @assert length(parentIndices) == NP
 
     parents_centered = pop[:, parentIndices]
