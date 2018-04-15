@@ -10,7 +10,7 @@ struct OperatorPipeline <: GeneticOperator
     end
 end
 
-function apply(p::OperatorPipeline, parents::Vector{Vector{<:Real}})
+function apply(p::OperatorPipeline, parents::AbstractVector{<:AbstractVector{<:Real}})
     for i in 1:length(p.ops)
         parents = apply(p.ops[i], parents)
     end

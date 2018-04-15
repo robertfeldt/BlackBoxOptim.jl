@@ -22,8 +22,8 @@ numdims(pop::PopulationMatrix) = size(pop, 1)
 params_mean(pop::PopulationMatrix) = mean(pop, 1)
 params_std(pop::PopulationMatrix) = std(pop, 1)
 
-popsize(pop::Vector{<:Candidate}) = length(pop)
-numdims(pop::Vector{<:Candidate}) = isempty(pop) ? 0 : length(pop[1].params)
+popsize(pop::AbstractVector{<:Candidate}) = length(pop)
+numdims(pop::AbstractVector{<:Candidate}) = isempty(pop) ? 0 : length(pop[1].params)
 
 viewer(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
 

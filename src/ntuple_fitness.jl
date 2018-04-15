@@ -230,7 +230,7 @@ function check_epsbox_ϵ(ϵ::Number, n::Int)
     return fill(ϵ, n)
 end
 
-function check_epsbox_ϵ(ϵ::Vector{<:Number}, n::Int)
+function check_epsbox_ϵ(ϵ::AbstractVector{<:Number}, n::Int)
     length(ϵ)==n || throw(ArgumentError("The length of ϵ vector ($(length(ϵ))) does not match the specified fitness dimensions ($n)"))
     all(isposdef, ϵ) || throw(ArgumentError("ϵ must be positive"))
     return ϵ

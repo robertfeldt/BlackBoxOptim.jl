@@ -20,7 +20,7 @@ end
 Default implementation of `apply!()` for operators mixture.
 """
 function apply!(opmix::GeneticOperatorsMixture,
-                v::Vector{<:Real}, target_index::Int)
+                v::AbstractVector{<:Real}, target_index::Int)
     op, tag = next(opmix)
     apply!(op, v, target_index)
 end

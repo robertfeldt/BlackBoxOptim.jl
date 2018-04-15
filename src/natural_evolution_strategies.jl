@@ -93,7 +93,7 @@ function ask(snes::SeparableNESOpt)
     return snes.candidates
 end
 
-function tell!(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F}}) where F
+function tell!(snes::SeparableNESOpt{F}, rankedCandidates::AbstractVector{<:Candidate{F}}) where F
     u = assign_weights!(snes.tmp_Utilities, rankedCandidates, snes.sortedUtilities)
 
     # Calc gradient
@@ -123,7 +123,7 @@ the corresponding weights.
 Returns candidate weights sorted by the individual's index in the population.
 """
 function assign_weights!(weights::Vector{Float64},
-                         rankedCandidates::Vector{<:Candidate},
+                         rankedCandidates::AbstractVector{<:Candidate},
                          sortedWeights::Vector{Float64})
     @assert length(weights) == length(sortedWeights) && length(rankedCandidates) == length(weights)
     for i in eachindex(rankedCandidates)
@@ -164,7 +164,7 @@ function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Ma
     return exnes.candidates
 end
 
-function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::Vector)
+function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::AbstractVector)
     # TODO use syrk(Z,dA) to speed-up multiplication
     Zu = scale!(exnes.tmp_Zu, exnes.Z, u)
     ln_dB = A_mul_Bt!(exnes.tmp_lndB, Zu, exnes.Z)

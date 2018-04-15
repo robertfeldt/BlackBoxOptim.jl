@@ -38,7 +38,7 @@ Select `numSamples` random candidates from the `population`.
 """
 function select(::IndividualsSelector, population, numSamples::Int) end
 
-apply(o::MutationOperator, parents::Vector{Vector{<:Real}}) =
+apply(o::MutationOperator, parents::AbstractVector{<:AbstractVector{<:Real}}) =
     map(p -> apply(o, p), parents)
 
 numchildren(o::GeneticOperator) = 1
