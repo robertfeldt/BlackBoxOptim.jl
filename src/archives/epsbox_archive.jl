@@ -1,7 +1,7 @@
 """
 Individual representing the solution from the Pareto set.
 """
-immutable FrontierIndividual{F} <: ArchivedIndividual{F}
+struct FrontierIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     params::Individual
     tag::Int                            # tag of the individual (e.g. gen.op. ID)
@@ -36,7 +36,7 @@ dominated by any other solutions in the archive.
 It also counts the number of candidate solutions that have been added
 and how many ϵ-box progresses have been made.
 """
-type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
+mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
     fit_scheme::FS        # Fitness scheme used
     start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
@@ -75,7 +75,7 @@ numdims(a::EpsBoxArchive) = !isempty(a.frontier) ? length(a.frontier[1].params) 
 """
 Iterates occupied elements of the `archive.frontier`.
 """
-immutable EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
+struct EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
     archive::A
     (::Type{EpsBoxArchiveFrontierIterator}){A<:EpsBoxArchive}(a::A) = new{A}(a)
 end

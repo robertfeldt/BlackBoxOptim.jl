@@ -1,7 +1,7 @@
 """
 DX-NES: distance-weighted extensions of xNES by Fukushima et al.
 """
-type DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
+mutable struct DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     embed::E                        # operator embedding into the search space
     lambda::Int                     # Number of samples to take per iteration
     sortedUtilities::Vector{Float64}# Fitness utility to give to each rank

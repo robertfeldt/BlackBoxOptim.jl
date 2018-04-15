@@ -3,7 +3,7 @@ abstract type NaturalEvolutionStrategyOpt <: PopulationOptimizer end
 """
 Separable Natural Evolution Strategy (sNES) optimizer.
 """
-type SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
+mutable struct SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrategyOpt
     embed::E                        # operator embedding into the search space
     lambda::Int                     # number of samples to take per iteration
     mu::Vector{Float64}             # center of the population
@@ -212,7 +212,7 @@ end
 
 Nice but scales badly with increasing dimensions.
 """
-type XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
+mutable struct XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStrategyOpt
     embed::E                        # operator embedding into the search space
     lambda::Int                     # number of samples to take per iteration
     sortedUtilities::Vector{Float64}# the fitness shaping utility vector

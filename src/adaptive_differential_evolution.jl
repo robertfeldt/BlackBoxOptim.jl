@@ -13,7 +13,7 @@ An Adaptive DE typically changes parameters of the search dynamically. This is
 typically done in the `tell!()` function when we know if the trial vector
 was better than the target vector.
 """
-type AdaptiveDiffEvoParameters
+mutable struct AdaptiveDiffEvoParameters
     # Distributions we will use to generate new F and CR values.
     # In the literature Cauchy distributions have been used for sampling the
     # `f` and `cr` constants
@@ -56,7 +56,7 @@ end
 """
 An Adaptive DE crossover operator changes `cr` and `f` parameters of the search dynamically.
 """
-type AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
+mutable struct AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
     params::AdaptiveDiffEvoParameters
 
     AdaptiveDiffEvoRandBin(params::AdaptiveDiffEvoParameters) = new(params)

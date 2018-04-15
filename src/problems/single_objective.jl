@@ -63,7 +63,7 @@ name(tp::TransformedProblem) = name(sub_problem(tp))
 A `TransformedProblem` subclass that shifts the minimum value and biases the returned
 function values.
 """
-type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
+struct ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
     xshift::Vector{Float64}
     funcshift::Float64
     subp::OptimizationProblem{FS}

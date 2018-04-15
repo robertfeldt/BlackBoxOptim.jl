@@ -19,7 +19,7 @@ and its close sibling "Resampling Inheritance Search" (RIS) is described in:
     F. Caraffini, F. Neri, B. N. Passow and G. Iacca, "Re-sampled Inheritance
     Search: High Performance Despite the Simplicity", 2013.
 """
-type ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
+mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
     name::String
     params::Parameters
     evaluator::E

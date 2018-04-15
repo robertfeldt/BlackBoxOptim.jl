@@ -10,7 +10,7 @@ but generalized so that it can support more than the adaptation of only
 the coordinates in a Coordinate Descent scheme. The things that are being
 adapted are identified by integers in 1:n, with n being the main parameter.
 """
-type FrequencyAdapter
+mutable struct FrequencyAdapter
     n::Int                # number of methods to select from
     eta::Float64          # 0..1, running average decay rate
     c::Float64            # positive, sensitivity to progress changes

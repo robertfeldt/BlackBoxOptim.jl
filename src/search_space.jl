@@ -77,7 +77,7 @@ end
 """
 `SearchSpace` defined by a range of valid values for each dimension.
 """
-immutable RangePerDimSearchSpace <: ContinuousSearchSpace
+struct RangePerDimSearchSpace <: ContinuousSearchSpace
     # We save the ranges as individual mins, maxs and deltas for faster access later.
     mins::Vector{Float64}
     maxs::Vector{Float64}

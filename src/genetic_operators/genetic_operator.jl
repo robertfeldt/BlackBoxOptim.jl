@@ -65,7 +65,7 @@ end
 """
 `MutationOperator` that does nothing.
 """
-immutable NoMutation <: MutationOperator end
+struct NoMutation <: MutationOperator end
 apply!(mo::NoMutation, target, target_index) = target
 
 """

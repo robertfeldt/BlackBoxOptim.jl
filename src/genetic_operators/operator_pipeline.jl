@@ -1,7 +1,7 @@
 """
 Several genetic operators chained together.
 """
-type OperatorPipeline <: GeneticOperator
+struct OperatorPipeline <: GeneticOperator
     ops::Vector{GeneticOperator}
 
     function OperatorPipeline(operators...)

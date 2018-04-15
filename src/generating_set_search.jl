@@ -15,7 +15,7 @@ a GSS search.
 """
 abstract type DirectionGenerator end
 
-immutable ConstantDirectionGen <: DirectionGenerator
+struct ConstantDirectionGen <: DirectionGenerator
     directions::Matrix{Float64}
 
     ConstantDirectionGen(directions) = new(directions)
@@ -45,7 +45,7 @@ Generating Set Search as described in Kolda2003:
   by direct search: New perspectives on some classical and modern methods."
   SIAM review 45.3 (2003): 385-482.
 """
-type GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
+mutable struct GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
     direction_gen::D
     evaluator::V
     embed::E

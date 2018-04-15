@@ -13,7 +13,7 @@ The original paper is:
     and B. Worzel, pp. 109-124. Boston, MA: Kluwer Academic Publishers.
     http://faculty.hampshire.edu/lspector/pubs/trivial-geography-toappear.pdf
 """
-immutable RadiusLimitedSelector <: IndividualsSelector
+mutable struct RadiusLimitedSelector <: IndividualsSelector
     radius::Int
 end
 

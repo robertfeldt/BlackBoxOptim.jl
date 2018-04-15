@@ -11,7 +11,7 @@ const SPSADefaultParameters = ParamsDict(
     :A     => 10
 )
 
-type SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticApproximationOptimizer
+mutable struct SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticApproximationOptimizer
     embed::E # embed candidate into search space
     parameters::Parameters
     k::Int

@@ -15,7 +15,7 @@ function sample_unit_hypersphere(n, num = 1)
     broadcast(*, sqrootsums, X)
 end
 
-immutable RandomDirectionGen <: DirectionGenerator
+struct RandomDirectionGen <: DirectionGenerator
     numDimensions::Int
     numDirections::Int
 end
@@ -27,7 +27,7 @@ directions_for_k(rdg::RandomDirectionGen, k) =
 Generate half of the directions randomly and then
 mirrors by negating them.
 """
-immutable MirroredRandomDirectionGen <: DirectionGenerator
+struct MirroredRandomDirectionGen <: DirectionGenerator
     numDimensions::Int
     numDirections::Int
 

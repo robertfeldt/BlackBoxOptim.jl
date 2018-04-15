@@ -1,6 +1,6 @@
 using JSON
 
-type ParameterExperiment
+struct ParameterExperiment
     parameters::Vector{String}               # Parameter names
     mappers::Vector{Function}                     # One function per param mapping a design value to a param value
     design_ranges::Vector{Tuple{Float64, Float64}}# Design range per parameter

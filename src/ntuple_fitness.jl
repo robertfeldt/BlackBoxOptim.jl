@@ -29,7 +29,7 @@ Pareto dominance for `N`-tuple (`N`≧1) fitnesses.
 Might be used for comparisons (or not, depending on the setup).
 Always used when printing fitness vectors though.
 """
-immutable ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
+struct ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
 
     (::Type{ParetoFitnessScheme{N,F}}){N,F<:Number,AGG}(; is_minimizing::Bool=true, aggregator::AGG=sum) =
@@ -76,7 +76,7 @@ hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::ParetoFitnessScheme{N,F,f
 Might be used for comparisons (or not, depending on the setup).
 Always used when printing fitness vectors though.
 """
-immutable EpsDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: FitnessScheme{NTuple{N,F}}
+struct EpsDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: FitnessScheme{NTuple{N,F}}
     ϵ::F              # ɛ-domination threshold
     aggregator::AGG    # fitness aggregation function
 
@@ -158,7 +158,7 @@ end
 
 Used together with `EpsBoxDominanceFitnessScheme`.
 """
-immutable IndexedTupleFitness{N,F}
+struct IndexedTupleFitness{N,F}
     orig::NTuple{N,F}       # original fitness
     agg::F                  # aggregated fitness
     index::NTuple{N,Int}    # ϵ-index vector
@@ -243,7 +243,7 @@ It operates with fitnesses of type `IndexedTupleFitness`.
 Might be used for comparisons (or not, depending on the setup).
 Always used when printing fitness vectors though.
 """
-immutable EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,IndexedTupleFitness{N,F},MIN,AGG}
+struct EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,IndexedTupleFitness{N,F},MIN,AGG}
     ϵ::Vector{F}        # per-objective ɛ-domination thresholds
     aggregator::AGG     # fitness aggregation function
 

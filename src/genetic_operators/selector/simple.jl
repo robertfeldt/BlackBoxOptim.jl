@@ -3,7 +3,7 @@ Simple random `IndividualsSelector`.
 
 The probabilties of all candidates are equal.
 """
-immutable SimpleSelector <: IndividualsSelector
+struct SimpleSelector <: IndividualsSelector
 end
 
 select(::SimpleSelector, population, numSamples::Int) =

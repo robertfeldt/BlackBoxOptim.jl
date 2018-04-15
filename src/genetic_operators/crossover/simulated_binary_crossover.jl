@@ -3,7 +3,7 @@ Simulated Binary Crossover (SBX).
 
 See Deb&Agrawal "Simulated binary crossover for continuous search space", 1994, Complex Systems
 """
-immutable SimulatedBinaryCrossover <: CrossoverOperator{2,2}
+struct SimulatedBinaryCrossover <: CrossoverOperator{2,2}
     p::Float64      # probability to modify a dimension
     η::Float64      # distribution index
     η_exp::Float64  # pre-processed index

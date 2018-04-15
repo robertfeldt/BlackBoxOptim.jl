@@ -10,7 +10,7 @@ of the `OptimizationResults`.
 """
 abstract type MethodOutput end
 
-immutable DummyMethodOutput <: MethodOutput end
+struct DummyMethodOutput <: MethodOutput end
 
 # no method-specific output by default
 (::Type{MethodOutput})(method::Optimizer) = DummyMethodOutput()
@@ -22,7 +22,7 @@ Returned by `run!(oc::OptRunController)`.
 Should be compatible (on the API level) with the `Optim` package.
 See `make_opt_results()`.
 """
-type OptimizationResults
+mutable struct OptimizationResults
     method::String           # FIXME symbol instead or flexible?
     stop_reason::String      # FIXME turn into type hierarchy of immutable reasons with their attached info
     iterations::Int
@@ -85,7 +85,7 @@ iteration_converged(or::OptimizationResults) = iterations(or) >= parameters(or)[
 """
 `TopListArchive`-specific components of the optimization results.
 """
-immutable TopListArchiveOutput{F,C} <: ArchiveOutput
+struct TopListArchiveOutput{F,C} <: ArchiveOutput
     best_fitness::F
     best_candidate::C
 
@@ -98,7 +98,7 @@ end
 """
 Wrapper for `FrontierIndividual` that allows easy access to the problem fitness.
 """
-immutable FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
+struct FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
     inner::FrontierIndividual{FA}
     fitness::F
 
@@ -113,7 +113,7 @@ archived_fitness(indi::FrontierIndividualWrapper) = fitness(indi.inner)
 """
 `EpsBoxArchive`-specific components of the optimization results.
 """
-immutable EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutput
+struct EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutput
     best_fitness::NTuple{N,F}
     best_candidate::Individual
     frontier::Vector{FrontierIndividualWrapper{NTuple{N,F},IndexedTupleFitness{N,F}}} # inferred Pareto frontier
@@ -136,7 +136,7 @@ pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 `PopulationOptimizer`-specific components of the `OptimizationResults`.
 Stores the final population.
 """
-immutable PopulationOptimizerOutput{P} <: MethodOutput
+struct PopulationOptimizerOutput{P} <: MethodOutput
     population::P
 
     (::Type{PopulationOptimizerOutput})(method::PopulationOptimizer) =

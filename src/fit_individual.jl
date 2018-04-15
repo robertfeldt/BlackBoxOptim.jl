@@ -27,7 +27,7 @@ Candidate can be either a member of the population (`index` > 0) or
 a standalone solution (`index` == -1).
 Can carry additional information, like the `tag` or the genetic operator applied (`extra`).
 """
-type Candidate{F} <: FitIndividual{F}
+mutable struct Candidate{F} <: FitIndividual{F}
     params::Individual
     index::Int          # index of individual in the population, -1 if unassigned
     fitness::F          # fitness

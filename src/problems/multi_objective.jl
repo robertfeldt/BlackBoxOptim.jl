@@ -1,7 +1,7 @@
 """
 ``(N-1)``-dimensional manifold in ``N``-dimensional space.
 """
-immutable Hypersurface{N,SS<:SearchSpace}
+struct Hypersurface{N,SS<:SearchSpace}
     manifold::Function
     parameter_space::SS
 

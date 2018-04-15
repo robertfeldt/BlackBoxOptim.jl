@@ -22,7 +22,7 @@ Default implementation of the `Evaluator`.
 """
 # FIXME F is the fitness type of the problem, but with current Julia it's
 # not possible to get and use it at declaration type
-type ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
+mutable struct ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
     problem::P
     archive::A
     num_evals::Int

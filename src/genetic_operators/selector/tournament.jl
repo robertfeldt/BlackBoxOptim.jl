@@ -1,7 +1,7 @@
 """
 Tournament selector.
 """
-type TournamentSelector{H} <: IndividualsSelector
+mutable struct TournamentSelector{H} <: IndividualsSelector
     hat_comp::H     # fitness comparison tri-valued operator
     size::Int       # tournament size
 

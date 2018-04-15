@@ -1,7 +1,7 @@
 """
 Optimize by randomly generating the candidates.
 """
-type RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
+mutable struct RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
     name::String
     search_space::S
     best_fitness          # FIXME fitness type should be known

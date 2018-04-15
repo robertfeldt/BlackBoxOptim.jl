@@ -2,7 +2,7 @@
 An ordered set of dicts that are examined one after another to find the parameter value.
 Returns nothing if no param setting is found in any of the dicts.
 """
-type DictChain{K,V} <: Associative{K,V}
+mutable struct DictChain{K,V} <: Associative{K,V}
     dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
 
     DictChain(dicts::Vector{Associative{K,V}}) = new(dicts)

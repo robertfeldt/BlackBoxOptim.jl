@@ -21,7 +21,7 @@ Manages problem optimization using the specified method.
 
 See `OptController`.
 """
-type OptRunController{O<:Optimizer, E<:Evaluator}
+mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
     optimizer::O   # optimization algorithm
     evaluator::E   # problem evaluator
 
@@ -345,7 +345,7 @@ Supports restarts and modifying parameter of the method between runs.
 
 See `OptRunController`.
 """
-type OptController{O<:Optimizer, P<:OptimizationProblem}
+mutable struct OptController{O<:Optimizer, P<:OptimizationProblem}
     optimizer::O   # optimization algorithm
     problem::P     # opt problem
     parameters::ParamsDictChain

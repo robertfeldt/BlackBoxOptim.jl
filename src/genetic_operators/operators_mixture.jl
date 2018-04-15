@@ -2,7 +2,7 @@
 Randomly selects the genetic operator from the vector
 according to its weight and applies it.
 """
-type FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
+struct FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operations
     weights::Weights{Float64, Float64, Vector{Float64}}  # fixed weights
 
@@ -32,7 +32,7 @@ end
 """
 Frequency-adapting genetic operators mixture.
 """
-type FAGeneticOperatorsMixture <: GeneticOperatorsMixture
+struct FAGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operators
     fa::FrequencyAdapter               # adapter of operator frequencies
 

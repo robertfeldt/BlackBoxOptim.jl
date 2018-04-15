@@ -7,7 +7,7 @@ Random values are further constrained to `[0.0, 1.0]` range either by
 truncating the initial unconstrained value or by generating new random value
 until it fits the range.
 """
-immutable BimodalCauchy
+struct BimodalCauchy
     a::Cauchy
     b::Cauchy
     mix_prob::Float64

@@ -4,7 +4,7 @@ parameters described by a ParameterSet. The parameter vectors that are tuned
 only take values in [0.0, 1.0] and it is up to the ParameterSet to translate
 that to meaningful ranges.
 """
-type BonesaTuner
+struct BonesaTuner
     numvectors::Int                     # Current num of param vectors in archive
     parameter_vectors::Matrix{Float64}  # Archive of param vectors, each column is one vector
     utilities::Matrix{Float64}          # Each column has Nu * Np utility values for one and the same parameter vector

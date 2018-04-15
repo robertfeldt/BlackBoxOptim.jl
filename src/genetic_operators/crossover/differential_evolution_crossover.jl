@@ -1,7 +1,7 @@
 abstract type DiffEvoCrossoverOperator{NP,NC} <: CrossoverOperator{NP,NC} end
 
 # FIXME is it possible somehow to do arithmetic operations with N?
-immutable DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
+struct DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
     cr::Float64   # probability to crossover the dimension
     f::Float64    # scale parameter
 

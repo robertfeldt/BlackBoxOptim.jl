@@ -12,7 +12,7 @@ abstract type ProblemFamily{FS<:FitnessScheme} end
 Family of `FunctionBasedProblem` optimization problems
 parameterized by the number of search space dimensions.
 """
-type FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
+struct FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
     objfunc::Function                     # Objective function
     name::String
     fitness_scheme::FS

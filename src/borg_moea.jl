@@ -4,7 +4,7 @@ Borg MOEA algorithm.
 Based on Hadka & Reed, "Borg: An Auto-Adaptive Many-Objective Evolutionary Computing
 Framework", Evol. Comp. 2013
 """
-type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<:EmbeddingOperator} <: SteppingOptimizer
+mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<:EmbeddingOperator} <: SteppingOptimizer
     evaluator::V
     population::P     # candidates, NOTE index one is always reserved for one archive parent for recombination
     rand_check_order::Vector{Int} # random population check order

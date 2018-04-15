@@ -1,7 +1,7 @@
 """
 Internal data for the worker process of the parallel evaluator.
 """
-immutable ParallelEvaluatorWorker{P<:OptimizationProblem}
+struct ParallelEvaluatorWorker{P<:OptimizationProblem}
     problem::P
 
     (::Type{ParallelEvaluatorWorker}){P}(problem::P) =
@@ -20,7 +20,7 @@ fitness{P}(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) =
 """
 Current state of fitness function evaluation for the vector of candidates.
 """
-type ParallelEvaluationState{F, FS}
+mutable struct ParallelEvaluationState{F, FS}
     fitness_scheme::FS
     candidates::Vector{Candidate{F}}  # candidates to calculate fitness for
 
@@ -109,7 +109,7 @@ end
 Fitness evaluator that distributes candidates fitness calculation
 among several worker processes.
 """
-type ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
+mutable struct ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
     problem::P
     archive::Archive
     num_evals::Int

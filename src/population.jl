@@ -48,7 +48,7 @@ end
 """
 The default implementation of `PopulationWithFitness{F}`.
 """
-type FitPopulation{F} <: PopulationWithFitness{F}
+mutable struct FitPopulation{F} <: PopulationWithFitness{F}
     # The population is a matrix of floats, each column being an individual.
     individuals::PopulationMatrix
 

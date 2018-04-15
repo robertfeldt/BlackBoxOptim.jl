@@ -44,7 +44,7 @@ abstract type RatioFitnessScheme{F} <: FitnessScheme{F} end
 The boolean type parameter `MIN` specifies if smaller fitness values
 are better (`true`) or worse (`false`).
 """
-immutable ScalarFitnessScheme{MIN} <: RatioFitnessScheme{Float64}
+struct ScalarFitnessScheme{MIN} <: RatioFitnessScheme{Float64}
 end
 
 const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
@@ -68,7 +68,7 @@ is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{false}) = f1 > f
 Complex-valued fitness.
 """
 # FIXME what is isbetter() for ComplexFitnessScheme
-immutable ComplexFitnessScheme <: FitnessScheme{Complex128}
+struct ComplexFitnessScheme <: FitnessScheme{Complex128}
 end
 
 # FIXME do we need it? it might be confused with problem's fitness bounds
@@ -98,7 +98,7 @@ is_better(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == -1
 is_worse(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 1
 same_fitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 
-immutable HatCompare{FS<:FitnessScheme}
+struct HatCompare{FS<:FitnessScheme}
     fs::FS
 
     (::Type{HatCompare}){FS<:FitnessScheme}(fs::FS) = new{FS}(fs)

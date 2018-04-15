@@ -70,23 +70,23 @@ end
 abstract type BBOBNoiseFunction end
 
 # Different types depending on the noise function used.
-type BBOBNfreeFunction <: BBOBNoiseFunction
+struct BBOBNfreeFunction <: BBOBNoiseFunction
 end
 noise(f::BBOBNfreeFunction, ftrue) = copy(ftrue) # no noise added
 
-type BBOBGaussFunction <: BBOBNoiseFunction
+struct BBOBGaussFunction <: BBOBNoiseFunction
     gaussbeta::Float64
 end
 noise(f::BBOBGaussFunction, ftrue) = fGauss(ftrue, f.gaussbeta)
 
-type BBOBUniformFunction <: BBOBNoiseFunction
+struct BBOBUniformFunction <: BBOBNoiseFunction
     unifalphafac::Float64
     unifbeta::Float64
 end
 noise(f::BBOBUniformFunction, ftrue) =
     fUniform(ftrue, f.unifalphafac * (0.49 + 1. / f.dim), f.unifbeta)
 
-type BBOBCauchyFunction <: BBOBNoiseFunction
+struct BBOBCauchyFunction <: BBOBNoiseFunction
     cauchyalpha::Float64
     cauchyp::Float64
 end
@@ -96,7 +96,7 @@ abstract type FSphere{NoiseFunc} <: BBOBFunction end
 compute_core(f::FSphere, x) = sum(x.^2)
 
 # Sphere without noise
-type F1 <: FSphere{BBOBNfreeFunction}
+struct F1 <: FSphere{BBOBNfreeFunction}
     funId::Int
     noisefunc::BBOBNoiseFunction
     F1() = new(1, BBOBNfreeFunction())
@@ -104,7 +104,7 @@ end
 boundaryhandling(f::F1, x) = 0
 
 # Sphere with Gaussian noise
-type F101 <: FSphere{BBOBGaussFunction}
+struct F101 <: FSphere{BBOBGaussFunction}
     funId::Int
     noisefunc::BBOBNoiseFunction
     F101 = new(101, BBOBGaussFunction(0.01))

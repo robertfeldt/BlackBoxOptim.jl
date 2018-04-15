@@ -22,11 +22,11 @@ simulations(f::NewFitness) = characteristics(f)
 characteristics(f::NewFitness) = fitnessvalues(f)
 evaluator(f::NewFitness) = nothing
 
-type SingleNumberFitness{T <: Real} <: SingleObjectiveFitness
+struct SingleNumberFitness{T <: Real} <: SingleObjectiveFitness
     fvalue::T
 end
 
-type VectorFitness{T <: Real} <: MultiObjectiveFitness
+struct VectorFitness{T <: Real} <: MultiObjectiveFitness
     fvalues::Vector{T}
 end
 
