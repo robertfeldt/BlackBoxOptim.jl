@@ -5,8 +5,8 @@ struct DiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
     cr::Float64   # probability to crossover the dimension
     f::Float64    # scale parameter
 
-    DiffEvoRandBin(cr::Number, f::Number) = new(cr, f)
-    DiffEvoRandBin(options::Parameters) = new(options[:DEX_cr], options[:DEX_f])
+    DiffEvoRandBin{N}(cr::Number, f::Number) where N = new{N}(cr, f)
+    DiffEvoRandBin{N}(options::Parameters) where N = new{N}(options[:DEX_cr], options[:DEX_f])
 end
 
 const DEX_DefaultOptions = ParamsDict(

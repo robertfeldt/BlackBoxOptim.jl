@@ -6,8 +6,8 @@ struct PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
     η::Float64
 
-    (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, η = 50.0) = new{SS}(ss, η)
-    (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, options::Parameters) =
+    PolynomialMutation(ss::SS, η = 50.0) where {SS<:SearchSpace} = new{SS}(ss, η)
+    PolynomialMutation(ss::SS, options::Parameters) where {SS<:SearchSpace} =
         new{SS}(ss, options[:PM_η])
 end
 

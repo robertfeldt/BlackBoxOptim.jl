@@ -30,11 +30,11 @@ mutable struct DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionSt
     tmp_Zu::Matrix{Float64}
     tmp_sBZ::Matrix{Float64}
 
-    function DXNESOpt(embed::E; lambda::Int = 0,
+    function DXNESOpt{F}(embed::E; lambda::Int = 0,
             mu_learnrate::Float64 = 1.0,
             ini_x = nothing, ini_sigma::Float64 = 1.0,
             ini_lnB = nothing,
-            max_sigma::Float64 = 1.0E+10)
+            max_sigma::Float64 = 1.0E+10) where {F, E<:EmbeddingOperator}
         iseven(lambda) || throw(ArgumentError("lambda needs to be even"))
         d = numdims(search_space(embed))
         if lambda == 0
@@ -49,7 +49,7 @@ mutable struct DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionSt
         u = fitness_shaping_utilities_log(lambda)
         moving_threshold, evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
-        new(embed, lambda, u, Vector{Float64}(lambda),
+        new{F,E}(embed, lambda, u, Vector{Float64}(lambda),
             mu_learnrate, 0.0, 0.0, max_sigma,
             moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
             zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
@@ -83,11 +83,11 @@ const DXNES_DefaultOptions = chain(NES_DefaultOptions, ParamsDict(
 function dxnes(problem::OptimizationProblem, parameters)
     params = chain(DXNES_DefaultOptions, parameters)
     embed = RandomBound(search_space(problem))
-    DXNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
-                                                   ini_x = params[:ini_x],
-                                                   ini_sigma = params[:ini_sigma],
-                                                   ini_lnB = params[:ini_lnB],
-                                                   max_sigma = params[:max_sigma])
+    DXNESOpt{fitness_type(problem)}(embed; lambda = params[:lambda],
+                                    ini_x = params[:ini_x],
+                                    ini_sigma = params[:ini_sigma],
+                                    ini_lnB = params[:ini_lnB],
+                                    max_sigma = params[:max_sigma])
 end
 
 function ask(dxnes::DXNESOpt)

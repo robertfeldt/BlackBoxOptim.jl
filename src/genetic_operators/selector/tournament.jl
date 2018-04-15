@@ -4,11 +4,11 @@ Tournament selector.
 mutable struct TournamentSelector{H} <: IndividualsSelector
     hat_comp::H     # fitness comparison tri-valued operator
     size::Int       # tournament size
+end
 
-    function (::Type{TournamentSelector}){FS}(fs::FS, size::Int=2)
-        h = HatCompare(fs)
-        new{typeof(h)}(h, size)
-    end
+function TournamentSelector(fs::FitnessScheme, size::Int=2)
+    h = HatCompare(fs)
+    TournamentSelector{typeof(h)}(h, size)
 end
 
 # selection using `n_tours` tournaments

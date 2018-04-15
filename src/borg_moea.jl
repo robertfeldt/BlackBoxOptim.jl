@@ -36,11 +36,12 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     modify::M         # operator to mutate frontier element during restarts
     embed::E          # embedding operator
 
-    function (::Type{BorgMOEA}){O<:OptimizationProblem, P<:Population,
-                     M<:GeneticOperator, E<:EmbeddingOperator}(
+    function BorgMOEA(
         problem::O,
         pop::P, recombinate::Vector{CrossoverOperator},
-        modify::M = M(), embed::E = E(), params = EMPTY_PARAMS)
+        modify::M = M(), embed::E = E(), params = EMPTY_PARAMS) where
+            {O<:OptimizationProblem, P<:Population,
+             M<:GeneticOperator, E<:EmbeddingOperator}
         # NOTE if ϵ-dominance is used, params[:ϵ] has the priority
         fit_scheme = fitness_scheme(problem)
         isa(fit_scheme, TupleFitnessScheme) || throw(ArgumentError("BorgMOEA can only solve problems with `TupleFitnessScheme`"))

@@ -34,9 +34,9 @@ mutable struct FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: Opt
     ss::SS                # search space
     opt_value::FO         # known optimal value or nothing
 
-    function (::Type{FunctionBasedProblem}){FS<:FitnessScheme,SS<:SearchSpace,FO}(objfunc::Function, name::String,
-                                                                                  fitness_scheme::FS, ss::SS,
-                                                                                  opt_value::FO = nothing)
+    function FunctionBasedProblem(objfunc::Function, name::String,
+                                  fitness_scheme::FS, ss::SS,
+                                  opt_value::FO = nothing) where {FS<:FitnessScheme,SS<:SearchSpace,FO}
         if FO <: Number
             fitness_type(fitness_scheme) == FO ||
                 throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))

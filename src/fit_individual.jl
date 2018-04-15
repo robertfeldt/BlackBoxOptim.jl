@@ -35,17 +35,16 @@ mutable struct Candidate{F} <: FitIndividual{F}
     extra::Any          # extra information
     tag::Int            # additional information set by the genetic operator
 
-    Candidate(params::Individual, index::Int = -1,
-             fitness::F = NaN,
-             extra::Any = Void,
-             tag::Int = 0) =
+    Candidate{F}(params::Individual, index::Int = -1,
+                 fitness::F = NaN,
+                 extra::Any = nothing,
+                 tag::Int = 0) where {F} =
         new(params, index, fitness, extra, tag)
 
-    (::Type{Candidate}){F}(
-            params::Individual, index::Int = -1,
-            fitness::F = NaN,
-            extra::Any = Void,
-            tag::Int = 0) =
+    Candidate(params::Individual, index::Int = -1,
+              fitness::F = NaN,
+              extra::Any = nothing,
+              tag::Int = 0) where {F} =
         new{F}(params, index, fitness, extra, tag)
 end
 

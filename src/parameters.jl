@@ -5,12 +5,13 @@ Returns nothing if no param setting is found in any of the dicts.
 mutable struct DictChain{K,V} <: Associative{K,V}
     dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
 
-    DictChain(dicts::Vector{Associative{K,V}}) = new(dicts)
+    DictChain{K,V}(dicts::Vector{Associative{K,V}}) where {K,V} = new{K,V}(dicts)
 
     # empty dicts vector
-    DictChain() = new(Vector{Associative{K,V}}())
+    DictChain{K,V}() where {K,V} = new(Vector{Associative{K,V}}())
 
-    DictChain(dicts::Associative{K,V}...) = new(Associative{K,V}[dict for dict in dicts])
+    DictChain{K,V}(dicts::Associative{K,V}...) where {K,V} =
+        new(Associative{K,V}[dict for dict in dicts])
 end
 
 # (Associative{K,V}...) ctor is not triggered, so here's 1-, 2- and 3-argument

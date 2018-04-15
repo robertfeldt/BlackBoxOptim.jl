@@ -32,11 +32,11 @@ Always used when printing fitness vectors though.
 struct ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
 
-    (::Type{ParetoFitnessScheme{N,F}}){N,F<:Number,AGG}(; is_minimizing::Bool=true, aggregator::AGG=sum) =
+    ParetoFitnessScheme{N,F}(; is_minimizing::Bool=true, aggregator::AGG=sum) where {N, F<:Number, AGG} =
         new{N,F,is_minimizing,AGG}(aggregator)
 
-    (::Type{ParetoFitnessScheme{N}}){N,F<:Number,AGG}(; fitness_type::Type{F} = Float64,
-                                is_minimizing::Bool=true, aggregator::AGG=sum) =
+    ParetoFitnessScheme{N}(; fitness_type::Type{F} = Float64,
+                            is_minimizing::Bool=true, aggregator::AGG=sum) where {N, F<:Number, AGG} =
         new{N,fitness_type,is_minimizing,AGG}(aggregator)
 end
 
@@ -80,16 +80,16 @@ struct EpsDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: FitnessScheme{NTuple{N,
     ϵ::F              # ɛ-domination threshold
     aggregator::AGG    # fitness aggregation function
 
-    function (::Type{EpsDominanceFitnessScheme{N,F}}){N,F<:Number,AGG}(
-                                ϵ::F; is_minimizing::Bool=true, aggregator::AGG=sum)
+    function EpsDominanceFitnessScheme{N,F}(
+            ϵ::F; is_minimizing::Bool=true, aggregator::AGG=sum) where {N, F<:Number, AGG}
         ϵ>0.0 || throw(ArgumentError("ϵ must be positive"))
         new{N,F,is_minimizing,AGG}(ϵ, aggregator)
     end
-
-    (::Type{EpsDominanceFitnessScheme{N}}){N,F<:Number,AGG}(ϵ::F; fitness_type::Type{F} = Float64,
-                               is_minimizing::Bool=true, aggregator::AGG=sum) =
-        EpsDominanceFitnessScheme{N,fitness_type}(ϵ; is_minimizing=is_minimizing, aggegator=aggregator)
 end
+
+EpsDominanceFitnessScheme{N}(ϵ::F; fitness_type::Type{F} = Float64,
+        is_minimizing::Bool=true, aggregator::AGG=sum) where {N, F<:Number, AGG} =
+    EpsDominanceFitnessScheme{N,fitness_type}(ϵ; is_minimizing=is_minimizing, aggegator=aggregator)
 
 # comparison for minimizing ϵ-dominance scheme
 function hat_compare_ϵ{N,F}(u::NTuple{N,F}, v::NTuple{N,F}, ϵ::F, expected::Int=0)
@@ -164,13 +164,14 @@ struct IndexedTupleFitness{N,F}
     index::NTuple{N,Int}    # ϵ-index vector
     dist::F                 # distance between ϵ-index vector and the original fitness
 
-    function (::Type{IndexedTupleFitness}){N,F,MIN}(u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
+    function IndexedTupleFitness(u::NTuple{N,F}, agg::F, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}}) where {N, F, MIN}
         ix, dist = ϵ_index(u, ϵ, is_minimizing)
         return new{N,F}(u, agg, ix, dist)
     end
-    (::Type{IndexedTupleFitness}){N,F,MIN}(u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) =
-        IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
 end
+
+IndexedTupleFitness(u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) where {N, F, MIN} =
+    IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
 
 Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitness.orig
 
@@ -247,12 +248,12 @@ struct EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N
     ϵ::Vector{F}        # per-objective ɛ-domination thresholds
     aggregator::AGG     # fitness aggregation function
 
-    (::Type{EpsBoxDominanceFitnessScheme{N,F}}){N,F<:Number,AGG}(ϵ::Union{F,Vector{F}};
-                               is_minimizing::Bool=true, aggregator::AGG=sum) =
+    EpsBoxDominanceFitnessScheme{N,F}(ϵ::Union{F,Vector{F}};
+            is_minimizing::Bool=true, aggregator::AGG=sum) where {N,F<:Number,AGG} =
         new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 
-    (::Type{EpsBoxDominanceFitnessScheme{N}}){N,F<:Number,AGG}(ϵ::Union{F,Vector{F}};
-                               is_minimizing::Bool=true, aggregator::AGG=sum) =
+    EpsBoxDominanceFitnessScheme{N}(ϵ::Union{F,Vector{F}};
+            is_minimizing::Bool=true, aggregator::AGG=sum) where {N,F<:Number,AGG} =
         new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 end
 

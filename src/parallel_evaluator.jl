@@ -4,7 +4,7 @@ Internal data for the worker process of the parallel evaluator.
 struct ParallelEvaluatorWorker{P<:OptimizationProblem}
     problem::P
 
-    (::Type{ParallelEvaluatorWorker}){P}(problem::P) =
+    ParallelEvaluatorWorker(problem::P) where {P<:OptimizationProblem} =
         new{P}(problem)
 end
 
@@ -31,8 +31,8 @@ mutable struct ParallelEvaluationState{F, FS}
                                       # fitness calculation
     next_index::Int                   # index of the next candidate to calculate fitness
 
-    function (::Type{ParallelEvaluationState}){FS<:FitnessScheme}(fitness_scheme::FS,
-                                                                  nworkers::Int)
+    function ParallelEvaluationState(fitness_scheme::FS,
+                                     nworkers::Int) where {FS<:FitnessScheme}
         F = fitness_type(fitness_scheme)
         new{F,FS}(fitness_scheme, Vector{Candidate{F}}(),
                   fill(false, nworkers), Vector{Int}(), Condition(), 0)

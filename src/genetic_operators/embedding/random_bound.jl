@@ -6,7 +6,7 @@ to get the new valid value if target's parameter is out-of-bounds.
 struct RandomBound{S<:SearchSpace} <: EmbeddingOperator
     searchSpace::S
 
-    (::Type{RandomBound}){S<:SearchSpace}(searchSpace::S) = new{S}(searchSpace)
+    RandomBound(searchSpace::S) where {S<:SearchSpace} = new{S}(searchSpace)
 end
 
 # outer ctors

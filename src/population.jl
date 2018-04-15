@@ -60,18 +60,14 @@ mutable struct FitPopulation{F} <: PopulationWithFitness{F}
 
     function FitPopulation(individuals::PopulationMatrix,
                            nafitness::F,
-                           fitness::Vector{F};
-                           ntransient::Integer=0)
-        popsize(individuals) == length(fitness) || throw(DimensionMismatch("Fitness vector length does not match the population size"))
-        new(individuals, nafitness, fitness, ntransient,
-            Vector{Candidate{F}}())
+                           fitness::Vector{F} = fill(nafitness, popsize(individuals));
+                           ntransient::Integer=0) where {F}
+        popsize(individuals) == length(fitness) ||
+            throw(DimensionMismatch("Fitness vector length does not match the population size"))
+        new{F}(individuals, nafitness, copy(fitness), ntransient,
+               Vector{Candidate{F}}())
     end
 end
-
-FitPopulation{F}(individuals::PopulationMatrix, nafitness::F,
-                 fitnesses::Vector{F} = fill(nafitness, popsize(individuals));
-                 ntransient::Integer=0) =
-  FitPopulation{F}(individuals, nafitness, fitnesses, ntransient=ntransient)
 
 FitPopulation(fs::FitnessScheme, individuals::PopulationMatrix;
               ntransient::Integer=0) =

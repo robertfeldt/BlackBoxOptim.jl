@@ -9,12 +9,12 @@ struct FrontierIndividual{F} <: ArchivedIndividual{F}
     n_restarts::Int                     # the number of method restarts so far
     timestamp::Float64                  # when archived
 
-    FrontierIndividual(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) =
-        new(fitness, params, tag, num_fevals, n_restarts, timestamp)
+    FrontierIndividual{F}(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
+        new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
-    (::Type{FrontierIndividual}){F}(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) =
+    FrontierIndividual(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
         new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 end
 
@@ -25,8 +25,8 @@ Individual stored in `EpsBoxArchive`.
 """
 const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
 
-(::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
-               params, tag, num_fevals, n_restarts, timestamp=time()) =
+EpsBoxFrontierIndividual(fitness::IndexedTupleFitness{N,F},
+               params, tag, num_fevals, n_restarts, timestamp=time()) where {N,F} =
     FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
 """
@@ -53,15 +53,15 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
     frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
     frontier_isoccupied::BitVector # true if given frontier element is occupied
 
-    function (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
+    EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme{N,F};
+                  max_size::Integer = 1_000_000) where {N,F} =
         new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
                                     sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
                                     sizehint!(BitVector(), 64))
-    end
-
-    (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
-        EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
 end
+
+EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) where {N,F} =
+    EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
 
 const EpsBoxArchive_DefaultParameters = ParamsDict(
     :MaxArchiveSize => 10_000,
@@ -77,7 +77,7 @@ Iterates occupied elements of the `archive.frontier`.
 """
 struct EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
     archive::A
-    (::Type{EpsBoxArchiveFrontierIterator}){A<:EpsBoxArchive}(a::A) = new{A}(a)
+    EpsBoxArchiveFrontierIterator(a::A) where {A<:EpsBoxArchive} = new{A}(a)
 end
 
 @inline Base.length(it::EpsBoxArchiveFrontierIterator) = length(it.archive)

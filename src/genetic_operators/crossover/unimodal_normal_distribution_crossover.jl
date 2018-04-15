@@ -9,13 +9,13 @@ struct UnimodalNormalDistributionCrossover{NP} <: CrossoverOperator{NP,1}
 	ζ::Float64 # sd for parent-defined orthogonal directions
     η::Float64 # sd for the directions orthogonal to the parent-defined ones, divided by √n
 
-    function UnimodalNormalDistributionCrossover(ζ::Number, η::Number)
+    function UnimodalNormalDistributionCrossover{NP}(ζ::Number, η::Number) where NP
         ζ > 0 || throw(ArgumentError("ζ must be positive"))
         η >= 0 || throw(ArgumentError("η must be non-negative"))
-        new(ζ, η)
+        new{NP}(ζ, η)
     end
-    UnimodalNormalDistributionCrossover(params::Parameters) =
-        new(params[:UNDX_ζ], params[:UNDX_η])
+    UnimodalNormalDistributionCrossover{NP}(params::Parameters) where NP =
+        new{NP}(params[:UNDX_ζ], params[:UNDX_η])
 end
 
 const UNDX_DefaultOptions = ParamsDict(

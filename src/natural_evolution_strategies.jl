@@ -18,13 +18,13 @@ mutable struct SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrate
     sortedUtilities::Vector{Float64}# the fitness shaping utility vector
     tmp_Utilities::Vector{Float64}   # the fitness shaping utility vector sorted by current population fitness
 
-    function SeparableNESOpt(
+    function SeparableNESOpt{F}(
             embed::E;
             lambda::Int = 0,
             mu_learnrate::Float64 = 1.0,
             sigma_learnrate::Float64 = 0.0,
             ini_x = nothing, max_sigma::Float64 = 1.0E+10
-    )
+    ) where {F, E<:EmbeddingOperator}
         d = numdims(search_space(embed))
 
         if lambda == 0
@@ -39,16 +39,16 @@ mutable struct SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrate
             ini_x = copy(ini_x::Individual)
         end
 
-        new(embed, lambda,
-            ini_x, ones(d),
-            Normal(0, 1),
-            mu_learnrate, sigma_learnrate, max_sigma,
-            zeros(d, lambda),
-            Candidate{F}[Candidate{F}(Individual(d), i) for i in 1:lambda],
-            # Most modern NES papers use log rather than linear fitness shaping.
-            fitness_shaping_utilities_log(lambda),
-            Vector{Float64}(lambda))
-  end
+        new{F,E}(embed, lambda,
+                 ini_x, ones(d),
+                 Normal(0, 1),
+                 mu_learnrate, sigma_learnrate, max_sigma,
+                 zeros(d, lambda),
+                 [Candidate{F}(Individual(d), i) for i in 1:lambda],
+                 # Most modern NES papers use log rather than linear fitness shaping.
+                 fitness_shaping_utilities_log(lambda),
+                 Vector{Float64}(lambda))
+    end
 end
 
 population(o::NaturalEvolutionStrategyOpt) = o.candidates
@@ -65,7 +65,7 @@ const NES_DefaultOptions = ParamsDict(
 function separable_nes(problem::OptimizationProblem, parameters)
     params = chain(NES_DefaultOptions, parameters)
     embed = RandomBound(search_space(problem))
-    SeparableNESOpt{fitness_type(problem), typeof(embed)}(embed,
+    SeparableNESOpt{fitness_type(problem)}(embed,
         lambda = params[:lambda],
         mu_learnrate = params[:mu_learnrate],
         sigma_learnrate = params[:sigma_learnrate],
@@ -237,10 +237,10 @@ mutable struct XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStr
     tmp_Zu::Matrix{Float64}
     tmp_sBZ::Matrix{Float64}
 
-    function XNESOpt(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
-                   sigma_learnrate = 0.0, B_learnrate::Float64 = 0.0,
-                   ini_x = nothing, ini_sigma::Float64 = 1.0, ini_lnB = nothing,
-                   max_sigma::Float64 = 1.0E+10)
+    function XNESOpt{F}(embed::E; lambda::Int = 0, mu_learnrate::Float64 = 1.0,
+            sigma_learnrate = 0.0, B_learnrate::Float64 = 0.0,
+            ini_x = nothing, ini_sigma::Float64 = 1.0, ini_lnB = nothing,
+            max_sigma::Float64 = 1.0E+10) where {F, E<:EmbeddingOperator}
         d = numdims(search_space(embed))
         if lambda == 0
             lambda = 4 + 3*floor(Int, log(d))
@@ -258,14 +258,14 @@ mutable struct XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStr
             apply!(embed, ini_x, rand_individual(search_space(embed)))
         end
 
-        new(embed, lambda, fitness_shaping_utilities_log(lambda), Vector{Float64}(lambda),
-            mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
-            ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
-            Candidate{F}[Candidate{F}(Individual(d), i) for i in 1:lambda],
-            # temporaries
-            zeros(d), zeros(d), zeros(d),
-            zeros(d, d),
-            zeros(d, lambda), zeros(d, lambda)
+        new{F,E}(embed, lambda, fitness_shaping_utilities_log(lambda), Vector{Float64}(lambda),
+                 mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
+                 ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
+                 [Candidate{F}(Individual(d), i) for i in 1:lambda],
+                  # temporaries
+                  zeros(d), zeros(d), zeros(d),
+                  zeros(d, d),
+                  zeros(d, lambda), zeros(d, lambda)
         )
     end
 end
@@ -279,14 +279,15 @@ const XNES_DefaultOptions = chain(NES_DefaultOptions, ParamsDict(
 function xnes(problem::OptimizationProblem, parameters)
     params = chain(XNES_DefaultOptions, parameters)
     embed = RandomBound(search_space(problem))
-    XNESOpt{fitness_type(problem), typeof(embed)}(embed; lambda = params[:lambda],
-                                                mu_learnrate = params[:mu_learnrate],
-                                                sigma_learnrate = params[:sigma_learnrate],
-                                                B_learnrate = params[:B_learnrate],
-                                                ini_x = params[:ini_x],
-                                                ini_sigma = params[:ini_sigma],
-                                                ini_lnB = params[:ini_lnB],
-                                                max_sigma = params[:max_sigma])
+    F = fitness_type(problem)
+    XNESOpt{F}(embed; lambda = params[:lambda],
+               mu_learnrate = params[:mu_learnrate],
+               sigma_learnrate = params[:sigma_learnrate],
+               B_learnrate = params[:B_learnrate],
+               ini_x = params[:ini_x],
+               ini_sigma = params[:ini_sigma],
+               ini_lnB = params[:ini_lnB],
+               max_sigma = params[:max_sigma])
 end
 
 function ask(xnes::XNESOpt)

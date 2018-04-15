@@ -33,13 +33,13 @@ mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
 
     # Constructor for RS:
     function ResamplingMemeticSearcher(evaluator::E, parameters::Parameters,
-            resampling_function::Function, name::String) = begin
+            resampling_function::Function, name::String) where {E<:Evaluator}
         params = chain(RSDefaultParameters, parameters)
         elite = rand_individual(search_space(evaluator))
         diams = diameters(search_space(evaluator))
-        new(name, params, evaluator, resampling_function,
-            params[:PrecisionRatio] * diams, diams,
-            elite, fitness(elite, evaluator))
+        new{E}(name, params, evaluator, resampling_function,
+               params[:PrecisionRatio] * diams, diams,
+               elite, fitness(elite, evaluator))
     end
 end
 
@@ -48,11 +48,6 @@ name(rs::ResamplingMemeticSearcher) = rs.name
 const RISDefaultParameters = ParamsDict(
     :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
 )
-
-function ResamplingMemeticSearcher{E<:Evaluator}(evaluator::E,
-    params, resampling_function, name)
-    ResamplingMemeticSearcher{E}(evaluator, params, resampling_function, name)
-end
 
 ResamplingMemeticSearcher(problem::OptimizationProblem,
         params::Parameters = EMPTY_PARAMS,

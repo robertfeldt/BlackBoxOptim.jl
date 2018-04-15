@@ -20,7 +20,7 @@ Uniform mutation of a parameter vector.
 struct UniformMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
 
-    (::Type{UniformMutation}){SS<:SearchSpace}(ss::SS) = new{SS}(ss)
+    UniformMutation(ss::SS) where {SS<:SearchSpace} = new{SS}(ss)
 end
 
 search_space(m::UniformMutation) = m.ss
@@ -41,7 +41,7 @@ mutable struct MutationClock{S<:GibbsMutationOperator} <: MutationOperator
     rate::Float64           # Probability to mutate a dimension
     nextVarToMutate::Int    # dimension index - 1
 
-    (::Type{MutationClock}){S<:GibbsMutationOperator}(inner::S, rate::Float64 = 0.05) =
+    MutationClock(inner::S, rate::Float64 = 0.05) where {S<:GibbsMutationOperator} =
         new{S}(inner, rate, 1 + num_vars_to_next_mutation_point(rate))
 end
 

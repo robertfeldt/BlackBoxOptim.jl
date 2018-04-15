@@ -7,11 +7,9 @@ mutable struct RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
     best_fitness          # FIXME fitness type should be known
     best::Individual
 
-    RandomSearcher(searchSpace::S) =
-        new("Random Search", searchSpace, nothing)
+    RandomSearcher(searchSpace::S) where {S<:SearchSpace} =
+        new{S}("Random Search", searchSpace, nothing)
 end
-
-RandomSearcher{S<:SearchSpace}(searchSpace::S) = RandomSearcher{S}(searchSpace)
 
 function ask(rs::RandomSearcher)
     # Just randomly generate a new individual and return it with a dummy index

@@ -89,7 +89,7 @@ struct TopListArchiveOutput{F,C} <: ArchiveOutput
     best_fitness::F
     best_candidate::C
 
-    (::Type{TopListArchiveOutput}){F}(archive::TopListArchive{F}) =
+    TopListArchiveOutput(archive::TopListArchive{F}) where F =
         new{F,Individual}(best_fitness(archive), best_candidate(archive))
 end
 
@@ -102,9 +102,10 @@ struct FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
     inner::FrontierIndividual{FA}
     fitness::F
 
-    (::Type{FrontierIndividualWrapper{F}}){F,FA}(
-        indi::FrontierIndividual{FA}, fit_scheme::FitnessScheme{FA}) =
-            new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
+    FrontierIndividualWrapper{F}(
+            indi::FrontierIndividual{FA},
+            fit_scheme::FitnessScheme{FA}) where {F, FA} =
+        new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
 end
 
 params(indi::FrontierIndividualWrapper) = params(indi.inner)
@@ -119,9 +120,10 @@ struct EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutpu
     frontier::Vector{FrontierIndividualWrapper{NTuple{N,F},IndexedTupleFitness{N,F}}} # inferred Pareto frontier
     fit_scheme::FS
 
-    function (::Type{EpsBoxArchiveOutput}){N,F}(archive::EpsBoxArchive{N,F})
+    function EpsBoxArchiveOutput(archive::EpsBoxArchive{N,F}) where {N,F}
         fit_scheme = fitness_scheme(archive)
-        new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme), best_candidate(archive),
+        new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme),
+                                    best_candidate(archive),
                                     FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}[FrontierIndividualWrapper{NTuple{N,F}}(archive.frontier[i], fit_scheme)
                                                                                                      for i in find(archive.frontier_isoccupied)],
                                     fit_scheme)
@@ -139,7 +141,8 @@ Stores the final population.
 struct PopulationOptimizerOutput{P} <: MethodOutput
     population::P
 
-    (::Type{PopulationOptimizerOutput})(method::PopulationOptimizer) =
+    # FIXME PO is only required so that julia doesn't think it's an old inner ctor syntax
+    PopulationOptimizerOutput(method::PO) where {PO<:PopulationOptimizer} =
         new{typeof(population(method))}(population(method))
 end
 

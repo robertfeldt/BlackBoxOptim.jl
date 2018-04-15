@@ -61,21 +61,23 @@ mutable struct GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Emb
     step_size::Float64           # current step size
     x::Individual
     xfitness::Float64
-end
 
-function GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}(evaluator::V, dgen::D, embed::E,
-    random_dir_order::Bool, step_size_factor::Float64, step_size_gamma::Float64, step_size_phi::Float64, step_size_max::Float64,
-    step_tol::Float64)
-    # FIXME check parameters ranges
-    n = numdims(evaluator)
-    ss = search_space(evaluator)
-    x = rand_individual(ss)
-    GeneratingSetSearcher{V, D, E}(dgen, evaluator, embed, ss, n, 0,
-        random_dir_order, step_size_factor,
-        step_size_gamma, step_size_phi,
-        step_size_max, step_tol,
-        calc_initial_step_size(ss, step_size_factor),
-        x, fitness(x, evaluator))
+    function GeneratingSetSearcher(
+            evaluator::V, dgen::D, embed::E,
+            random_dir_order::Bool, step_size_factor::Float64, step_size_gamma::Float64,
+            step_size_phi::Float64, step_size_max::Float64,
+            step_tol::Float64) where {V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}
+        # FIXME check parameters ranges
+        n = numdims(evaluator)
+        ss = search_space(evaluator)
+        x = rand_individual(ss)
+        new{V, D, E}(dgen, evaluator, embed, ss, n, 0,
+            random_dir_order, step_size_factor,
+            step_size_gamma, step_size_phi,
+            step_size_max, step_tol,
+            calc_initial_step_size(ss, step_size_factor),
+            x, fitness(x, evaluator))
+    end
 end
 
 # by default use RandomBound embedder

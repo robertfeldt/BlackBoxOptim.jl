@@ -5,7 +5,7 @@ be used as crossover operator.
 struct MutationWrapper{OP<:MutationOperator} <: CrossoverOperator{1,1}
     inner::OP
 
-    (::Type{MutationWrapper}){OP<:MutationOperator}(mutation::OP) =
+    MutationWrapper(mutation::OP) where {OP<:MutationOperator} =
         new{OP}(mutation)
 end
 

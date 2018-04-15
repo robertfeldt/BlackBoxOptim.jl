@@ -29,7 +29,7 @@ struct TopListIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     tag::Int
 
-    (::Type{TopListIndividual}){F}(params::AbstractIndividual, fitness::F, tag::Int) =
+    TopListIndividual(params::AbstractIndividual, fitness::F, tag::Int) where F =
         new{F}(params, fitness, tag)
 end
 
@@ -72,9 +72,11 @@ mutable struct TopListArchive{F<:Number,FS<:FitnessScheme} <: Archive{F,FS}
     # class is: `(magnitude_class, time, num_fevals, fitness, width_of_confidence_interval)`
     fitness_history::Vector{TopListFitness{F}}
 
-    function (::Type{TopListArchive}){FS<:FitnessScheme}(fit_scheme::FS, numdims::Integer, capacity::Integer = 10)
+    function TopListArchive(fit_scheme::FS, numdims::Integer,
+                            capacity::Integer = 10) where FS<:FitnessScheme
         F = fitness_type(FS)
-        new{F,FS}(fit_scheme, time(), numdims, 0, capacity, TopListIndividual{F}[], TopListFitness{F}[])
+        new{F,FS}(fit_scheme, time(), numdims, 0, capacity,
+                  TopListIndividual{F}[], TopListFitness{F}[])
     end
 end
 

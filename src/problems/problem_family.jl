@@ -20,10 +20,11 @@ struct FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
     range_per_dim::ParamBounds            # Default range per dimension
     opt_value::FO                         # optional optimal value, or nothing
 
-    function (::Type{FunctionBasedProblemFamily}){FS<:FitnessScheme,FO}(
+    function FunctionBasedProblemFamily(
             objfunc::Function, name::String,
             fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
-            reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE)
+            reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE
+    ) where {FS<:FitnessScheme, FO}
         if FO <: Number
             fitness_type(fitness_scheme) == FO ||
                 throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))

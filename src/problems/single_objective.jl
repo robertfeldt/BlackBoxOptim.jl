@@ -69,9 +69,9 @@ struct ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
     subp::OptimizationProblem{FS}
 
     function ShiftedAndBiasedProblem(sub_problem::OptimizationProblem{FS};
-                                     xshift = false, funcshift = 0.0)
+        xshift = false, funcshift = 0.0) where {FS <: FitnessScheme}
         xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
-        new(xshift[:], funcshift, sub_problem)
+        new{FS}(xshift[:], funcshift, sub_problem)
     end
 end
 

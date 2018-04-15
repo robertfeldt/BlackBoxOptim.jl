@@ -101,7 +101,7 @@ same_fitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 struct HatCompare{FS<:FitnessScheme}
     fs::FS
 
-    (::Type{HatCompare}){FS<:FitnessScheme}(fs::FS) = new{FS}(fs)
+    HatCompare(fs::FS) where {FS<:FitnessScheme} = new{FS}(fs)
 end
 
 (hc::HatCompare){F}(x::F, y::F) = hat_compare(x, y, hc.fs)

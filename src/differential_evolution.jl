@@ -17,10 +17,10 @@ mutable struct DiffEvoOpt{P<:Population,S<:IndividualsSelector,M<:GeneticOperato
     modify::M        # genetic operator
     embed::E         # embedding operator
 
-    function (::Type{DiffEvoOpt}){P<:Population, S<:IndividualsSelector,
-                     M<:GeneticOperator, E<:EmbeddingOperator}(
-        name::String, pop::P,
-        select::S = S(), modify::M = M(), embed::E = E())
+    function DiffEvoOpt(name::String, pop::P,
+                        select::S = S(), modify::M = M(), embed::E = E()) where
+            {P<:Population, S<:IndividualsSelector,
+             M<:GeneticOperator, E<:EmbeddingOperator}
         new{P,S,M,E}(name, pop, select, modify, embed)
     end
 end

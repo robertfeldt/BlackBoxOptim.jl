@@ -59,10 +59,10 @@ An Adaptive DE crossover operator changes `cr` and `f` parameters of the search 
 mutable struct AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
     params::AdaptiveDiffEvoParameters
 
-    AdaptiveDiffEvoRandBin(params::AdaptiveDiffEvoParameters) = new(params)
+    AdaptiveDiffEvoRandBin{N}(params::AdaptiveDiffEvoParameters) where N = new{N}(params)
 
-    AdaptiveDiffEvoRandBin(options::Parameters) =
-        new(AdaptiveDiffEvoParameters(options))
+    AdaptiveDiffEvoRandBin{N}(options::Parameters) where N =
+        new{N}(AdaptiveDiffEvoParameters(options))
 end
 
 crossover_parameters(xover::AdaptiveDiffEvoRandBin, pop::Population, target_index) =

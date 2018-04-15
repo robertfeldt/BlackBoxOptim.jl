@@ -28,15 +28,14 @@ mutable struct ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: E
     num_evals::Int
     last_fitness::FP
 
-    (::Type{ProblemEvaluator}){P<:OptimizationProblem, A<:Archive}(
-            problem::P, archive::A) =
-        new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(problem, archive,
+    ProblemEvaluator(problem::P, archive::A) where {P<:OptimizationProblem, A<:Archive} =
+        new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(
+                problem, archive,
                 0, nafitness(fitness_scheme(problem)))
-
-    (::Type{ProblemEvaluator}){P<:OptimizationProblem}(
-            problem::P; archiveCapacity::Int = 10) =
-        ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
 end
+
+ProblemEvaluator(problem::OptimizationProblem; archiveCapacity::Int = 10) =
+    ProblemEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity))
 
 problem(e::Evaluator) = e.problem
 num_evals(e::ProblemEvaluator) = e.num_evals

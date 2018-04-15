@@ -6,12 +6,13 @@ struct FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operations
     weights::Weights{Float64, Float64, Vector{Float64}}  # fixed weights
 
-    function FixedGeneticOperatorsMixture{GO<:GeneticOperator}(
-        operators::AbstractVector{GO},
+    function FixedGeneticOperatorsMixture(
+        operators::AbstractVector{<:GeneticOperator},
         rates::AbstractVector{Float64} = fill(1.0/length(operators), length(operators)) # defaults to uniform distribution of rates
     )
-      length(operators) == length(rates) || throw(DimensionMismatch("Number of mutators does not match the number of their rates"))
-      new(GeneticOperator[op for op in operators], weights(rates))
+        length(operators) == length(rates) ||
+            throw(DimensionMismatch("Number of mutators does not match the number of their rates"))
+        new(GeneticOperator[op for op in operators], weights(rates))
     end
 end
 
@@ -36,8 +37,8 @@ struct FAGeneticOperatorsMixture <: GeneticOperatorsMixture
     operators::Vector{GeneticOperator} # available operators
     fa::FrequencyAdapter               # adapter of operator frequencies
 
-    FAGeneticOperatorsMixture{GO<:GeneticOperator}(
-        operators::AbstractVector{GO};
+    FAGeneticOperatorsMixture(
+        operators::AbstractVector{<:GeneticOperator};
         c = 1E-2, eta = 1E-2, pmin = 0.01, pmax = 1.0
     ) = new(GeneticOperator[op for op in operators],
             FrequencyAdapter(length(operators);

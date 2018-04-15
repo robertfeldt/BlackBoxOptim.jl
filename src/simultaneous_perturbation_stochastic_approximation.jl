@@ -18,17 +18,18 @@ mutable struct SimultaneousPerturbationSA2{E<:EmbeddingOperator} <: StochasticAp
     n::Int
     theta::Individual
     delta_ck::Individual
-end
 
-function SimultaneousPerturbationSA2{E<:EmbeddingOperator}(problem::OptimizationProblem, embed::E, parameters::Parameters)
-    ss = search_space(problem)
-    n = numdims(ss)
-    SimultaneousPerturbationSA2{E}(embed, chain(SPSADefaultParameters, parameters),
-                                   0, n, rand_individual(ss), zeros(Float64, n))
+    function SimultaneousPerturbationSA2(problem::OptimizationProblem, embed::E, parameters::Parameters) where {E<:EmbeddingOperator}
+        ss = search_space(problem)
+        n = numdims(ss)
+        new{E}(embed, chain(SPSADefaultParameters, parameters),
+               0, n, rand_individual(ss), zeros(Float64, n))
+    end
 end
 
 # by default use RandomBound embedder
-SimultaneousPerturbationSA2(problem::OptimizationProblem, parameters::Parameters) = SimultaneousPerturbationSA2(problem, RandomBound(search_space(problem)), parameters)
+SimultaneousPerturbationSA2(problem::OptimizationProblem, parameters::Parameters) =
+    SimultaneousPerturbationSA2(problem, RandomBound(search_space(problem)), parameters)
 
 name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stochastic Approximation, 1st order, 2 samples)"
 
