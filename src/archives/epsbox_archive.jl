@@ -168,8 +168,8 @@ function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     return res
 end
 
-function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness{N,F},
-                             candidate, tag::Int=0, num_fevals::Int=-1)
+function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness{N,F},
+                        candidate, tag::Int=0, num_fevals::Int=-1) where {N,F}
     a.num_candidates += 1
     if num_fevals == -1
         num_fevals = a.num_candidates
@@ -256,8 +256,8 @@ end
 
 # actually this methods should never be called because the fitness
 # is already indexes within the method
-add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
-                    candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1) =
+add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
+               candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1) where {N,F} =
     add_candidate!(a, archived_fitness(cand_fitness, a), candidate, tag, num_fevals)
 
 # called by check_stop_condition(e::Evaluator, ctrl)

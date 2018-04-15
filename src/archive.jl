@@ -4,7 +4,7 @@
 abstract type Archive{F,FS<:FitnessScheme} end
 
 numdims(a::Archive) = a.numdims
-fitness_type{F}(a::Archive{F}) = F
+fitness_type(a::Archive{F}) where F = F
 fitness_scheme(a::Archive) = a.fit_scheme
 
 """
@@ -33,7 +33,7 @@ struct TopListIndividual{F} <: ArchivedIndividual{F}
         new{F}(params, fitness, tag)
 end
 
-Base.:(==){F}(x::TopListIndividual{F}, y::TopListIndividual{F}) =
+Base.:(==)(x::TopListIndividual{F}, y::TopListIndividual{F}) where F =
   (x.fitness == y.fitness) && (x.params == y.params)
 
 """
@@ -120,8 +120,8 @@ end
 
 Add a candidate with a fitness to the archive (if it is good enough).
 """
-function add_candidate!{F,FS<:FitnessScheme}(a::TopListArchive{F,FS}, fitness::F, candidate::AbstractIndividual,
-                                             tag::Int=0, num_fevals::Int=-1)
+function add_candidate!(a::TopListArchive{F}, fitness::F, candidate::AbstractIndividual,
+                        tag::Int=0, num_fevals::Int=-1) where F
     a.num_fitnesses += 1
     if (num_fevals == -1) num_fevals = a.num_fitnesses end
 

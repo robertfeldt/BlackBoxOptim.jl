@@ -22,9 +22,9 @@ const PCX_DefaultOptions = ParamsDict(
     :PCX_η => 0.5
 )
 
-function apply!{NP}(xover::ParentCentricCrossover{NP},
-                    target::Individual, targetIndex::Int,
-                    pop, parentIndices)
+function apply!(xover::ParentCentricCrossover{NP},
+                target::Individual, targetIndex::Int,
+                pop, parentIndices) where NP
     @assert length(parentIndices) == NP
 
     parents_centered = pop[:, parentIndices]

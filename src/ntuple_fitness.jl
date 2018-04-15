@@ -41,7 +41,7 @@ struct ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple
 end
 
 # comparison and for minimizing Pareto scheme
-function hat_compare_pareto{N,F}(u::NTuple{N,F}, v::NTuple{N,F}, expected::Int=0)
+function hat_compare_pareto(u::NTuple{N,F}, v::NTuple{N,F}, expected::Int=0) where {N, F}
     res = 0
     @inbounds for i in 1:N
         delta = u[i] - v[i]
@@ -64,9 +64,9 @@ function hat_compare_pareto{N,F}(u::NTuple{N,F}, v::NTuple{N,F}, expected::Int=0
     return res
 end
 
-hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::ParetoFitnessScheme{N,F,true}, expected::Int=0) =
+hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::ParetoFitnessScheme{N,F,true}, expected::Int=0) where {N,F} =
     hat_compare_pareto(f1, f2, expected)
-hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::ParetoFitnessScheme{N,F,false}, expected::Int=0) =
+hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::ParetoFitnessScheme{N,F,false}, expected::Int=0) where {N,F} =
     hat_compare_pareto(f2, f1, expected)
 
 """
@@ -92,7 +92,8 @@ EpsDominanceFitnessScheme{N}(ϵ::F; fitness_type::Type{F} = Float64,
     EpsDominanceFitnessScheme{N,fitness_type}(ϵ; is_minimizing=is_minimizing, aggegator=aggregator)
 
 # comparison for minimizing ϵ-dominance scheme
-function hat_compare_ϵ{N,F}(u::NTuple{N,F}, v::NTuple{N,F}, ϵ::F, expected::Int=0)
+function hat_compare_ϵ(u::NTuple{N,F}, v::NTuple{N,F},
+                       ϵ::F, expected::Int=0) where {N,F}
     res = 0 # true if any u[i] < v[i] + ϵ
     @inbounds for i in 1:N
         delta = u[i] - v[i] - ϵ
@@ -115,13 +116,13 @@ function hat_compare_ϵ{N,F}(u::NTuple{N,F}, v::NTuple{N,F}, ϵ::F, expected::In
     return res
 end
 
-hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,true}, expected::Int=0) =
+hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,true}, expected::Int=0) where {N,F} =
     hat_compare_ϵ(f1, f2, fs.ϵ, expected)
-hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,false}, expected::Int=0) =
+hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,false}, expected::Int=0) where {N,F} =
     hat_compare_ϵ(f2, f1, fs.ϵ, expected)
 
 # ϵ-index of the fitness component for minimizing scheme
-@inline function ϵ_index{F}(u::F, ϵ::F, ::Type{Val{true}})
+@inline function ϵ_index(u::F, ϵ::F, ::Type{Val{true}}) where F
     if isnan(u)
         return (typemax(Int), zero(F))
     else
@@ -132,7 +133,7 @@ hat_compare{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme
 end
 
 # ϵ-index of the fitness component for maximizing scheme
-@inline function ϵ_index{F}(u::F, ϵ::F, ::Type{Val{false}})
+@inline function ϵ_index(u::F, ϵ::F, ::Type{Val{false}}) where F
     if isnan(u)
         return (typemin(Int), zero(F))
     else
@@ -143,7 +144,7 @@ end
 end
 
 # vectorized ϵ-index
-@generated function ϵ_index{N,F,MIN}(u::NTuple{N,F}, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}})
+@generated function ϵ_index(u::NTuple{N,F}, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}}) where {N,F,MIN}
     quote
         pairs = Base.Cartesian.@ntuple $N i -> ϵ_index(u[i], ϵ[i], is_minimizing)
         ix = Base.Cartesian.@ntuple $N i -> pairs[i][1]
@@ -173,9 +174,9 @@ end
 IndexedTupleFitness(u::NTuple{N,F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}}) where {N, F, MIN} =
     IndexedTupleFitness(u, agg, fill(ϵ, N), is_minimizing)
 
-Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) = fitness.orig
+Base.convert(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}) where {N, F} = fitness.orig
 
-@generated function nafitness{N,F}(::Type{IndexedTupleFitness{N,F}})
+@generated function nafitness(::Type{IndexedTupleFitness{N,F}}) where {N, F}
     quote
         IndexedTupleFitness(Base.Cartesian.@ntuple($N, _ -> convert($F, NaN)),
                             NaN, 1.0, Val{true})
@@ -190,10 +191,10 @@ Returns a tuple of `u` and `v` comparison:
   * `1`: u≻v
 and whether `u` index fully matches `v` index.
 """
-function hat_compare_ϵ_box{N,F}(
+function hat_compare_ϵ_box(
         u::IndexedTupleFitness{N,F},
         v::IndexedTupleFitness{N,F},
-        is_minimizing::Bool=true, expected::Int=0)
+        is_minimizing::Bool=true, expected::Int=0) where {N,F}
     comp = 0
     @inbounds for (ui, vi) in zip(u.index, v.index)
         if ui > vi
@@ -229,7 +230,7 @@ function check_epsbox_ϵ(ϵ::Number, n::Int)
     return fill(ϵ, n)
 end
 
-function check_epsbox_ϵ{F<:Number}(ϵ::Vector{F}, n::Int)
+function check_epsbox_ϵ(ϵ::Vector{<:Number}, n::Int)
     length(ϵ)==n || throw(ArgumentError("The length of ϵ vector ($(length(ϵ))) does not match the specified fitness dimensions ($n)"))
     all(isposdef, ϵ) || throw(ArgumentError("ϵ must be positive"))
     return ϵ
@@ -257,47 +258,55 @@ struct EpsBoxDominanceFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N
         new{N,F,is_minimizing,AGG}(check_epsbox_ϵ(ϵ, N), aggregator)
 end
 
-isnafitness{N,F}(f::IndexedTupleFitness{N,F}, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}) = isnafitness(f.orig, fit_scheme)
+isnafitness(f::IndexedTupleFitness{N,F},
+            fit_scheme::EpsBoxDominanceFitnessScheme{N,F}) where {N,F<:Number} =
+    isnafitness(f.orig, fit_scheme)
 
-Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::F=one(F)) =
-  EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
+Base.convert(::Type{EpsBoxDominanceFitnessScheme},
+             fs::ParetoFitnessScheme{N,F}, ϵ::F=one(F)) where {N,F} =
+    EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::ParetoFitnessScheme{N,F,MIN}, ϵ::Vector{F}) =
-  EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
+Base.convert(::Type{EpsBoxDominanceFitnessScheme},
+             fs::ParetoFitnessScheme{N,F}, ϵ::Vector{F}) where {N,F} =
+    EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert{N,F,MIN}(::Type{EpsBoxDominanceFitnessScheme}, fs::EpsDominanceFitnessScheme{N,F,MIN}, ϵ::Union{F,Vector{F}}=fs.ϵ) =
-  EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=MIN, aggregator=fs.aggregator)
+Base.convert(::Type{EpsBoxDominanceFitnessScheme},
+             fs::EpsDominanceFitnessScheme{N,F},
+             ϵ::Union{F,Vector{F}}=fs.ϵ) where {N,F} =
+    EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert{N,F<:Number,MIN,AGG}(::Type{ParetoFitnessScheme}, fs::EpsBoxDominanceFitnessScheme{N,F,MIN,AGG}) =
-  ParetoFitnessScheme{N,F}(is_minimizing=MIN, aggregator=fs.aggregator)
+Base.convert(::Type{ParetoFitnessScheme}, fs::EpsBoxDominanceFitnessScheme{N,F}) where {N,F} =
+  ParetoFitnessScheme{N,F}(is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert{N,F,MIN}(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},
-                      fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
-    IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
+Base.convert(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},
+             fs::EpsBoxDominanceFitnessScheme{N,F}) where {N,F} =
+    IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{is_minimizing(fs)})
 
-Base.convert{N,F,MIN}(::Type{IndexedTupleFitness}, fitness::NTuple{N,F},
-                      fs::EpsBoxDominanceFitnessScheme{N,F,MIN}) =
-    IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{MIN})
+Base.convert(::Type{IndexedTupleFitness}, fitness::NTuple{N,F},
+             fs::EpsBoxDominanceFitnessScheme{N,F}) where {N,F} =
+    IndexedTupleFitness(fitness, aggregate(fitness, fs), fs.ϵ, Val{is_minimizing(fs)})
 
-Base.convert{N,F}(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F}, fs::EpsBoxDominanceFitnessScheme{N,F}) = fitness.orig
+Base.convert(::Type{NTuple{N,F}}, fitness::IndexedTupleFitness{N,F},
+             fs::EpsBoxDominanceFitnessScheme{N,F}) where {N,F} = fitness.orig
 
-hat_compare{N,F,MIN}(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F,MIN}, expected::Int=0) =
-    hat_compare_ϵ_box(u, v, MIN, expected)
+hat_compare(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
+            fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
+    hat_compare_ϵ_box(u, v, is_minimizing(fs), expected)
 
-hat_compare{N,F}(u::NTuple{N,F}, v::IndexedTupleFitness{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) =
+hat_compare(u::NTuple{N,F}, v::IndexedTupleFitness{N,F},
+            fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
     hat_compare(convert(IndexedTupleFitness, u, fs), v, fs, expected)
 
-hat_compare{N,F}(u::IndexedTupleFitness{N,F}, v::NTuple{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) =
+hat_compare(u::IndexedTupleFitness{N,F}, v::NTuple{N,F},
+            fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
     hat_compare(u, convert(IndexedTupleFitness, v, fs), fs, expected)
 
-hat_compare{N,F}(u::NTuple{N,F}, v::NTuple{N,F},
-                 fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) =
+hat_compare(u::NTuple{N,F}, v::NTuple{N,F},
+            fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
     hat_compare(convert(IndexedTupleFitness, u, fs),
                 convert(IndexedTupleFitness, v, fs), fs, expected)
 
 # special overload that strips index equality flag
-(hc::HatCompare{FS}){FS<:EpsBoxDominanceFitnessScheme,N,F}(
-        u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F}) = hat_compare(u, v, hc.fs)[1]
+(hc::HatCompare{FS})(u::IndexedTupleFitness{N,F},
+                     v::IndexedTupleFitness{N,F}) where {FS<:EpsBoxDominanceFitnessScheme,N,F} =
+    hat_compare(u, v, hc.fs)[1]

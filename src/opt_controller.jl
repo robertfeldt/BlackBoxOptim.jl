@@ -77,7 +77,7 @@ Create `OptRunController` for a given problem using specified `optimizer`.
         * `:SaveFitnessTraceToCsv` whether the history of fitness changes during optimization should be save to a csv file
         * `:SaveParameters` save method/controller parameters to a JSON file
 """
-function OptRunController{O<:Optimizer, E<:Evaluator}(optimizer::O, evaluator::E, params)
+function OptRunController(optimizer::O, evaluator::E, params) where {O<:Optimizer, E<:Evaluator}
     OptRunController{O,E}(optimizer, evaluator,
         [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
@@ -235,7 +235,7 @@ function trace_progress(ctrl::OptRunController)
     trace_state(STDOUT, ctrl.optimizer, ctrl.trace_mode)
 end
 
-function step!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
+function step!(ctrl::OptRunController{<:AskTellOptimizer})
     # The ask()/tell() interface is more general since you can mix and max
     # elements from several optimizers using it. However, in this top-level
     # execution function we do not make use of this flexibility...
@@ -245,20 +245,20 @@ function step!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
 end
 
 # step for SteppingOptimizers
-function step!{O<:SteppingOptimizer}(ctrl::OptRunController{O})
+function step!(ctrl::OptRunController{<:SteppingOptimizer})
     step!(ctrl.optimizer)
     return 0
 end
 
-setup_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
+setup_optimizer!(ctrl::OptRunController{<:SteppingOptimizer}) =
     setup!(ctrl.optimizer)
-setup_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O}) =
+setup_optimizer!(ctrl::OptRunController{<:AskTellOptimizer}) =
     setup!(ctrl.optimizer, ctrl.evaluator)
 
-shutdown_optimizer!{O<:SteppingOptimizer}(ctrl::OptRunController{O}) =
+shutdown_optimizer!(ctrl::OptRunController{<:SteppingOptimizer}) =
     shutdown!(ctrl.optimizer)
 
-function shutdown_optimizer!{O<:AskTellOptimizer}(ctrl::OptRunController{O})
+function shutdown_optimizer!(ctrl::OptRunController{<:AskTellOptimizer})
     shutdown!(ctrl.optimizer)
     shutdown!(ctrl.evaluator)
 end
@@ -359,11 +359,10 @@ Create `OptController` for a given `optimizer` and a `problem`.
     * `:RngSeed` and `:RandomizeRngSeed` params for controlling the random seed
     * `:RecoverResults` if intermediate results are returned upon `InterruptException()` (on by default)
 """
-function OptController{O<:Optimizer, P<:OptimizationProblem}(
+OptController(
     optimizer::O, problem::P,
-    params::ParamsDictChain)
+    params::ParamsDictChain) where {O<:Optimizer, P<:OptimizationProblem} =
     OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
-end
 
 problem(oc::OptController) = oc.problem
 numruns(oc::OptController) = length(oc.runcontrollers)
@@ -374,7 +373,7 @@ lastrun(oc::OptController) = oc.runcontrollers[end]
 
 Update the `OptController` parameters.
 """
-function update_parameters!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P}, parameters::Parameters = EMPTY_DICT)
+function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_DICT)
     parameters = convert(ParamsDict, parameters)
 
     # Most parameters cannot be changed since the problem and optimizer has already
@@ -405,7 +404,7 @@ end
 
 Start a new optimization run, possibly with new parameters and report on results.
 """
-function run!{O<:Optimizer, P<:OptimizationProblem}(oc::OptController{O,P})
+function run!(oc::OptController)
     # If this is not the first run we create the controller based on the previous one
     # to reuse the archive etc, otherwise create it based on the problem.
     ctrl = if numruns(oc) > 0

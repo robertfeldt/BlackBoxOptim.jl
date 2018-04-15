@@ -93,7 +93,7 @@ function ask(snes::SeparableNESOpt)
     return snes.candidates
 end
 
-function tell!{F}(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
+function tell!(snes::SeparableNESOpt{F}, rankedCandidates::Vector{Candidate{F}}) where F
     u = assign_weights!(snes.tmp_Utilities, rankedCandidates, snes.sortedUtilities)
 
     # Calc gradient
@@ -122,9 +122,9 @@ the corresponding weights.
 
 Returns candidate weights sorted by the individual's index in the population.
 """
-function assign_weights!{F}(weights::Vector{Float64},
-                            rankedCandidates::Vector{Candidate{F}},
-                            sortedWeights::Vector{Float64})
+function assign_weights!(weights::Vector{Float64},
+                         rankedCandidates::Vector{<:Candidate},
+                         sortedWeights::Vector{Float64})
     @assert length(weights) == length(sortedWeights) && length(rankedCandidates) == length(weights)
     for i in eachindex(rankedCandidates)
         weights[rankedCandidates[i].index] = sortedWeights[i]
@@ -295,7 +295,7 @@ function ask(xnes::XNESOpt)
     update_candidates!(xnes, xnes.Z)
 end
 
-function tell!{F}(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
+function tell!(xnes::XNESOpt{F}, rankedCandidates::Vector{Candidate{F}}) where F
     u = assign_weights!(xnes.tmp_Utilities, rankedCandidates, xnes.sortedUtilities)
 
     update_parameters!(xnes, u)

@@ -4,9 +4,9 @@
 Randomly sample `numSamples` values from the parallelogram defined
 by `mins` and `maxs` using the Latin hypercube algorithm.
 """
-function latin_hypercube_sampling{T}(mins::AbstractVector{T},
-                                     maxs::AbstractVector{T},
-                                     numSamples::Integer)
+function latin_hypercube_sampling(mins::AbstractVector{T},
+                                  maxs::AbstractVector{T},
+                                  numSamples::Integer) where T
     dims = length(mins)
     result = zeros(T, numSamples, dims)
     @inbounds for i in 1:dims

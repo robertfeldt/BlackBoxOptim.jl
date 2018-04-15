@@ -23,9 +23,9 @@ const UNDX_DefaultOptions = ParamsDict(
     :UNDX_η => 0.1
 )
 
-function apply!{NP}(xover::UnimodalNormalDistributionCrossover{NP},
-                    target::Individual, targetIndex::Int,
-                    pop, parentIndices)
+function apply!(xover::UnimodalNormalDistributionCrossover{NP},
+                target::Individual, targetIndex::Int,
+                pop, parentIndices) where NP
     @assert length(parentIndices) == NP
 
     parents = pop[:, parentIndices]

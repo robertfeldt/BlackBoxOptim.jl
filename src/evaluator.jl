@@ -80,7 +80,7 @@ function best_of(candidate1::Individual, candidate2::Individual, e::Evaluator)
     end
 end
 
-function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA})
+function update_fitness!(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA}) where {FP,FA}
     # evaluate fitness if not known yet
     if isnafitness(candidate.fitness, fitness_scheme(e.archive))
         candidate.fitness = fitness(candidate.params, e, candidate.tag)
@@ -88,14 +88,14 @@ function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidate::Candidate
     return candidate
 end
 
-function update_fitness!{FP,FA}(e::ProblemEvaluator{FP,FA}, candidates::Vector{Candidate{FA}})
+function update_fitness!(e::ProblemEvaluator{FP,FA}, candidates::Vector{Candidate{FA}}) where {FP,FA}
     @inbounds for candidate in candidates
         update_fitness!(e, candidate)
     end
     return candidates
 end
 
-function rank_by_fitness!{F,P<:OptimizationProblem}(e::Evaluator{P}, candidates::Vector{Candidate{F}})
+function rank_by_fitness!(e::Evaluator, candidates::Vector{<:Candidate})
     fs = fitness_scheme(e)
     sort!(update_fitness!(e, candidates);
           # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed

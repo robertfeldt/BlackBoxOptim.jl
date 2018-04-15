@@ -38,22 +38,22 @@ Select `numSamples` random candidates from the `population`.
 """
 function select(::IndividualsSelector, population, numSamples::Int) end
 
-apply{T <: Real}(o::MutationOperator, parents::Vector{Vector{T}}) =
+apply(o::MutationOperator, parents::Vector{Vector{<:Real}}) =
     map(p -> apply(o, p), parents)
 
 numchildren(o::GeneticOperator) = 1
 numparents(o::MutationOperator) = 1 # But it will apply to each parent separately if given more than one...
 
-numparents{NP,NC}(o::CrossoverOperator{NP,NC}) = NP::Int
-numchildren{NP,NC}(o::CrossoverOperator{NP,NC}) = NC::Int
+numparents(o::CrossoverOperator{NP,NC}) where {NP,NC} = NP::Int
+numchildren(o::CrossoverOperator{NP,NC}) where {NP,NC} = NC::Int
 
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
 # wrapper for multi-children variant of apply!() for single-child xover operators
-function apply!{NP,I<:AbstractIndividual}(xover::CrossoverOperator{NP,1},
-               targets::AbstractVector{I}, target_indices::AbstractVector{Int},
-               pop, parentIndices)
+function apply!(xover::CrossoverOperator{NP, 1},
+                targets::AbstractVector{<:AbstractIndividual}, target_indices::AbstractVector{Int},
+                pop, parentIndices) where NP
     length(targets) == length(target_indices) ||
         throw(ArgumentError("The number of target doesn't match the number of their indices"))
     for i in eachindex(target_indices)
@@ -79,8 +79,8 @@ the fitness change.
 
 The default implementation does nothing.
 """
-function adjust!{F}(op::GeneticOperator, tag::Int, indi_index::Int,
-                    new_fitness::F, old_fitness::F, is_improved::Bool) end
+function adjust!(op::GeneticOperator, tag::Int, indi_index::Int,
+                 new_fitness::F, old_fitness::F, is_improved::Bool) where F end
 
 """
     trace_state(io, op::GeneticOperator, mode::Symbol)

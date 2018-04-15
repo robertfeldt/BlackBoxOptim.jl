@@ -17,15 +17,14 @@ abstract type FitnessScheme{F} end
 
 Get the type of fitness values for fitness scheme `fs`.
 """
-fitness_type{F}(::Type{FitnessScheme{F}}) = F
-fitness_type{F}(::FitnessScheme{F}) = F
-fitness_type{FS<:FitnessScheme}(::Type{FS}) = fitness_type(supertype(FS))
-fitness_eltype{F<:Number}(::Type{FitnessScheme{F}}) = F
-fitness_eltype{F<:Number}(::FitnessScheme{F}) = F
-#fitness_type{FS<:FitnessScheme}(::FS) = fitness_type(FS)
+fitness_type(::Type{FitnessScheme{F}}) where F = F
+fitness_type(::FitnessScheme{F}) where F = F
+fitness_type(::Type{FS}) where {FS<:FitnessScheme} = fitness_type(supertype(FS))
+fitness_eltype(::Type{FitnessScheme{F}}) where {F<:Number} = F
+fitness_eltype(::FitnessScheme{F}) where {F<:Number} = F
 
 # trivial convert() between calculated and archived fitness
-Base.convert{F}(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) = fit
+Base.convert(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) where F = fit
 
 # ordering induced by the fitness scheme
 # FIXME enable once v0.5 issue #14919 is fixed
@@ -50,16 +49,16 @@ end
 const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
 const MaximizingFitnessScheme = ScalarFitnessScheme{false}()
 
-is_minimizing{MIN}(::ScalarFitnessScheme{MIN}) = MIN
-nafitness{F<:Number}(::Type{F}) = convert(F, NaN)
+is_minimizing(::ScalarFitnessScheme{MIN}) where {MIN} = MIN
+nafitness(::Type{F}) where {F<:Number} = convert(F, NaN)
 @inline nafitness(fs::FitnessScheme) = nafitness(fitness_type(fs))
-isnafitness{F<:Number}(f::F, ::RatioFitnessScheme{F}) = isnan(f)
-numobjectives{F<:Number}(::RatioFitnessScheme{F}) = 1
+isnafitness(f::F, ::RatioFitnessScheme{F}) where {F<:Number} = isnan(f)
+numobjectives(::RatioFitnessScheme{F}) where {F<:Number} = 1
 
 """
 Aggregation is just the identity function for scalar fitness.
 """
-aggregate{F<:Number}(fitness::F, ::RatioFitnessScheme{F}) = fitness
+aggregate(fitness::F, ::RatioFitnessScheme{F}) where {F<:Number} = fitness
 
 is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{true}) = f1 < f2
 is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{false}) = f1 > f2
@@ -104,4 +103,4 @@ struct HatCompare{FS<:FitnessScheme}
     HatCompare(fs::FS) where {FS<:FitnessScheme} = new{FS}(fs)
 end
 
-(hc::HatCompare){F}(x::F, y::F) = hat_compare(x, y, hc.fs)
+(hc::HatCompare)(x::F, y::F) where {F} = hat_compare(x, y, hc.fs)

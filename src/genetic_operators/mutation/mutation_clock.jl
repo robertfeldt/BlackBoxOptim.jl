@@ -7,7 +7,7 @@ vector.
 abstract type GibbsMutationOperator <: MutationOperator end
 
 # apply operator to each dimension
-function apply!{T<:Real}(m::GibbsMutationOperator, params::AbstractVector{T}, target_index::Int)
+function apply!(m::GibbsMutationOperator, params::AbstractVector{<:Real}, target_index::Int)
     @inbounds @simd for i in eachindex(params)
         params[i] = apply(m, params[i], i, target_index)
     end
@@ -45,7 +45,7 @@ mutable struct MutationClock{S<:GibbsMutationOperator} <: MutationOperator
         new{S}(inner, rate, 1 + num_vars_to_next_mutation_point(rate))
 end
 
-function apply!{T<:Real}(mc::MutationClock, v::AbstractVector{T}, target_index::Int)
+function apply!(mc::MutationClock, v::AbstractVector{<:Real}, target_index::Int)
     n = length(v)
     i = mc.nextVarToMutate
     @inbounds while i <= n

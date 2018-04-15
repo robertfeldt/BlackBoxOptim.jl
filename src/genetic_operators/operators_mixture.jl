@@ -19,8 +19,8 @@ end
 """
 Default implementation of `apply!()` for operators mixture.
 """
-function apply!{T<:Real}(opmix::GeneticOperatorsMixture,
-                         v::Vector{T}, target_index::Int)
+function apply!(opmix::GeneticOperatorsMixture,
+                v::Vector{<:Real}, target_index::Int)
     op, tag = next(opmix)
     apply!(op, v, target_index)
 end
@@ -52,8 +52,8 @@ function Base.next(opmix::FAGeneticOperatorsMixture)
     return opmix.operators[i], i
 end
 
-function adjust!{F}(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::Int,
-                    new_fitness::F, old_fitness::F, is_improved::Bool)
+function adjust!(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::Int,
+                 new_fitness::F, old_fitness::F, is_improved::Bool) where F
     # KLUDGE we don't know the fitness scheme, but if there is no improvement in fitness,
     # new_fitness==old_fitness, so it's ok to take the abs()
     update!(opmix.fa, op_index, is_improved ? abs(new_fitness-old_fitness) : 0.0)

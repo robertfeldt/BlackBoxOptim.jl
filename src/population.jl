@@ -22,8 +22,8 @@ numdims(pop::PopulationMatrix) = size(pop, 1)
 params_mean(pop::PopulationMatrix) = mean(pop, 1)
 params_std(pop::PopulationMatrix) = std(pop, 1)
 
-popsize{F}(pop::Vector{Candidate{F}}) = length(pop)
-numdims{F}(pop::Vector{Candidate{F}}) = isempty(pop) ? 0 : length(pop[1].params)
+popsize(pop::Vector{<:Candidate}) = length(pop)
+numdims(pop::Vector{<:Candidate}) = isempty(pop) ? 0 : length(pop[1].params)
 
 viewer(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
 
@@ -127,7 +127,7 @@ function Base.setindex!{F}(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_i
     return pop
 end
 
-function Base.append!{F}(pop::FitPopulation{F}, extra_pop::FitPopulation{F})
+function Base.append!(pop::FitPopulation{F}, extra_pop::FitPopulation{F}) where {F}
     pop.ntransient == 0 || throw(error("Appending to the population with transients not supported (yet)"))
     numdims(pop) == numdims(extra_pop) ||
         throw(DimensionMismatch("Cannot append population, "*
@@ -138,8 +138,8 @@ function Base.append!{F}(pop::FitPopulation{F}, extra_pop::FitPopulation{F})
     return pop
 end
 
-fitness_type{F}(pop::FitPopulation{F}) = F
-candidate_type{F}(pop::FitPopulation{F}) = Candidate{F}
+fitness_type(pop::FitPopulation{F}) where {F} = F
+candidate_type(pop::FitPopulation{F}) where {F} = Candidate{F}
 
 """
     acquire_candi(pop::FitPopulation[, {ix::Int, candi::Candidate}])
@@ -148,7 +148,7 @@ Get individual from a pool, or create one if the pool is empty.
 By default the individual is not initialized, but if `ix` or `candi` is specified,
 the corresponding fields of the new candidate are set to the given values.
 """
-function acquire_candi{F}(pop::FitPopulation{F})
+function acquire_candi(pop::FitPopulation{F}) where {F}
     if isempty(pop.candi_pool)
         return Candidate{F}(Individual(numdims(pop)), -1, pop.nafitness)
     end
@@ -159,7 +159,7 @@ function acquire_candi{F}(pop::FitPopulation{F})
     return res
 end
 
-acquire_candis{F}(pop::FitPopulation{F}, n::Integer) =
+acquire_candis(pop::FitPopulation{F}, n::Integer) where F =
     Candidate{F}[acquire_candi(pop) for _ in 1:n]
 
 # Get an individual from a pool and sets it to ix-th individual from population.
@@ -172,20 +172,20 @@ function acquire_candi(pop::FitPopulation, ix::Int)
 end
 
 # Get an individual from a pool and sets it to another candidate.
-acquire_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) =
+acquire_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F =
     copy!(acquire_candi(pop), candi)
 
 """
 Put the candidate back to the pool.
 """
-release_candi{F}(pop::FitPopulation{F}, candi::Candidate{F}) =
+release_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F =
     push!(pop.candi_pool, candi)
 
 """
 Put the candidate back into the pool and copy the values
 into the corresponding individual of the population (`candi.index` should be set).
 """
-function accept_candi!{F}(pop::FitPopulation{F}, candi::Candidate{F})
+function accept_candi!(pop::FitPopulation{F}, candi::Candidate{F}) where F
     pop.individuals[:, candi.index] = candi.params
     pop.fitness[candi.index] = candi.fitness
     release_candi(pop, candi)
@@ -197,7 +197,7 @@ Reset the candidate fitness.
 Need it when the candidate parameters have changed, but the stored fitness
 is still for the old parameter set.
 """
-function reset_fitness!{F}(candi::Candidate{F}, pop::FitPopulation{F})
+function reset_fitness!(candi::Candidate{F}, pop::FitPopulation{F}) where F
     candi.fitness = pop.nafitness
     return candi
 end
@@ -209,10 +209,10 @@ Generate a population for a given problem.
 
 The default method to generate a population, uses Latin Hypercube Sampling.
 """
-function population{F}(problem::OptimizationProblem,
-                       options::Parameters = EMPTY_PARAMS,
-                       nafitness::F = nafitness(fitness_scheme(problem));
-                       ntransient::Integer = 0)
+function population(problem::OptimizationProblem,
+                    options::Parameters = EMPTY_PARAMS,
+                    nafitness::F = nafitness(fitness_scheme(problem));
+                    ntransient::Integer = 0) where F
     if !haskey(options, :Population)
         pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50) + ntransient)
     else

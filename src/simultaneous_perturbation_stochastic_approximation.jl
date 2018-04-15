@@ -47,7 +47,7 @@ function ask(spsa::SimultaneousPerturbationSA2)
      Candidate{Float64}(theta_minus, 2)]
 end
 
-function tell!{F}(spsa::SimultaneousPerturbationSA2, rankedCandidates::Vector{Candidate{F}})
+function tell!(spsa::SimultaneousPerturbationSA2, rankedCandidates::Vector{<:Candidate})
     # Use index of rank to get right values for yplus and yminus, respectively.
     if rankedCandidates[1].index == 1
         yplus = rankedCandidates[1].fitness

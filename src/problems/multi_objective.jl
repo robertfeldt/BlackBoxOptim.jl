@@ -19,10 +19,10 @@ end
 Generate the points of the hypersurface using the
 discretization defined by ϵ-box fitness schema.
 """
-@generated function generate{N,F,NP}(surf::Hypersurface{N},
-                                     fs::EpsBoxDominanceFitnessScheme{N,F},
-                                     ::Type{Val{NP}},
-                                     param_step::Vector{F} = 0.1*fs.ϵ)
+@generated function generate(surf::Hypersurface{N},
+                             fs::EpsBoxDominanceFitnessScheme{N,F},
+                             ::Type{Val{NP}},
+                             param_step::Vector{F} = 0.1*fs.ϵ) where {N,F,NP}
     quote
         #archive = EpsBoxArchive(fs)
         pf = Dict{NTuple{N,Int}, IndexedTupleFitness{N,F}}()
@@ -46,7 +46,7 @@ end
 
 Filter `fitnesses` removing all dominated values.
 """
-function nondominated{N,F}(fitnesses, fit_scheme::EpsBoxDominanceFitnessScheme{N,F})
+function nondominated(fitnesses, fit_scheme::EpsBoxDominanceFitnessScheme{N,F}) where {N,F}
     arch = EpsBoxArchive(fit_scheme)
     res = sizehint!(Vector{IndexedTupleFitness{N,F}}(), length(fitnesses))
     empty_params = Individual()
@@ -61,7 +61,7 @@ end
 
 Euclidean distance from `a` to `b`.
 """
-@generated function distance{N,F}(a::NTuple{N,F}, b::NTuple{N,F})
+@generated function distance(a::NTuple{N,F}, b::NTuple{N,F}) where {N,F}
     quote
         res = 0.0
         Base.Cartesian.@nexprs $N i -> res += (a[i]-b[i])^2
@@ -74,7 +74,7 @@ end
 
 The average Euclidean distance from the points of `A` to the points of `B`.
 """
-IGD{N,F<:Number}(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}) =
+IGD(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}) where {N,F<:Number} =
     sum(a -> minimum(b -> distance(a, b), B), A) / length(A)
 
 """
@@ -84,10 +84,11 @@ Average Euclidean distance from the exact Pareto frontier of the problem (`ref`)
 to the solution (`sol`) produced by the optimization method.
 If `two_sided` is on, returns the maximum of `IGD(sol, ref)` and `IGD(nondominated(ref), sol)`.
 """
-function IGD{N,F<:Number,T<:FrontierIndividualWrapper,NP}(ref::Hypersurface{N}, sol::AbstractVector{T},
-                             fit_scheme::EpsBoxDominanceFitnessScheme{N,F},
-                             ::Type{Val{NP}},
-                             param_step::Vector{F} = 0.1*fit_scheme.ϵ, two_sided::Bool=true)
+function IGD(ref::Hypersurface{N}, sol::AbstractVector{T},
+             fit_scheme::EpsBoxDominanceFitnessScheme{N,F},
+             ::Type{Val{NP}},
+             param_step::Vector{F} = 0.1*fit_scheme.ϵ, two_sided::Bool=true
+) where {N,F<:Number,T<:FrontierIndividualWrapper,NP}
     @assert fitness_type(sol[1]) == NTuple{N,F}
     ref_indexed_pts = values(generate(ref, fit_scheme, Val{NP}, param_step))
     nondom_ref_pts = NTuple{N,F}[val.orig for val in nondominated(ref_indexed_pts, fit_scheme)]

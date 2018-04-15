@@ -30,8 +30,8 @@ struct VectorFitness{T <: Real} <: MultiObjectiveFitness
     fvalues::Vector{T}
 end
 
-makefitness{T <: Real}(fvalue::T) = SingleNumberFitness(fvalue)
-makefitness{T <: Real}(fvalues::Vector{T}) = VectorFitness(fvalues)
+makefitness(fvalue::T) where {T <: Real} = SingleNumberFitness(fvalue)
+makefitness(fvalues::Vector{T}) where {T <: Real} = VectorFitness(fvalues)
 
-fitnessvalues{T <: Real}(f::VectorFitness{T}) = f.fvalues
-fitnessvalues{T <: Real}(f::SingleNumberFitness{T}) = [f.fvalue]
+fitnessvalues(f::VectorFitness{T}) where {T <: Real} = f.fvalues
+fitnessvalues(f::SingleNumberFitness{T}) where {T <: Real} = [f.fvalue]

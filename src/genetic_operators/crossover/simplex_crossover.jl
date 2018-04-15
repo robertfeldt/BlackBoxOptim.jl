@@ -20,9 +20,9 @@ const SPX_DefaultOptions = ParamsDict(
 
 #masscenter(pop, parentIndices) = mapslices(mean, pop[:, parentIndices], 2)
 
-function apply!{NP}(xover::SimplexCrossover{NP},
-                    target::Individual, targetIndex::Int,
-                    pop, parentIndices)
+function apply!(xover::SimplexCrossover{NP},
+                target::Individual, targetIndex::Int,
+                pop, parentIndices) where NP
     @assert length(parentIndices) == NP
 
     offset = zeros(target)

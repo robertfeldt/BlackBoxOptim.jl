@@ -85,8 +85,8 @@ Evaluate fitness by first shifting `x` and then biasing the returned function va
 evalfunc(x, i, sp::ShiftedAndBiasedProblem) =
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
 
-shifted{FS<:FitnessScheme}(p::OptimizationProblem{FS}; funcshift = 0.0) =
-    ShiftedAndBiasedProblem{FS}(p; funcshift = funcshift)
+shifted(p::OptimizationProblem{FS}; funcshift = 0.0) where {FS<:FitnessScheme} =
+    ShiftedAndBiasedProblem(p; funcshift = funcshift)
 
 
 #####################################################################

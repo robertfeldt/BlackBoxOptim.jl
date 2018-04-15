@@ -101,7 +101,7 @@ function ask(dxnes::DXNESOpt)
     update_candidates!(dxnes, dxnes.Z)
 end
 
-function tell!{F}(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}})
+function tell!(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}}) where F
     u = assign_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.sortedUtilities)
     dxnes.evol_path *= dxnes.evol_discount
     dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
@@ -140,9 +140,9 @@ function calculate_evol_path_params(n::Int, u::Vector{Float64})
     return threshold, discount, Zscale
 end
 
-function assign_distance_weights!{F}(weights::Vector{Float64}, scale::Float64,
-                                     rankedCandidates::Vector{Candidate{F}},
-                                     Z::Matrix{Float64})
+function assign_distance_weights!(weights::Vector{Float64}, scale::Float64,
+                                  rankedCandidates::Vector{Candidate{F}},
+                                  Z::Matrix{Float64}) where F
     @assert length(weights) == length(rankedCandidates) == size(Z, 2)
     lambda = size(Z, 2)
     u0 = log(0.5*lambda+1)

@@ -68,8 +68,8 @@ end
 crossover_parameters(xover::AdaptiveDiffEvoRandBin, pop::Population, target_index) =
     crossover_parameters(xover.params, pop, target_index)
 
-adjust!{F}(xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
-                 new_fitness::F, old_fitness::F, is_improved::Bool) =
+adjust!(xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
+        new_fitness::F, old_fitness::F, is_improved::Bool) where F =
     adjust!(xover.params, candi_index, is_improved)
 
 const AdaptiveDiffEvoRandBin1 = AdaptiveDiffEvoRandBin{3}

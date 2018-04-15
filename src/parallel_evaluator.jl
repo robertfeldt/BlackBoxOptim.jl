@@ -14,7 +14,7 @@ fitness(params::Individual, worker::ParallelEvaluatorWorker) =
 const ChannelRef{T} = RemoteChannel{Channel{T}}
 const ParallelEvaluatorWorkerRef{P} = ChannelRef{ParallelEvaluatorWorker{P}}
 
-fitness{P}(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) =
+fitness(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) where P =
     fitness(params, fetch(fetch(worker_ref))::ParallelEvaluatorWorker{P})
 
 """
@@ -47,7 +47,7 @@ abort!(estate::ParallelEvaluationState) = (estate.next_index = 0)
 Reset the current `ParallelEvaluationState` and the vector
 of candidates that need fitness evaluation.
 """
-function reset!{F}(estate::ParallelEvaluationState{F}, candidates::Vector{Candidate{F}})
+function reset!(estate::ParallelEvaluationState{F}, candidates::Vector{Candidate{F}}) where F
     estate.candidates = candidates
     fill!(estate.worker_busy, false)
     empty!(estate.retry_queue)
@@ -119,9 +119,9 @@ mutable struct ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
     eval_state::ParallelEvaluationState{F, FS}
 end
 
-function ParallelEvaluator{P<:OptimizationProblem}(
+function ParallelEvaluator(
         problem::P, archive::Archive;
-        pids::Vector{Int} = workers())
+        pids::Vector{Int} = workers()) where {P<:OptimizationProblem}
     fs = fitness_scheme(problem)
     ParallelEvaluator{fitness_type(fs), typeof(fs), P}(problem,
         archive,
@@ -144,7 +144,7 @@ ParallelEvaluator(problem::OptimizationProblem;
 
 num_evals(e::ParallelEvaluator) = e.num_evals
 
-function update_fitness!{F}(e::ParallelEvaluator{F}, candidates::Vector{Candidate{F}})
+function update_fitness!(e::ParallelEvaluator{F}, candidates::Vector{Candidate{F}}) where F
     reset!(e.eval_state, candidates)
 
     # based on pmap() code
@@ -173,7 +173,7 @@ function update_fitness!{F}(e::ParallelEvaluator{F}, candidates::Vector{Candidat
 end
 
 # FIXME it's not efficient to calculate fitness like that with `ParallelEvaluator`
-function fitness{F}(params::Individual, e::ParallelEvaluator{F})
+function fitness(params::Individual, e::ParallelEvaluator{F}) where F
     candi = Candidate{F}(params)
     update_fitness!(e, [candi])
     return candi.fitness

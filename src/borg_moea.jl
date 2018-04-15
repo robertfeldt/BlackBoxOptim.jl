@@ -71,7 +71,7 @@ const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, Params
     :MaxStepsWithoutProgress => 100
 ))
 
-function borg_moea{FS<:TupleFitnessScheme}(problem::OptimizationProblem{FS}, options::Parameters = EMPTY_PARAMS)
+function borg_moea(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
     opts = chain(BorgMOEA_DefaultParameters, options)
     fs = fitness_scheme(problem)
     N = numobjectives(fs)
