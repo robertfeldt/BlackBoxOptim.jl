@@ -70,17 +70,20 @@ function fill_block!(fa::FrequencyAdapter)
     # fill the block according to the fa.p and fa.a
     last_pos = 0 # position in the block
     for i in 1:fa.n
-        fa.a[i] += (fa.n * fa.p[i] / fa.psum)
-        if fa.a[i] >= 1.0
+        ai = fa.a[i]
+        pi = fa.p[i]
+        ai += (fa.n * pi / fa.psum)
+        if ai >= 1.0
             # block should have at least one i-th method
-            num_ai = floor(Int, fa.a[i])
-            @assert num_ai > 0
-            fa.a[i] -= num_ai # adjust the remainder
-            new_pos = last_pos+num_ai
+            nai = floor(Int, ai)
+            @assert nai > 0
+            ai -= nai # adjust the remainder
+            new_pos = last_pos + nai
             resize!(fa.block, new_pos)
             fa.block[(last_pos+1):(new_pos)] = i
             last_pos = new_pos
         end
+        fa.a[i] = ai
     end
     # Due to rounding errors the block is sometimes empty so we select the one
     # with largest a value.
