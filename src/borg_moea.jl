@@ -53,7 +53,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
                 params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
                 Categorical(ones(length(recombinate))/length(recombinate)),
                 params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
-                params[:MaxStepsWithoutProgress],
+                params[:MaxStepsWithoutEpsProgress],
                 recombinate,
                 TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
     end
@@ -68,7 +68,7 @@ const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, Params
     :ζ => 1.0,        # dampening coefficient for recombination operator weights
     :RestartCheckPeriod => 1000,
     :OperatorsUpdatePeriod => 100,
-    :MaxStepsWithoutProgress => 100
+    :MaxStepsWithoutEpsProgress => 100
 ))
 
 function borg_moea(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
