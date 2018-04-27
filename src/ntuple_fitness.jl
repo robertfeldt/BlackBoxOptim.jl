@@ -262,20 +262,16 @@ isnafitness(f::IndexedTupleFitness{N,F},
             fit_scheme::EpsBoxDominanceFitnessScheme{N,F}) where {N,F<:Number} =
     isnafitness(f.orig, fit_scheme)
 
-Base.convert(::Type{EpsBoxDominanceFitnessScheme},
-             fs::ParetoFitnessScheme{N,F}, ϵ::F=one(F)) where {N,F} =
+EpsBoxDominanceFitnessScheme(fs::ParetoFitnessScheme{N,F}, ϵ::F=one(F)) where {N,F} =
     EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert(::Type{EpsBoxDominanceFitnessScheme},
-             fs::ParetoFitnessScheme{N,F}, ϵ::Vector{F}) where {N,F} =
+EpsBoxDominanceFitnessScheme(fs::ParetoFitnessScheme{N,F}, ϵ::Vector{F}) where {N,F} =
     EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert(::Type{EpsBoxDominanceFitnessScheme},
-             fs::EpsDominanceFitnessScheme{N,F},
-             ϵ::Union{F,Vector{F}}=fs.ϵ) where {N,F} =
+EpsBoxDominanceFitnessScheme(fs::EpsDominanceFitnessScheme{N,F}, ϵ::Union{F,Vector{F}}=fs.ϵ) where {N,F} =
     EpsBoxDominanceFitnessScheme{N,F}(ϵ, is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
-Base.convert(::Type{ParetoFitnessScheme}, fs::EpsBoxDominanceFitnessScheme{N,F}) where {N,F} =
+ParetoFitnessScheme(fs::EpsBoxDominanceFitnessScheme{N,F}) where {N,F} =
   ParetoFitnessScheme{N,F}(is_minimizing=is_minimizing(fs), aggregator=fs.aggregator)
 
 Base.convert(::Type{IndexedTupleFitness{N,F}}, fitness::NTuple{N,F},

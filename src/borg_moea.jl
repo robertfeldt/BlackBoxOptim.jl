@@ -46,7 +46,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
         fit_scheme = fitness_scheme(problem)
         isa(fit_scheme, TupleFitnessScheme) || throw(ArgumentError("BorgMOEA can only solve problems with `TupleFitnessScheme`"))
         !isempty(recombinate) || throw(ArgumentError("No recombinate operators specified"))
-        fit_scheme = convert(EpsBoxDominanceFitnessScheme, fit_scheme, params[:ϵ])
+        fit_scheme = EpsBoxDominanceFitnessScheme(fit_scheme, params[:ϵ])
         archive = EpsBoxArchive(fit_scheme, params)
         evaluator = make_evaluator(problem, archive, params)
         new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
