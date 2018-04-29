@@ -5,8 +5,6 @@ my_slow_tests = [
     "test_bboptimize.jl"
 ]
 
-@testset "BlackBoxOptim long-running test suite" begin
-    for t in my_slow_tests
-        include(t)
-    end
+@testset "BlackBoxOptim long-running test suite $t" for t in my_slow_tests
+    include(t)
 end
