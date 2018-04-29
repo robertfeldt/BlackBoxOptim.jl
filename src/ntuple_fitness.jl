@@ -32,6 +32,12 @@ Always used when printing fitness vectors though.
 struct ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
 
+    ParetoFitnessScheme{N,F,MIN,AGG}(; aggregator::AGG=sum) where {N, F<:Number, MIN, AGG} =
+        new{N,F,MIN,AGG}(aggregator)
+
+    ParetoFitnessScheme{N,F,MIN}(; aggregator::AGG=sum) where {N, F<:Number, MIN, AGG} =
+        new{N,F,MIN,AGG}(aggregator)
+
     ParetoFitnessScheme{N,F}(; is_minimizing::Bool=true, aggregator::AGG=sum) where {N, F<:Number, AGG} =
         new{N,F,is_minimizing,AGG}(aggregator)
 
