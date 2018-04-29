@@ -291,16 +291,16 @@ hat_compare(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
 
 hat_compare(u::NTuple{N,F}, v::IndexedTupleFitness{N,F},
             fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
-    hat_compare(convert(IndexedTupleFitness, u, fs), v, fs, expected)
+    hat_compare(convert(IndexedTupleFitness{N,F}, u, fs), v, fs, expected)
 
 hat_compare(u::IndexedTupleFitness{N,F}, v::NTuple{N,F},
             fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
-    hat_compare(u, convert(IndexedTupleFitness, v, fs), fs, expected)
+    hat_compare(u, convert(IndexedTupleFitness{N,F}, v, fs), fs, expected)
 
 hat_compare(u::NTuple{N,F}, v::NTuple{N,F},
             fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
-    hat_compare(convert(IndexedTupleFitness, u, fs),
-                convert(IndexedTupleFitness, v, fs), fs, expected)
+    hat_compare(convert(IndexedTupleFitness{N,F}, u, fs),
+                convert(IndexedTupleFitness{N,F}, v, fs), fs, expected)
 
 # special overload that strips index equality flag
 (hc::HatCompare{FS})(u::IndexedTupleFitness{N,F},
