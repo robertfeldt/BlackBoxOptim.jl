@@ -84,12 +84,12 @@ struct RangePerDimSearchSpace <: ContinuousSearchSpace
     deltas::Vector{Float64}
 
     function RangePerDimSearchSpace(ranges)
-        mins = map(t -> t[1], ranges)
-        maxs = map(t -> t[2], ranges)
-        new(mins, maxs, (maxs - mins))
+        mins = getindex.(ranges, 1)
+        maxs = getindex.(ranges, 2)
+        new(mins, maxs, maxs .- mins)
     end
 
-    RangePerDimSearchSpace(mins, maxs) = new(mins, maxs, (maxs - mins))
+    RangePerDimSearchSpace(mins, maxs) = new(mins, maxs, maxs .- mins)
 end
 
 mins(rss::RangePerDimSearchSpace) = rss.mins
@@ -108,11 +108,12 @@ symmetric_search_space(numdims, range=(0.0, 1.0)) = RangePerDimSearchSpace(fill(
 """
 Projects a given point onto the search space coordinate-wise.
 """
-feasible(v::AbstractIndividual, ss::RangePerDimSearchSpace) = map(clamp, v, mins(ss), maxs(ss))
+feasible(v::AbstractIndividual, ss::RangePerDimSearchSpace) = clamp.(v, mins(ss), maxs(ss))
 
 # concatenates two range-based search spaces
 Base.vcat(ss1::RangePerDimSearchSpace, ss2::RangePerDimSearchSpace) =
-    RangePerDimSearchSpace(vcat(mins(ss1), mins(ss2)), vcat(maxs(ss1), maxs(ss2)))
+    RangePerDimSearchSpace(vcat(mins(ss1), mins(ss2)),
+                           vcat(maxs(ss1), maxs(ss2)))
 
 """
 0-dimensional search space.
