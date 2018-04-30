@@ -13,17 +13,17 @@ Family of `FunctionBasedProblem` optimization problems
 parameterized by the number of search space dimensions.
 """
 struct FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
-    objfunc::Function                     # Objective function
+    objfunc::Function               # Objective function
     name::String
     fitness_scheme::FS
-    reserved_ss::RangePerDimSearchSpace   # search space for the first reserved dimensions
-    range_per_dim::ParamBounds            # Default range per dimension
-    opt_value::FO                         # optional optimal value, or nothing
+    reserved_ss::RectSearchSpace    # search space for the first reserved dimensions
+    range_per_dim::ParamBounds      # Default range per dimension
+    opt_value::FO                   # optional optimal value, or nothing
 
     function FunctionBasedProblemFamily(
             objfunc::Function, name::String,
             fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
-            reserved_ss::RangePerDimSearchSpace = ZERO_SEARCH_SPACE
+            reserved_ss::RectSearchSpace = ZERO_SEARCH_SPACE
     ) where {FS<:FitnessScheme, FO}
         if FO <: Number
             fitness_type(fitness_scheme) == FO ||

@@ -3,14 +3,14 @@ Embedding operator that randomly samples
 between parent's value and the nearest parameter boundary
 to get the new valid value if target's parameter is out-of-bounds.
 """
-struct RandomBound{S<:RangePerDimSearchSpace} <: EmbeddingOperator
+struct RandomBound{S<:RectSearchSpace} <: EmbeddingOperator
     search_space::S
 
-    RandomBound(search_space::S) where {S<:RangePerDimSearchSpace} = new{S}(search_space)
+    RandomBound(search_space::S) where {S<:RectSearchSpace} = new{S}(search_space)
 end
 
 # outer ctors
-RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace(dimBounds))
+RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RectSearchSpace(dimBounds))
 
 search_space(rb::RandomBound) = rb.search_space
 

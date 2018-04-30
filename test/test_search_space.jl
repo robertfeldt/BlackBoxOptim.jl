@@ -38,13 +38,16 @@
 
     @testset "SymmetricSearchSpace with given range" begin
         ss1 = symmetric_search_space(1, (-1.0, 1.0))
+        @test_throws ArgumentError symmetric_search_space(1, (0.0, -1.0))
+        @test ss1 isa ContinuousRectSearchSpace
         @test numdims(ss1) == 1
         @test ranges(ss1) == [(-1.0, 1.0)]
         @test range_for_dim(ss1,1) == (-1.0, 1.0)
 
         for i in 1:NumTestRepetitions
             reps = rand(1:100)
-            range = (rand(), rand())
+            a = rand()
+            range = (a, a + (1-a)*rand())
             ss = symmetric_search_space(reps, range)
             @test numdims(ss) == reps
             @test all([(dr == range) for dr in ranges(ss)])
@@ -86,7 +89,7 @@
             ds = rand(1:10, numdimensions) .* rand(numdimensions)
             maxbounds = minbounds .+ ds
             parambounds = collect(zip(minbounds, maxbounds))
-            ss = RangePerDimSearchSpace(parambounds)
+            ss = RectSearchSpace(parambounds)
             @test mins(ss) == minbounds
             @test maxs(ss) == maxbounds
             @test round.(deltas(ss), digits=6) == round.(ds, digits=6)
@@ -102,20 +105,20 @@
         end
     end
 
-    @testset "RangePerDimSearchSpace" begin
-        ss = RangePerDimSearchSpace([(0.0, 1.0)])
+    @testset "RectSearchSpace" begin
+        ss = RectSearchSpace([(0.0, 1.0)])
         @test mins(ss) == [0.0]
         @test maxs(ss) == [1.0]
         @test deltas(ss) == [1.0]
 
-        ss = RangePerDimSearchSpace([(0.0, 1.0), (0.5, 10.0)])
+        ss = RectSearchSpace([(0.0, 1.0), (0.5, 10.0)])
         @test mins(ss) == [0.0, 0.5]
         @test maxs(ss) == [1.0, 10.0]
         @test deltas(ss) == [1.0, 9.5]
     end
 
     @testset "rand_individuals_lhs samples in LHS intervals" begin
-        ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+        ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
         inds = rand_individuals_lhs(ss, 2)
         @test size(inds, 1) == 3
@@ -133,7 +136,7 @@
     end
 
     @testset "feasible finds feasible points in the search space" begin
-        ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+        ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
         # We use the double transpose below to ensure the actual and expected
         # values have the same type (matrices, not vectors).
@@ -161,7 +164,7 @@
     end
 
     @testset "diameters" begin
-        ss = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+        ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
         diams = diameters(ss)
 
         @test length(diams) == 3
@@ -169,8 +172,8 @@
     end
 
     @testset "concat(ss1, ss2)" begin
-        ss1 = RangePerDimSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
-        ss2 = RangePerDimSearchSpace([(6.0, 7.0), (8.0, 9.0)])
+        ss1 = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+        ss2 = RectSearchSpace([(6.0, 7.0), (8.0, 9.0)])
 
         sscat = vcat(ss1, ss2)
         @test numdims(sscat) == 5

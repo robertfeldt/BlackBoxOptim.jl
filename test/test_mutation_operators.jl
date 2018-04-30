@@ -1,5 +1,5 @@
 @testset "Mutation operators" begin
-    ss = RangePerDimSearchSpace([(-1.0, 1.0), (0.0, 100.0), (-5.0, 0.0)])
+    ss = RectSearchSpace([(-1.0, 1.0), (0.0, 100.0), (-5.0, 0.0)])
 
     @testset "UniformMutation" begin
         gibbs = UniformMutation(ss)

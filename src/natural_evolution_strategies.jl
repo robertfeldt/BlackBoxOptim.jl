@@ -201,7 +201,7 @@ ini_xnes_B(ss::SearchSpace) = Matrix{Float64}(I, numdims(ss), numdims(ss))
 """
 Calculates the initial ``log B`` matrix for `xNES` based on the deltas of each dimension.
 """
-function ini_xnes_B(ss::RangePerDimSearchSpace)
+function ini_xnes_B(ss::RectSearchSpace)
     diag = log.(deltas(ss))
     diag .-= mean(diag)
     return Matrix{Float64}(Diagonal(diag))
