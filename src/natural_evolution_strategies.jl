@@ -313,8 +313,8 @@ end
 Calculate the `n`-dimensional fitness shaping utilities vector using the "log" method.
 """
 function fitness_shaping_utilities_log(n::Int)
-    u = [max(0.0, log(n / 2 + 1.0) - log(i)) for i in 1:n]
-    return u/sum(u) - 1/n
+    u = max.(0.0, log(n / 2 + 1.0) - log.(1:n))
+    return u./sum(u) - 1/n
 end
 
 """
@@ -326,7 +326,7 @@ using the "steps" method.
 function fitness_shaping_utilities_linear(n::Int)
     # Second half has zero utility.
     treshold = floor(Int, n/2)
-    second_half = zeros(n - treshold)
+    second_half = fill(0.0, n - treshold)
 
     # While first half's utility decreases in linear steps
     step_size = 1 / treshold
@@ -334,5 +334,5 @@ function fitness_shaping_utilities_linear(n::Int)
 
     # But the utilities should sum to 0, so we normalize and return
     u = vcat(first_half, second_half)
-    return u/sum(u) - 1/n
+    return u./sum(u) - 1/n
 end

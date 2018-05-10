@@ -118,7 +118,7 @@
         function rosenbrock_throwing(x)
             i += 1
             if i < 50
-                return sum(100*(x[2:end] - x[1:end-1].^2).^2 + (x[1:end-1] - 1).^2)
+                return sum(i -> 100*(x[i+1] - x[i])^2 + (x[i] - 1)^2, 1:(length(x)-1))
             else
                 throw(InterruptException())
             end

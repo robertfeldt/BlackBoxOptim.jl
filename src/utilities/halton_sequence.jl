@@ -3,8 +3,7 @@
 
 Generate the first `n` numbers in Halton's sequence with base `b`.
 """
-haltonsequence(b, n) =
-  map(i -> haltonnumber(b, i), 1:n)
+haltonsequence(b, n) = haltonnumber.(b, 1:n)
 
 """
     haltonnumber(base, index)
