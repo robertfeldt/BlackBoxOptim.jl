@@ -102,7 +102,7 @@
 
     @testset "fitness decrease monotonically if optimizing with same optctrl repeatedly" begin
         # There was a bug in 0.3.0 that did not give monotonically decreasing
-        # fitness with repeated runs. The bug only happened for very short MaxSteps 
+        # fitness with repeated runs. The bug only happened for very short MaxSteps
         # lengths, such as 10. This test ensures it does not resurface.
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
             MaxSteps = 10, TraceMode = :silent)
@@ -114,34 +114,34 @@
     end
 
     @testset "return results after interruption" begin
+        i = 0
+        function rosenbrock_throwing(x)
+            i += 1
+            if i < 50
+                return sum(100*(x[2:end] - x[1:end-1].^2).^2 + (x[1:end-1] - 1).^2)
+            else
+                throw(InterruptException())
+            end
+        end
+        @testset ":RecoverResults on" begin
             i = 0
-            function rosenbrock_throwing(x)
-                    i += 1
-                    if i < 50
-                            return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
-                    else
-                            throw(InterruptException())
-                    end
-            end
-            @testset ":RecoverResults on" begin
-                i = 0
-                optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-                        MaxSteps=100, TraceMode=:silent, RecoverResults=true)
-                res = bboptimize(optctrl)
-                @test BlackBoxOptim.stop_reason(res) == (@sprintf "%s" InterruptException())
-            end
+            optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+                              MaxSteps=100, TraceMode=:silent, RecoverResults=true)
+            res = bboptimize(optctrl)
+            @test BlackBoxOptim.stop_reason(res) == (@sprintf "%s" InterruptException())
+        end
 
-            @testset ":RecoverResults off" begin
-                i = 0 # reset the counter, otherwise it will throw in the setup
-                optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-                        MaxSteps=100, TraceMode=:silent, RecoverResults=false)
-                @test_throws InterruptException bboptimize(optctrl)
-            end
+        @testset ":RecoverResults off" begin
+            i = 0 # reset the counter, otherwise it will throw in the setup
+            optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+                              MaxSteps=100, TraceMode=:silent, RecoverResults=false)
+            @test_throws InterruptException bboptimize(optctrl)
+        end
     end
 
     @testset "continue running an optimization after serializing to disc" begin
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-            MaxTime = 0.5, TraceMode = :silent)
+                          MaxTime = 0.5, TraceMode = :silent)
         res1 = bboptimize(optctrl)
 
         local tempfilename = "./temp" * string(rand(1:10^8)) * ".tmp"
@@ -174,12 +174,12 @@
     @testset "TargetFitness option works" begin
         # FIXME use the same (fixed?) random seed to guarantee reproducibility
         result1 = bboptimize(rosenbrock, SearchRange = (-5.0, 5.0), NumDimensions = 5,
-                                                Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
-                                                MaxSteps = 1000000, TraceMode = :silent,
-                                                TargetFitness = 0.0)
+                             Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
+                             MaxSteps = 1000000, TraceMode = :silent,
+                             TargetFitness = 0.0)
         result2 = bboptimize(rosenbrock, SearchRange = (-5.0, 5.0), NumDimensions = 5,
-                                                Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
-                                                MaxSteps = 1000000, TraceMode = :silent)
+                             Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
+                             MaxSteps = 1000000, TraceMode = :silent)
         @test best_fitness(result1) < 1e-5
         @test result1.iterations < result2.iterations
     end

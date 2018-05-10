@@ -1,8 +1,8 @@
 include("helper.jl")
 
 my_slow_tests = [
-  "problems/test_optimize_single_objective_problems.jl",
-  "test_bboptimize.jl"
+    "problems/test_optimize_single_objective_problems.jl",
+    "test_bboptimize.jl"
 ]
 
 @testset "BlackBoxOptim long-running test suite" begin
