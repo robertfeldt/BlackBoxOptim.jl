@@ -7,8 +7,10 @@ abstract type OptimizationProblem{FS<:FitnessScheme} end
 # common definitions for `OptimizationProblem`
 # (enforce field names of subtypes)
 name(p::OptimizationProblem) = p.name
+fitness_scheme_type(::Type{<:OptimizationProblem{FS}}) where FS = FS
+fitness_type(::Type{P}) where P <: OptimizationProblem = fitness_type(fitness_scheme_type(P))
 fitness_scheme(p::OptimizationProblem) = p.fitness_scheme
-fitness_type(p::OptimizationProblem) = fitness_type(fitness_scheme(p))
+fitness_type(p::P) where P <: OptimizationProblem = fitness_type(P)
 numobjectives(p::OptimizationProblem) = numobjectives(fitness_scheme(p))
 search_space(p::OptimizationProblem) = p.ss
 numdims(p::OptimizationProblem) = numdims(search_space(p))
