@@ -1,7 +1,7 @@
 """
-    Individual representing the solution from the Pareto set.
+Individual representing the solution from the Pareto set.
 """
-immutable FrontierIndividual{F} <: ArchivedIndividual{F}
+struct FrontierIndividual{F} <: ArchivedIndividual{F}
     fitness::F
     params::Individual
     tag::Int                            # tag of the individual (e.g. gen.op. ID)
@@ -9,62 +9,62 @@ immutable FrontierIndividual{F} <: ArchivedIndividual{F}
     n_restarts::Int                     # the number of method restarts so far
     timestamp::Float64                  # when archived
 
-    FrontierIndividual(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) =
-        new(fitness, params, tag, num_fevals, n_restarts, timestamp)
+    FrontierIndividual{F}(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
+        new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
-    (::Type{FrontierIndividual}){F}(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) =
+    FrontierIndividual(fitness::F,
+                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
         new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 end
 
 tag(indi::FrontierIndividual) = indi.tag
 
 """
-    Individual stored in `EpsBoxArchive`.
+Individual stored in `EpsBoxArchive`.
 """
-@compat const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
+const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
 
-(::Type{EpsBoxFrontierIndividual}){N,F}(fitness::IndexedTupleFitness{N,F},
-               params, tag, num_fevals, n_restarts, timestamp=time()) =
+EpsBoxFrontierIndividual(fitness::IndexedTupleFitness{N,F},
+               params, tag, num_fevals, n_restarts, timestamp=time()) where {N,F} =
     FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
 """
-    ϵ-box archive saves only the solutions that are not ϵ-box
-    dominated by any other solutions in the archive.
+ϵ-box archive saves only the solutions that are not ϵ-box
+dominated by any other solutions in the archive.
 
-    It also counts the number of candidate solutions that have been added
-    and how many ϵ-box progresses have been made.
+It also counts the number of candidate solutions that have been added
+and how many ϵ-box progresses have been made.
 """
-type EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
-  fit_scheme::FS        # Fitness scheme used
-  start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
+mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
+    fit_scheme::FS        # Fitness scheme used
+    start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
-  num_candidates::Int               # Number of calls to add_candidate!()
-  best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
-  last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
-  last_restart::Int                 # when (wrt num_dlast) last restart has occured
-  n_restarts::Int                   # the counter of the method restarts
+    num_candidates::Int               # Number of calls to add_candidate!()
+    best_candidate_ix::Int            # the index of the candidate with the best aggregated fitness
+    last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
+    last_restart::Int                 # when (wrt num_dlast) last restart has occured
+    n_restarts::Int                   # the counter of the method restarts
 
-  len::Int              # current frontier size
-  max_size::Int         # maximal frontier size
-  # TODO allow different frontier containers?
-  # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
-  frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
-  frontier_isoccupied::BitVector # true if given frontier element is occupied
+    len::Int              # current frontier size
+    max_size::Int         # maximal frontier size
+    # TODO allow different frontier containers?
+    # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
+    frontier::Vector{EpsBoxFrontierIndividual{N,F}}  # candidates along the fitness Pareto frontier
+    frontier_isoccupied::BitVector # true if given frontier element is occupied
 
-  function (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}; max_size::Integer = 1_000_000)
-    new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
-                                sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
-                                sizehint!(BitVector(), 64))
-  end
-
-  (::Type{EpsBoxArchive}){N,F}(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) =
-    EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
+    EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme{N,F};
+                  max_size::Integer = 1_000_000) where {N,F} =
+        new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
+                                    sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
+                                    sizehint!(BitVector(), 64))
 end
 
+EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme{N,F}, params::Parameters) where {N,F} =
+    EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize])
+
 const EpsBoxArchive_DefaultParameters = ParamsDict(
-  :MaxArchiveSize => 10_000,
+    :MaxArchiveSize => 10_000,
 )
 
 Base.length(a::EpsBoxArchive) = a.len
@@ -73,11 +73,11 @@ capacity(a::EpsBoxArchive) = a.max_size
 numdims(a::EpsBoxArchive) = !isempty(a.frontier) ? length(a.frontier[1].params) : 0
 
 """
-    Iterates occupied elements of the `archive.frontier`.
+Iterates occupied elements of the `archive.frontier`.
 """
-immutable EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
+struct EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
     archive::A
-    (::Type{EpsBoxArchiveFrontierIterator}){A<:EpsBoxArchive}(a::A) = new{A}(a)
+    EpsBoxArchiveFrontierIterator(a::A) where {A<:EpsBoxArchive} = new{A}(a)
 end
 
 @inline Base.length(it::EpsBoxArchiveFrontierIterator) = length(it.archive)
@@ -86,7 +86,7 @@ end
 @inline Base.next(it::EpsBoxArchiveFrontierIterator, ix::Integer) = (it.archive.frontier[ix], findnext(it.archive.frontier_isoccupied, ix+1))
 
 """
-    Get the iterator to the individuals on the Pareto frontier.
+Get the iterator to the individuals on the Pareto frontier.
 """
 pareto_frontier(a::EpsBoxArchive) = EpsBoxArchiveFrontierIterator(a)
 
@@ -102,8 +102,8 @@ function occupied_frontier_indices(a::EpsBoxArchive)
 end
 
 """
-    Get random occupied Pareto frontier index.
-    Returns 0 if frontier is empty.
+Get random occupied Pareto frontier index.
+Returns 0 if frontier is empty.
 """
 function rand_frontier_index(a::EpsBoxArchive)
     if a.len == 0
@@ -122,11 +122,11 @@ function rand_frontier_index(a::EpsBoxArchive)
 end
 
 """
-    `noprogress_streak(a::EpsBoxArchive, [since_restart])`
+    noprogress_streak(a::EpsBoxArchive, [since_restart])
 
-    Get the number of `add_candidate!()` calls since the last ϵ-progress.
-    If `since_restart` is specified, the number is relative to the last
-    restart.
+Get the number of `add_candidate!()` calls since the last ϵ-progress.
+If `since_restart` is specified, the number is relative to the last
+restart.
 """
 noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
     since_restart ?
@@ -135,6 +135,7 @@ noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
 
 best_candidate(a::EpsBoxArchive) = a.frontier[a.best_candidate_ix].params
 best_fitness(a::EpsBoxArchive) = a.best_candidate_ix > 0 ? fitness(a.frontier[a.best_candidate_ix]) : nafitness(fitness_scheme(a))
+
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
         a.n_restarts += 1
@@ -145,12 +146,12 @@ function notify!(a::EpsBoxArchive, event::Symbol)
 end
 
 """
-    `tagcounts(a::EpsBoxArchive)`
+    tagcounts(a::EpsBoxArchive)
 
-    Count the tags of individuals on the ϵ-box frontier.
-    Each restart the individual remains in the frontier discounts it by `θ`.
+Count the tags of individuals on the ϵ-box frontier.
+Each restart the individual remains in the frontier discounts it by `θ`.
 
-    Returns the `tag`→`count` dictionary.
+Returns the `tag`→`count` dictionary.
 """
 function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     (0.0 < θ <= 1.0) || throw(ArgumentError("θ ($θ) should be in (0.0, 1.0] range"))
@@ -167,8 +168,8 @@ function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     return res
 end
 
-function add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness{N,F},
-                             candidate, tag::Int=0, num_fevals::Int=-1)
+function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness{N,F},
+                        candidate, tag::Int=0, num_fevals::Int=-1) where {N,F}
     a.num_candidates += 1
     if num_fevals == -1
         num_fevals = a.num_candidates
@@ -255,12 +256,13 @@ end
 
 # actually this methods should never be called because the fitness
 # is already indexes within the method
-add_candidate!{N,F}(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
-                    candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1) =
+add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
+               candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1) where {N,F} =
     add_candidate!(a, archived_fitness(cand_fitness, a), candidate, tag, num_fevals)
 
 # called by check_stop_condition(e::Evaluator, ctrl)
 function check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl)
-    ctrl.max_steps_without_progress > 0 && noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress ?
+    ctrl.max_steps_without_progress > 0 &&
+    noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress ?
         "No epsilon-progress for more than $(ctrl.max_steps_without_progress) iterations" : ""
 end

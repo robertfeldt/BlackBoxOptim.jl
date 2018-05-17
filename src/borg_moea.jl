@@ -1,92 +1,93 @@
 """
-  Borg MOEA algorithm.
+Borg MOEA algorithm.
 
-  Based on Hadka & Reed, "Borg: An Auto-Adaptive Many-Objective Evolutionary Computing
-  Framework", Evol. Comp. 2013
+Based on Hadka & Reed, "Borg: An Auto-Adaptive Many-Objective Evolutionary Computing
+Framework", Evol. Comp. 2013
 """
-type BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<:EmbeddingOperator} <: SteppingOptimizer
-  evaluator::V
-  population::P     # candidates, NOTE index one is always reserved for one archive parent for recombination
-  rand_check_order::Vector{Int} # random population check order
+mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<:EmbeddingOperator} <: SteppingOptimizer
+    evaluator::V
+    population::P     # candidates, NOTE index one is always reserved for one archive parent for recombination
+    rand_check_order::Vector{Int} # random population check order
 
-  n_restarts::Int
-  n_steps::Int
-  last_restart_check::Int
-  last_restart::Int
-  last_wrecombinate_update::Int
+    n_restarts::Int
+    n_steps::Int
+    last_restart_check::Int
+    last_restart::Int
+    last_wrecombinate_update::Int
 
-  τ::Float64        # tournament size, fraction of the population
-  γ::Float64        # recommended population-to-archive ratio
-  γ_δ::Float64      # the maximum allowed deviation of the population-to-archive ratio from γ
-  min_popsize::Int  # the minimal population size
+    τ::Float64        # tournament size, fraction of the population
+    γ::Float64        # recommended population-to-archive ratio
+    γ_δ::Float64      # the maximum allowed deviation of the population-to-archive ratio from γ
+    min_popsize::Int  # the minimal population size
 
-  recombinate_distr::Categorical # weights of the recombination operators
+    recombinate_distr::Categorical # weights of the recombination operators
 
-  # method parameters
-  θ::Float64        # restart-discounting coefficient for recombination operator weights
-  ζ::Float64        # dampening coefficient for recombination operator weights
-  wrecombinate_update_period::Int
-  restart_check_period::Int
-  max_steps_without_ϵ_progress::Int
+    # method parameters
+    θ::Float64        # restart-discounting coefficient for recombination operator weights
+    ζ::Float64        # dampening coefficient for recombination operator weights
+    wrecombinate_update_period::Int
+    restart_check_period::Int
+    max_steps_without_ϵ_progress::Int
 
-  recombinate::Vector{CrossoverOperator} # recombination operators
+    recombinate::Vector{CrossoverOperator} # recombination operators
 
-  # Set of operators that together define a specific DE strategy.
-  select::TournamentSelector{HatCompare{FS}}         # random individuals selector
-  modify::M         # operator to mutate frontier element during restarts
-  embed::E          # embedding operator
+    # Set of operators that together define a specific DE strategy.
+    select::TournamentSelector{HatCompare{FS}}         # random individuals selector
+    modify::M         # operator to mutate frontier element during restarts
+    embed::E          # embedding operator
 
-  function (::Type{BorgMOEA}){O<:OptimizationProblem, P<:Population,
-                     M<:GeneticOperator, E<:EmbeddingOperator}(
+    function BorgMOEA(
         problem::O,
         pop::P, recombinate::Vector{CrossoverOperator},
-        modify::M = M(), embed::E = E(), params = EMPTY_PARAMS)
-    # NOTE if ϵ-dominance is used, params[:ϵ] has the priority
-    fit_scheme = fitness_scheme(problem)
-    isa(fit_scheme, TupleFitnessScheme) || throw(ArgumentError("BorgMOEA can only solve problems with `TupleFitnessScheme`"))
-    !isempty(recombinate) || throw(ArgumentError("No recombinate operators specified"))
-    fit_scheme = convert(EpsBoxDominanceFitnessScheme, fit_scheme, params[:ϵ])
-    archive = EpsBoxArchive(fit_scheme, params)
-    evaluator = make_evaluator(problem, archive, params)
-    new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
-           params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
-           Categorical(ones(length(recombinate))/length(recombinate)),
-           params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
-           params[:MaxStepsWithoutProgress],
-           recombinate,
-           TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
-  end
+        modify::M = M(), embed::E = E(), params = EMPTY_PARAMS) where
+            {O<:OptimizationProblem, P<:Population,
+             M<:GeneticOperator, E<:EmbeddingOperator}
+        # NOTE if ϵ-dominance is used, params[:ϵ] has the priority
+        fit_scheme = fitness_scheme(problem)
+        isa(fit_scheme, TupleFitnessScheme) || throw(ArgumentError("BorgMOEA can only solve problems with `TupleFitnessScheme`"))
+        !isempty(recombinate) || throw(ArgumentError("No recombinate operators specified"))
+        fit_scheme = EpsBoxDominanceFitnessScheme(fit_scheme, params[:ϵ])
+        archive = EpsBoxArchive(fit_scheme, params)
+        evaluator = make_evaluator(problem, archive, params)
+        new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
+                params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
+                Categorical(ones(length(recombinate))/length(recombinate)),
+                params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
+                params[:MaxStepsWithoutProgress],
+                recombinate,
+                TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
+    end
 end
 
 const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, ParamsDict(
-  :ϵ => 0.1,        # size of the ϵ-box
-  :τ => 0.02,       # selection ratio, fraction of population to use for tournament
-  :γ => 4.0,        # recommended population-to-archive ratio
-  :γ_δ => 0.25,     # the maximum allowed deviation of the population-to-archive ratio from γ
-  :θ => 0.9,        # restart-discounting coefficient for recombination operator weights
-  :ζ => 1.0,        # dampening coefficient for recombination operator weights
-  :RestartCheckPeriod => 1000,
-  :OperatorsUpdatePeriod => 100,
-  :MaxStepsWithoutProgress => 100
+    :ϵ => 0.1,        # size of the ϵ-box
+    :τ => 0.02,       # selection ratio, fraction of population to use for tournament
+    :γ => 4.0,        # recommended population-to-archive ratio
+    :γ_δ => 0.25,     # the maximum allowed deviation of the population-to-archive ratio from γ
+    :θ => 0.9,        # restart-discounting coefficient for recombination operator weights
+    :ζ => 1.0,        # dampening coefficient for recombination operator weights
+    :RestartCheckPeriod => 1000,
+    :OperatorsUpdatePeriod => 100,
+    :MaxStepsWithoutProgress => 100
 ))
 
-function borg_moea{FS<:TupleFitnessScheme}(problem::OptimizationProblem{FS}, options::Parameters = EMPTY_PARAMS)
-  opts = chain(BorgMOEA_DefaultParameters, options)
-  fs = fitness_scheme(problem)
-  N = numobjectives(fs)
-  F = fitness_eltype(fs)
-  pop = population(problem, opts, nafitness(IndexedTupleFitness{N,F}), ntransient=1)
-  BorgMOEA(problem, pop, CrossoverOperator[DiffEvoRandBin1(chain(DE_DefaultOptions, options)),
+function borg_moea(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
+    opts = chain(BorgMOEA_DefaultParameters, options)
+    fs = fitness_scheme(problem)
+    N = numobjectives(fs)
+    F = fitness_eltype(fs)
+    pop = population(problem, opts, nafitness(IndexedTupleFitness{N,F}), ntransient=1)
+    BorgMOEA(problem, pop, CrossoverOperator[DiffEvoRandBin1(chain(DE_DefaultOptions, options)),
                                            SimulatedBinaryCrossover(chain(SBX_DefaultOptions, options)),
                                            SimplexCrossover{3}(chain(SPX_DefaultOptions, options)),
                                            ParentCentricCrossover{2}(chain(PCX_DefaultOptions, options)),
                                            ParentCentricCrossover{3}(chain(PCX_DefaultOptions, options)),
                                            UnimodalNormalDistributionCrossover{2}(chain(UNDX_DefaultOptions, options)),
                                            UnimodalNormalDistributionCrossover{3}(chain(UNDX_DefaultOptions, options))],
-           FixedGeneticOperatorsMixture(GeneticOperator[
+            FixedGeneticOperatorsMixture(GeneticOperator[
                                             MutationClock(PolynomialMutation(search_space(problem), chain(PM_DefaultOptions, options)), 1/numdims(problem)),
                                             MutationClock(UniformMutation(search_space(problem)), 1/numdims(problem))], [0.75, 0.25]),
-           RandomBound(search_space(problem)), opts)
+            RandomBound(search_space(problem)), opts)
 end
 
 archive(alg::BorgMOEA) = alg.evaluator.archive
@@ -220,12 +221,13 @@ function update_population_fitness!(alg::BorgMOEA)
 end
 
 """
-  Update recombination operator probabilities based on the archive tag counts.
+Update recombination operator probabilities based on the archive tag counts.
 """
 function update_recombination_weights!(alg::BorgMOEA)
     op_counts = tagcounts(archive(alg), alg.θ)
     adj_op_counts = sum(values(op_counts)) + length(alg.recombinate)*alg.ζ
-    alg.recombinate_distr = Categorical([(get(op_counts, i, 0)+alg.ζ)/adj_op_counts for i in eachindex(alg.recombinate)])
+    alg.recombinate_distr = Categorical([(get(op_counts, i, 0)+alg.ζ)/adj_op_counts
+                                        for i in eachindex(alg.recombinate)])
     alg.last_wrecombinate_update = alg.n_steps
     return alg
 end
@@ -252,9 +254,9 @@ function populate_by_mutants(alg::BorgMOEA, last_nonmutant::Int)
 end
 
 """
-    Restart Borg MOEA.
+Restart Borg MOEA.
 
-    Resize and refills the population from the archive.
+Resize and refills the population from the archive.
 """
 function restart!(alg::BorgMOEA)
     notify!(archive(alg), :restart)

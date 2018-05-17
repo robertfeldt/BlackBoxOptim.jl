@@ -1,9 +1,9 @@
 """
-    Simulated Binary Crossover (SBX).
+Simulated Binary Crossover (SBX).
 
-    See Deb&Agrawal "Simulated binary crossover for continuous search space", 1994, Complex Systems
+See Deb&Agrawal "Simulated binary crossover for continuous search space", 1994, Complex Systems
 """
-immutable SimulatedBinaryCrossover <: CrossoverOperator{2,2}
+struct SimulatedBinaryCrossover <: CrossoverOperator{2,2}
     p::Float64      # probability to modify a dimension
     η::Float64      # distribution index
     η_exp::Float64  # pre-processed index
@@ -28,7 +28,9 @@ function randbeta(xover::SimulatedBinaryCrossover)
     return (u < 0.5 ? 2*u : 1/(2*(1-u)))^xover.η_exp
 end
 
-function apply!(xover::SimulatedBinaryCrossover, targets::Vector{Individual}, targetIndices::Vector{Int}, pop, parentIndices)
+function apply!(xover::SimulatedBinaryCrossover,
+                targets::Vector{Individual}, targetIndices::Vector{Int},
+                pop, parentIndices)
     @assert length(targets) == 2
     @assert length(targetIndices) == 2
     @assert length(parentIndices) == 2

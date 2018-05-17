@@ -15,26 +15,25 @@ Hartman6 = minimization_problem(hartman6, "Hartman6", (0.0, 1.0), 6, -3.32237)
 Hartman3 = minimization_problem(hartman3, "Hartman3", (0.0, 1.0), 3, -3.860038442)
 
 """
-  JADE collection of optimization problems.
+JADE collection of optimization problems.
 
-  We skip (for now) `f12` and `f13` in the JADE paper since they are penalized
-  functions which are quite nonstandard. We also skip `f8` since we are unsure
-  about its proper implementation.
+We skip (for now) `f12` and `f13` in the JADE paper since they are penalized
+functions which are quite nonstandard. We also skip `f8` since we are unsure
+about its proper implementation.
 """
 const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
-  1   => MinimizationProblemFamily(sphere, "Sphere", (-100.0, 100.0), 0.0),
-  2   => MinimizationProblemFamily(schwefel2_22,  "Schwefel2.22",  ( -10.0,  10.0), 0.0),
-  3   => MinimizationProblemFamily(schwefel1_2,   "Schwefel1.2",   (-100.0, 100.0), 0.0),
-  4   => MinimizationProblemFamily(schwefel2_21,  "Schwefel2.21",  (-100.0, 100.0), 0.0),
-  5   => MinimizationProblemFamily(rosenbrock,    "Rosenbrock",    ( -30.0,  30.0), 0.0),
-  6   => MinimizationProblemFamily(s2_step,       "Step",          (-100.0, 100.0), 0.0),
-  7   => MinimizationProblemFamily(noisy_quartic, "Noisy quartic", ( -30.0,  30.0)),
-#  8   => MinimizationProblemFamily(schwefel2_26,  "Schwefel2.26",  (-500.0, 500.0)),
-  9   => MinimizationProblemFamily(rastrigin,     "Rastrigin",     ( -5.12,  5.12), 0.0),
-  10  => MinimizationProblemFamily(ackley,        "Ackley",        ( -32.0,  32.0), 0.0),
-  11  => MinimizationProblemFamily(griewank,      "Griewank",      (-600.0, 600.0), 0.0)
+    1   => MinimizationProblemFamily(sphere, "Sphere", (-100.0, 100.0), 0.0),
+    2   => MinimizationProblemFamily(schwefel2_22,  "Schwefel2.22",  ( -10.0,  10.0), 0.0),
+    3   => MinimizationProblemFamily(schwefel1_2,   "Schwefel1.2",   (-100.0, 100.0), 0.0),
+    4   => MinimizationProblemFamily(schwefel2_21,  "Schwefel2.21",  (-100.0, 100.0), 0.0),
+    5   => MinimizationProblemFamily(rosenbrock,    "Rosenbrock",    ( -30.0,  30.0), 0.0),
+    6   => MinimizationProblemFamily(s2_step,       "Step",          (-100.0, 100.0), 0.0),
+    7   => MinimizationProblemFamily(noisy_quartic, "Noisy quartic", ( -30.0,  30.0)),
+#    8   => MinimizationProblemFamily(schwefel2_26,  "Schwefel2.26",  (-500.0, 500.0)),
+    9   => MinimizationProblemFamily(rastrigin,     "Rastrigin",     ( -5.12,  5.12), 0.0),
+    10  => MinimizationProblemFamily(ackley,        "Ackley",        ( -32.0,  32.0), 0.0),
+    11  => MinimizationProblemFamily(griewank,      "Griewank",      (-600.0, 600.0), 0.0)
 )
-
 
 #####################################################################
 # S3 Base functions.
@@ -46,12 +45,12 @@ const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
 #####################################################################
 
 """
-  A `TransformedProblem` just makes a few changes in an original problem but refers
-  most func calls to it.
+A `TransformedProblem` just makes a few changes in an original problem but refers
+most func calls to it.
 
-  The concrete derived types must implement a `sub_problem()` method.
+The concrete derived types must implement a `sub_problem()` method.
 """
-@compat abstract type TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS} end
+abstract type TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS} end
 
 search_space(tp::TransformedProblem) = search_space(sub_problem(tp))
 is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(tp))
@@ -61,19 +60,19 @@ fmins(tp::TransformedProblem) = fmins(sub_problem(tp))
 name(tp::TransformedProblem) = name(sub_problem(tp))
 
 """
-  A `TransformedProblem` subclass that shifts the minimum value and biases the returned
-  function values.
+A `TransformedProblem` subclass that shifts the minimum value and biases the returned
+function values.
 """
-type ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
-  xshift::Vector{Float64}
-  funcshift::Float64
-  subp::OptimizationProblem{FS}
+struct ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
+    xshift::Vector{Float64}
+    funcshift::Float64
+    subp::OptimizationProblem{FS}
 
-  ShiftedAndBiasedProblem(sub_problem::OptimizationProblem{FS};
-    xshift = false, funcshift = 0.0) = begin
-    xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
-    new(xshift[:], funcshift, sub_problem)
-  end
+    function ShiftedAndBiasedProblem(sub_problem::OptimizationProblem{FS};
+        xshift = false, funcshift = 0.0) where {FS <: FitnessScheme}
+        xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
+        new{FS}(xshift[:], funcshift, sub_problem)
+    end
 end
 
 sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
@@ -81,14 +80,13 @@ sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
 is_fixed_dimensional(p::ShiftedAndBiasedProblem) = is_fixed_dimensional(sub_problem(p))
 
 """
-  Evaluate fitness by first shifting `x` and then biasing the returned function value.
+Evaluate fitness by first shifting `x` and then biasing the returned function value.
 """
-evalfunc(x, i, sp::ShiftedAndBiasedProblem) = begin
+evalfunc(x, i, sp::ShiftedAndBiasedProblem) =
   ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
-end
 
-shifted{FS<:FitnessScheme}(p::OptimizationProblem{FS}; funcshift = 0.0) = ShiftedAndBiasedProblem{FS}(p;
-  funcshift = funcshift)
+shifted(p::OptimizationProblem{FS}; funcshift = 0.0) where {FS<:FitnessScheme} =
+    ShiftedAndBiasedProblem(p; funcshift = funcshift)
 
 
 #####################################################################
@@ -98,23 +96,23 @@ shifted{FS<:FitnessScheme}(p::OptimizationProblem{FS}; funcshift = 0.0) = Shifte
 s1_sphere = sphere
 
 function s1_elliptic(x)
-  xt = t_irreg(x)
-  elliptic(xt)
+    xt = t_irreg(x)
+    elliptic(xt)
 end
 
 function s1_rastrigin(x)
-  xt = t_diag(t_asy(t_irreg(x), 0.2), 10)
-  rastrigin(xt)
+    xt = t_diag(t_asy(t_irreg(x), 0.2), 10)
+    rastrigin(xt)
 end
 
 function s1_ackley(x)
-  xt = t_diag(t_asy(t_irreg(x), 0.2), 10)
-  ackley(xt)
+    xt = t_diag(t_asy(t_irreg(x), 0.2), 10)
+    ackley(xt)
 end
 
 function s1_schwefel(x)
-  xt = t_asy(t_irreg(x), 0.2)
-  schwefel1_2(xt)
+    xt = t_asy(t_irreg(x), 0.2)
+    schwefel1_2(xt)
 end
 
 s1_rosenbrock = rosenbrock
@@ -125,76 +123,76 @@ s1_rosenbrock = rosenbrock
 #####################################################################
 
 """
-  Transform symmetric `f` into asymmetric objective function.
+Transform symmetric `f` into asymmetric objective function.
 """
 function t_asy(f, beta)
-  D = length(f)
-  g = copy(f)
-  temp = beta * linspace(0, 1, D)
-  ind = collect(1:D)[f .> 0]
-  t = f[ind] .^ (1 + temp[ind] .* sqrt(f[ind]))
-  setindex!(g, t, ind)
-  g
+    D = length(f)
+    g = copy(f)
+    temp = beta * linspace(0, 1, D)
+    ind = collect(1:D)[f .> 0]
+    t = f[ind] .^ (1 + temp[ind] .* sqrt(f[ind]))
+    setindex!(g, t, ind)
+    return g
 end
 
 """
-  Transform `f` into objective function with ill-conditioning effect.
+Transform `f` into objective function with ill-conditioning effect.
 """
 function t_diag(f, alpha)
-  D = length(f)
-  scales = sqrt(alpha) .^ linspace(0, 1, D)
-  scales .* f
+    D = length(f)
+    scales = sqrt(alpha) .^ linspace(0, 1, D)
+    return scales .* f
 end
 
 """
-  Transform `f` into objective function with smooth local irregularities.
+Transform `f` into objective function with smooth local irregularities.
 """
 function t_irreg(f)
-   a = 0.1
-   g = copy(f)
-   indices = collect(1:length(f))
+    a = 0.1
+    g = copy(f)
+    indices = collect(1:length(f))
 
-   idxp = indices[f .> 0]
-   t = log(f[idxp])/a
-   r = exp(t + 0.49*(sin(t) + sin(0.79*t))).^a
-   setindex!(g, r, idxp)
+    idxp = indices[f .> 0]
+    t = log(f[idxp])/a
+    r = exp(t + 0.49*(sin(t) + sin(0.79*t))).^a
+    setindex!(g, r, idxp)
 
-   idxn = indices[f .< 0]
-   t = log(-f[idxn])/a
-   r = -exp(t + 0.49*(sin(0.55*t) + sin(0.31*t))).^a
-   setindex!(g, r, idxn)
+    idxn = indices[f .< 0]
+    t = log(-f[idxn])/a
+    r = -exp(t + 0.49*(sin(0.55*t) + sin(0.31*t))).^a
+    setindex!(g, r, idxn)
 
-   g
+    return g
 end
 
 function xshifted(n, f)
-  move = 10.0 * randn(n, 1)
-  transformed_f(x) = f(x .- move)
+    move = 10.0 * randn(n, 1)
+    transformed_f(x) = f(x .- move)
 end
 
 function xrotatedandshifted(n, f, shiftAmplitude = 1.0, rotateAmplitude = 1.0)
-  shift = shiftAmplitude * randn(n, 1)
-  rotmatrix = rotateAmplitude * rand(n, n)
-  transformed_f(x) = f(rotmatrix * (x .- shift))
+    shift = shiftAmplitude * randn(n, 1)
+    rotmatrix = rotateAmplitude * rand(n, n)
+    transformed_f(x) = f(rotmatrix * (x .- shift))
 end
 
 const example_problems = Dict{String, Union{OptimizationProblem,FunctionBasedProblemFamily}}(
-  "Sphere" => JadeFunctionSet[1],
-  "Rosenbrock" => JadeFunctionSet[5],
-  "Schwefel2.22" => JadeFunctionSet[2],
-  "Schwefel1.2" => JadeFunctionSet[3],
-  "Schwefel2.21" => JadeFunctionSet[4],
-  "Step" => JadeFunctionSet[6],
-  "Rastrigin" => JadeFunctionSet[9],
-  "Ackley" => JadeFunctionSet[10],
-  "Griewank" => JadeFunctionSet[11],
-  "Ellipsoid" => MinimizationProblemFamily(ellipsoid, "Ellipsoid", (-65.536, 65.536), 0.0),
-  "Cigar" => MinimizationProblemFamily(cigar, "Cigar", (-100.0, 100.0), 0.0),
-  "DeceptiveCuccu2011_15_2" => MinimizationProblemFamily(deceptive_cuccu2011_15_2, "DeceptiveCuccu2011_15_2", (-100.0, 100.0), 0.0),
-  "Shekel10" => Shekel10,
-  "Shekel7" => Shekel7,
-  "Shekel5" => Shekel5,
-  "Hartman6" => Hartman6,
-  "Hartman3" => Hartman3,
-  "Tsallis1996" => MinimizationProblemFamily(energy_tsallis1996, "Tsallis1996", (-100.0, 100.0), 0.0),
+    "Sphere" => JadeFunctionSet[1],
+    "Rosenbrock" => JadeFunctionSet[5],
+    "Schwefel2.22" => JadeFunctionSet[2],
+    "Schwefel1.2" => JadeFunctionSet[3],
+    "Schwefel2.21" => JadeFunctionSet[4],
+    "Step" => JadeFunctionSet[6],
+    "Rastrigin" => JadeFunctionSet[9],
+    "Ackley" => JadeFunctionSet[10],
+    "Griewank" => JadeFunctionSet[11],
+    "Ellipsoid" => MinimizationProblemFamily(ellipsoid, "Ellipsoid", (-65.536, 65.536), 0.0),
+    "Cigar" => MinimizationProblemFamily(cigar, "Cigar", (-100.0, 100.0), 0.0),
+    "DeceptiveCuccu2011_15_2" => MinimizationProblemFamily(deceptive_cuccu2011_15_2, "DeceptiveCuccu2011_15_2", (-100.0, 100.0), 0.0),
+    "Shekel10" => Shekel10,
+    "Shekel7" => Shekel7,
+    "Shekel5" => Shekel5,
+    "Hartman6" => Hartman6,
+    "Hartman3" => Hartman3,
+    "Tsallis1996" => MinimizationProblemFamily(energy_tsallis1996, "Tsallis1996", (-100.0, 100.0), 0.0),
 )

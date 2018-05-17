@@ -1,8 +1,8 @@
-@compat abstract type NewFitness end
+abstract type NewFitness end
 
-@compat abstract type SingleObjectiveFitness <: NewFitness end
+abstract type SingleObjectiveFitness <: NewFitness end
 
-@compat abstract type MultiObjectiveFitness <: NewFitness end
+abstract type MultiObjectiveFitness <: NewFitness end
 
 # Some evaluators go through several stages of fitness evaluation:
 #   1. a candidate is simulated -> *simulation(s)*
@@ -22,16 +22,16 @@ simulations(f::NewFitness) = characteristics(f)
 characteristics(f::NewFitness) = fitnessvalues(f)
 evaluator(f::NewFitness) = nothing
 
-type SingleNumberFitness{T <: Real} <: SingleObjectiveFitness
-  fvalue::T
+struct SingleNumberFitness{T <: Real} <: SingleObjectiveFitness
+    fvalue::T
 end
 
-type VectorFitness{T <: Real} <: MultiObjectiveFitness
-  fvalues::Vector{T}
+struct VectorFitness{T <: Real} <: MultiObjectiveFitness
+    fvalues::Vector{T}
 end
 
-makefitness{T <: Real}(fvalue::T) = SingleNumberFitness(fvalue)
-makefitness{T <: Real}(fvalues::Vector{T}) = VectorFitness(fvalues)
+makefitness(fvalue::T) where {T <: Real} = SingleNumberFitness(fvalue)
+makefitness(fvalues::Vector{T}) where {T <: Real} = VectorFitness(fvalues)
 
-fitnessvalues{T <: Real}(f::VectorFitness{T}) = f.fvalues
-fitnessvalues{T <: Real}(f::SingleNumberFitness{T}) = [f.fvalue]
+fitnessvalues(f::VectorFitness{T}) where {T <: Real} = f.fvalues
+fitnessvalues(f::SingleNumberFitness{T}) where {T <: Real} = [f.fvalue]

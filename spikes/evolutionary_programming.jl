@@ -11,7 +11,7 @@ PopulationBasedEvolutionaryProgrammingDefaultParameters = {
 # datum while the generic population-based EP is kept in a single type. This
 # way we can easily change the strategy without having to rewrite the common parts
 # throughout.
-@compat abstract type EvolutionaryProgrammingStrategy end
+abstract type EvolutionaryProgrammingStrategy end
 
 type PopulationBasedEvolutionaryProgramming <: PopulationOptimizer
   parameters::Parameters

@@ -1,26 +1,28 @@
 """
-    Simplex Crossover (SPX).
+Simplex Crossover (SPX).
 
-    `ϵ>0` controls how the original simplex is inflated, `ϵ=1` means no
-    inflation.
+`ϵ>0` controls how the original simplex is inflated, `ϵ=1` means no
+inflation.
 
-    See Tsutsui, Yamamura & Higuchi "Multi-parent recombination with simplex crossover in real coded genetic algorithms", 1999,
-    Proc. of the Genetic and Evolutionary Computation Conference
+See Tsutsui, Yamamura & Higuchi "Multi-parent recombination with simplex crossover in real coded genetic algorithms", 1999,
+Proc. of the Genetic and Evolutionary Computation Conference
 """
-immutable SimplexCrossover{NP} <: CrossoverOperator{NP,1}
+struct SimplexCrossover{NP} <: CrossoverOperator{NP,1}
     ϵ::Float64      # inflation rate
 
-    SimplexCrossover(ϵ::Number = Math.sqrt(NP + 1)) = new(ϵ)
-    SimplexCrossover(params::Parameters) = new(params[:SPX_ϵ])
+    SimplexCrossover{NP}(ϵ::Number = Math.sqrt(NP + 1)) where NP = new{NP}(ϵ)
+    SimplexCrossover{NP}(params::Parameters) where NP = new{NP}(params[:SPX_ϵ])
 end
 
 const SPX_DefaultOptions = ParamsDict(
-  :SPX_ϵ => 1.1 # how much to inflate
+    :SPX_ϵ => 1.1 # how much to inflate
 )
 
 #masscenter(pop, parentIndices) = mapslices(mean, pop[:, parentIndices], 2)
 
-function apply!{NP}(xover::SimplexCrossover{NP}, target::Individual, targetIndex::Int, pop, parentIndices)
+function apply!(xover::SimplexCrossover{NP},
+                target::Individual, targetIndex::Int,
+                pop, parentIndices) where NP
     @assert length(parentIndices) == NP
 
     offset = zeros(target)

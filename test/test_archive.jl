@@ -49,8 +49,8 @@
         @test delta_fitness(a)    == 0.5
 
         expected = ((0.8 - 0.5) / ((1 - 0.05)^(-2/1) - 1))
-        @test width_of_confidence_interval(a, 0.05) == expected
-        @test fitness_improvement_potential(a, 0.05) == (expected / 0.50)
+        @test width_of_confidence_interval(a, 0.05) ≈ expected
+        @test fitness_improvement_potential(a, 0.05) ≈ (expected / 0.50)
 
         BlackBoxOptim.add_candidate!(a, 0.4, [1.9])
         @test capacity(a)       == 3
@@ -61,8 +61,8 @@
         @test isapprox(delta_fitness(a), 0.1)
 
         expected = ((0.5 - 0.4) / ((1 - 0.05)^(-2/1) - 1))
-        @test width_of_confidence_interval(a, 0.05) == expected
-        @test fitness_improvement_potential(a, 0.05) == (expected / 0.40)
+        @test width_of_confidence_interval(a, 0.05) ≈ expected
+        @test fitness_improvement_potential(a, 0.05) ≈ (expected / 0.40)
 
         # identical candidate is not inserted
         BlackBoxOptim.add_candidate!(a, 0.5, [2.0])

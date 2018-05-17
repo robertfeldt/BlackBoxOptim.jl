@@ -286,7 +286,7 @@ end
 
 # We create different types of Covariance matrix samplers based on different
 # decompositions.
-@compat abstract type CovarianceMatrixSampler end
+abstract type CovarianceMatrixSampler end
 
 function update_covariance_matrix!(cms::CovarianceMatrixSampler, delta, a)
   C = a * cms.C + (1 - a) * delta

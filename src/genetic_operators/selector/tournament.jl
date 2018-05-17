@@ -1,14 +1,14 @@
 """
-  Tournament selector.
+Tournament selector.
 """
-type TournamentSelector{H} <: IndividualsSelector
+mutable struct TournamentSelector{H} <: IndividualsSelector
     hat_comp::H     # fitness comparison tri-valued operator
     size::Int       # tournament size
+end
 
-    function (::Type{TournamentSelector}){FS}(fs::FS, size::Int=2)
-        h = HatCompare(fs)
-        new{typeof(h)}(h, size)
-    end
+function TournamentSelector(fs::FitnessScheme, size::Int=2)
+    h = HatCompare(fs)
+    TournamentSelector{typeof(h)}(h, size)
 end
 
 # selection using `n_tours` tournaments
@@ -26,14 +26,12 @@ function select(sel::TournamentSelector, population, n_tours::Int)
 end
 
 """
-    Simulate tournament among specified `candidates`.
+Simulate tournament among specified `candidates`.
 
-    Returns the index of the winner.
+Returns the index of the winner.
 """
 function tournament(sel::TournamentSelector, population, candidates)
-    if isempty(candidates)
-        return 0
-    end
+    isempty(candidates) && return 0
     @inbounds begin
         winner_ix = candidates[1]
         best_fitness = fitness(population, winner_ix)

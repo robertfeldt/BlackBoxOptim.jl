@@ -1,27 +1,30 @@
 """
-    Parent Centric Crossover (PCX).
+Parent Centric Crossover (PCX).
 
-    See
-        Deb, K., Anand, A., and Joshi, D., "A Computationally Efficient Evolutionary Algorithm for Real-Parameter Optimization," Evolutionary Computation, vol. 10, no. 4, pp. 371-395, 2002.
+See
+    Deb, K., Anand, A., and Joshi, D., "A Computationally Efficient Evolutionary Algorithm for Real-Parameter Optimization," Evolutionary Computation, vol. 10, no. 4, pp. 371-395, 2002.
 """
-immutable ParentCentricCrossover{NP} <: CrossoverOperator{NP,1}
+struct ParentCentricCrossover{NP} <: CrossoverOperator{NP,1}
 	ζ::Float64 # sd for the orthogonal directions defined by 2nd,3rd etc parents
     η::Float64 # sd for the direction of the 1st parent
 
-    function ParentCentricCrossover(ζ::Number, η::Number)
+    function ParentCentricCrossover{NP}(ζ::Number, η::Number) where NP
         ζ > 0 || throw(ArgumentError("ζ must be positive"))
         η > 0 || throw(ArgumentError("η must be non-negative"))
-        new(ζ, η)
+        new{NP}(ζ, η)
     end
-    ParentCentricCrossover(params::Parameters) = new(params[:PCX_ζ], params[:PCX_η])
+    ParentCentricCrossover{NP}(params::Parameters) where NP =
+        new{NP}(params[:PCX_ζ], params[:PCX_η])
 end
 
 const PCX_DefaultOptions = ParamsDict(
-  :PCX_ζ => 0.1,
-  :PCX_η => 0.5
+    :PCX_ζ => 0.1,
+    :PCX_η => 0.5
 )
 
-function apply!{NP}(xover::ParentCentricCrossover{NP}, target::Individual, targetIndex::Int, pop, parentIndices)
+function apply!(xover::ParentCentricCrossover{NP},
+                target::Individual, targetIndex::Int,
+                pop, parentIndices) where NP
     @assert length(parentIndices) == NP
 
     parents_centered = pop[:, parentIndices]

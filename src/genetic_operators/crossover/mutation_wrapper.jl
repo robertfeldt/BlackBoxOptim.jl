@@ -1,15 +1,16 @@
 """
-    Wraps the mutation operator, so that it could
-    be used as crossover operator.
+Wraps the mutation operator, so that it could
+be used as crossover operator.
 """
-immutable MutationWrapper{OP<:MutationOperator} <: CrossoverOperator{1,1}
+struct MutationWrapper{OP<:MutationOperator} <: CrossoverOperator{1,1}
     inner::OP
 
-    (::Type{MutationWrapper}){OP<:MutationOperator}(mutation::OP) =
+    MutationWrapper(mutation::OP) where {OP<:MutationOperator} =
         new{OP}(mutation)
 end
 
-function apply!(wrapper::MutationWrapper, target::Individual, targetIndex::Int, pop, parentIndices)
+function apply!(wrapper::MutationWrapper,
+                target::Individual, targetIndex::Int, pop, parentIndices)
     @assert length(parentIndices) == 1
     apply!(wrapper.inner, copy!(target, viewer(pop, parentIndices[1])), targetIndex)
 end

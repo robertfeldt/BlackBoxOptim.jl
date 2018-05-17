@@ -1,20 +1,21 @@
 """
-  Polynomial mutation as presented in the paper:
+Polynomial mutation as presented in the paper:
     Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
 """
-immutable PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
+struct PolynomialMutation{SS<:SearchSpace} <: GibbsMutationOperator
     ss::SS
     η::Float64
 
-    (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, η = 50.0) = new{SS}(ss, η)
-    (::Type{PolynomialMutation}){SS<:SearchSpace}(ss::SS, options::Parameters) = new{SS}(ss, options[:PM_η])
+    PolynomialMutation(ss::SS, η = 50.0) where {SS<:SearchSpace} = new{SS}(ss, η)
+    PolynomialMutation(ss::SS, options::Parameters) where {SS<:SearchSpace} =
+        new{SS}(ss, options[:PM_η])
 end
 
 """
-   Default parameters for `PolynomialMutation`.
+Default parameters for `PolynomialMutation`.
 """
 const PM_DefaultOptions = ParamsDict(
-  :PM_η => 50.0,
+    :PM_η => 50.0,
 )
 
 function apply(m::PolynomialMutation, v::Number, dim::Int, target_index::Int)
