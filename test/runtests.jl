@@ -4,6 +4,8 @@ end
 
 module BlackBoxOptimTests
 
+using CSV
+
 startclocktime = time()
 include("helper.jl")
 
@@ -66,7 +68,7 @@ using DataFrames
 TestTimingFileName = "test/timing_testing.csv"
 
 if isfile("test/timing_testing.csv")
-    timing_data = readtable("test/timing_testing.csv")
+    timing_data = CSV.read("test/timing_testing.csv")
 else
     timing_data = DataFrame(TimeStamp = AbstractString[],
                             Julia = AbstractString[],
@@ -108,7 +110,7 @@ if Main.TimeTestExecution
     using SHA
     hash = bytes2hex(sha512(join(map(fn -> readstring(open(joinpath("test", fn))), my_tests))))[1:16]
     push!(timing_data, [datestr, versionstr, gitstr, "TOTAL TIME for $(length(my_tests)) test files, $(hash)", elapsed])
-    writetable(TestTimingFileName, timing_data)
+    CSV.write(TestTimingFileName, timing_data)
     println("Wrote $(nrow(timing_data)) rows to file $TestTimingFileName")
 end
 
