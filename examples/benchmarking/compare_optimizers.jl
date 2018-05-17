@@ -272,9 +272,11 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
   vcat(dfs)
 end
 
+using CSV
+
 function read_benchmark_db(filename)
   if isfile(filename)
-    return readtable(filename)
+    return CSV.read(filename)
   else
     return DataFrame()
   end
@@ -331,17 +333,17 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
     df = join(summarydf, permethod, on = :Method)
 
     # Now sort and print
-    sort!(df; cols = [:MeanRank, :MeanRankTime, :Num1sFitness])
+    sort!(df; [:MeanRank, :MeanRankTime, :Num1sFitness])
     println(df)
     if typeof(saveResultCsvFile) <: AbstractString && length(saveResultCsvFile) > 0
-        writetable(saveResultCsvFile, df)
+        CSV.write(saveResultCsvFile, df)
         println("Results written to file: ", saveResultCsvFile)
     end
   end
 end
 
 function save_result_database(db, filename)
-  writetable(filename, db)
+  CSV.write(filename, db)
 end
 
 function update_benchmarks(db, pset, optimizers, nreps = 10)
@@ -373,8 +375,8 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 probname, numdims, popsize, numfevals = pd
                 psel = db[:,:Problem] .== probname
                 dsel = db[:,:NumDims] .== numdims
-                df = db[optsel & psel & dsel,:]
-                benchfitnesses = df[:,:Fitness]
+                df = db[optsel .& psel .& dsel,:]
+                benchfitnesses = collect(skipmissing(df[:,:Fitness]))
                 newfs = Float64[]
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
@@ -406,17 +408,17 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
 
         # Use Benjamini-Hochberg to judge which pvalues are significant given we did
         # many comparisons.
-        pvs = convert(Array, df[:Pvalue])
+        pvs = convert(Array, collect(skipmissing(df[:Pvalue])))
         @show pvs
         df[:SignificantBH001] = benjamini_hochberg(pvs, 0.01)
         df[:SignificantBH005] = benjamini_hochberg(pvs, 0.05)
         df[:SignificantBH010] = benjamini_hochberg(pvs, 0.10)
 
-        writetable(Libc.strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
+        CSV.write(Libc.strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
     else
-        df = readtable(comparisonfile)
+        df = CSV.read(comparisonfile)
     end
-    sort!(df; cols = [:Pvalue])
+    sort!(df, [:Pvalue])
     report_below_pvalue(df, 1.00)
     report_below_pvalue(df, 0.05)
     report_below_pvalue(df, 0.01)
