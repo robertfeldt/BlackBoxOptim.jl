@@ -63,7 +63,7 @@ step(x) = sum(xx -> ceil(xx + 0.5), x)
 
 function griewank(x)
     n = length(x)
-    1 + (1/4000)*sum(abs2, x) - prod(cos(x ./ sqrt(1:n)))
+    1 + (1/4000)*sum(abs2, x) - prod(cos.(x ./ sqrt.(1:n)))
 end
 
 schwefel2_22(x) = sum(abs, x) + prod(abs, x)
