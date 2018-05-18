@@ -1,5 +1,9 @@
 __precompile__()
 
+if VERSION > v"0.7.0-DEV.0"
+    using Random
+end
+
 module BlackBoxOptim
 
 using Distributions, StatsBase, Compat

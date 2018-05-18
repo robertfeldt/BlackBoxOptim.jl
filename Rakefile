@@ -2,9 +2,9 @@ Lib = "BlackBoxOptim"
 TestDir = "test"
 
 # General parameters that the user can set from the command line.
-Julia = ENV["minreps"] || "julia"
-Julia05 = "julia05"
+Julia = "julia"
 Julia06 = "julia06"
+Julia07 = "julia07"
 MinReps = (ENV["minreps"] || 30).to_i
 MaxReps = (ENV["maxreps"] || 1000).to_i
 MaxRepTime = (ENV["maxreptime"] || 1.0).to_f
@@ -22,18 +22,13 @@ task :atest do
   sh "#{BaseCommand} test/run_autotests.jl"
 end
 
-Command = "#{Julia} --color=yes -L src/BlackBoxOptim.jl"
-Command05 = "#{Julia05} --color=yes -L src/BlackBoxOptim.jl"
-Command06 = "#{Julia06} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
+Command06 = "#{Julia06} --color=yes -L src/BlackBoxOptim.jl"
+Command07 = "#{Julia07} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
+Command = Command06
 
 desc "Run normal (fast) tests"
 task :runtest do
   sh "#{Command} test/runtests.jl"
-end
-
-desc "Run normal (fast) tests on Julia 0.6"
-task :runtest6 do
-  sh "#{Command06} test/runtests.jl"
 end
 
 desc "Run normal (fast) tests, while timing test execution"
@@ -41,14 +36,14 @@ task :timedruntest do
   sh "#{Command} test/timedruntests.jl"
 end
 
-desc "Run normal (fast) tests on Julia 0.5"
-task :runtest5 do
-  sh "#{Command05} test/runtests.jl"
+desc "Run normal (fast) tests on Julia 0.7"
+task :runtest7 do
+  sh "#{Command07} test/runtests.jl"
 end
 
-desc "Run normal (fast) tests on Julia 0.5, while timing test execution"
-task :timedruntest5 do
-  sh "#{Command05} test/timedruntests.jl"
+desc "Run normal (fast) tests on Julia 0.7, while timing test execution"
+task :timedruntest7 do
+  sh "#{Command07} test/timedruntests.jl"
 end
 
 desc "Run slow tests"
@@ -98,7 +93,6 @@ end
 
 task :at => :runalltest
 task :st => :runslowtest
-
 task :default => :runtest
 
 def loc_of_files(files)
