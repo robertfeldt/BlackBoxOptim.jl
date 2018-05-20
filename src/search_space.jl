@@ -99,6 +99,9 @@ numdims(rss::RangePerDimSearchSpace) = length(mins(rss))
 
 diameters(rss::RangePerDimSearchSpace) = deltas(rss)
 
+Base.:(==)(a::RangePerDimSearchSpace, b::RangePerDimSearchSpace) =
+    numdims(a) == numdims(b) && (a.mins == b.mins) && (a.maxs == b.maxs)
+
 """
 Create `RangePerDimSearchSpace` with given number of dimensions
 and given range of valid values for each dimension.
