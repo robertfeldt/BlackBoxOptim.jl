@@ -26,4 +26,27 @@ using DataFrames, CSV
     @test df[end, :BestFitness] ~ 2.0 # Sum of 1.0 and 1.0
 end
 
+@testset "Trace also to a front-end/GUI that shows fitness progress etc" begin
+    # Not sure this is the right design but since we need to update a front-end
+    # basically on every trace event we could use a special tracer that runs both
+    # a http server to serve the GUI and a websocket that communicates with that
+    # http server to update the GUI. We could use any GUI, really, but a simple
+    # one might be to put up a Vega-Lite graph that plots fitness over time
+    # on logarithmic scales.
+
+    dtr = DefaultReportTracer(STDOUT, mode = :verbose)
+    webguitr = VegaLiteOptimizationFrontEnd(; port = 8082) # Open localhost:8082 to access GUI once the optimization has started
+    tracer = SeqOfTracers(dtr, webguitr)
+    myfn(x) = sum(x)
+    res = bboptimize(myfn; Tracer = tracer, SearchRange = (-1.0, 1.0), 
+                NumDimensions = 2, MaxEvals = 100)
+    # We need to get the page and make some sanity checks on it
+    try
+        r = HTTP.request("GET", "http://localhost:8082"; readtimeout = 10)
+        # Add some sanity checks of the gui html here...
+    catch err
+        @test false # Indicate that exception was thrown => failure
+    end
+end
+
 end
