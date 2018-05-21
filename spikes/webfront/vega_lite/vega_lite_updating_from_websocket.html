@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<head>
+  <title>Vega Lite Streaming Data from WebSocket Example</title>
+  <meta charset="utf-8">
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@3.3.1/build/vega.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@2.4.3/build/vega-lite.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@3.9.0/build/vega-embed.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <style media="screen">
+    /* Add space between Vega-Embed links  */
+    .vega-actions a {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>Vega Lite Streaming Data from WebSocket Example</h3>
+  <table style="width:100%">
+    <tr>
+      <th>Start time:</th>
+      <td id="startTimeCell"></td>
+    </tr>
+    <tr>
+        <th>Elapsed:</th>
+        <td id="elapsedCell"></td>
+    </tr>
+    <tr>
+        <th>Best fitness:</th>
+        <td id="bestFitnessCell"></td>
+    </tr>
+    <tr>
+        <th>Num evals:</th>
+        <td id="numEvalsCell"></td>
+    </tr>
+  </table>
+
+  <!-- Container for the visualization -->
+  <div id="chart"></div>
+
+<script>
+var vlSpec = {
+    '$schema': 'https://vega.github.io/schema/vega-lite/v2.json',
+    'data': { 'name': 'table' },
+    'width': 800,
+    'height': 360,
+    'actions': false,
+    'mark': 'line',
+    'encoding': {
+        'x': { 'field': 'ElapsedSeconds', 'type': 'quantitative'},
+        'y': { 'field': 'BestFitness', 'type': 'quantitative' }
+    }
+};
+
+function precise(x, digits = 4) {
+  return Number.parseFloat(x).toPrecision(digits);
+}
+
+vegaEmbed('#chart', vlSpec).then(function(res) {
+    var elapsedCell = document.getElementById("elapsedCell");
+    var bestFitnessCell = document.getElementById("bestFitnessCell");
+    var numEvalsCell = document.getElementById("numEvalsCell");
+
+    // Websocket to Julia server where we get new values
+    var ws = new WebSocket("ws://localhost:8082/")
+    ws.onmessage = function (event) {
+        var obj = jQuery.parseJSON(event.data);
+        console.log(obj);
+        if ('info' in obj) {
+            if (obj.info == 'meta') {
+                console.log(obj['StartTime']);
+                var div = document.getElementById("startTimeCell");  
+                div.textContent = obj.StartTime;
+            }
+        } else {
+            var changeSet = vega.changeset().insert(obj);
+            res.view.change('table', changeSet).run();
+            elapsedCell.textContent = (Math.round(obj.ElapsedSeconds * 1000) / 1000) + " seconds";
+            bestFitnessCell.textContent = precise(obj.BestFitness, 5);
+            numEvalsCell.textContent = obj.NumEvals;
+        };
+    };
+});
+
+</script>
+
+</body>
+</html>
