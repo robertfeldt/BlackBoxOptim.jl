@@ -75,6 +75,8 @@ function Base.merge!(d::Dict{K,V}, dc::DictChain{K,V}) where {K,V}
     return d
 end
 
+Base.length(p::DictChain) = length(p.dicts)
+
 # since Base.merge(Dict, Dict) generates Dict, we need another name
 # for operation that generates DictChain.
 # The difference between chain() and merge() for other argument types is that
