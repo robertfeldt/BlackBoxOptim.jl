@@ -1,7 +1,7 @@
 abstract type CoordinateTransform end
 
 # Based on the pseudo-code on page 156 in Loschchilov's PhD Thesis from 2013.
-type AdaptiveEncoding <: CoordinateTransform
+mutable struct AdaptiveEncoding <: CoordinateTransform
   n::Int
   sqrtn::Float64
   initialized::Bool

@@ -1,6 +1,6 @@
 abstract type MeshAdaptiveDirectSearch end
 
-type LTMADS <: MeshAdaptiveDirectSearch
+mutable struct LTMADS <: MeshAdaptiveDirectSearch
   n::Int
   D::Array{Int,2}
   tau::Float64
@@ -39,7 +39,7 @@ function update_delta_m(m::LTMADS, isMinimalFrameCenter, improvedMeshPointFound)
 end
 
 # From box on page 203 in Audet2006:
-type LTMADSDirectionGenerator
+mutable struct LTMADSDirectionGenerator
   cache::Dict{Int, Array{Int, 1}}  # Cache of previous directions used
 
   LTMADSDirectionGenerator() = begin

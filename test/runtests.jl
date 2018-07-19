@@ -52,10 +52,10 @@ my_tests = [
 if Main.TimeTestExecution
 
 function get_git_remote_and_branch()
-    lines = split(readstring(`git remote -v show`), "\n")
+    lines = split(read(`git remote -v show`, String), "\n")
     remote = match(r"[a-z0-9]+\s+([^\s]+)", lines[1]).captures[1]
-    branch = strip(readstring(`git rev-parse --abbrev-ref HEAD`))
-    commit = strip(readstring(`git rev-parse HEAD`))
+    branch = strip(read(`git rev-parse --abbrev-ref HEAD`, String))
+    commit = strip(read(`git rev-parse HEAD`, String))
     return remote, branch, commit
 end
 
@@ -108,13 +108,13 @@ elapsed = float(CPUtime_us() - starttime)/1e6
 if Main.TimeTestExecution
     datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
     using SHA
-    hash = bytes2hex(sha512(join(map(fn -> readstring(open(joinpath("test", fn))), my_tests))))[1:16]
+    hash = bytes2hex(sha512(join(map(fn -> read(open(joinpath("test", fn)), String), my_tests))))[1:16]
     push!(timing_data, [datestr, versionstr, gitstr, "TOTAL TIME for $(length(my_tests)) test files, $(hash)", elapsed])
     CSV.write(TestTimingFileName, timing_data)
     println("Wrote $(nrow(timing_data)) rows to file $TestTimingFileName")
 end
 
 elapsedclock = time() - startclocktime
-println("Tested $(numtestfiles) files in $(round(elapsedclock, 1)) seconds.")
+println("Tested $(numtestfiles) files in $(round(elapsedclock, digits=1)) seconds.")
 
 end # module BlackBoxOptimTests

@@ -136,7 +136,7 @@ to print the names of each objective.
 """
 show_fitness(io::IO, fit::Number) = @printf(io, "%.9f", fit)
 
-function show_fitness{N}(io::IO, fit::NTuple{N})
+function show_fitness(io::IO, fit::NTuple{N}) where N
     print(io, "(")
     for i in 1:N
         if i > 1
@@ -147,7 +147,7 @@ function show_fitness{N}(io::IO, fit::NTuple{N})
     print(io, ")")
 end
 
-function show_fitness{N}(io::IO, fit::IndexedTupleFitness{N})
+function show_fitness(io::IO, fit::IndexedTupleFitness{N}) where N
     show_fitness(io, fit.orig)
     @printf(io, " agg=%.5f", fit.agg)
 end
@@ -155,7 +155,7 @@ end
 # problem-specific method defaults to problem-agnostic method
 # note that the fitness type of the problem could be different from FA,
 # because show_fitness() typically is called for the archived fitness
-show_fitness{FA}(io::IO, fit::FA, problem::OptimizationProblem) = show_fitness(io, fit)
+show_fitness(io::IO, fit::FA, problem::OptimizationProblem) where {FA} = show_fitness(io, fit)
 
 """
     format_fitness(fit, [problem::OptimizationProblem])
@@ -227,12 +227,12 @@ function trace_progress(ctrl::OptRunController)
     # Always print fitness if num_evals > 0
     if num_func_evals(ctrl) > 0
         tr(ctrl, ", fitness=")
-        show_fitness(STDOUT, best_fitness(ctrl), problem(ctrl))
+        show_fitness(stdout, best_fitness(ctrl), problem(ctrl))
     end
 
     tr(ctrl, "\n")
 
-    trace_state(STDOUT, ctrl.optimizer, ctrl.trace_mode)
+    trace_state(stdout, ctrl.optimizer, ctrl.trace_mode)
 end
 
 function step!(ctrl::OptRunController{<:AskTellOptimizer})
@@ -320,7 +320,7 @@ function show_report(ctrl::OptRunController, population_stats=false)
 
     tr(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
     tr(ctrl, "\n\nFitness: ")
-    show_fitness(STDOUT, best_fitness(ctrl), problem(ctrl))
+    show_fitness(stdout, best_fitness(ctrl), problem(ctrl))
     tr(ctrl, "\n\n")
 end
 
@@ -434,7 +434,7 @@ function run!(oc::OptController)
     catch ex
         # If it was a ctrl-c interrupt we try to make a result and return it...
         if get(oc.parameters, :RecoverResults, true) && isa(ex, InterruptException)
-            warn("Optimization interrupted, recovering intermediate results...")
+            @warn("Optimization interrupted, recovering intermediate results...")
             ctrl.stop_reason = @sprintf "%s" ex
             return OptimizationResults(ctrl, oc)
         else

@@ -1,4 +1,4 @@
-bfiles = filter(f->typeof(match(r"^benchmark_runs_\d.+\.csv$", f))!=Void, readdir("."))
+bfiles = filter(f->typeof(match(r"^benchmark_runs_\d.+\.csv$", f))!=Nothing, readdir("."))
 
 bf = bfiles[end]
 

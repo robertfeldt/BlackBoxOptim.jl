@@ -13,7 +13,7 @@ abstract type MethodOutput end
 struct DummyMethodOutput <: MethodOutput end
 
 # no method-specific output by default
-(::Type{MethodOutput})(method::Optimizer) = DummyMethodOutput()
+MethodOutput(method::Optimizer) = DummyMethodOutput()
 
 """
 The results of running optimization method.
@@ -64,11 +64,11 @@ numdims(or::OptimizationResults) = length(best_candidate(or))
 function general_stop_reason(or::OptimizationResults)
     detailed_reason = stop_reason(or)
 
-    if ismatch(r"Fitness .* within tolerance .* of optimum", detailed_reason)
+    if occursin(r"Fitness .* within tolerance .* of optimum", detailed_reason)
         return "Within fitness tolerance of optimum"
     end
 
-    if ismatch(r"Delta fitness .* below tolerance .*", detailed_reason)
+    if occursin(r"Delta fitness .* below tolerance .*", detailed_reason)
         return "Delta fitness below tolerance"
     end
 
@@ -93,7 +93,7 @@ struct TopListArchiveOutput{F,C} <: ArchiveOutput
         new{F,Individual}(best_fitness(archive), best_candidate(archive))
 end
 
-(::Type{ArchiveOutput})(archive::TopListArchive) = TopListArchiveOutput(archive)
+ArchiveOutput(archive::TopListArchive) = TopListArchiveOutput(archive)
 
 """
 Wrapper for `FrontierIndividual` that allows easy access to the problem fitness.
@@ -125,12 +125,12 @@ struct EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutpu
         new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme),
                                     best_candidate(archive),
                                     FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}[FrontierIndividualWrapper{NTuple{N,F}}(archive.frontier[i], fit_scheme)
-                                                                                                     for i in find(archive.frontier_isoccupied)],
+                                                                                                     for i in findall(archive.frontier_isoccupied)],
                                     fit_scheme)
     end
 end
 
-(::Type{ArchiveOutput})(archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
+ArchiveOutput(archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
 
 pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 
@@ -146,6 +146,6 @@ struct PopulationOptimizerOutput{P} <: MethodOutput
         new{typeof(population(method))}(population(method))
 end
 
-(::Type{MethodOutput})(optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
+MethodOutput(optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
 
 population(or::OptimizationResults) = or.method_output.population

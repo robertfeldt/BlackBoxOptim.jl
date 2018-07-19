@@ -1,12 +1,12 @@
 include("helper.jl")
 
 const ExamplesDir = joinpath(dirname(@__FILE__()), "..", "examples")
-examples = sort(filter(fn -> isfile(joinpath(ExamplesDir, fn)) && ismatch(r"\.jl$", fn), 
+examples = sort(filter(fn -> isfile(joinpath(ExamplesDir, fn)) && occursin(r"\.jl$", fn), 
     readdir(ExamplesDir)))
 
 function run_examples_as_test(examplefile::String, dirpath::String)
     testcode = quote
-        print_with_color(:blue, "Running example: ", $examplefile, "\n")
+        printstyled("Running example: ", $examplefile, "\n", color=:blue)
         @testset $examplefile begin
             err = nothing
             try

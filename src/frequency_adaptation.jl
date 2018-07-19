@@ -90,7 +90,7 @@ function fill_block!(fa::FrequencyAdapter)
     if last_pos == 0
         #println("Empty block created. Rectifying., std(p) = ", std(fa.p))
         #print("psum = $(fa.psum), a = ", fa.a, ", p = ", fa.p)
-        i = indmax(fa.a)
+        i = argmax(fa.a)
         fa.a[i] = 0
         resize!(fa.block, 1)
         fa.block[1] = i

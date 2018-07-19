@@ -11,7 +11,7 @@
 abstract type AdaptiveSelector end
 
 # The default AdaptiveSelector is a random selector.
-type RandomSelector <: AdaptiveSelector
+mutable struct RandomSelector <: AdaptiveSelector
   item_map::Dict{Int, Any}
   next_index::Int
 
@@ -73,7 +73,7 @@ function reward(a::AdaptiveSelector, index, reward)
 end
 
 # We need a queue of fixed size to keep info about recent rewards.
-type FixedSizeQueue
+mutable struct FixedSizeQueue
   queue::Array{Any,1}
   size::Int
   maxsize::Int
@@ -118,7 +118,7 @@ function Base.next(fsq::FixedSizeQueue, state)
 end
 
 
-type AucBanditSelector <: AdaptiveSelector
+mutable struct AucBanditSelector <: AdaptiveSelector
   window::FixedSizeQueue  # Window of latest (itemindex, reward) pairs
   ns::Int[]             # Number of times each item has been used within the current window.
   items::Any[]
@@ -182,7 +182,7 @@ function select(a::AucBanditSelector)
     # Select via the multi-armed bandit formula
     qs = calc_quality_values(a)
     vs = qs + a.exploration_factor * sqrt( 2 * log(sum(a.ns)) * (1 / a.ns) )
-    items[indmin(vs)]
+    items[argmin(vs)]
   end
 end
 

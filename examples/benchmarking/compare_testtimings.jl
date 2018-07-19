@@ -21,13 +21,13 @@ end
 
 function print_percent_diff(origvalue, currvalue; rev=false)
     if currvalue > origvalue
-        s = "+" * string(round(100.0 * (currvalue/origvalue - 1.0), 1)) * "%"
+        s = "+" * string(round(100.0 * (currvalue/origvalue - 1.0), digits=1)) * "%"
         color = rev ? :red : :gren
     else
-        s = "-" * string(round(100.0 * (1.0 - currvalue/origvalue), 1)) * "%"
+        s = "-" * string(round(100.0 * (1.0 - currvalue/origvalue), digits=1)) * "%"
         color = rev ? :green : :red
     end
-    print_with_color(color, s)
+    printstyled(s, color=color)
 end
 
 # Sort by largest time diff:
@@ -35,7 +35,7 @@ for (testfile, slicedf, diff) in sort(res2, by = t -> t[3], rev=false)
     sorteddf = sort(slicedf, [:x1])
     mintime = sorteddf[1, :x1]
     mindesc = join(convert(Array, sorteddf[1, 1:2]), ", ")
-    println(testfile, " (fastest = ", round(mintime, 2), " secs for ", mindesc, "):")
+    println(testfile, " (fastest = ", round(mintime, digits=2), " secs for ", mindesc, "):")
     for i in 2:nrow(sorteddf)
         if sorteddf[i, :Julia] == LatestJulia
             print("  * ")
@@ -43,7 +43,7 @@ for (testfile, slicedf, diff) in sort(res2, by = t -> t[3], rev=false)
             print("    ")
         end
         desc = join(convert(Array, sorteddf[i, 1:(ncol(sorteddf)-1)]), ", ")
-        print(desc, ": ", round(sorteddf[i, :x1], 2), " (")
+        print(desc, ": ", round(sorteddf[i, :x1], digits=2), " (")
         print_percent_diff(mintime, sorteddf[i, :x1]; rev=true)
         println(")")
     end

@@ -36,12 +36,12 @@ while length(results1) < N
   else
     # Ignore runs with large MaxTime deviation:
     # usually initial runs have compilation hiccups (both BBO and GC)
-    warn("Run ignored: large MaxTime deviation")
+    @warn("Run ignored: large MaxTime deviation")
   end
 end
 
 function report(vs, label, t = nothing)
-  r(x) = round(x, 3)
+  r(x) = round(x, digits=3)
   println(label, ": ", r(mean(vs)), " ± ", r(std(vs)),
     " (", r(minimum(vs)), "-", r(maximum(vs)), ")")
   if t != nothing

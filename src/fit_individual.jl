@@ -6,7 +6,7 @@ corresponding fitness value.
 """
 abstract type FitIndividual{F} end
 
-fitness_type{F}(indi::FitIndividual{F}) = F
+fitness_type(indi::FitIndividual{F}) where {F} = F
 
 """
 Get the problem parameters (a point in the search space) of the individual.

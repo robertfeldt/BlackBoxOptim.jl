@@ -45,6 +45,6 @@ function start_http_and_websocket_servers(httpcontent, httpport = 8081, wsport =
     return httpserver, wsserver
 end
 
-servedcontent = readstring(open("vega_lite_updating_from_websocket.html"))
+servedcontent = read(open("vega_lite_updating_from_websocket.html"), String)
 start_http_and_websocket_servers(servedcontent, 8081, 8083)
 sleep(120.0)
