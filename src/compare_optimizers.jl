@@ -49,9 +49,9 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
         end
     end
 
-    avg_ranks = round(mean(ranks, 2), 2)
-    avg_fitness = round(mean(fitnesses, 2), 3)
-    avg_times = round(mean(times, 2), 2)
+    avg_ranks = round(mean(ranks, 2), digits=2)
+    avg_fitness = round(mean(fitnesses, 2), digits=3)
+    avg_times = round(mean(times, 2), digits=2)
 
     perm = sortperm(avg_ranks[:])
     println("\nBy avg rank:")
@@ -76,7 +76,7 @@ end
 Summarize a vector of float values by stating its mean, std dev and median.
 """
 function report_on_values(desc, v, lpad = "", rpad = "", digits = 3)
-    println("$(lpad)$(desc): $(signif(mean(v), digits)) (std. dev = $(signif(std(v), digits)), median = $(signif(median(v), digits)))")
+    println("$(lpad)$(desc): $(round(mean(v), sigdigits=digits)) (std. dev = $(round(std(v), sigdigits=digits)), median = $(round(median(v), sigdigits=digits)))")
 end
 
 """
@@ -89,7 +89,7 @@ function count_dict_report(dict, desc, lpad = "", rpad = "")
     total = sum(collect(values(dict))) # FIXME collect() should not be required
     pdict = Dict()
     for (r, c) in dict
-        pdict[r] = round(100.0*c/total, 2)
+        pdict[r] = round(100.0*c/total, digits=2)
         println(lpad, r, ": ", c, " (", pdict[r], "%)", rpad)
     end
     pdict
@@ -107,7 +107,7 @@ function report_from_result_dict(statsdict)
     report_on_values("Time", statsdict[:times], "  ")
     report_on_values("Num function evals", statsdict[:numevals], "  ")
 
-    success_rate = round(get(pdict, "Within fitness tolerance of optimum", 0.0), 3)
+    success_rate = round(get(pdict, "Within fitness tolerance of optimum", 0.0), digits=3)
     println("  Success rate: ", success_rate, "%\n")
     success_rate
 end
@@ -118,7 +118,7 @@ function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false,
     ranked = BlackBoxOptim.Utils.assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1e-3, rev = rev)
     println("Ranked by $(descsummary) $(desc):")
     for (rank, rd, value) in ranked
-        println("  $(rank). $(rd[:method]), $(signif(value, digits))$(rpad)")
+        println("  $(rank). $(rd[:method]), $(round(value, sigdigits=digits))$(rpad)")
     end
     println("")
 end

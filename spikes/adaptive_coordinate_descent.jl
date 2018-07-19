@@ -163,7 +163,7 @@ function generate_random_orthogonal_transformation(P)
 end
 
 # Use this when no adaptive encoding is used, i.e. the ACD algorithm is a normal CD.
-type NoEncoding
+mutable struct NoEncoding
   B
   NoEncoding(mu, P) = begin
     new(eye(P, P))
@@ -174,7 +174,7 @@ function update!(e::NoEncoding, population::Matrix{Float64}, howOftenUpdateRotat
   # Do nothing since we never update anything...
 end
 
-type AdaptiveEncoding
+mutable struct AdaptiveEncoding
   mu
   P
   B

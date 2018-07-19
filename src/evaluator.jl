@@ -66,7 +66,7 @@ and only want the fitness itself if the criteria fulfilled.
 """
 last_fitness(e::Evaluator) = e.last_fitness
 
-is_better{F}(f1::F, f2::F, e::Evaluator) = is_better(f1, f2, fitness_scheme(e))
+is_better(f1::F, f2::F, e::Evaluator) where {F} = is_better(f1, f2, fitness_scheme(e))
 
 is_better(candidate, f, e::Evaluator) = is_better(fitness(candidate, e), f, fitness_scheme(e))
 

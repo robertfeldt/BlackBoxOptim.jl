@@ -17,7 +17,7 @@ function ask(rs::RandomSearcher)
     [Candidate{Float64}(rand_individual(rs.search_space), 1)]
 end
 
-function tell!{F}(rs::RandomSearcher, rankedCandidates::Vector{Candidate{F}})
+function tell!(rs::RandomSearcher, rankedCandidates::Vector{Candidate{F}}) where F
     candidate = rankedCandidates[1]
     if rs.best_fitness == nothing || candidate.fitness < rs.best_fitness
         rs.best = candidate.params

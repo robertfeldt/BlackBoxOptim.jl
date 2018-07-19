@@ -1,4 +1,4 @@
-type ObjectiveFuncEvaluator
+mutable struct ObjectiveFuncEvaluator
   f::Function
   archive::Archive
 

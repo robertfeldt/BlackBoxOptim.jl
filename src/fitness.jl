@@ -67,7 +67,7 @@ is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{false}) = f1 > f
 Complex-valued fitness.
 """
 # FIXME what is isbetter() for ComplexFitnessScheme
-struct ComplexFitnessScheme <: FitnessScheme{Complex128}
+struct ComplexFitnessScheme <: FitnessScheme{ComplexF64}
 end
 
 # FIXME do we need it? it might be confused with problem's fitness bounds

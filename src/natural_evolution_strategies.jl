@@ -148,7 +148,7 @@ where `B` is an exponential of some symmetric matrix `lnB`, `tr(lnB)==0.0`
 abstract type ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt end
 
 function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Matrix)
-    B = expm(exnes.ln_B)
+    B = exp(exnes.ln_B)
     sBZ = A_mul_B!(exnes.tmp_sBZ, B, Z)
     scale!(sBZ, exnes.sigma)
     for i in eachindex(exnes.candidates)
@@ -330,7 +330,7 @@ function fitness_shaping_utilities_linear(n::Int)
 
     # While first half's utility decreases in linear steps
     step_size = 1 / treshold
-    first_half = linspace(1.0, step_size, treshold)
+    first_half = range(1.0, stop=step_size, length=treshold)
 
     # But the utilities should sum to 0, so we normalize and return
     u = vcat(first_half, second_half)

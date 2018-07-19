@@ -12,7 +12,7 @@ num_reps = 10
 Ds = [0.01, 0.10, 0.50]
 
 function non_sparse_sqrtm(C, randsamples)
-  sqrtC = sqrtm(C)
+  sqrtC = sqrt(C)
   s = sqrtC * randsamples
   C + (s * s')
 end

@@ -2,7 +2,7 @@
 # a GSS search.
 abstract type DirectionGenerator end
 
-type ConstantDirectionGen <: DirectionGenerator
+mutable struct ConstantDirectionGen <: DirectionGenerator
   directions::Array{Float64, 2}
 
   ConstantDirectionGen(directions) = begin

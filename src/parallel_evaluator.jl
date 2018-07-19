@@ -77,7 +77,7 @@ function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
     end
     if task_ix == 0
         if !isempty(estate.retry_queue)
-            task_ix = shift!(estate.retry_queue)
+            task_ix = popfirst!(estate.retry_queue)
         else
             # Handles the condition where we have finished processing the requested
             # lsts as well as any retryqueue entries, but there are still some jobs
@@ -85,7 +85,7 @@ function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
             while any(estate.worker_busy)
                 wait(estate.worker_finished)
                 if !isempty(estate.retry_queue)
-                    task_ix = shift!(estate.retry_queue)
+                    task_ix = popfirst!(estate.retry_queue)
                     break
                 end
             end

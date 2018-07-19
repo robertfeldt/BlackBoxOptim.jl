@@ -1,25 +1,25 @@
-type FitnessQueue{F}
+mutable struct FitnessQueue{F}
     queue::Vector{F}
     delay::Int
     numadded::Int
     start::Int
-    FitnessQueue{F}(delay::Int) = begin
+    FitnessQueue{F_}(delay::Int) where {F_, F} = begin
         q = Array(F, delay)
         new(q, delay, 0, 1)
     end
 end
 
-function setall!{F}(q::FitnessQueue{F}, val::F)
+function setall!(q::FitnessQueue{F}, val::F) where F
     for i in 1:q.delay
         q.queue[i] = val
     end
 end
-delay{F}(q::FitnessQueue{F}) = q.delay
-length{F}(q::FitnessQueue{F}) = q.delay
-lastfitness{F}(q::FitnessQueue{F}) = q.queue[q.start]
-nextidx{F}(q::FitnessQueue{F}) = (q.start == q.delay) ? 1 : (q.start + 1)
-delayedfitness{F}(q::FitnessQueue{F}) = q.queue[nextidx(q)]
-function add{F}(q::FitnessQueue{F}, val::F)
+delay(q::FitnessQueue{F}) where {F} = q.delay
+length(q::FitnessQueue{F}) where {F} = q.delay
+lastfitness(q::FitnessQueue{F}) where {F} = q.queue[q.start]
+nextidx(q::FitnessQueue{F}) where {F} = (q.start == q.delay) ? 1 : (q.start + 1)
+delayedfitness(q::FitnessQueue{F}) where {F} = q.queue[nextidx(q)]
+function add(q::FitnessQueue{F}, val::F) where F
     q.numadded += 1
     if q.numadded == 1
         setall!(q, val)
@@ -50,14 +50,14 @@ end
 #delayedfitness(fq)
 
 # Burke and Yukov propose the greedy_or_late_acceptance_rule
-function greedy_or_late_acceptance_rule{F}(q::FitnessQueue{F}, f::F)
+function greedy_or_late_acceptance_rule(q::FitnessQueue{F}, f::F) where F
     f < delayedfitness(fq) || f < lastfitness(fq)
 end
 
-late_acceptance_rule{F}(q::FitnessQueue{F}, f::F) = f < delayedfitness(fq)
+late_acceptance_rule(q::FitnessQueue{F}, f::F) where {F} = f < delayedfitness(fq)
 
-smaller_than_all{F}(q::FitnessQueue{F}, f::F) = all(v -> f < v, fq.queue)
+smaller_than_all(q::FitnessQueue{F}, f::F) where {F} = all(v -> f < v, fq.queue)
 
-type LateAcceptanceHillClimbing
+mutable struct LateAcceptanceHillClimbing
     mutationOperators
 end

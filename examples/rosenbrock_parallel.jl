@@ -18,7 +18,7 @@ opt1 = bbsetup(rosenbrock; Method=:xnes, SearchRange = (-5.0, 5.0),
                NumDimensions = 50, MaxFuncEvals = 5000)
 tic()
 res1 = bboptimize(opt1)
-t1 = round(toq(), 3)
+t1 = round(toq(), digits=3)
 
 # When Workers= option is given, BlackBoxOptim enables parallel
 # evaluation of fitness using the specified worker processes
@@ -26,11 +26,11 @@ opt2 = bbsetup(rosenbrock; Method=:xnes, SearchRange = (-5.0, 5.0),
                NumDimensions = 50, MaxFuncEvals = 5000, Workers = workers())
 tic()
 res2 = bboptimize(opt2)
-t2 = round(toq(), 3)
+t2 = round(toq(), digits=3)
 
 println("Time: serial = $(t1)s, parallel = $(t2)s")
 if t2 < t1
-  println("Speedup is $(round(t1/t2, 1))x")
+  println("Speedup is $(round(t1/t2, digits=1))x")
 else
-  println("Slowdown is $(round(t2/t1, 1))x")
+  println("Slowdown is $(round(t2/t1, digits=1))x")
 end

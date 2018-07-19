@@ -10,17 +10,17 @@ Type parameters:
 """
 abstract type TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA} end
 
-@inline numobjectives{N}(::TupleFitnessScheme{N}) = N
-@inline fitness_eltype{N,F}(::TupleFitnessScheme{N,F}) = F
-@inline is_minimizing{N,F,FA,MIN}(::TupleFitnessScheme{N,F,FA,MIN}) = MIN
+@inline numobjectives(::TupleFitnessScheme{N}) where {N} = N
+@inline fitness_eltype(::TupleFitnessScheme{N,F}) where {N,F} = F
+@inline is_minimizing(::TupleFitnessScheme{N,F,FA,MIN}) where {N,F,FA,MIN} = MIN
 
-@generated nafitness{N,F}(::TupleFitnessScheme{N,F,NTuple{N,F}}) = ntuple(_ -> convert(F, NaN), Val{N})
-isnafitness{N,F}(f::NTuple{N,F}, ::TupleFitnessScheme{N,F}) = any(isnan, f)
+@generated nafitness(::TupleFitnessScheme{N,F,NTuple{N,F}}) where {N,F} = ntuple(_ -> convert(F, NaN), Val{N})
+isnafitness(f::NTuple{N,F}, ::TupleFitnessScheme{N,F}) where {N,F} = any(isnan, f)
 
-aggregate{N,F}(f::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) = fs.aggregator(f)
+aggregate(f::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) where {N,F} = fs.aggregator(f)
 
-@inline is_better{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) = hat_compare(f1, f2, fs, -1) == -1
-@inline is_worse{N,F}(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) = hat_compare(f1, f2, fs, 1) == 1
+@inline is_better(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) where {N,F} = hat_compare(f1, f2, fs, -1) == -1
+@inline is_worse(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::TupleFitnessScheme{N,F,NTuple{N,F}}) where {N,F} = hat_compare(f1, f2, fs, 1) == 1
 
 """
 Pareto dominance for `N`-tuple (`N`≧1) fitnesses.

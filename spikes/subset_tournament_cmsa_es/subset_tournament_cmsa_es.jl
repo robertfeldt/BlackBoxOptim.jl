@@ -138,7 +138,7 @@ function st_cmsa_es(p;
     num_fevals += lambda
 
     # Check if best new fitness is best ever and print some info if tracing.
-    indbest = indmin(fitnesses)
+    indbest = argmin(fitnesses)
     fbest_new = fitnesses[indbest]
 
     # Save info about the fitnesses if we are in tournament mode
@@ -207,9 +207,9 @@ end
 function select_winning_subset(subsets, fitness_per_tournament_round)
   if length(size(fitness_per_tournament_round)) > 1
     fitness_summary = mean(fitness_per_tournament_round, 1)
-    indmin(fitness_summary)
+    argmin(fitness_summary)
   else
-    indmin(fitness_per_tournament_round)
+    argmin(fitness_per_tournament_round)
   end
 end
 
@@ -293,7 +293,7 @@ function update_covariance_matrix!(cms::CovarianceMatrixSampler, delta, a)
   cms.C = triu(C) + triu(C,1)' # Ensure C is symmetric. Should not be needed, investigate...
 end
 
-type EigenCovarSampler <: CovarianceMatrixSampler
+mutable struct EigenCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   B::Array{Float64,2}
   diagD::Array{Float64,1}
@@ -317,7 +317,7 @@ function multivariate_normal_sample(cms::CovarianceMatrixSampler, n, m)
   cms.B * (cms.diagD .* randn(n, m))
 end
 
-type CholeskyCovarSampler <: CovarianceMatrixSampler
+mutable struct CholeskyCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   sqrtC::Array{Float64,2}
 
@@ -342,7 +342,7 @@ end
 # (expensive) cholesky decomposition, the other variables are kept constant.
 # However, the covariance matrix itself is always updated and saved in full
 # so that the overall learning of the shape of the fitness landscape is not lost.
-type SubsetCholeskyCovarSampler <: CovarianceMatrixSampler
+mutable struct SubsetCholeskyCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   sqrtC::Array{Float64,2}
   subset::Array{Int, 1} # Indices of the currently active subset of variables

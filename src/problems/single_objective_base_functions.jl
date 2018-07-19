@@ -20,7 +20,7 @@ end
 function elliptic(x)
     D = length(x)
     condition = 1e+6
-    coefficients = condition .^ linspace(0, 1, D)
+    coefficients = condition .^ range(0, stop=1, length=D)
     return sum(coefficients .* x.^2)
 end
 

@@ -128,7 +128,7 @@ Transform symmetric `f` into asymmetric objective function.
 function t_asy(f, beta)
     D = length(f)
     g = copy(f)
-    temp = beta * linspace(0, 1, D)
+    temp = beta * range(0, stop=1, length=D)
     ind = collect(1:D)[f .> 0]
     t = f[ind] .^ (1 + temp[ind] .* sqrt(f[ind]))
     setindex!(g, t, ind)
@@ -140,7 +140,7 @@ Transform `f` into objective function with ill-conditioning effect.
 """
 function t_diag(f, alpha)
     D = length(f)
-    scales = sqrt(alpha) .^ linspace(0, 1, D)
+    scales = sqrt(alpha) .^ range(0, stop=1, length=D)
     return scales .* f
 end
 

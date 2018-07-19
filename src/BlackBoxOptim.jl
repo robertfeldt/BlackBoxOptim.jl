@@ -1,8 +1,6 @@
 __precompile__()
 
-if VERSION > v"0.7.0-DEV.0"
-    using Random
-end
+using Random
 
 module BlackBoxOptim
 

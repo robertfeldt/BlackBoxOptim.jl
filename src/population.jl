@@ -121,7 +121,7 @@ function Base.setindex!(pop::FitPopulation, indi::Individual, indi_ix::Integer)
     return pop
 end
 
-function Base.setindex!{F}(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_ix::Integer)
+function Base.setindex!(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_ix::Integer) where F
     pop.individuals[:, indi_ix] = params(indi)
     pop.fitness[indi_ix] = fitness(indi)
     return pop
