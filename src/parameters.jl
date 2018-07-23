@@ -112,5 +112,4 @@ The default placeholder value for parameters argument.
 """
 const EMPTY_PARAMS = ParamsDict()
 
-kwargs2dict(kwargs::Vector{Any}) =
-    Dict(Tuple{Symbol,Any}[(convert(Symbol, k), convert(Any,v)) for (k,v) in kwargs])
+kwargs2dict(kwargs::Iterators.Pairs{Symbol}) = ParamsDict(kwargs)
