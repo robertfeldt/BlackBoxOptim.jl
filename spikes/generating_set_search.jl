@@ -16,7 +16,7 @@ end
 
 # We can easily do a compass search with GSS by generating directions
 # individually (+ and -) for each coordinate.
-compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
+compass_search_directions(n) = ConstantDirectionGen([Matrix{Float64}(I, n,n) -Matrix{Float64}(I, n, n)])
 
 using BlackBoxOptim
 
@@ -40,7 +40,7 @@ function generating_set_search(problem;
 
   max_evals = max_evals_per_dim * n
 
-  directions = [eye(n,n) -eye(n, n)]
+  directions = [Matrix{Float64}(I, n,n) -Matrix{Float64}(I, n, n)]
 
   x = rand_individual(ss)
   fbest = eval1(x, problem)

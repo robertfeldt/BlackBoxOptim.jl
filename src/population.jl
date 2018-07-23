@@ -12,15 +12,17 @@ fitness.
 """
 abstract type PopulationWithFitness{F} <: Population end
 
+const AbstractPopulationMatrix = AbstractMatrix{Float64}
+
 """
 The simplest `Population` implementation -- a matrix of floats, each column is an individual.
 """
 const PopulationMatrix = Matrix{Float64}
 
-popsize(pop::PopulationMatrix) = size(pop, 2)
-numdims(pop::PopulationMatrix) = size(pop, 1)
-params_mean(pop::PopulationMatrix) = mean(pop, 1)
-params_std(pop::PopulationMatrix) = std(pop, 1)
+popsize(pop::AbstractPopulationMatrix) = size(pop, 2)
+numdims(pop::AbstractPopulationMatrix) = size(pop, 1)
+params_mean(pop::AbstractPopulationMatrix) = mean(pop, dims=1)
+params_std(pop::AbstractPopulationMatrix) = std(pop, dims=1)
 
 popsize(pop::AbstractVector{<:Candidate}) = length(pop)
 numdims(pop::AbstractVector{<:Candidate}) = isempty(pop) ? 0 : length(pop[1].params)
@@ -32,7 +34,7 @@ viewer(pop::PopulationMatrix, indi_ix) = view(pop, :, indi_ix)
 # at the moment it's just an extract from SampleBase.sample!() for ordered=false, replace=false
 function rand_indexes(a::AbstractArray{Int}, k::Int)
     n = length(a)
-    x = Vector{Int}(k)
+    x = Vector{Int}(undef, k)
     if k == 1
         @inbounds x[1] = sample(a)
     elseif k == 2
@@ -58,7 +60,7 @@ mutable struct FitPopulation{F} <: PopulationWithFitness{F}
 
     candi_pool::Vector{Candidate{F}} # pool of reusable candidates
 
-    function FitPopulation(individuals::PopulationMatrix,
+    function FitPopulation(individuals::AbstractPopulationMatrix,
                            nafitness::F,
                            fitness::Vector{F} = fill(nafitness, popsize(individuals));
                            ntransient::Integer=0) where {F}
@@ -75,14 +77,14 @@ FitPopulation(fs::FitnessScheme, individuals::PopulationMatrix;
 
 FitPopulation(fs::FitnessScheme, popsize::Int = 100, dims::Int = 1;
               ntransient::Integer=0) =
-  FitPopulation(fs, PopulationMatrix(dims, popsize); ntransient=ntransient)
+  FitPopulation(fs, PopulationMatrix(undef, dims, popsize); ntransient=ntransient)
 
 popsize(pop::FitPopulation) = popsize(pop.individuals)-pop.ntransient
 numdims(pop::FitPopulation) = numdims(pop.individuals)
 
 # resize the population
 function Base.resize!(pop::FitPopulation, newpopsize::Integer)
-    new_individuals = PopulationMatrix(numdims(pop), newpopsize+pop.ntransient)
+    new_individuals = PopulationMatrix(undef, numdims(pop), newpopsize+pop.ntransient)
     new_individuals[:, 1:min(newpopsize,popsize(pop))] = view(pop.individuals, :, 1:min(newpopsize,popsize(pop)))
     pop.individuals = new_individuals
     resize!(pop.fitness, newpopsize + pop.ntransient)
@@ -150,7 +152,7 @@ the corresponding fields of the new candidate are set to the given values.
 """
 function acquire_candi(pop::FitPopulation{F}) where {F}
     if isempty(pop.candi_pool)
-        return Candidate{F}(Individual(numdims(pop)), -1, pop.nafitness)
+        return Candidate{F}(fill!(Individual(undef, numdims(pop)), NaN), -1, pop.nafitness)
     end
     res = pop!(pop.candi_pool)
     # reset reference to genetic operation
@@ -165,7 +167,7 @@ acquire_candis(pop::FitPopulation{F}, n::Integer) where F =
 # Get an individual from a pool and sets it to ix-th individual from population.
 function acquire_candi(pop::FitPopulation, ix::Int)
     x = acquire_candi(pop)
-    copy!(x.params, viewer(pop, ix))
+    copyto!(x.params, viewer(pop, ix))
     x.index = ix
     x.fitness = fitness(pop, ix)
     return x
@@ -220,7 +222,7 @@ function population(problem::OptimizationProblem,
     end
     if isa(pop, Population)
         return pop
-    elseif isa(pop, PopulationMatrix)
+    elseif isa(pop, AbstractPopulationMatrix)
         return FitPopulation(pop, nafitness, ntransient=ntransient)
     else
         throw(ArgumentError("\"Population\" parameter is of unsupported type: $(typeof(pop))"))

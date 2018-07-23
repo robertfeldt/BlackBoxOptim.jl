@@ -168,7 +168,7 @@ function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     (0.0 < θ <= 1.0) || throw(ArgumentError("θ ($θ) should be in (0.0, 1.0] range"))
     res = Dict{Int,Float64}()
     i = findfirst(a.frontier_isoccupied)
-    while i > 0
+    while i !== nothing
         curtag = tag(a.frontier[i])
         if curtag > 0
             curcounts = get!(res, curtag, 0.0)
@@ -189,18 +189,18 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
     #info("Params: ", candidate)
 
     has_progress = false
-    updated_frontier_ix = 0
+    updated_frontier_ix = nothing
     i = findfirst(a.frontier_isoccupied)
-    while i > 0
+    while i !== nothing
         front_fitness = fitness(a.frontier[i])
         hat, index_match = hat_compare(cand_fitness, front_fitness, a.fit_scheme)
         if hat < 0
             # new fitness dominates the one in the archive
-            if updated_frontier_ix==0
+            if updated_frontier_ix === nothing
                 #info("Replaced the dominated element $i on the frontier")
                 # replace the fitness to minimize memory operations
                 # note - if i was the best candidate index, it stays
-                new_params = copy!(a.frontier[i].params, candidate)
+                new_params = copyto!(a.frontier[i].params, candidate)
                 a.frontier[i] = EpsBoxFrontierIndividual(cand_fitness, new_params, tag, num_fevals, a.n_restarts)
                 updated_frontier_ix = i
                 if index_match # we replace the element with the same index, so the domination pattern to the other elements should not change
@@ -221,17 +221,17 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
             end
         elseif hat > 0 || (hat == 0 && index_match)
             # the candidate fitness is worse or just the same as in the frontier, don't insert it
-            @assert updated_frontier_ix == 0 # should not have been inserted into the frontier before
-            updated_frontier_ix = -1 # just something nonzero to prevent appending
+            @assert updated_frontier_ix === nothing # should not have been inserted into the frontier before
+            updated_frontier_ix = -1 # non-valid integer to prevent appending
             break
         end
         i = findnext(a.frontier_isoccupied, i+1)
     end
-    if updated_frontier_ix == 0 # non-dominated candidate, append to the frontier
-        updated_frontier_ix = findfirst(a.frontier_isoccupied, false) # first unoccupied
-        if updated_frontier_ix > 0
+    if updated_frontier_ix === nothing # non-dominated candidate, append to the frontier
+        updated_frontier_ix = findfirst(isequal(false), a.frontier_isoccupied) # first unoccupied
+        if updated_frontier_ix !== nothing
             # replace the deactivated frontier element and activate it
-            new_params = copy!(a.frontier[updated_frontier_ix].params, candidate)
+            new_params = copyto!(a.frontier[updated_frontier_ix].params, candidate)
             a.frontier[updated_frontier_ix] = EpsBoxFrontierIndividual(cand_fitness, new_params, tag, num_fevals, a.n_restarts)
             a.frontier_isoccupied[updated_frontier_ix] = true
         else

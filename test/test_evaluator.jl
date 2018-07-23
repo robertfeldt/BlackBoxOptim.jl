@@ -76,6 +76,8 @@ end
     end
 
     @testset "ParallelEvaluator" begin
+        using Distributed
+
         evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
     end
 

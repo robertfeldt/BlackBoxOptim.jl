@@ -54,7 +54,7 @@
     @testset "rand_individual is within the search space" begin
         for i in 1:NumTestRepetitions
             reps = rand(1:100)
-            mm = sort(rand(2,1), 1)
+            mm = sort(rand(2,1), dims=1)
             range = (mm[1], mm[2])
             ss = symmetric_search_space(reps, range)
             ind = rand_individual(ss)
@@ -66,7 +66,7 @@
     @testset "rand_individuals creates many individuals and all are within the search space" begin
         for i in 1:NumTestRepetitions
             reps = rand(1:10)
-            mm = sort(rand(2,1), 1)
+            mm = sort(rand(2,1), dims=1)
             range = (mm[1], mm[2])
             ss = symmetric_search_space(reps, range)
             numinds = rand(1:10)
@@ -89,7 +89,7 @@
             ss = RangePerDimSearchSpace(parambounds)
             @test mins(ss) == minbounds
             @test maxs(ss) == maxbounds
-            @test round.(deltas(ss), 6) == round.(ds, 6)
+            @test round.(deltas(ss), digits=6) == round.(ds, digits=6)
 
             # Now generate 100 individuals and make sure they are all within bounds
             inds = rand_individuals(ss, 100)
@@ -121,7 +121,7 @@
         @test size(inds, 1) == 3
         @test size(inds, 2) == 2
 
-        sorted = sort(inds, 2) # Sort per row --> in their ordered intervals
+        sorted = sort(inds, dims=2) # Sort per row --> in their ordered intervals
         @test (0.0 <= sorted[1,1] <= 0.5)
         @test (0.5 <= sorted[1,2] <= 1.0)
 

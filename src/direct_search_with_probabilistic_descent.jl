@@ -11,8 +11,8 @@ This is the Muller-Marsaglia method as described [here](http://mathworld.wolfram
 """
 function sample_unit_hypersphere(n, num = 1)
     X = randn(n, num)
-    sqrootsums = 1 ./ sqrt.(sum(abs2, X, 1))
-    broadcast(*, sqrootsums, X)
+    sqrootsums = 1 ./ sqrt.(sum(abs2, X, dims=1))
+    sqrootsums .* X
 end
 
 struct RandomDirectionGen <: DirectionGenerator

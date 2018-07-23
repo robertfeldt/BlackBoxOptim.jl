@@ -10,7 +10,7 @@ mutable struct LTMADS <: MeshAdaptiveDirectSearch
   delta_p::Float64
   directionGenerator
 
-  LTMADS(n, D = [eye(n,n) -eye(n,n)]) = begin
+  LTMADS(n, D = [Matrix{Float64}(I, n,n) -Matrix{Float64}(I, n,n)]) = begin
     # Default values taken from Audet2006:
     new(D, 4, -1, +1, 1, 1, LTMADSDirectionGenerator())
   end

@@ -26,7 +26,7 @@ directions_for_k(cg::ConstantDirectionGen, k) =
 
 # We can easily do a compass search with GSS by generating directions
 # individually (+ and -) for each coordinate.
-compass_search_directions(n) = ConstantDirectionGen([eye(n,n) -eye(n, n)])
+compass_search_directions(n) = ConstantDirectionGen([Matrix{Float64}(I, n,n) -Matrix{Float64}(I, n, n)])
 
 const GSSDefaultParameters = ParamsDict(
     :DeltaTolerance => 1e-10,       # GSS has converged if the StepSize drops below this tolerance level

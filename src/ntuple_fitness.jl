@@ -14,7 +14,7 @@ abstract type TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA} en
 @inline fitness_eltype(::TupleFitnessScheme{N,F}) where {N,F} = F
 @inline is_minimizing(::TupleFitnessScheme{N,F,FA,MIN}) where {N,F,FA,MIN} = MIN
 
-@generated nafitness(::TupleFitnessScheme{N,F,NTuple{N,F}}) where {N,F} = ntuple(_ -> convert(F, NaN), Val{N})
+@generated nafitness(::TupleFitnessScheme{N,F,NTuple{N,F}}) where {N,F} = ntuple(_ -> convert(F, NaN), N)
 isnafitness(f::NTuple{N,F}, ::TupleFitnessScheme{N,F}) where {N,F} = any(isnan, f)
 
 aggregate(f::NTuple{N,F}, fs::TupleFitnessScheme{N,F}) where {N,F} = fs.aggregator(f)

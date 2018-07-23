@@ -3,11 +3,11 @@ include("../src/frequency_adaptation.jl")
 # Combine Loschilov's ACD with Glasmachers ACF-CD. Initial testing indicated it is 3-20 times
 # worse than just ACD. I guess the ACD needs new fitness evals in each direction of the transformation
 # matrix in order to reliably update it. So maybe only use ACF when increasing the population size, i.e.
-# ensure that all directions have been tried at least once and then add additional once from the frequency 
+# ensure that all directions have been tried at least once and then add additional once from the frequency
 # selected directions?
 function acf_adaptive_coordinate_descent(fitnessfct, P, Xmin, Xmax;
-  MaxEval = 1e4 * P, 
-  stopfitness = 1e-8, 
+  MaxEval = 1e4 * P,
+  stopfitness = 1e-8,
   howOftenUpdateRotation = 1,
   numfevals = 0,
   kSuccess = 2.0,
@@ -124,8 +124,8 @@ function acf_adaptive_coordinate_descent(fitnessfct, P, Xmin, Xmax;
           println("Restart!")
           # Recursive call to restart but express how many function evals we have already done...
           xm2, bf2, nf2 = acf_adaptive_coordinate_descent(fitnessfct, P, Xmin, Xmax;
-            MaxEval = MaxEval, stopfitness = stopfitness, 
-            howOftenUpdateRotation = howOftenUpdateRotation, 
+            MaxEval = MaxEval, stopfitness = stopfitness,
+            howOftenUpdateRotation = howOftenUpdateRotation,
             numfevals = numfevals)
           if bf2 < bestFit
             return (xm2, bf2, nf2)
@@ -156,7 +156,7 @@ function predicted_final_fitness(currentfevals, lastfevals, maxfevals, currentfi
 end
 
 function generate_random_orthogonal_transformation(P)
-  B = eye(P,P)
+  B = Matrix{Float64}(I, P, P)
   for i = 1:P
     v = randn(P,1)
     while norm(v) < 1e-2
@@ -173,9 +173,7 @@ end
 # Use this when no adaptive encoding is used, i.e. the ACD algorithm is a normal CD.
 mutable struct NoEncoding
   B
-  NoEncoding(mu, P) = begin
-    new(eye(P, P))
-  end
+  NoEncoding(mu, P) = new(Matrix{Float64}(I, P, P))
 end
 
 function update!(e::NoEncoding, population::Matrix{Float64}, howOftenUpdateRotation = 1)
@@ -215,8 +213,8 @@ mutable struct AdaptiveEncoding
       zeros(P), # pc
       zeros(P), # pcmu
       population * weights, # xmean
-      eye(P), # C
-      eye(P), # Cold
+      Matrix{Float64}(I, P, P), # C
+      Matrix{Float64}(I, P, P), # Cold
       ones(P), # diagD
       0, # ps
       0  # iter
@@ -247,13 +245,13 @@ function update!(ae::AdaptiveEncoding, population::Matrix{Float64}, howOftenUpda
 
   # Line 10: Calculate z0 but check for the denominator being zero...
   xdiff = ae.xmean .- xold
-  denom = sum((ae.invB * xdiff).^2)
+  denom = sum(abs2, ae.invB * xdiff)
   if denom == 0
     z0 = zeros(ae.P)
   else
     z0 = (sqrt(ae.P) / sqrt(denom)) * xdiff
   end
-  
+
   # Line 11&13: Calc zi's and then Cmu.
   #ae.cmu = 0.0
   if ae.cmu != 0.0
@@ -265,7 +263,7 @@ function update!(ae::AdaptiveEncoding, population::Matrix{Float64}, howOftenUpda
     Cmu = 1 # dummy just so it is defined
   end
 
-  # Line 12: Update p 
+  # Line 12: Update p
   ae.pc = (1-ae.cp) * ae.pc .+ sqrt(ae.cp*(2-ae.cp)) * z0
 
   # Line 14: Update C.
@@ -288,12 +286,12 @@ function update!(ae::AdaptiveEncoding, population::Matrix{Float64}, howOftenUpda
     if minimum(eigenvalues) <= 0
       eigenvalues[eigenvalues .< 0] = 0
       tmp = maximum(eigenvalues) / cond
-      ae.C = ae.C .+ tmp * eye(ae.P)
+      ae.C = ae.C .+ tmp * Matrix{Float64}(I, ae.P, ae.P)
       eigenvalues += tmp * ones(ae.P,1)
     end
     if maximum(eigenvalues) > cond*minimum(eigenvalues)
       tmp = maximum(eigenvalues)/cond - minimum(eigenvalues)
-      ae.C = ae.C .+ tmp * eye(ae.P)
+      ae.C = ae.C .+ tmp * Matrix{Float64}(I, ae.P, ae.P)
       eigenvalues += tmp*ones(ae.P,1)
     end
     if (minimum(eigenvalues) <= 0)
@@ -302,7 +300,7 @@ function update!(ae::AdaptiveEncoding, population::Matrix{Float64}, howOftenUpda
     end
 
     try
-      ae.diagD = sqrt(eigenvalues) 
+      ae.diagD = sqrt(eigenvalues)
       # Use Cholesky instead??
       ae.B = ae.Bo * diagm(ae.diagD) # This is sometimes a matrix rather than a vector. Strange!
       ae.invB = diagm(1 ./ ae.diagD) * ae.Bo'

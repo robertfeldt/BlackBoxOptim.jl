@@ -1,10 +1,11 @@
-if !isdefined(:TimeTestExecution)
+if !@isdefined(TimeTestExecution)
     const TimeTestExecution = false
 end
 
 module BlackBoxOptimTests
 
-using CSV
+using LinearAlgebra, Random
+using Printf: @printf, @sprintf
 
 startclocktime = time()
 include("helper.jl")
@@ -63,7 +64,7 @@ gitremote, gitbranch, gitcommit = get_git_remote_and_branch()
 gitstr = gitremote * "/" * gitbranch * "/" * gitcommit[1:6]
 versionstr = string(VERSION)
 
-using DataFrames
+using CSV, DataFrames
 
 TestTimingFileName = "test/timing_testing.csv"
 
@@ -99,7 +100,7 @@ for t in my_tests
         include(t)
     end
     numtestfiles += 1
-    print("."); flush(STDOUT);
+    print("."); flush(stdout);
 end
 println() # So Base.Test summary is correctly aligned...
 end

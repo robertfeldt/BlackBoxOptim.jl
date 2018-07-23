@@ -26,7 +26,7 @@
 #
 #    sigma = 1.0                   # Mutation strength, sigma (self-adapted)
 #    sigmas = sigma * ones(1, n)
-#    C = eye(n, n)                 # Covariance matrix
+#    C = Matrix{Float64}(I, n, n)                 # Covariance matrix
 #
 #    new(n, mu, lambda, decomposeFunc, tau, tau_c,
 #      sigma, sigmas, C, decomposeFunc(C))
@@ -313,7 +313,7 @@ mutable struct EigenCovarSampler <: CovarianceMatrixSampler
   diagD::Array{Float64,1}
 
   EigenCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n), ones(n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n), ones(n))
   end
 end
 
@@ -336,7 +336,7 @@ mutable struct CholeskyCovarSampler <: CovarianceMatrixSampler
   sqrtC::Array{Float64,2}
 
   CholeskyCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n))
   end
 end
 

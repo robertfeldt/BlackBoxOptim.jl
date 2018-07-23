@@ -26,10 +26,10 @@ discretization defined by ϵ-box fitness schema.
     quote
         #archive = EpsBoxArchive(fs)
         pf = Dict{NTuple{N,Int}, IndexedTupleFitness{N,F}}()
-        param = Vector{Float64}(N-1)
+        param = fill!(Vector{Float64}(undef, N-1), 0.0)
         #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N-1) t d->linspace(surf.parameter_space.mins[d], surf.parameter_space.maxs[d],
-                                                    ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
+        Base.Cartesian.@nloops $(N-1) t d->range(surf.parameter_space.mins[d], stop=surf.parameter_space.maxs[d],
+                                                 length=ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
             fit = surf.manifold(param, Val{NP})
             if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
                 ifit = convert(IndexedTupleFitness, fit, fs)

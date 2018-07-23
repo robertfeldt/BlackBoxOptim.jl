@@ -80,7 +80,7 @@ function fill_block!(fa::FrequencyAdapter)
             ai -= nai # adjust the remainder
             new_pos = last_pos + nai
             resize!(fa.block, new_pos)
-            fa.block[(last_pos+1):(new_pos)] = i
+            fa.block[(last_pos+1):(new_pos)] .= i
             last_pos = new_pos
         end
         fa.a[i] = ai

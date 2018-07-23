@@ -25,7 +25,7 @@ end
 
 for n in Ns
   # Non-sparse, sqrtm
-  C = eye(n)
+  C = Matrix{Float64}(I, n, n)
   if n <= 2000
     tic()
     for rep in 1:num_reps

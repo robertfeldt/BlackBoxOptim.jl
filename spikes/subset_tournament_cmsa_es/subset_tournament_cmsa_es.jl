@@ -299,7 +299,7 @@ mutable struct EigenCovarSampler <: CovarianceMatrixSampler
   diagD::Array{Float64,1}
 
   EigenCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n), ones(n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n), ones(n))
   end
 end
 
@@ -322,7 +322,7 @@ mutable struct CholeskyCovarSampler <: CovarianceMatrixSampler
   sqrtC::Array{Float64,2}
 
   CholeskyCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n))
   end
 end
 
@@ -348,7 +348,7 @@ mutable struct SubsetCholeskyCovarSampler <: CovarianceMatrixSampler
   subset::Array{Int, 1} # Indices of the currently active subset of variables
 
   SubsetCholeskyCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n), collect(1:n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n), collect(1:n))
   end
 end
 

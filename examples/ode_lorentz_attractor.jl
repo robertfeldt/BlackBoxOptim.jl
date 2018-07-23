@@ -7,12 +7,12 @@ function lorentz_equations(params::Vector{Float64}, r::Vector{Float64})
 
     # Extract the coordinates from the r vector
     x, y, z = r
-    
+
     # The Lorenz equations
     dx_dt = sigma*(y - x)
     dy_dt = x*(rho - z) - y
     dz_dt = x*y - beta*z
-    
+
     # Return the derivatives as a vector
     Float64[dx_dt, dy_dt, dz_dt]
 end
@@ -34,7 +34,7 @@ t_Xiang2015 = collect(tinterval_Xiang2015)
 # Initial position in space
 r0 = [0.1; 0.0; 0.0]
 
-# Constants sigma, rho and beta. In a real ODE problem these would not be known 
+# Constants sigma, rho and beta. In a real ODE problem these would not be known
 # and would be estimated.
 sigma = 10.0
 rho   = 28.0
@@ -42,7 +42,7 @@ beta  = 8.0/3.0
 real_params = [sigma, rho, beta]
 
 # "Play" an ODE from a starting point and into the future given a sequence of time steps.
-function calc_state_vectors(params::Vector{Float64}, odefunc::Function, 
+function calc_state_vectors(params::Vector{Float64}, odefunc::Function,
     startx::Vector{Float64}, times::Vector{Float64}; states = nothing)
 
     numsamples = length(times)
@@ -85,7 +85,7 @@ function subsample(origstates::Array{Float64, 2}, times::Vector{Float64}, lenrat
     return origstates[:, indexes], times[indexes]
 end
 
-# The [Xiang2015] paper, https://www.hindawi.com/journals/ddns/2015/740721/, 
+# The [Xiang2015] paper, https://www.hindawi.com/journals/ddns/2015/740721/,
 # used these param bounds:
 Xiang2015Bounds = Tuple{Float64, Float64}[(9, 11), (20, 30), (2, 3)]
 
@@ -102,15 +102,15 @@ end
 origstates1, times1 = subsample(origstates, t, 0.04); # Sample only first 4%
 origstates1_Xiang2015, times1_Xiang2015 = subsample(origstates_Xiang2015, t_Xiang2015, 1.00);
 
-res1 = bboptimize(params -> lorentz_fitness(params, origstates1, times1); 
+res1 = bboptimize(params -> lorentz_fitness(params, origstates1, times1);
     SearchRange = Xiang2015Bounds, MaxSteps = 8e3)
 
-res2 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015); 
+res2 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015);
     SearchRange = Xiang2015Bounds, MaxSteps = 11e3) # They allow 12k fitness evals for 3-param estimation
 
 # But lets also try with less tight bounds
 LooserBounds = Tuple{Float64, Float64}[(0, 22), (0, 60), (1, 6)]
-res3 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015); 
+res3 = bboptimize(params -> lorentz_fitness(params, origstates1_Xiang2015, times1_Xiang2015);
     SearchRange = LooserBounds, MaxSteps = 11e3) # They allow 12k fitness evals for 3-param estimation
 
 println("Results on the long time sequence from Paulo Marques:")

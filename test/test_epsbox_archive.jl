@@ -132,7 +132,7 @@
         scheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=true)
         a = EpsBoxArchive(scheme)
 
-        for t in linspace(0, 2, 1000)
+        for t in range(0, stop=2, length=1000)
             params = [t, t]
             BlackBoxOptim.add_candidate!(a, schaffer1(params), params)
         end

@@ -29,7 +29,7 @@ Can carry additional information, like the `tag` or the genetic operator applied
 """
 mutable struct Candidate{F} <: FitIndividual{F}
     params::Individual
-    index::Int          # index of individual in the population, -1 if unassigned
+    index::Int          # index of individual in the population, -1 if unassigned # FIXME nothing if unassigned
     fitness::F          # fitness
 
     extra::Any          # extra information
@@ -54,7 +54,7 @@ tag(cand::Candidate) = cand.tag
 Base.copy(c::Candidate) = Candidate(copy(c.params), c.index, c.fitness, c.extra, c.tag)
 
 function Base.copy!(c::Candidate{F}, o::Candidate{F}) where F
-    copy!(c.params, o.params)
+    copyto!(c.params, o.params)
     c.index = o.index
     c.fitness = o.fitness # FIXME if vector?
     c.extra = o.extra

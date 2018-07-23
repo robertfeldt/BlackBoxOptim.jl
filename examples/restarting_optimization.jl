@@ -2,9 +2,7 @@ using BlackBoxOptim
 
 # Lets start and then restart an optimization of 2D rosenbrock
 # as in the README:
-function rosenbrock2d(x)
-  return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
+rosenbrock2d(x) = abs2(1.0 - x[1]) + 100.0 * abs2(x[2] - x[1]^2)
 
 # If you want to restart optimization you need to get a handle
 # to the optimizer, problem and params. Use the function

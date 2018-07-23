@@ -4,12 +4,16 @@
 #
 function rosenbrock(x)
   n = length(x)
-  return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
+  return sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 )
 end
+# FIXME this should be a more efficient implementation, but switching to it would reset all benchmarks
+#rosenbrock(x) = sum(i -> 100*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x)-1))
 
 function sphere(x)
   sum(x.^2)
 end
+# FIXME this should be a more efficient implementation, but switching to it would reset all benchmarks
+#sphere(x) = sum(abs2, x)
 
 mutable struct SparseShiftedProblem
   active_factors::Array{Int, 1}

@@ -96,7 +96,7 @@ OptRunController(orc::OptRunController, params) =
     OptRunController(optimizer(orc), evaluator(orc), params)
 
 # logging/tracing
-function tr(ctrl::OptRunController, msg::AbstractString, obj = nothing)
+function trace(ctrl::OptRunController, msg::AbstractString, obj = nothing)
     if ctrl.trace_mode != :silent
         print(msg)
         if obj !== nothing
@@ -214,23 +214,23 @@ function trace_progress(ctrl::OptRunController)
     end
 
     # Always print step number, num fevals and elapsed time
-    tr(ctrl, @sprintf("%.2f secs, %d evals, %d steps",
+    trace(ctrl, @sprintf("%.2f secs, %d evals, %d steps",
             elapsed_time(ctrl), num_func_evals(ctrl), num_steps(ctrl)))
 
     # Only print if this optimizer reports on number of better. They return 0
     # if they do not.
     if total_improvement_rate > 0.0
-        tr(ctrl, @sprintf(", improv/step: %.3f (last = %.4f)",
+        trace(ctrl, @sprintf(", improv/step: %.3f (last = %.4f)",
                 total_improvement_rate, recent_improvement_rate))
     end
 
     # Always print fitness if num_evals > 0
     if num_func_evals(ctrl) > 0
-        tr(ctrl, ", fitness=")
+        trace(ctrl, ", fitness=")
         show_fitness(stdout, best_fitness(ctrl), problem(ctrl))
     end
 
-    tr(ctrl, "\n")
+    trace(ctrl, "\n")
 
     trace_state(stdout, ctrl.optimizer, ctrl.trace_mode)
 end
@@ -269,7 +269,7 @@ end
 Run optimization until one of the stopping conditions are satisfied.
 """
 function run!(ctrl::OptRunController)
-    tr(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
+    trace(ctrl, "Starting optimization with optimizer $(name(ctrl.optimizer))\n")
     try
         setup_optimizer!(ctrl)
 
@@ -300,28 +300,28 @@ function run!(ctrl::OptRunController)
     finally
         shutdown_optimizer!(ctrl)
     end
-    tr(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
+    trace(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
 
     return ctrl.stop_reason
 end
 
 function show_report(ctrl::OptRunController, population_stats=false)
     final_elapsed_time = elapsed_time(ctrl)
-    tr(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
-    tr(ctrl, "Steps per second = $(num_steps(ctrl)/final_elapsed_time)\n")
-    tr(ctrl, "Function evals per second = $(num_func_evals(ctrl)/final_elapsed_time)\n")
-    tr(ctrl, "Improvements/step = $(ctrl.num_better/ctrl.max_steps)\n")
-    tr(ctrl, "Total function evaluations = $(num_func_evals(ctrl))\n")
+    trace(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
+    trace(ctrl, "Steps per second = $(num_steps(ctrl)/final_elapsed_time)\n")
+    trace(ctrl, "Function evals per second = $(num_func_evals(ctrl)/final_elapsed_time)\n")
+    trace(ctrl, "Improvements/step = $(ctrl.num_better/ctrl.max_steps)\n")
+    trace(ctrl, "Total function evaluations = $(num_func_evals(ctrl))\n")
 
     if population_stats && isa(ctrl.optimizer, PopulationOptimizer)
-        tr(ctrl, "\nMean value (in population) per position:",  mean(population(ctrl.optimizer),1))
-        tr(ctrl, "\n\nStd dev (in population) per position:", std(population(ctrl.optimizer),1))
+        trace(ctrl, "\nMean value (in population) per position:",  mean(population(ctrl.optimizer),1))
+        trace(ctrl, "\n\nStd dev (in population) per position:", std(population(ctrl.optimizer),1))
     end
 
-    tr(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
-    tr(ctrl, "\n\nFitness: ")
+    trace(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
+    trace(ctrl, "\n\nFitness: ")
     show_fitness(stdout, best_fitness(ctrl), problem(ctrl))
-    tr(ctrl, "\n\n")
+    trace(ctrl, "\n\n")
 end
 
 function write_result(ctrl::OptRunController, filename = "")
@@ -435,7 +435,7 @@ function run!(oc::OptController)
         # If it was a ctrl-c interrupt we try to make a result and return it...
         if get(oc.parameters, :RecoverResults, true) && isa(ex, InterruptException)
             @warn("Optimization interrupted, recovering intermediate results...")
-            ctrl.stop_reason = @sprintf "%s" ex
+            ctrl.stop_reason = @sprintf("%s", ex)
             return OptimizationResults(ctrl, oc)
         else
             rethrow(ex)

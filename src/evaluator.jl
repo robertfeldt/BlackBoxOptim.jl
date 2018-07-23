@@ -20,9 +20,9 @@ Default implementation of the `Evaluator`.
 `FP` is the original problem's fitness type
 `FA` is the fitness type actually stored by the archive.
 """
-# FIXME F is the fitness type of the problem, but with current Julia it's
-# not possible to get and use it at declaration type
 mutable struct ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
+    # FIXME F is the fitness type of the problem, but with current Julia it's
+    # not possible to get and use it at declaration type
     problem::P
     archive::A
     num_evals::Int

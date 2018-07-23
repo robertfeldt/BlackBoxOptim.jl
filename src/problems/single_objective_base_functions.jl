@@ -12,7 +12,7 @@ function ellipsoid(x)
     cumsum = 0.0
     for xx in x
         cumsum += xx
-        res += cumsum^2
+        res += abs2(cumsum)
     end
     return res
 end
@@ -21,8 +21,16 @@ function elliptic(x)
     D = length(x)
     condition = 1e+6
     coefficients = condition .^ range(0, stop=1, length=D)
-    return sum(coefficients .* x.^2)
+    return sum(coefficients .* abs2.(x))
 end
+
+#= FIXME this should be more efficient implementation, but switching to it would reset the benchmarks
+function elliptic(x)
+    condition = 1e+6
+    powers = range(0, stop=1, length=length(x))
+    @inbounds return sum(i -> (condition^powers[i])*abs2(x[i]), eachindex(x))
+end
+=#
 
 function rastrigin(x)
     D = length(x)
@@ -32,7 +40,7 @@ end
 function ackley(x)
     D = length(x)
     try
-        return 20 - 20.*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + e
+        return 20 - 20*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + e
     catch ex
         # Sometimes we have gotten a DomainError from the cos function so we protect this call
         println(ex)
@@ -56,8 +64,15 @@ end
 
 function rosenbrock(x)
     n = length(x)
-    return sum(100*(view(x, 2:n) - view(x, 1:(n-1)).^2).^2 + (view(x, 1:(n-1)) - 1).^2)
+    return sum(100*(view(x, 2:n) .- view(x, 1:(n-1)).^2).^2 .+ (view(x, 1:(n-1)) .- 1).^2)
 end
+
+#= FIXME this should be more efficient implementation, but switching to it would reset the benchmarks
+function rosenbrock(x)
+    @inbounds return sum(i -> 100.0*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1.0),
+                         1:length(x)-1)
+end
+=#
 
 step(x) = sum(xx -> ceil(xx + 0.5), x)
 

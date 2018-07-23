@@ -16,10 +16,10 @@ function select(sel::TournamentSelector, population, n_tours::Int)
     n_candidates = min(popsize(population), sel.size*n_tours)
     all_candidates = rand_indexes(1:popsize(population), n_candidates)
 
-    res = Vector{Int}(n_tours)
-    tour_candidates = Vector{Int}(sel.size)
+    res = Vector{Int}(undef, n_tours)
+    tour_candidates = Vector{Int}(undef, sel.size)
     @inbounds for i in eachindex(res)
-        copy!(tour_candidates, 1, all_candidates, 1+(i-1)*sel.size, sel.size)
+        copyto!(tour_candidates, 1, all_candidates, 1+(i-1)*sel.size, sel.size)
         res[i] = tournament(sel, population, tour_candidates)
     end
     return res

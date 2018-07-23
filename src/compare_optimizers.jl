@@ -49,9 +49,9 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
         end
     end
 
-    avg_ranks = round(mean(ranks, 2), digits=2)
-    avg_fitness = round(mean(fitnesses, 2), digits=3)
-    avg_times = round(mean(times, 2), digits=2)
+    avg_ranks = round(mean(ranks, dims=2), digits=2)
+    avg_fitness = round(mean(fitnesses, dims=2), digits=3)
+    avg_times = round(mean(times, dims=2), digits=2)
 
     perm = sortperm(avg_ranks[:])
     println("\nBy avg rank:")
