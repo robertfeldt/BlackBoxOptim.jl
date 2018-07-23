@@ -67,6 +67,8 @@ const EpsBoxArchive_DefaultParameters = ParamsDict(
     :MaxArchiveSize => 10_000,
 )
 
+Base.eltype(::Type{EpsBoxArchive{N,F}}) where {N,F} = EpsBoxFrontierIndividual{N,F}
+
 Base.length(a::EpsBoxArchive) = a.len
 Base.isempty(a::EpsBoxArchive) = a.len == 0
 capacity(a::EpsBoxArchive) = a.max_size
@@ -80,10 +82,19 @@ struct EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
     EpsBoxArchiveFrontierIterator(a::A) where {A<:EpsBoxArchive} = new{A}(a)
 end
 
-@inline Base.length(it::EpsBoxArchiveFrontierIterator) = length(it.archive)
-@inline Base.start(it::EpsBoxArchiveFrontierIterator) = findfirst(it.archive.frontier_isoccupied)
-@inline Base.done(it::EpsBoxArchiveFrontierIterator, ix::Integer) = ix == 0
-@inline Base.next(it::EpsBoxArchiveFrontierIterator, ix::Integer) = (it.archive.frontier[ix], findnext(it.archive.frontier_isoccupied, ix+1))
+Base.eltype(::Type{EpsBoxArchiveFrontierIterator{A}}) where A = eltype(A)
+
+@inline function Base.iterate(it::EpsBoxArchiveFrontierIterator)
+    ix = findfirst(it.archive.frontier_isoccupied)
+    return ix !== nothing ? (it.archive.frontier[ix], ix) : nothing
+end
+
+@inline function Base.iterate(it::EpsBoxArchiveFrontierIterator, state::Int)
+    ix = findnext(it.archive.frontier_isoccupied, state+1)
+    return ix !== nothing ? (it.archive.frontier[ix], ix) : nothing
+end
+
+Base.length(it::EpsBoxArchiveFrontierIterator) = sum(it.archive.frontier_isoccupied)
 
 """
 Get the iterator to the individuals on the Pareto frontier.
@@ -93,7 +104,7 @@ pareto_frontier(a::EpsBoxArchive) = EpsBoxArchiveFrontierIterator(a)
 function occupied_frontier_indices(a::EpsBoxArchive)
     ixs = sizehint!(Vector{Int}(), a.len)
     i = findfirst(a.frontier_isoccupied)
-    while i > 0
+    while i !== nothing
         push!(ixs, i)
         i = findnext(a.frontier_isoccupied, i+1)
     end
