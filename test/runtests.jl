@@ -82,7 +82,6 @@ end
 
 using CPUTime
 
-numtestfiles = 0
 starttime = CPUtime_us()
 @testset "BlackBoxOptim test suite" begin
 
@@ -97,7 +96,6 @@ for t in my_tests
         datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
         push!(timing_data, [datestr, versionstr, gitstr, t, elapsed])
     end
-    numtestfiles += 1
     print("."); flush(stdout);
 end
 println() # So Base.Test summary is correctly aligned...
@@ -114,6 +112,6 @@ if Main.TimeTestExecution
 end
 
 elapsedclock = time() - startclocktime
-println("Tested $(numtestfiles) files in $(round(elapsedclock, digits=1)) seconds.")
+println("Tested $(length(my_tests)) files in $(round(elapsedclock, digits=1)) seconds.")
 
 end # module BlackBoxOptimTests
