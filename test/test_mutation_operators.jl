@@ -29,7 +29,7 @@
             ind = copy(ref_ind)
             BlackBoxOptim.apply!(mc, ind, 1)
             @test in(ind, ss)
-            mutations_per_param[ind .!= ref_ind] += 1
+            mutations_per_param[ind .!= ref_ind] .+= 1
         end
         mut_frequencies = mutations_per_param ./ NumReps
         for p in 1:numdims(ss)
