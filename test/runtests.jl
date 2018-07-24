@@ -87,17 +87,15 @@ starttime = CPUtime_us()
 @testset "BlackBoxOptim test suite" begin
 
 for t in my_tests
+    Main.TimeTestExecution && CPUtic()
+
+    # Including the test file runs the tests in there...
+    include(t)
+
     if Main.TimeTestExecution
-        CPUtic()
-
-        # Including the test file runs the tests in there...
-        include(t)
-
         elapsed = CPUtoq()
         datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
         push!(timing_data, [datestr, versionstr, gitstr, t, elapsed])
-    else
-        include(t)
     end
     numtestfiles += 1
     print("."); flush(stdout);
