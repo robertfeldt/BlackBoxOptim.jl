@@ -75,7 +75,72 @@ function Base.merge!(d::Dict{K,V}, dc::DictChain{K,V}) where {K,V}
     return d
 end
 
-Base.length(p::DictChain) = length(p.dicts)
+# Iterator methods
+function Base.start(dc::DictChain)
+    vec_state = start(dc.dicts)
+    return (vec_state, nothing)
+end
+
+function Base.next(dc::DictChain, state::Tuple{Int,Void})
+    vec_state = state[1]
+    (assoc, vec_state) = next(dc.dicts, vec_state)
+    assoc_state = start(assoc)
+    return next(dc, (vec_state, (assoc, assoc_state)))
+end
+
+function Base.next(dc::DictChain, state::Tuple{Int,Tuple})
+    vec_state, (assoc, assoc_state) = state
+    while done(assoc, assoc_state)
+        # We know dc.dicts is not done
+        (assoc, vec_state) = next(dc.dicts, vec_state)
+        assoc_state = start(assoc)
+    end
+    (el, assoc_state) = next(assoc, assoc_state)
+    return (el, (vec_state, (assoc, assoc_state)))
+end
+
+function Base.done(dc::DictChain, state::Tuple{Int,Void})
+    vec_state = state[1]
+    while !done(dc.dicts, vec_state)
+        assoc, vec_state = next(dc.dicts, vec_state)
+        assoc_state = start(assoc)
+        if !done(assoc, assoc_state)
+            return false
+        end
+    end
+    return true
+end
+
+function Base.done(dc::DictChain, state::Tuple{Int,Tuple})
+    vec_state, (assoc, assoc_state) = state
+    while done(assoc, assoc_state)
+        if done(dc.dicts, vec_state)
+            return true
+        end
+        (assoc, vec_state) = next(dc.dicts, vec_state)
+        assoc_state = start(assoc)
+    end
+    return false # there is a nonempty assoc in dicts
+end
+
+# Length is the total number of pairs in all the dicts
+function Base.length(dc::DictChain)
+    sum(length(dct) for dct in dc.dicts)
+end
+
+# `in` returns true if the pair is in any contained dict
+function Base.in(pair::Pair, dc::DictChain, valcmp=(==))
+    any(in(pair, assoc, valcmp) for assoc in dc.dicts)
+end
+
+import Base: ==
+function ==(ldc::DictChain, rdc::DictChain)
+    left, right = collect(ldc), collect(rdc)
+    if length(left) != length(right) return false end
+    # Associative objects have no canonical ordering
+    # This trusts `sort` is faster than any comparison I'd be likely to implement
+    all(sort(left) .== sort(right))
+end
 
 # since Base.merge(Dict, Dict) generates Dict, we need another name
 # for operation that generates DictChain.

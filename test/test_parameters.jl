@@ -131,6 +131,57 @@
         @test fd[:b] == 4
         @test sort(collect(keys(fd))) == [:a, :b]
     end
+
+    d1 = Dict{Symbol,Int}(:a => 1)
+    d2 = Dict{Symbol,Int}(:a => 2, :b => 4)
+    d3 = Dict{Symbol,Int}(:b => 3, :c => 5)
+    dc = DictChain(d1, d2, d3)
+
+    empty_d1 = Dict{Symbol,Int}()
+    empty_d2 = Dict{Symbol,Int}()
+    empty_dc = DictChain(empty_d1, empty_d2)
+    @testset "in" begin
+        @test in(:a => 1, dc)
+        @test in(:a => 2, dc)
+    end
+
+    @testset "iterator" begin
+        @testset "start" begin
+            @test start(dc) == (1, nothing)
+        end
+        @testset "done" begin
+            @test done(empty_dc, start(empty_dc))
+        end
+        @testset "all methods" begin
+            @test first(dc) == (:a=>1)
+            dc_list = collect(dc)
+            @test in(:b=>3, dc_list)
+            @test in(:b=>4, dc_list)
+        end
+    end
+
+    @testset "length" begin
+        @test length(dc) == 5
+        @test length(empty_dc) == 0
+    end
+
+    @testset "==" begin
+        dc_same = DictChain(d1,d2,d3)
+        @test dc == dc_same
+        @testset "catch Base.== shortcoming" begin
+            ad1 = Dict{Symbol,Int}(:a => 1)
+            ad2 = Dict{Symbol,Int}(:a => 1, :b => 4)
+            ad3 = Dict{Symbol,Int}(:a => 1, :c => 5)
+            adc = DictChain(ad1, ad2, ad3)
+            @test adc != dc
+        end
+        @testset "empty dicts don't matter" begin
+            #edc = DictChain(Associative{Symbol,Int}[d1, d2, d3, empty_d1])
+            edc = DictChain{Symbol,Int}(Associative{Symbol,Int}[d1, d2, d3, empty_d1])
+            @test dc == edc
+        end
+    end
+
 end
 
 @testset "Parameters" begin
