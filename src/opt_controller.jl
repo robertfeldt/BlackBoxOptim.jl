@@ -395,7 +395,7 @@ end
 function init_rng!(parameters::Parameters)
     if parameters[:RandomizeRngSeed]
         parameters[:RngSeed] = rand(1:1_000_000)
-        srand(parameters[:RngSeed])
+        Random.seed!(parameters[:RngSeed])
     end
 end
 
