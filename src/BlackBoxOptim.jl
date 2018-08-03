@@ -1,5 +1,3 @@
-__precompile__()
-
 using Random
 
 module BlackBoxOptim
