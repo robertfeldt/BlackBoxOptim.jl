@@ -1,7 +1,5 @@
 @testset "Top-level interface" begin
-    function rosenbrock(x)
-        return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
-    end
+    rosenbrock(x) = sum(i -> 100*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x)-1))
 
     @testset "run a simple optimization" begin
         @testset "using bboptimize() with mostly defaults" begin
@@ -128,7 +126,7 @@
             optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
                               MaxSteps=100, TraceMode=:silent, RecoverResults=true)
             res = bboptimize(optctrl)
-            @test BlackBoxOptim.stop_reason(res) == (@sprintf "%s" InterruptException())
+            @test BlackBoxOptim.stop_reason(res) == @sprintf("%s", InterruptException())
         end
 
         @testset ":RecoverResults off" begin
@@ -140,6 +138,8 @@
     end
 
     @testset "continue running an optimization after serializing to disc" begin
+        using Serialization: serialize, deserialize
+
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
                           MaxTime = 0.5, TraceMode = :silent)
         res1 = bboptimize(optctrl)
@@ -152,7 +152,7 @@
             end
 
             # Try to make sure its not in mem:
-            opctrl = nothing; gc()
+            opctrl = nothing; GC.gc()
 
             local ocloaded
             open(tempfilename, "r") do fh

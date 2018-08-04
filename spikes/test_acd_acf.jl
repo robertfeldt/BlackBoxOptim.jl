@@ -41,13 +41,13 @@ function bbob_sp1(func, targetValue, P, nonImprovementBudget = 1, reps = 10, Max
   mean_fevals_successes = mean(nfevals[successes])
   mean_times_successes = mean(times[successes])
   sp1 = mean_fevals_successes / successrate
-  std_fevals = round(std(nfevals[successes]), 2)
-  std_times = round(std(times[successes]), 2)
+  std_fevals = round(std(nfevals[successes]), digits=2)
+  std_times = round(std(times[successes]), digits=2)
 
-  println("\n\nNum fevals: $(round(mean_fevals_successes, 2)) +/- $(std_fevals) ($(minimum(nfevals[successes]))-$(maximum(nfevals[successes])))")
-  println("Times     : $(round(mean_times_successes, 2)) +/- $(std_times) ($(minimum(times[successes]))-$(maximum(times[successes])))")
-  println("SP1 = $(round(sp1, 2))")
-  println("log10(fevals/dim) = $(round(log10(mean_fevals_successes/P), 2))")
+  println("\n\nNum fevals: $(round(mean_fevals_successes, digits=2)) +/- $(std_fevals) ($(minimum(nfevals[successes]))-$(maximum(nfevals[successes])))")
+  println("Times     : $(round(mean_times_successes, digits=2)) +/- $(std_times) ($(minimum(times[successes]))-$(maximum(times[successes])))")
+  println("SP1 = $(round(sp1, digits=2))")
+  println("log10(fevals/dim) = $(round(log10(mean_fevals_successes/P), digits=2))")
 
   return (sp1, successrate)
 end

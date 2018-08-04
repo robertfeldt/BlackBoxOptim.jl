@@ -34,9 +34,10 @@ Base.convert(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) where F = fit
 In `RatioFitnessScheme` the fitness values can be ranked on a ratio scale so
 pairwise comparisons are not required.
 The default scale used is the aggregate of the fitness components.
+
 """
-# FIXME
 abstract type RatioFitnessScheme{F} <: FitnessScheme{F} end
+# FIXME is it necessary?
 
 """
 `Float64`-valued scalar fitness scheme.
@@ -66,8 +67,8 @@ is_better(f1::Float64, f2::Float64, scheme::ScalarFitnessScheme{false}) = f1 > f
 """
 Complex-valued fitness.
 """
-# FIXME what is isbetter() for ComplexFitnessScheme
-struct ComplexFitnessScheme <: FitnessScheme{Complex128}
+struct ComplexFitnessScheme <: FitnessScheme{ComplexF64}
+# FIXME what is isbetter() for ComplexFitnessScheme?
 end
 
 # FIXME do we need it? it might be confused with problem's fitness bounds

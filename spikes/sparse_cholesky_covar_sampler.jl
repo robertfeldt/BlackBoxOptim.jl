@@ -5,7 +5,7 @@
 
 # This is not a general solution but it works for specifically my use case and
 # when the operator is *
-function Base.broadcast{Tv,Ti}(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti})
+function Base.broadcast(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
   I, J = findn(A)
   V = zeros(nnz(A))
   vn, vm = size(v)
@@ -25,7 +25,7 @@ function Base.broadcast{Tv,Ti}(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti})
   sparse(I, J, V)
 end
 
-type SparseCholeskyCovarSampler <: CovarianceMatrixSampler
+mutable struct SparseCholeskyCovarSampler <: CovarianceMatrixSampler
   C::SparseMatrixCSC{Float64,Int}
   sqrtC::SparseMatrixCSC{Float64,Int}
 

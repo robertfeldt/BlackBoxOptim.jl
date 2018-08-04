@@ -154,7 +154,7 @@ end
 ############################################################################
 # initialization:
 ############################################################################
-#Cov = eye(n);           # initial covariance matrix
+#Cov = Matrix{Float64}(I, n, n);           # initial covariance matrix
 # initializing individual population:
 #Individual.y = yInit;
 #Individual.w = 0;

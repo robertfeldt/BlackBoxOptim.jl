@@ -1,12 +1,9 @@
-__precompile__()
-
-if VERSION > v"0.7.0-DEV.0"
-    using Random
-end
+using Random
 
 module BlackBoxOptim
 
-using Distributions, StatsBase, Compat
+using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
+using Printf: @printf, @sprintf
 using Compat: String, view
 
 export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
@@ -88,6 +85,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         name
 
 module Utils
+    using Random
+
     include("utilities/latin_hypercube_sampling.jl")
     include("utilities/assign_ranks.jl")
     include("utilities/halton_sequence.jl")

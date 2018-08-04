@@ -1,5 +1,5 @@
 @testset "bboptimize() single-objective methods smoketest" begin
-    rosenbrock2d(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+    rosenbrock2d(x) = abs2(1.0 - x[1]) + 100.0 * abs2(x[2] - x[1]^2)
 
     for m in keys(BlackBoxOptim.SingleObjectiveMethods)
         @testset "$(m)" begin
@@ -21,7 +21,7 @@ end
 
     for m in keys(BlackBoxOptim.MultiObjectiveMethods)
         @testset "$(m)" begin
-            ctrl = bbsetup(schaffer1; Method = m, 
+            ctrl = bbsetup(schaffer1; Method = m,
                 SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,
                 FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.01)
             # run first iteration before the main run to exclude compilation from timing

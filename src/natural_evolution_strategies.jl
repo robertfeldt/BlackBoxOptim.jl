@@ -40,14 +40,14 @@ mutable struct SeparableNESOpt{F,E<:EmbeddingOperator} <: NaturalEvolutionStrate
         end
 
         new{F,E}(embed, lambda,
-                 ini_x, ones(d),
+                 ini_x, fill(1.0, d),
                  Normal(0, 1),
                  mu_learnrate, sigma_learnrate, max_sigma,
-                 zeros(d, lambda),
-                 [Candidate{F}(Individual(d), i) for i in 1:lambda],
+                 fill(0.0, d, lambda),
+                 [Candidate{F}(fill!(Individual(undef, d), NaN), i) for i in 1:lambda],
                  # Most modern NES papers use log rather than linear fitness shaping.
                  fitness_shaping_utilities_log(lambda),
-                 Vector{Float64}(lambda))
+                 Vector{Float64}(undef, lambda))
     end
 end
 
@@ -83,7 +83,7 @@ function ask(snes::SeparableNESOpt)
     for i in eachindex(snes.candidates)
         candi = snes.candidates[i]
         candi.index = i # reset ordering
-        @inbounds for j in 1:length(candi.params)
+        @inbounds for j in eachindex(candi.params)
             candi.params[j] = snes.mu[j] + snes.sigma[j] * snes.last_s[j, i]
         end
         apply!(snes.embed, candi.params, snes.mu)
@@ -98,7 +98,7 @@ function tell!(snes::SeparableNESOpt{F}, rankedCandidates::AbstractVector{<:Cand
 
     # Calc gradient
     gradient_mu = snes.last_s * u
-    gradient_sigma = (snes.last_s.^2 - 1) * u
+    gradient_sigma = (abs2.(snes.last_s) .- 1) * u
 
     # Update the mean and sigma vectors based on the gradient
     old_mu = copy(snes.mu)
@@ -148,9 +148,9 @@ where `B` is an exponential of some symmetric matrix `lnB`, `tr(lnB)==0.0`
 abstract type ExponentialNaturalEvolutionStrategyOpt <: NaturalEvolutionStrategyOpt end
 
 function update_candidates!(exnes::ExponentialNaturalEvolutionStrategyOpt, Z::Matrix)
-    B = expm(exnes.ln_B)
-    sBZ = A_mul_B!(exnes.tmp_sBZ, B, Z)
-    scale!(sBZ, exnes.sigma)
+    B = exp(exnes.ln_B)
+    sBZ = mul!(exnes.tmp_sBZ, B, Z)
+    sBZ .*= exnes.sigma
     for i in eachindex(exnes.candidates)
         candi = exnes.candidates[i]
         candi.index = i # reset ordering
@@ -166,8 +166,8 @@ end
 
 function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::AbstractVector)
     # TODO use syrk(Z,dA) to speed-up multiplication
-    Zu = scale!(exnes.tmp_Zu, exnes.Z, u)
-    ln_dB = A_mul_Bt!(exnes.tmp_lndB, Zu, exnes.Z)
+    Zu = broadcast!(*, exnes.tmp_Zu, exnes.Z, transpose(u))
+    ln_dB = mul!(exnes.tmp_lndB, Zu, transpose(exnes.Z))
     sumU = sum(u)
     dSigma = 0.0
     @inbounds for i in 1:size(ln_dB, 1)
@@ -178,11 +178,11 @@ function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::Ab
     @inbounds for i in 1:size(ln_dB, 1)
         ln_dB[i, i] -= dSigma
     end
-    scale!(ln_dB, 0.5 * exnes.B_learnrate)
+    ln_dB .*= 0.5 * exnes.B_learnrate
 
-    prev_x = copy!(exnes.tmp_x, exnes.x)
-    dx = A_mul_B!(exnes.tmp_dx, exnes.tmp_sBZ, u)
-    scale!(dx, exnes.x_learnrate)
+    prev_x = copyto!(exnes.tmp_x, exnes.x)
+    dx = mul!(exnes.tmp_dx, exnes.tmp_sBZ, u)
+    dx .*= exnes.x_learnrate
     exnes.x += dx
     apply!(exnes.embed, exnes.x, prev_x)
 
@@ -196,15 +196,15 @@ function update_parameters!(exnes::ExponentialNaturalEvolutionStrategyOpt, u::Ab
 end
 
 " Identity for generic search space "
-ini_xnes_B(ss::SearchSpace) = eye(numdims(ss), numdims(ss))
+ini_xnes_B(ss::SearchSpace) = Matrix{Float64}(I, numdims(ss), numdims(ss))
 
 """
 Calculates the initial ``log B`` matrix for `xNES` based on the deltas of each dimension.
 """
 function ini_xnes_B(ss::RangePerDimSearchSpace)
-    diag = map(log, deltas(ss))
-    diag -= mean(diag)
-    return full(Diagonal(diag))
+    diag = log.(deltas(ss))
+    diag .-= mean(diag)
+    return Matrix{Float64}(Diagonal(diag))
 end
 
 """
@@ -258,14 +258,15 @@ mutable struct XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStr
             apply!(embed, ini_x, rand_individual(search_space(embed)))
         end
 
-        new{F,E}(embed, lambda, fitness_shaping_utilities_log(lambda), Vector{Float64}(lambda),
+        new{F,E}(embed, lambda, fitness_shaping_utilities_log(lambda),
+                 fill!(Vector{Float64}(undef, lambda), NaN),
                  mu_learnrate, sigma_learnrate, B_learnrate, max_sigma,
-                 ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, zeros(d, lambda),
-                 [Candidate{F}(Individual(d), i) for i in 1:lambda],
+                 ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x, fill(0.0, d, lambda),
+                 [Candidate{F}(fill!(Individual(undef, d), NaN), i) for i in 1:lambda],
                   # temporaries
-                  zeros(d), zeros(d), zeros(d),
-                  zeros(d, d),
-                  zeros(d, lambda), zeros(d, lambda)
+                  Vector{Float64}(undef, d), Vector{Float64}(undef, d), Vector{Float64}(undef, d),
+                  Matrix{Float64}(undef, d, d),
+                  Matrix{Float64}(undef, d, lambda), Matrix{Float64}(undef, d, lambda),
         )
     end
 end
@@ -304,7 +305,7 @@ end
 
 function trace_state(io::IO, xnes::XNESOpt, mode::Symbol)
     println(io, "sigma=", xnes.sigma,
-                " |trace(ln_B)|=", trace(xnes.ln_B))
+                " |trace(ln_B)|=", tr(xnes.ln_B))
 end
 
 """
@@ -313,8 +314,8 @@ end
 Calculate the `n`-dimensional fitness shaping utilities vector using the "log" method.
 """
 function fitness_shaping_utilities_log(n::Int)
-    u = max.(0.0, log(n / 2 + 1.0) - log.(1:n))
-    return u./sum(u) - 1/n
+    u = max.(0.0, log(n / 2 + 1.0) .- log.(1:n))
+    return u./sum(u) .- 1/n
 end
 
 """
@@ -325,14 +326,13 @@ using the "steps" method.
 """
 function fitness_shaping_utilities_linear(n::Int)
     # Second half has zero utility.
-    treshold = floor(Int, n/2)
-    second_half = fill(0.0, n - treshold)
+    threshold = n÷2
+    second_half = fill(0.0, n - threshold)
 
     # While first half's utility decreases in linear steps
-    step_size = 1 / treshold
-    first_half = linspace(1.0, step_size, treshold)
+    first_half = range(1.0, stop=1/threshold, length=threshold)
 
     # But the utilities should sum to 0, so we normalize and return
     u = vcat(first_half, second_half)
-    return u./sum(u) - 1/n
+    return u./sum(u) .- 1/n
 end

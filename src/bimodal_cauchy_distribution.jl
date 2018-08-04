@@ -21,7 +21,7 @@ struct BimodalCauchy
             mix_prob, clampBelow0, clampAbove1)
 end
 
-function Base.rand(distr::BimodalCauchy)
+function Random.rand(distr::BimodalCauchy)
     while true
         value = rand() < distr.mix_prob ? rand(distr.a) : rand(distr.b)
         if value >= 1.0
@@ -34,7 +34,7 @@ function Base.rand(distr::BimodalCauchy)
     end
 end
 
-function Base.rand!(distr::BimodalCauchy, A::AbstractArray)
+function Random.rand!(distr::BimodalCauchy, A::AbstractArray)
     for i in eachindex(A)
         @inbounds A[i] = rand(distr)
     end

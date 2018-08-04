@@ -2,26 +2,26 @@
 An ordered set of dicts that are examined one after another to find the parameter value.
 Returns nothing if no param setting is found in any of the dicts.
 """
-mutable struct DictChain{K,V} <: Associative{K,V}
-    dicts::Vector{Associative{K,V}}  # First dict is searched first and then in order until the last
+mutable struct DictChain{K,V} <: AbstractDict{K,V}
+    dicts::Vector{AbstractDict{K,V}}  # First dict is searched first and then in order until the last
 
-    DictChain{K,V}(dicts::Vector{Associative{K,V}}) where {K,V} = new{K,V}(dicts)
+    DictChain{K,V}(dicts::Vector{AbstractDict{K,V}}) where {K,V} = new{K,V}(dicts)
 
     # empty dicts vector
-    DictChain{K,V}() where {K,V} = new(Vector{Associative{K,V}}())
+    DictChain{K,V}() where {K,V} = new(Vector{AbstractDict{K,V}}())
 
-    DictChain{K,V}(dicts::Associative{K,V}...) where {K,V} =
-        new(Associative{K,V}[dict for dict in dicts])
+    DictChain{K,V}(dicts::AbstractDict{K,V}...) where {K,V} =
+        new(AbstractDict{K,V}[dict for dict in dicts])
 end
 
 # (Associative{K,V}...) ctor is not triggered, so here's 1-, 2- and 3-argument
 # versions of it, until there's a better way
-DictChain(dict::Associative{K,V}) where {K,V} = DictChain{K,V}(dict)
-DictChain(dict1::Associative{K,V}, dict2::Associative{K,V}) where {K,V} =
+DictChain(dict::AbstractDict{K,V}) where {K,V} = DictChain{K,V}(dict)
+DictChain(dict1::AbstractDict{K,V}, dict2::AbstractDict{K,V}) where {K,V} =
     DictChain{K,V}(dict1, dict2)
-DictChain(dict1::Associative{K,V},
-          dict2::Associative{K,V},
-          dict3::Associative{K,V}) where {K,V} =
+DictChain(dict1::AbstractDict{K,V},
+          dict2::AbstractDict{K,V},
+          dict3::AbstractDict{K,V}) where {K,V} =
     DictChain{K,V}(dict1, dict2, dict3)
 
 function Base.show(io::IO, dc::DictChain)
@@ -81,10 +81,10 @@ end
 # merge() grows horizontally (extends dicts vector),
 # whereas chain() grows vertically
 # (references its two arguments in the new 2-element dicts vector)
-chain(p1::Associative{K,V}, p2::Associative{K,V}) where {K,V} = DictChain(p2, p1)
-chain(p1::Associative{K,V}, p2::Associative{K,V}...) where {K,V} = DictChain(chain(p2...), p1)
+chain(p1::AbstractDict{K,V}, p2::AbstractDict{K,V}) where {K,V} = DictChain(p2, p1)
+chain(p1::AbstractDict{K,V}, p2::AbstractDict{K,V}...) where {K,V} = DictChain(chain(p2...), p1)
 
-flatten(d::Associative) = d
+flatten(d::AbstractDict) = d
 flatten(d::DictChain{K,V}) where {K,V} = convert(Dict{K,V}, d)
 
 Base.convert(::Type{Dict{K,V}}, dc::DictChain{K,V}) where {K,V} = merge!(Dict{K,V}(), dc)
@@ -99,7 +99,7 @@ end
 """
 The parameters storage type for `BlackBoxOptim`.
 """
-const Parameters = Associative{Symbol,Any}
+const Parameters = AbstractDict{Symbol,Any}
 
 """
 The default parameters storage in `BlackBoxOptim`.
@@ -112,5 +112,4 @@ The default placeholder value for parameters argument.
 """
 const EMPTY_PARAMS = ParamsDict()
 
-kwargs2dict(kwargs::Vector{Any}) =
-    Dict(Tuple{Symbol,Any}[(convert(Symbol, k), convert(Any,v)) for (k,v) in kwargs])
+kwargs2dict(kwargs::Iterators.Pairs{Symbol}) = ParamsDict(kwargs)

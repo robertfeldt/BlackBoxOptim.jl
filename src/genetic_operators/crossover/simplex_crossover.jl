@@ -25,7 +25,7 @@ function apply!(xover::SimplexCrossover{NP},
                 pop, parentIndices) where NP
     @assert length(parentIndices) == NP
 
-    offset = zeros(target)
+    offset = fill!(similar(target), 0)
     parentSum = copy(viewer(pop, parentIndices[1]))
     for i in 1:(NP-1)
         s = rand()^(1/i)

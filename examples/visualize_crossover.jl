@@ -7,12 +7,12 @@ using BlackBoxOptim, Gadfly
     Plot the distribution of offsprings for the crossover operator `xover`
     and given `parents`.
 """
-function plot_crossover{NP,NC}(xover::CrossoverOperator{NP,NC}, parents::Matrix{Float64};
-                        n=5000, shuffle_parents=false)
+function plot_crossover(xover::CrossoverOperator{NP,NC}, parents::Matrix{Float64};
+                 n=5000, shuffle_parents=false) where {NP,NC}
     @assert size(parents, 2) == NP
     parents_pop = FitPopulation(parents, NaN)
     parent_ixs = collect(1:NP)
-    children_mtx = hcat([hcat(apply!(xover, [Individual(size(parents, 1)) for _ in 1:NC],
+    children_mtx = hcat([hcat(apply!(xover, [fill!(Individual(undef, size(parents, 1)), NaN) for _ in 1:NC],
                               zeros(Int, NC), parents_pop,
                               shuffle_parents ? shuffle(parent_ixs) : parent_ixs)...) for _ in 1:n]...)
     plot(layer(x=parents_pop.individuals[1,:], y=parents_pop.individuals[2,:], Geom.point, # parents

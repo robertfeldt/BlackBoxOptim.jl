@@ -1,5 +1,5 @@
 @testset "Testing methods diagnostic tracing" begin
-    rosenbrock(x) = 100.0*sum(i -> abs2(x[i+1] - x[i]^2), 1:length(x)-1) + sum(i -> abs2(x[i] - 1.0), 1:length(x)-1)
+    rosenbrock(x) = sum(i -> 100*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x)-1))
     schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
 
     @testset "trace_state()" begin
@@ -10,7 +10,7 @@
                                             SearchRange = (-5.0, 5.0), NumDimensions = 2,
                                             MaxSteps = 1, TraceMode = :silent)
                     BlackBoxOptim.run!(opt)
-                    BlackBoxOptim.trace_state(DevNull, BlackBoxOptim.optimizer(BlackBoxOptim.lastrun(opt)), mode)
+                    BlackBoxOptim.trace_state(devnull, BlackBoxOptim.optimizer(BlackBoxOptim.lastrun(opt)), mode)
                 end
                 for method in keys(BlackBoxOptim.MultiObjectiveMethods)
                     opt = bbsetup(schaffer1; Method=method,
@@ -18,7 +18,7 @@
                                             FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.01,
                                             MaxSteps = 1, TraceMode = :silent)
                     BlackBoxOptim.run!(opt)
-                    BlackBoxOptim.trace_state(DevNull, BlackBoxOptim.optimizer(BlackBoxOptim.lastrun(opt)), mode)
+                    BlackBoxOptim.trace_state(devnull, BlackBoxOptim.optimizer(BlackBoxOptim.lastrun(opt)), mode)
                 end
             end
         end

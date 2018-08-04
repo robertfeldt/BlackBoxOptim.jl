@@ -26,10 +26,10 @@ discretization defined by ϵ-box fitness schema.
     quote
         #archive = EpsBoxArchive(fs)
         pf = Dict{NTuple{N,Int}, IndexedTupleFitness{N,F}}()
-        param = Vector{Float64}(N-1)
+        param = fill!(Vector{Float64}(undef, N-1), 0.0)
         #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N-1) t d->linspace(surf.parameter_space.mins[d], surf.parameter_space.maxs[d],
-                                                    ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
+        Base.Cartesian.@nloops $(N-1) t d->range(surf.parameter_space.mins[d], stop=surf.parameter_space.maxs[d],
+                                                 length=ceil(Int, surf.parameter_space.deltas[d]/param_step[d])) d->param[d]=t_d begin
             fit = surf.manifold(param, Val{NP})
             if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
                 ifit = convert(IndexedTupleFitness, fit, fs)
@@ -134,7 +134,7 @@ end
 CEC09 Unconstrained Problem 8 Pareto Frontier.
 Parameterized by t[1]=f[1] and t[2]=f[2].
 """
-function CEC09_UP8_PF{NP}(t::Vector{Float64}, ::Type{Val{NP}})
+function CEC09_UP8_PF(t::Vector{Float64}, ::Type{Val{NP}}) where NP
     d=sum(abs2, t)
     (t[1], t[2], d <= 1.0 ? (1.0 - d)^(1/3) : NaN)
 end
@@ -153,7 +153,7 @@ const CEC09_Unconstrained_Set = Dict{Int,FunctionBasedProblemFamily}(
 )
 
 schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
-schaffer1_PF{NP}(t, ::Type{Val{NP}}) = (NP*t[1]^2, NP*(2-t[1])^2)
+schaffer1_PF(t, ::Type{Val{NP}}) where {NP} = (NP*t[1]^2, NP*(2-t[1])^2)
 
 const Schaffer1Family = FunctionBasedProblemFamily(schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing=true),
                                 (-10.0, 10.0),

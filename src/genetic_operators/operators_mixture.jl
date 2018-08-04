@@ -62,6 +62,7 @@ function adjust!(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::I
     adjust!(opmix.operators[op_index], 0, candi_index, new_fitness, old_fitness, is_improved)
 end
 
+# FIXME use logging
 function trace_state(io::IO, fa::FAGeneticOperatorsMixture, mode::Symbol)
     if mode == :verbose
         println(io, "FrequencyAdapting mixture rates:")

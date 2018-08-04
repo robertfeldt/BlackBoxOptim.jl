@@ -9,7 +9,7 @@ res = bboptimize(schaffer1; Method=:borg_moea,
 
 # the parameterized version of the exact Pareto frontier
 # N is the number of the problem (not fitness) dimensions
-pareto_curve_func{N}(t, ::Type{Val{N}}) = (N*t[1]^2, N*(2-t[1])^2)
+pareto_curve_func(t, ::Type{Val{N}}) where {N} = (N*t[1]^2, N*(2-t[1])^2)
 pareto_curve = BlackBoxOptim.Hypersurface(pareto_curve_func,
                                           symmetric_search_space(1, (0.0, 2.0)))
 

@@ -148,7 +148,7 @@ function predicted_final_fitness(currentfevals, lastfevals, maxfevals, currentfi
 end
 
 function generate_random_orthogonal_transformation(P)
-  B = eye(P,P)
+  B = Matrix{Float64}(I, P,P)
   for i = 1:P
     v = randn(P,1)
     while norm(v) < 1e-2
@@ -163,10 +163,10 @@ function generate_random_orthogonal_transformation(P)
 end
 
 # Use this when no adaptive encoding is used, i.e. the ACD algorithm is a normal CD.
-type NoEncoding
+mutable struct NoEncoding
   B
   NoEncoding(mu, P) = begin
-    new(eye(P, P))
+    new(Matrix{Float64}(I, P, P))
   end
 end
 
@@ -174,7 +174,7 @@ function update!(e::NoEncoding, population::Matrix{Float64}, howOftenUpdateRotat
   # Do nothing since we never update anything...
 end
 
-type AdaptiveEncoding
+mutable struct AdaptiveEncoding
   mu
   P
   B
@@ -213,8 +213,8 @@ type AdaptiveEncoding
       zeros(P), # pc
       zeros(P), # pcmu
       population * weights, # xmean
-      eye(P), # C
-      eye(P), # Cold
+      Matrix{Float64}(I, P, P), # C
+      Matrix{Float64}(I, P, P), # Cold
       ones(P), # diagD
       0, # ps
       0  # iter
@@ -286,12 +286,12 @@ function update!(ae::AdaptiveEncoding, population::Matrix{Float64}, howOftenUpda
     if minimum(eigenvalues) <= 0
       eigenvalues[eigenvalues .< 0] = 0
       tmp = maximum(eigenvalues) / cond
-      ae.C = ae.C .+ tmp * eye(ae.P)
+      ae.C = ae.C .+ tmp * Matrix{Float64}(I, ae.P, ae.P)
       eigenvalues += tmp * ones(ae.P,1)
     end
     if maximum(eigenvalues) > cond*minimum(eigenvalues)
       tmp = maximum(eigenvalues)/cond - minimum(eigenvalues)
-      ae.C = ae.C .+ tmp * eye(ae.P)
+      ae.C = ae.C .+ tmp * Matrix{Float64}(I, ae.P, ae.P)
       eigenvalues += tmp*ones(ae.P,1)
     end
     if (minimum(eigenvalues) <= 0)

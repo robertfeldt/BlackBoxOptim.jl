@@ -1,4 +1,4 @@
-rosenbrock2d(x) = 100.0*(x[2] - x[1]^2)^2 + (x[1] - 1.0)^2
+rosenbrock2d(x) = 100.0*abs2(x[2] - x[1]^2) + abs2(x[1] - 1.0)
 
 function rosenbrock(x)
     @inbounds res = sum(i -> 100.0*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1.0), 1:length(x)-1)

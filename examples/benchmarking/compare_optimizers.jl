@@ -318,15 +318,15 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
     # Get number of runs and median magnitude worse per method
     permethod = by(db, [:Method], df -> DataFrame(
         NumRuns = size(df, 1),
-        MedianLogTimesWorseFitness = round(median(df[:, :LogTimesWorseFitness]), 1),
+        MedianLogTimesWorseFitness = round(median(df[:, :LogTimesWorseFitness]), digits=1),
         )
     )
 
     # and merge with table with mean ranks of fitness and time.
     summarydf = by(sumdf, [:Method], df -> DataFrame(
-        MeanRank = round(mean(df[:,:RankFitness]), 3),
+        MeanRank = round(mean(df[:,:RankFitness]), digits=3),
         Num1sFitness = sum(map(r -> (r == 1) ? 1 : 0, df[:,:RankFitness])),
-        MeanRankTime = round(mean(df[:,:RankTime]), 3),
+        MeanRankTime = round(mean(df[:,:RankTime]), digits=3),
         Num1sTime = sum(map(r -> (r == 1) ? 1 : 0, df[:,:RankTime])),
         )
     )
@@ -381,7 +381,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
                     runnum += 1
-                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, 2))% of total runs)\n")
+                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, digits=2))% of total runs)\n")
                     ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
                     push!(newfs, ftn)
                 end
@@ -426,7 +426,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
     # Report (in color) on number of significant differences after Benjamini-Hochberg
     # correction.
     color = (sum(df[:SignificantBH005]) > 0) ? :red : :green
-    print_with_color(color, 
+    print_with_color(color,
       "\nNum significant at Benjamini-Hochberg 0.05 level: ", string(sum(df[:SignificantBH005])),
       "\n")
 end
@@ -439,7 +439,7 @@ function benjamini_hochberg(pvals, alpha = 0.05)
   perm = sortperm(pvals)
   origperm = sortperm(perm)
   sortedps = pvals[perm]
-  
+
   tresholds = alpha * collect(1:n) / n
   khat = n+1 - findfirst(reverse(sortedps .<= tresholds))
   if khat > n

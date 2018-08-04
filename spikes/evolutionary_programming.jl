@@ -13,7 +13,7 @@ PopulationBasedEvolutionaryProgrammingDefaultParameters = {
 # throughout.
 abstract type EvolutionaryProgrammingStrategy end
 
-type PopulationBasedEvolutionaryProgramming <: PopulationOptimizer
+mutable struct PopulationBasedEvolutionaryProgramming <: PopulationOptimizer
   parameters::Parameters
 
   generation::Int
@@ -125,7 +125,7 @@ end
 # Specific EP variants are implemented in their own types and have the PBEP
 # structure in them
 
-type GaussianEvolutionaryProgramming <: EvolutionaryProgrammingStrategy
+mutable struct GaussianEvolutionaryProgramming <: EvolutionaryProgrammingStrategy
   pep::PopulationBasedEvolutionaryProgramming
 end
 

@@ -203,7 +203,8 @@ function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
         # output recombination operator rates
         println(io, "P(recombine):")
         for i in eachindex(alg.recombinate)
-            println(io, "  #$i(", alg.recombinate[i], ")=", @sprintf("%.4f",alg.recombinate_distr.p[i]))
+            println(io, "  #$i(", alg.recombinate[i], ")=",
+                    @sprintf("%.4f",alg.recombinate_distr.p[i]))
         end
     end
 end

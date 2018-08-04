@@ -49,16 +49,16 @@ mutable struct DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionSt
         u = fitness_shaping_utilities_log(lambda)
         moving_threshold, evol_discount, evol_Zscale = calculate_evol_path_params(d, u)
 
-        new{F,E}(embed, lambda, u, Vector{Float64}(lambda),
+        new{F,E}(embed, lambda, u, Vector{Float64}(undef, lambda),
             mu_learnrate, 0.0, 0.0, max_sigma,
             moving_threshold, evol_discount, evol_Zscale, 0.9 + 0.15 * log(d),
-            zeros(d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
-            zeros(d, lambda),
-            [Candidate{F}(Vector{Float64}(d), i) for i in 1:lambda],
+            fill(NaN, d), ini_lnB === nothing ? ini_xnes_B(search_space(embed)) : ini_lnB, ini_sigma, ini_x,
+            fill(NaN, d, lambda),
+            [Candidate{F}(fill!(Individual(undef, d), NaN), i) for i in 1:lambda],
             # temporaries
-            zeros(d), zeros(d), zeros(d),
-            zeros(d, d),
-            zeros(d, lambda), zeros(d, lambda)
+            Vector{Float64}(undef, d), Vector{Float64}(undef, d),
+            Vector{Float64}(undef, d), Matrix{Float64}(undef, d, d),
+            Matrix{Float64}(undef, d, lambda), Matrix{Float64}(undef, d, lambda)
         )
     end
 end
@@ -70,7 +70,7 @@ function trace_state(io::IO, dxnes::DXNESOpt, mode::Symbol)
             " η[x]=", dxnes.x_learnrate,
             " η[σ]=", dxnes.sigma_learnrate,
             " η[B]=", dxnes.B_learnrate,
-            " |tr(ln_B)|=", abs(trace(dxnes.ln_B)),
+            " |tr(ln_B)|=", abs(tr(dxnes.ln_B)),
             " |path|=", evol_path_norm,
             " speed=", evol_path_norm/dxnes.moving_threshold)
 end
@@ -104,7 +104,7 @@ end
 function tell!(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}}) where F
     u = assign_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.sortedUtilities)
     dxnes.evol_path *= dxnes.evol_discount
-    dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), 2)
+    dxnes.evol_path += dxnes.evol_Zscale * dropdims(wsum(dxnes.Z, u, 2), dims=2)
     evol_speed = norm(dxnes.evol_path)/dxnes.moving_threshold
     if evol_speed > 1.0
         # the center is moving, adjust weights
@@ -148,12 +148,9 @@ function assign_distance_weights!(weights::Vector{Float64}, scale::Float64,
     u0 = log(0.5*lambda+1)
     for i in 1:lambda
         cand_ix = rankedCandidates[i].index
-        weights[cand_ix] = max(u0-log(i), 0) * exp(scale*norm(Z[:,cand_ix]))
+        weights[cand_ix] = max(u0-log(i), 0) * exp(scale*norm(view(Z, cand_ix)))
     end
-    wsum = sum(weights)
-    for i in 1:lambda
-        weights[i] = weights[i]/wsum - 1/lambda
-    end
+    weights .= weights./sum(weights) .- 1/lambda
     return weights
 end
 

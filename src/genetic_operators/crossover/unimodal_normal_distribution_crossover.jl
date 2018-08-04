@@ -29,10 +29,10 @@ function apply!(xover::UnimodalNormalDistributionCrossover{NP},
     @assert length(parentIndices) == NP
 
     parents = pop[:, parentIndices]
-    center = mean(parents, 2)
-    broadcast!(-, parents, parents, center)
-    sd = mean(map(sqrt, sum(abs2, parents, 2)))
-    svdf = svdfact(parents)
+    center = mean(parents, dims=2)
+    parents .-= center
+    sd = mean(map(sqrt, sum(abs2, parents, dims=2)))
+    svdf = svd(parents, full=false)
     svals = svdf.S / norm(svdf.S)
     @inbounds for (i,s) in enumerate(svals)
         svals[i] = sd*randn() * (
@@ -40,7 +40,7 @@ function apply!(xover::UnimodalNormalDistributionCrossover{NP},
             s * xover.ζ : xover.η )
     end
 
-    A_mul_B!(target, svdf.U, svals)
+    mul!(target, svdf.U, svals)
     @inbounds @simd for i in eachindex(target)
         target[i] += center[i,1]
     end

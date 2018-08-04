@@ -45,7 +45,7 @@ end
     @testset "tournament()" begin
         for i in 1:NumTestRepetitions
             tourSize = rand(0:popsize(fake_pop))
-            cand_ixs = find(bitrand(popsize(fake_pop)))
+            cand_ixs = findall(bitrand(popsize(fake_pop)))
 
             winner_ix = BlackBoxOptim.tournament(sel, fake_pop, cand_ixs)
 
