@@ -395,7 +395,11 @@ end
 function init_rng!(parameters::Parameters)
     if parameters[:RandomizeRngSeed]
         parameters[:RngSeed] = rand(1:1_000_000)
-        Random.seed!(parameters[:RngSeed])
+        if VERSION < v"0.7.0-rc2"
+            srand(parameters[:RngSeed])
+        else
+            Random.seed!(parameters[:RngSeed])
+        end
     end
 end
 
