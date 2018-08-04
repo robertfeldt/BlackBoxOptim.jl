@@ -1,4 +1,4 @@
-julia 0.7.0-rc2
+julia 0.7.0-beta2.0
 StatsBase
 Distributions
 Compat
