@@ -14,22 +14,21 @@ RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace
 
 search_space(rb::RandomBound) = rb.searchSpace
 
+@inline function random_bound(t::Real, r::Real, l::Real, u::Real)
+    if t < l
+        t = l + rand() * (r - l)
+    elseif t > u
+        t = u + rand() * (r - u)
+    end
+    @assert l <= t <= u "target=$(t) is out of [$l, $u]" # if r is out of [l, u]
+    return t
+end
+
 function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndividual)
     length(target) == length(ref) == numdims(eo.searchSpace) ||
         throw(ArgumentError("Dimensions of problem/individuals do not match"))
-    ssmins = mins(eo.searchSpace)
-    ssmaxs = maxs(eo.searchSpace)
-
-    @inbounds for i in 1:length(target)
-        l, u = ssmins[i], ssmaxs[i]
-
-        if target[i] < l
-            target[i] = l + rand() * (ref[i] - l)
-        elseif target[i] > u
-            target[i] = u + rand() * (ref[i] - u)
-        end
-        @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
-    end
+    ss = search_space(eo)
+    @inbounds target .= random_bound.(target, ref, mins(ss), maxs(ss))
     return target
 end
 
