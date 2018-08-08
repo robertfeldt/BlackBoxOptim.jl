@@ -5,10 +5,12 @@ using BlackBoxOptim
 using ArgParse
 using CPUTime
 using Compat
+using Statistics
+using Printf: @sprintf
 
 global logfilehandle = nothing
 function log(color::Symbol, str)
-    print_with_color(color, str)
+    printstyled(str, color=color)
     if logfilehandle != nothing
         print(logfilehandle, str)
         flush(logfilehandle)
@@ -231,8 +233,8 @@ function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int,
     best_fitness(res)
 end
 
-function latest_git_id()
-    strip(readall(`git -C "../.." log --format="%H" -n 1`))
+function latest_git_id(git_repo = joinpath(@__DIR__, "../.."))
+    strip(read(`git -C $git_repo log --format="%H" -n 1`, String))
 end
 
 # Test an optimizer on multiple problems and dimensions, return results in dict.
@@ -342,7 +344,7 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
         # Now sort and print
         sort!(df, [:MeanRank, :MeanRankTime, :Num1sFitness])
         println(df)
-        if typeof(saveResultCsvFile) <: AbstractString && length(saveResultCsvFile) > 0
+        if saveResultCsvFile !== nothing
             CSV.write(saveResultCsvFile, df)
             println("Results written to file: ", saveResultCsvFile)
         end
@@ -433,9 +435,8 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
     # Report (in color) on number of significant differences after Benjamini-Hochberg
     # correction.
     color = (sum(df[:SignificantBH005]) > 0) ? :red : :green
-    print_with_color(color,
-        "\nNum significant at Benjamini-Hochberg 0.05 level: ", string(sum(df[:SignificantBH005])),
-        "\n")
+    printstyled("\nNum significant at Benjamini-Hochberg 0.05 level: ",
+                sum(df[:SignificantBH005]), "\n", color=color)
 end
 
 function benjamini_hochberg(pvals, alpha = 0.05)
@@ -443,14 +444,13 @@ function benjamini_hochberg(pvals, alpha = 0.05)
     (n <= 1) && return pvals # no pvalue correction needed
 
     perm = sortperm(pvals)
-    origperm = sortperm(perm)
-    sortedps = pvals[perm]
+    origperm = invperm(perm)
 
-    tresholds = alpha .* (collect(1:n) ./ n)
-    khat = n+1 - findfirst(reverse(sortedps .<= tresholds))
-    (khat > n) && return (ones(n).>10.0) # There were no significant ones so return all false
+    thresholds = alpha .* (collect(1:n) ./ n)
+    khat = findlast(i -> pvals[perm[i]] < thresholds[i], 1:n)
+    (khat === nothing) && return fill(false, n) # There were no significant pvals so return all false
 
-    significant = vcat(ones(khat), zeros(n-khat)) .> 0.0
+    significant = vcat(fill(true, khat), fill(false, n-khat))
     return significant[origperm]
 end
 
