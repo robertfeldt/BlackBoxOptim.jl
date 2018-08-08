@@ -381,13 +381,13 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
         totalruns = length(optimizers) * nreps * length(pset)
         runnum = 0
         for optmethod in optimizers
-            optsel = db[:,:Method] .== string(optmethod)
+            optsel = db[:Method] .== string(optmethod)
             for pd in pset
                 probname, numdims, popsize, numfevals = pd
-                psel = db[:,:Problem] .== probname
-                dsel = db[:,:NumDims] .== numdims
-                df = db[optsel .& psel .& dsel,:]
-                benchfitnesses = collect(skipmissing(df[:,:Fitness]))
+                psel = db[:Problem] .== probname
+                dsel = db[:NumDims] .== numdims
+                df = db[optsel .& psel .& dsel, :]
+                benchfitnesses = collect(skipmissing(df[:Fitness]))
                 newfs = Float64[]
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
