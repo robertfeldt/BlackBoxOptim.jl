@@ -289,13 +289,11 @@ function read_benchmark_db(filename)
 end
 
 function add_rank_per_group(df, groupcols, rankcol, resultcol)
-    dfs = DataFrame[]
-    for subdf in groupby(df, groupcols)
+    by(df, groupcols) do subdf
         orderedsubdf = subdf[sortperm(subdf[:,rankcol]), :]
         orderedsubdf[resultcol] = collect(1:size(orderedsubdf,1))
-        push!(dfs, orderedsubdf)
+        return orderedsubdf
     end
-    vcat(dfs...)
 end
 
 function list_benchmark_db(db, saveResultCsvFile = nothing)
@@ -304,41 +302,44 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
 
     if numrows > 1
         # Find min fitness per problem
-        minfitpp = by(db, [:Problem, :NumDims], df -> DataFrame(
+        minfitpp = by(db, [:Problem, :NumDims]) do df
+            DataFrame(
                 MinFitness = minimum(df[:Fitness])
             )
-        )
+        end
 
         # Add col with order of magnitude worse than min fitness for each run
         db = join(db, minfitpp, on = [:Problem, :NumDims])
         db[:LogTimesWorseFitness] = log10.(db[:Fitness] ./ db[:MinFitness])
 
         # Calc median fitness and time per problem and method.
-        sumdf = by(db, [:Problem, :NumDims, :Method], df ->
+        sumdf = by(db, [:Problem, :NumDims, :Method]) do df
             DataFrame(N = size(df, 1),
                       MedianFitness = median(df[:,:Fitness]),
                       MedianTime = median(df[:,:ElapsedTime]))
-        )
+        end
 
         # Rank on median fitness and median time for each problem.
         sumdf = add_rank_per_group(sumdf, [:Problem, :NumDims], :MedianFitness, :RankFitness)
         sumdf = add_rank_per_group(sumdf, [:Problem, :NumDims], :MedianTime, :RankTime)
 
         # Get number of runs and median magnitude worse per method
-        permethod = by(db, [:Method], df -> DataFrame(
+        permethod = by(db, [:Method]) do df
+            DataFrame(
                 NumRuns = size(df, 1),
                 MedianLogTimesWorseFitness = round(median(df[:, :LogTimesWorseFitness]), digits=1)
             )
-        )
+        end
 
         # and merge with table with mean ranks of fitness and time.
-        summarydf = by(sumdf, [:Method], df -> DataFrame(
+        summarydf = by(sumdf, [:Method]) do df
+            DataFrame(
                 MeanRank = round(mean(df[:RankFitness]), digits=3),
                 Num1sFitness = sum(r -> (r == 1) ? 1 : 0, df[:RankFitness]),
                 MeanRankTime = round(mean(df[:RankTime]), digits=3),
                 Num1sTime = sum(r -> (r == 1) ? 1 : 0, df[:RankTime]),
             )
-        )
+        end
         df = join(summarydf, permethod, on = :Method)
 
         # Now sort and print
