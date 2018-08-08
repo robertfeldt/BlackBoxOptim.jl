@@ -456,19 +456,13 @@ function benjamini_hochberg(pvals, alpha = 0.05)
 end
 
 function report_below_pvalue(df, pvalue = 0.05)
-    selection = df[:,:Pvalue] .< pvalue
-    if pvalue >= 1.0
-        log("Num problems (any p-value) = $(sum(selection))\n")
-    else
-        log("Num problems (with p-values < $(pvalue)) = $(sum(selection))\n")
-    end
-    num_new_worse = sum(df[selection, :Order] .== "<")
-    num_new_better = sum(df[selection, :Order] .== ">")
+    selection = df[:Pvalue] .< pvalue
+    log("Num problems (with p-values < $(pvalue)) = $(sum(selection))\n")
+    num_new_worse = sum(x -> x == "<", df[selection, :Order])
+    num_new_better = sum(x -> x == ">", df[selection, :Order])
     log(:green, "  Num where new implementation is better = $(num_new_better)\n")
     log(:red, "  Num where new implementation is worse = $(num_new_worse)\n")
-    if sum(selection) > 0 && pvalue < 1.0
-        println(df[selection,:])
-    end
+    any(selection) && println(df[selection, :])
 end
 
 @CPUtime main(ARGS)
