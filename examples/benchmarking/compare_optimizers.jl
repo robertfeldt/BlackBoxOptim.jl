@@ -396,23 +396,24 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                     ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
                     push!(newfs, ftn)
                 end
-                pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
+
                 log(:blue, "$(probname)($numdims), $(optmethod):\n")
-                local statsigndiff
-                if pval > significancelevel
-                    log(:green, "  No statistically significant difference in $nreps repetitions!\n")
-                    statsigndiff = "No"
-                else
-                    log(:red, "  Statistically significant difference in $nreps repetitions!\n")
-                    statsigndiff = "Yes"
-                end
+
                 oldmed = median(benchfitnesses)
                 newmed = median(newfs)
                 ord = (oldmed < newmed) ? "<" : ">"
-                push!(dfs, DataFrame(Problem = probname, NumDims = numdims, Method = string(optmethod),
-                OldMedian = oldmed, Order = ord, NewMedian = newmed,
-                Pvalue = pval, Level = significancelevel, StatSignDiff = statsigndiff))
-                log(:white, "  (Old median) $(oldmed) $(ord) $(newmed) (New median)\n")
+                log(:white, "Fitness median $(oldmed)(old) $(ord) $(newmed)(new)\n")
+                pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
+                if pval > significancelevel
+                    log(:white, "  No statistically significant fitness difference in $nreps repetitions (P-value=$pval)!\n")
+                else
+                    log(ord == "<" ? :red : :green, "  Statistically significant fitness difference in $nreps repetitions (P-value=$pval)!\n")
+                end
+                push!(dfs, DataFrame(
+                    Problem = probname, NumDims = numdims, Method = string(optmethod), PvalueThreshold = significancelevel,
+                    OldMedian = oldmed, Order = ord, NewMedian = newmed,
+                    Pvalue = pval, IsSignif = pval <= significancelevel)
+                )
             end
         end
         df = vcat(dfs...)
@@ -435,9 +436,13 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
 
     # Report (in color) on number of significant differences after Benjamini-Hochberg
     # correction.
+    n_reg = sum(df[:SignificantBH005] .& (df[:Order] .== "<"))
+    n_imp = sum(df[:SignificantBH005] .& (df[:Order] .== ">"))
     color = (sum(df[:SignificantBH005]) > 0) ? :red : :green
-    printstyled("\nNum significant at Benjamini-Hochberg 0.05 level: ",
-                sum(df[:SignificantBH005]), "\n", color=color)
+    printstyled("\n$n_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
+                color=n_reg > 0 ? :red : :green)
+    printstyled("\n$n_imp significant fitness improvments at Benjamini-Hochberg 0.05 level\n",
+                color=n_imp > 0 ? :green : :white)
 end
 
 function benjamini_hochberg(pvals, alpha = 0.05)
@@ -457,11 +462,12 @@ end
 
 function report_below_pvalue(df, pvalue = 0.05)
     selection = df[:Pvalue] .< pvalue
-    log("Num problems (with p-values < $(pvalue)) = $(sum(selection))\n")
-    num_new_worse = sum(x -> x == "<", df[selection, :Order])
-    num_new_better = sum(x -> x == ">", df[selection, :Order])
-    log(:green, "  Num where new implementation is better = $(num_new_better)\n")
-    log(:red, "  Num where new implementation is worse = $(num_new_worse)\n")
+    log("Num problems with fitness p-values < $(pvalue): $(sum(selection))\n")
+    # workaround sum(isequal, []) throws
+    num_new_worse = sum(df[selection, :Order] .== "<")
+    num_new_better = sum(df[selection, :Order] .== ">")
+    log(num_new_better > 0 ? :green : :white, "  Num where new implementation is better = $(num_new_better)\n")
+    log(num_new_worse > 0 ? :red : :green, "  Num where new implementation is worse = $(num_new_worse)\n")
     any(selection) && println(df[selection, :])
 end
 
