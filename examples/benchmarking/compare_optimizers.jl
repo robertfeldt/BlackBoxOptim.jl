@@ -223,6 +223,7 @@ function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int,
 
     problem = instantiate(family, NumDimensions)
 
+    CPUtic()
     res = bboptimize(problem; Method = Method,
         NumDimensions = NumDimensions,
         PopulationSize = PopulationSize,
@@ -230,7 +231,7 @@ function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int,
         MaxFuncEvals = MaxFuncEvals
     )
 
-    best_fitness(res)
+    best_fitness(res), CPUtoc()
 end
 
 function latest_git_id(git_repo = joinpath(@__DIR__, "../.."))
@@ -265,9 +266,8 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
             log("\n$(probname), n = $(numdims), optimizer = $(string(method)), run $(rep) of $(NumRepetitions)\n")
 
             start_time = time()
-            CPUtic()
-            ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), method)
-            df[:ElapsedTime] = CPUtoc()
+            ftn, dur = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), method)
+            df[:ElapsedTime] = dur
             df[:StartTime] = Libc.strftime("%Y-%m-%d %H:%M:%S", start_time)
             df[:Fitness] = ftn
 
@@ -388,31 +388,48 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 dsel = db[:NumDims] .== numdims
                 df = db[optsel .& psel .& dsel, :]
                 benchfitnesses = convert(Vector{Float64}, df[:Fitness])
+                benchtimes = convert(Vector{Float64}, df[:ElapsedTime])
                 newfs = Float64[]
+                newtimes = Float64[]
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
                     runnum += 1
                     log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, digits=2))% of total runs)\n")
-                    ftn = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
+                    ftn, dur = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
                     push!(newfs, ftn)
+                    push!(newtimes, dur)
                 end
 
                 log(:blue, "$(probname)($numdims), $(optmethod):\n")
 
-                oldmed = median(benchfitnesses)
-                newmed = median(newfs)
-                ord = (oldmed < newmed) ? "<" : ">"
-                log(:white, "Fitness median $(oldmed)(old) $(ord) $(newmed)(new)\n")
-                pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
-                if pval > significancelevel
-                    log(:white, "  No statistically significant fitness difference in $nreps repetitions (P-value=$pval)!\n")
+                ftn_oldmed = median(benchfitnesses)
+                ftn_newmed = median(newfs)
+                ftn_ord = (ftn_oldmed < ftn_newmed) ? "<" : ">"
+                log(:white, "Fitness median $(ftn_oldmed)(old) $(ftn_ord) $(ftn_newmed)(new)\n")
+                ftn_pval = pvalue(MannWhitneyUTest(benchfitnesses, newfs))
+                if ftn_pval > significancelevel
+                    log(:white, "  No statistically significant fitness difference in $nreps repetitions (P-value=$ftn_pval)!\n")
                 else
-                    log(ord == "<" ? :red : :green, "  Statistically significant fitness difference in $nreps repetitions (P-value=$pval)!\n")
+                    log(ftn_ord == "<" ? :red : :green, "  Statistically significant fitness difference in $nreps repetitions (P-value=$ftn_pval)!\n")
                 end
+
+                time_oldmed = median(benchtimes)
+                time_newmed = median(newtimes)
+                time_ord = (time_oldmed < time_newmed) ? "<" : ">"
+                log(:white, "Time median $(time_oldmed)(old) $(time_ord) $(time_newmed)(new)\n")
+                time_pval = pvalue(MannWhitneyUTest(benchtimes, newtimes))
+                if time_pval > significancelevel
+                    log(:white, "  No statistically significant time difference in $nreps repetitions (P-value=$time_pval)!\n")
+                else
+                    log(time_ord == "<" ? :red : :green, "  Statistically significant time difference in $nreps repetitions (P-value=$time_pval)!\n")
+                end
+
                 push!(dfs, DataFrame(
                     Problem = probname, NumDims = numdims, Method = string(optmethod), PvalueThreshold = significancelevel,
-                    OldMedian = oldmed, Order = ord, NewMedian = newmed,
-                    Pvalue = pval, IsSignif = pval <= significancelevel)
+                    FitnessOldMedian = ftn_oldmed, FitnessOrder = ftn_ord, FitnessNewMedian = ftn_newmed,
+                    FitnessPvalue = ftn_pval, FitnessIsSignif = ftn_pval <= significancelevel,
+                    TimeOldMedian = time_oldmed, TimeOrder = time_ord, TimeNewMedian = time_newmed,
+                    TimePvalue = time_pval, TimeIsSignif = time_pval <= significancelevel)
                 )
             end
         end
@@ -420,29 +437,42 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
 
         # Use Benjamini-Hochberg to judge which pvalues are significant given we did
         # many comparisons.
-        pvs = convert(Vector{Float64}, df[:Pvalue])
-        df[:SignificantBH001] = benjamini_hochberg(pvs, 0.01)
-        df[:SignificantBH005] = benjamini_hochberg(pvs, 0.05)
-        df[:SignificantBH010] = benjamini_hochberg(pvs, 0.10)
+        ftn_pvs = convert(Vector{Float64}, df[:FitnessPvalue])
+        df[:FitnessSignificantBH001] = benjamini_hochberg(ftn_pvs, 0.01)
+        df[:FitnessSignificantBH005] = benjamini_hochberg(ftn_pvs, 0.05)
+        df[:FitnessSignificantBH010] = benjamini_hochberg(ftn_pvs, 0.10)
+
+        time_pvs = convert(Vector{Float64}, df[:TimePvalue])
+        df[:TimeSignificantBH001] = benjamini_hochberg(time_pvs, 0.01)
+        df[:TimeSignificantBH005] = benjamini_hochberg(time_pvs, 0.05)
+        df[:TimeSignificantBH010] = benjamini_hochberg(time_pvs, 0.10)
 
         CSV.write(Libc.strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
     else
         df = CSV.read(comparisonfile)
     end
-    sort!(df, [:Pvalue])
-    report_below_pvalue(df, 1.00)
-    report_below_pvalue(df, 0.05)
-    report_below_pvalue(df, 0.01)
+    sort!(df, [:FitnessPvalue])
+    report_below_pvalue(df, col_prefix="Fitness", pvalue=1.00)
+    report_below_pvalue(df, col_prefix="Fitness", pvalue=0.05)
+    report_below_pvalue(df, col_prefix="Fitness", pvalue=0.01)
+    report_below_pvalue(df, col_prefix="Time", pvalue=1.00)
+    report_below_pvalue(df, col_prefix="Time", pvalue=0.05)
+    report_below_pvalue(df, col_prefix="Time", pvalue=0.01)
 
     # Report (in color) on number of significant differences after Benjamini-Hochberg
     # correction.
-    n_reg = sum(df[:SignificantBH005] .& (df[:Order] .== "<"))
-    n_imp = sum(df[:SignificantBH005] .& (df[:Order] .== ">"))
-    color = (sum(df[:SignificantBH005]) > 0) ? :red : :green
-    printstyled("\n$n_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
-                color=n_reg > 0 ? :red : :green)
-    printstyled("\n$n_imp significant fitness improvments at Benjamini-Hochberg 0.05 level\n",
-                color=n_imp > 0 ? :green : :white)
+    n_ftn_reg = sum(df[:FitnessSignificantBH005] .& (df[:FitnessOrder] .== "<"))
+    n_ftn_imp = sum(df[:FitnessSignificantBH005] .& (df[:FitnessOrder] .== ">"))
+    printstyled("\n$n_ftn_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
+                color=n_ftn_reg > 0 ? :red : :green)
+    printstyled("\n$n_ftn_imp significant fitness improvments at Benjamini-Hochberg 0.05 level\n",
+                color=n_ftn_imp > 0 ? :green : :white)
+    n_time_reg = sum(df[:TimeSignificantBH005] .& (df[:TimeOrder] .== "<"))
+    n_time_imp = sum(df[:TimeSignificantBH005] .& (df[:TimeOrder] .== ">"))
+    printstyled("\n$n_time_reg significant time regressions at Benjamini-Hochberg 0.05 level\n",
+                color=n_time_reg > 0 ? :red : :green)
+    printstyled("\n$n_time_imp significant time improvments at Benjamini-Hochberg 0.05 level\n",
+                color=n_time_imp > 0 ? :green : :white)
 end
 
 function benjamini_hochberg(pvals, alpha = 0.05)
@@ -460,14 +490,15 @@ function benjamini_hochberg(pvals, alpha = 0.05)
     return significant[origperm]
 end
 
-function report_below_pvalue(df, pvalue = 0.05)
-    selection = df[:Pvalue] .< pvalue
-    log("Num problems with fitness p-values < $(pvalue): $(sum(selection))\n")
+function report_below_pvalue(df; col_prefix="Fitness", pvalue = 0.05)
+    selection = df[Symbol(col_prefix, "Pvalue")] .< pvalue
+    log("Num problems with $col_prefix p-values < $(pvalue): $(sum(selection))\n")
     # workaround sum(isequal, []) throws
-    num_new_worse = sum(df[selection, :Order] .== "<")
-    num_new_better = sum(df[selection, :Order] .== ">")
-    log(num_new_better > 0 ? :green : :white, "  Num where new implementation is better = $(num_new_better)\n")
-    log(num_new_worse > 0 ? :red : :green, "  Num where new implementation is worse = $(num_new_worse)\n")
+    num_new_worse = sum(df[selection, Symbol(col_prefix, "Order")] .== "<")
+    num_new_better = sum(df[selection, Symbol(col_prefix, "Order")] .== ">")
+    log_color = num_new_better > num_new_worse ? :green : :red
+    log(log_color, "  $col_prefix is better in current run in $(num_new_better) tests\n")
+    log(log_color, "  $col_prefix is worse in current run in $(num_new_worse) tests\n")
     any(selection) && println(df[selection, :])
 end
 
