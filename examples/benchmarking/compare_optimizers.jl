@@ -420,7 +420,6 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
         # Use Benjamini-Hochberg to judge which pvalues are significant given we did
         # many comparisons.
         pvs = convert(Array, collect(skipmissing(df[:Pvalue])))
-        @show pvs
         df[:SignificantBH001] = benjamini_hochberg(pvs, 0.01)
         df[:SignificantBH005] = benjamini_hochberg(pvs, 0.05)
         df[:SignificantBH010] = benjamini_hochberg(pvs, 0.10)
