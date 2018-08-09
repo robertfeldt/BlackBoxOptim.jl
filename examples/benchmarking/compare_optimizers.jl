@@ -387,7 +387,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 psel = db[:Problem] .== probname
                 dsel = db[:NumDims] .== numdims
                 df = db[optsel .& psel .& dsel, :]
-                benchfitnesses = collect(skipmissing(df[:Fitness]))
+                benchfitnesses = convert(Vector{Float64}, df[:Fitness])
                 newfs = Float64[]
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
@@ -419,7 +419,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
 
         # Use Benjamini-Hochberg to judge which pvalues are significant given we did
         # many comparisons.
-        pvs = convert(Array, collect(skipmissing(df[:Pvalue])))
+        pvs = convert(Vector{Float64}, df[:Pvalue])
         df[:SignificantBH001] = benjamini_hochberg(pvs, 0.01)
         df[:SignificantBH005] = benjamini_hochberg(pvs, 0.05)
         df[:SignificantBH010] = benjamini_hochberg(pvs, 0.10)
