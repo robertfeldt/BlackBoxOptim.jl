@@ -5,6 +5,7 @@ BlackBoxOptim.jl
 [![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
 [![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.6.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 [![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.7.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
+[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_1.0.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 
 `BlackBoxOptim` is a global optimization package for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability. It also supports parallel evaluation to speed up optimization for functions that are slow to evaluate.
 
