@@ -105,11 +105,7 @@ function tell!(dxnes::DXNESOpt{F}, rankedCandidates::Vector{Candidate{F}}) where
     u = assign_weights!(dxnes.tmp_Utilities, rankedCandidates, dxnes.sortedUtilities)
     dxnes.evol_path *= dxnes.evol_discount
     # We'll take the small perf hit for now just so this can run also on pre rc2 julia 0.7s
-    if VERSION < v"0.7.0-rc2"
-        dxnes.evol_path += dxnes.evol_Zscale * squeeze(wsum(dxnes.Z, u, 2), dims=2)
-    else
-        dxnes.evol_path += dxnes.evol_Zscale * dropdims(wsum(dxnes.Z, u, 2), dims=2)
-    end
+    dxnes.evol_path += dxnes.evol_Zscale * dropdims(wsum(dxnes.Z, u, 2), dims=2)
     evol_speed = norm(dxnes.evol_path)/dxnes.moving_threshold
     if evol_speed > 1.0
         # the center is moving, adjust weights
