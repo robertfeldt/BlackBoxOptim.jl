@@ -284,6 +284,7 @@ function read_benchmark_db(filename)
     if isfile(filename)
         return CSV.read(filename)
     else
+        @warn "Benchmark results file $filename not found, returning empty frame"
         return DataFrame()
     end
 end
