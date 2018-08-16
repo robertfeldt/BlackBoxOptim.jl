@@ -1,5 +1,3 @@
-using Random
-
 module BlackBoxOptim
 
 using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat

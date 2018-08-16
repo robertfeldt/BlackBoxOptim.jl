@@ -103,7 +103,7 @@ function trace(ctrl::OptRunController, msg::AbstractString, obj = nothing)
             if isa(obj, AbstractString)
                 print(obj)
             else
-                showcompact(obj)
+                show(IOContext(stdout, :compact => true), obj)
             end
         end
     end

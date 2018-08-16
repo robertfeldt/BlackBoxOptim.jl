@@ -52,7 +52,7 @@ If the block is empty, it is repopulated.
 The methods are randomly shuffled each time the block is regenerated, since we need
 to know their effectiveness at every period of the optimization process.
 """
-function Base.next(fa::FrequencyAdapter)
+function next(fa::FrequencyAdapter)
     if fa.block_pos > length(fa.block)
         fill_block!(fa)
     end

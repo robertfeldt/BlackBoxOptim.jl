@@ -25,7 +25,16 @@ function apply!(opmix::GeneticOperatorsMixture,
     apply!(op, v, target_index)
 end
 
-function Base.next(opmix::FixedGeneticOperatorsMixture)
+"""
+    next(fa::FixedGeneticOperatorsMixture)
+
+Gets the random genetic operator from the mixture.
+
+The probability to select an operator is proportional to its weight.
+
+Returns a tuple of the genetic operator and its index in the mix.
+"""
+function next(opmix::FixedGeneticOperatorsMixture)
     i = sample(1:length(opmix.operators), opmix.weights)
     return opmix.operators[i], i
 end
@@ -47,7 +56,7 @@ end
 
 frequencies(opmix::FAGeneticOperatorsMixture) = frequencies(opmix.fa)
 
-function Base.next(opmix::FAGeneticOperatorsMixture)
+function next(opmix::FAGeneticOperatorsMixture)
     i = next(opmix.fa)
     return opmix.operators[i], i
 end

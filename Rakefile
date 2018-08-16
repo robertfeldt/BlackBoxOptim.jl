@@ -4,7 +4,7 @@ TestDir = "test"
 # General parameters that the user can set from the command line.
 Julia = "julia"
 Julia06 = "julia06"
-Julia07 = "julia07"
+Julia07 = "julia"
 MinReps = (ENV["minreps"] || 30).to_i
 MaxReps = (ENV["maxreps"] || 1000).to_i
 MaxRepTime = (ENV["maxreptime"] || 1.0).to_f
@@ -23,7 +23,7 @@ task :atest do
 end
 
 Command06 = "#{Julia06} --color=yes -L src/BlackBoxOptim.jl"
-Command07 = "#{Julia07} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
+Command07 = "#{Julia07} --depwarn=no --color=yes"
 Command = Command06
 
 desc "Run normal (fast) tests"
@@ -117,6 +117,16 @@ end
 desc "Benchmark (against latest, saved set of benchmark runs)"
 task :bench do
   cd("./examples/benchmarking")
-  sh("julia runcompare.jl 10")
+  sh("#{Command} runcompare.jl examples/benchmarking 10")
   cd("../..")
+end
+
+desc "Benchmark on 0.7 (against the latest benchmark reference)"
+task :bench07 do
+  sh("#{Command07} ./examples/benchmarking/runcompare.jl examples/benchmarking 10")
+end
+
+desc "Generate benchmark reference"
+task :benchref07 do
+  sh("#{Command07} ./examples/benchmarking/runupdate.jl examples/benchmarking 10")
 end
