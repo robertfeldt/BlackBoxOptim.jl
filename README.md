@@ -11,11 +11,11 @@ BlackBoxOptim.jl
 
 # Installation
 ```julia
-Pkg.add("BlackBoxOptim")
+using Pkg; Pkg.add("BlackBoxOptim")
 ```
-or directly from github:
+or latest master directly from github:
 ```julia
-Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
+using Pkg; Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
 ```
 from a Julia repl.
 

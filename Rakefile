@@ -4,7 +4,8 @@ TestDir = "test"
 # General parameters that the user can set from the command line.
 Julia = "julia"
 Julia06 = "julia06"
-Julia07 = "julia"
+Julia07 = "julia07"
+Julia1 = "julia1"
 MinReps = (ENV["minreps"] || 30).to_i
 MaxReps = (ENV["maxreps"] || 1000).to_i
 MaxRepTime = (ENV["maxreptime"] || 1.0).to_f
@@ -23,8 +24,9 @@ task :atest do
 end
 
 Command06 = "#{Julia06} --color=yes -L src/BlackBoxOptim.jl"
-Command07 = "#{Julia07} --depwarn=no --color=yes"
-Command = Command06
+Command07 = "#{Julia07} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
+Command1 = "#{Julia1} --color=yes -L src/BlackBoxOptim.jl"
+Command = Command07
 
 desc "Run normal (fast) tests"
 task :runtest do
@@ -39,6 +41,11 @@ end
 desc "Run normal (fast) tests on Julia 0.7"
 task :runtest7 do
   sh "#{Command07} test/runtests.jl"
+end
+
+desc "Run normal (fast) tests on Julia 1.0"
+task :runtest1 do
+  sh "#{Command1} test/runtests.jl"
 end
 
 desc "Run normal (fast) tests on Julia 0.7, while timing test execution"
