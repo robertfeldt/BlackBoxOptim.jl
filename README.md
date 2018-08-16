@@ -3,7 +3,6 @@ BlackBoxOptim.jl
 
 [![Build Status](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl.svg?branch=master)](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl)
 [![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
-[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.6.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 [![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.7.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 [![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_1.0.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 
