@@ -81,6 +81,7 @@ Base.minimum(or::OptimizationResults) = best_candidate(or)
 f_minimum(or::OptimizationResults) = best_fitness(or)
 # FIXME lookup stop_reason
 iteration_converged(or::OptimizationResults) = iterations(or) >= parameters(or)[:MaxSteps]
+isinterrupted(or::OptimizationResults) = stop_reason(or) == "InterruptException()"
 
 """
 `TopListArchive`-specific components of the optimization results.

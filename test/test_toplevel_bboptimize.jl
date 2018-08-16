@@ -126,7 +126,7 @@
             optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
                               MaxSteps=100, TraceMode=:silent, RecoverResults=true)
             res = bboptimize(optctrl)
-            @test BlackBoxOptim.stop_reason(res) == @sprintf("%s", InterruptException())
+            @test BlackBoxOptim.isinterrupted(res)
         end
 
         @testset ":RecoverResults off" begin

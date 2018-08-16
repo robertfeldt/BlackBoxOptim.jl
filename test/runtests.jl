@@ -44,6 +44,7 @@ my_tests = [
     "test_toplevel_bboptimize.jl",
     "test_smoketest_bboptimize.jl",
 
+    "problems/test_problem.jl",
     "problems/test_single_objective.jl",
 
     "test_generating_set_search.jl",

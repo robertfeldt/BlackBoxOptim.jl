@@ -32,6 +32,12 @@ Always used when printing fitness vectors though.
 struct ParetoFitnessScheme{N,F<:Number,MIN,AGG} <: TupleFitnessScheme{N,F,NTuple{N,F},MIN,AGG}
     aggregator::AGG    # fitness aggregation function
 
+    ParetoFitnessScheme{N,F,MIN,AGG}(; aggregator::AGG=sum) where {N, F<:Number, MIN, AGG} =
+        new{N,F,MIN,AGG}(aggregator)
+
+    ParetoFitnessScheme{N,F,MIN}(; aggregator::AGG=sum) where {N, F<:Number, MIN, AGG} =
+        new{N,F,MIN,AGG}(aggregator)
+
     ParetoFitnessScheme{N,F}(; is_minimizing::Bool=true, aggregator::AGG=sum) where {N, F<:Number, AGG} =
         new{N,F,is_minimizing,AGG}(aggregator)
 
@@ -291,16 +297,16 @@ hat_compare(u::IndexedTupleFitness{N,F}, v::IndexedTupleFitness{N,F},
 
 hat_compare(u::NTuple{N,F}, v::IndexedTupleFitness{N,F},
             fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
-    hat_compare(convert(IndexedTupleFitness, u, fs), v, fs, expected)
+    hat_compare(convert(IndexedTupleFitness{N,F}, u, fs), v, fs, expected)
 
 hat_compare(u::IndexedTupleFitness{N,F}, v::NTuple{N,F},
             fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
-    hat_compare(u, convert(IndexedTupleFitness, v, fs), fs, expected)
+    hat_compare(u, convert(IndexedTupleFitness{N,F}, v, fs), fs, expected)
 
 hat_compare(u::NTuple{N,F}, v::NTuple{N,F},
             fs::EpsBoxDominanceFitnessScheme{N,F}, expected::Int=0) where {N,F} =
-    hat_compare(convert(IndexedTupleFitness, u, fs),
-                convert(IndexedTupleFitness, v, fs), fs, expected)
+    hat_compare(convert(IndexedTupleFitness{N,F}, u, fs),
+                convert(IndexedTupleFitness{N,F}, v, fs), fs, expected)
 
 # special overload that strips index equality flag
 (hc::HatCompare{FS})(u::IndexedTupleFitness{N,F},

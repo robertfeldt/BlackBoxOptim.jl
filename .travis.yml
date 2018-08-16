@@ -3,15 +3,17 @@ os:
   - linux
   - osx
 julia:
-#  - 0.7 uncomment once 0.7 is out
+  - 0.7
+  - 1.0
   - nightly
-#matrix: uncomment once 0.7 is out
-#  allow_failures:
-#    - julia: nightly
+matrix:
+  allow_failures:
+    - julia: nightly
 notifications:
   email: false
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("BlackBoxOptim"); Pkg.test("BlackBoxOptim"; coverage=true)'
+# uncomment the following lines to override the default test script
+#script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia --check-bounds=yes -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("RData"); Pkg.test("RData"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("BlackBoxOptim")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg, BlackBoxOptim; cd(joinpath(dirname(pathof(BlackBoxOptim)), "..")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

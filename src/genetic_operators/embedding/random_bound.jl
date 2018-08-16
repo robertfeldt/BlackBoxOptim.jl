@@ -17,16 +17,19 @@ search_space(rb::RandomBound) = rb.searchSpace
 function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndividual)
     length(target) == length(ref) == numdims(eo.searchSpace) ||
         throw(ArgumentError("Dimensions of problem/individuals do not match"))
+    ss = search_space(eo)
     ssmins = mins(eo.searchSpace)
     ssmaxs = maxs(eo.searchSpace)
 
-    @inbounds for i in 1:length(target)
+    @inbounds for i in eachindex(target)
         l, u = ssmins[i], ssmaxs[i]
 
         if target[i] < l
-            target[i] = l + rand() * (ref[i] - l)
+            target[i] = l + rand() * (ref[i]-l)
         elseif target[i] > u
-            target[i] = u + rand() * (ref[i] - u)
+            target[i] = u + rand() * (ref[i]-u)
+        else
+            continue
         end
         @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
     end

@@ -45,49 +45,52 @@ const JadeFunctionSet = Dict{Int,FunctionBasedProblemFamily}(
 #####################################################################
 
 """
-A `TransformedProblem` just makes a few changes in an original problem but refers
-most func calls to it.
+`TransformedProblem{FS, P}` is an abstract class for optimization problems derived
+from some original problem of type `P` by introducing a few changes.
 
-The concrete derived types must implement a `sub_problem()` method.
+The concrete derived types must implement:
+* `objfunc()` method
+* `fitness_scheme()` and `search_space()`
 """
-abstract type TransformedProblem{FS<:FitnessScheme} <: OptimizationProblem{FS} end
+abstract type TransformedProblem{FS, P <: OptimizationProblem} <: OptimizationProblem{FS} end
 
-search_space(tp::TransformedProblem) = search_space(sub_problem(tp))
-is_fixed_dimensional(tp::TransformedProblem) = is_fixed_dimensional(sub_problem(tp))
-numfuncs(tp::TransformedProblem) = numfuncs(sub_problem(tp))
-numdims(tp::TransformedProblem) = numdims(sub_problem(tp))
-fmins(tp::TransformedProblem) = fmins(sub_problem(tp))
-name(tp::TransformedProblem) = name(sub_problem(tp))
+orig_problem(tp::TransformedProblem) = tp.orig_problem # default implementation
+orig_problem_type(tp::Type{<:TransformedProblem{P}}) where P = P
+name(tp::TransformedProblem) = "TransformedProblem("*name(sub_problem(tp))*")"
 
 """
-A `TransformedProblem` subclass that shifts the minimum value and biases the returned
-function values.
+A `TransformedProblem` subclass that shifts the objective argument and offsets the value:
+``f(x - xshift) + fitshift`` → min/max, ``x`` ∈ ``X`` (``X`` stays intact).
 """
-struct ShiftedAndBiasedProblem{FS<:FitnessScheme} <: TransformedProblem{FS}
+struct ShiftedAndBiasedProblem{FS, F, P <: OptimizationProblem} <: TransformedProblem{FS, P}
+    orig_problem::P
+
     xshift::Vector{Float64}
-    funcshift::Float64
-    subp::OptimizationProblem{FS}
+    fitshift::F
+    opt_value::F
 
-    function ShiftedAndBiasedProblem(sub_problem::OptimizationProblem{FS};
-        xshift = false, funcshift = 0.0) where {FS <: FitnessScheme}
-        xshift = (xshift != false) ? xshift : rand_individual(search_space(sub_problem))
-        new{FS}(xshift[:], funcshift, sub_problem)
+    function ShiftedAndBiasedProblem(orig_problem::P;
+        xshift = nothing,
+        fitshift = nothing,
+        opt_value = nothing
+    ) where P <: OptimizationProblem{FS} where FS
+        (xshift === nothing) && (xshift = fill(0.0, numdims(orig_problem)))
+        F = fitness_type(FS)
+        (fitshift === nothing) && (fitshift = zero(F)) # FIXME zerofitness() to support tuples
+        # derive the default optimal value,
+        # which would be not correct if `xshift` moves the optimum in/out of the search space
+        (opt_value === nothing) && (opt_value = BlackBoxOptim.opt_value(orig_problem) + fitshift)
+        new{FS, F, P}(orig_problem, copy(xshift), fitshift, opt_value)
     end
 end
 
-sub_problem(sp::ShiftedAndBiasedProblem) = sp.subp
+name(p::ShiftedAndBiasedProblem) = "ShiftedAndBiased("*name(orig_problem(p))*")"
+fitness_scheme(tp::TransformedProblem) = fitness_scheme(orig_problem(tp))
+search_space(tp::TransformedProblem) = search_space(orig_problem(tp)) # the space stays the same
+opt_value(tp::TransformedProblem) = tp.opt_value
 
-is_fixed_dimensional(p::ShiftedAndBiasedProblem) = is_fixed_dimensional(sub_problem(p))
-
-"""
-Evaluate fitness by first shifting `x` and then biasing the returned function value.
-"""
-evalfunc(x, i, sp::ShiftedAndBiasedProblem) =
-  ofunc(sub_problem(sp), i)(x - sp.xshift) + sp.funcshift
-
-shifted(p::OptimizationProblem{FS}; funcshift = 0.0) where {FS<:FitnessScheme} =
-    ShiftedAndBiasedProblem(p; funcshift = funcshift)
-
+fitness(x, sp::ShiftedAndBiasedProblem) =
+    fitness(x - sp.xshift, orig_problem(sp)) + sp.fitshift
 
 #####################################################################
 # S1 Base functions. Typically slightly transformed to break symmetry

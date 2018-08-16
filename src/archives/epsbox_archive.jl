@@ -45,6 +45,7 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
     last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
     last_restart::Int                 # when (wrt num_dlast) last restart has occured
     n_restarts::Int                   # the counter of the method restarts
+    n_oversize_inserts::Int           # how many times the candidates were inserted into oversized archive
 
     len::Int              # current frontier size
     max_size::Int         # maximal frontier size
@@ -55,7 +56,7 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
 
     EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme{N,F};
                   max_size::Integer = 1_000_000) where {N,F} =
-        new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, max_size,
+        new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0, 0, 0, 0, 0, 0, 0, max_size,
                                     sizehint!(Vector{EpsBoxFrontierIndividual{N,F}}(), 64),
                                     sizehint!(BitVector(), 64))
 end
@@ -244,7 +245,7 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
         has_progress = true # no existing element with the same index, otherwise it would have been replaced
         #info("Appended non-dominated element to the frontier")
         if length(a.frontier) > a.max_size
-            throw(error("Pareto frontier exceeds maximum size"))
+            a.n_oversize_inserts += 1 # throw(error("Pareto frontier exceeds maximum size"))
         end
     end
     if updated_frontier_ix > 0
@@ -258,6 +259,9 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
                 a.best_candidate_ix = updated_frontier_ix
             end
         end
+    end
+    if length(a.frontier) <= a.max_size
+        a.n_oversize_inserts = 0 # reset the counter since the size is ok
     end
     if has_progress # non-dominated solution that has some eps-indices different from the existing ones
         a.last_progress = a.num_candidates
@@ -273,7 +277,14 @@ add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
 
 # called by check_stop_condition(e::Evaluator, ctrl)
 function check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl)
-    ctrl.max_steps_without_progress > 0 &&
-    noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress ?
-        "No epsilon-progress for more than $(ctrl.max_steps_without_progress) iterations" : ""
+    if ctrl.max_steps_without_progress > 0 &&
+        noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress
+        return "No epsilon-progress for more than $(ctrl.max_steps_without_progress) iterations"
+    elseif a.n_oversize_inserts >= 10
+        # notify that the last 10 inserts were to the oversized archive
+        # that means that the ϵ quantization steps are too small
+        return "Pareto frontier size ($(length(a.frontier))) exceeded maximum ($(a.max_size))"
+    else
+        return ""
+    end
 end

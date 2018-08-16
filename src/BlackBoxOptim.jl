@@ -37,7 +37,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         Problems,
         OptimizationProblem, FunctionBasedProblem,
         minimization_problem,
-        name, fitness_scheme, search_space, numdims, opt_value,
+        name, fitness_scheme_type, fitness_scheme, search_space, numdims, opt_value,
         fitness_is_within_ftol, objfunc, fitness,
 
         # Problem factory/family
@@ -54,6 +54,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # OptimizationResults
         minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
+        archived_fitness,
 
         # OptController
         numruns, lastrun, problem,
