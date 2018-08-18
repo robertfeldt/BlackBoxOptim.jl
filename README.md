@@ -65,7 +65,7 @@ You can find more examples of using `BlackBoxOptim` in [the examples directory](
 
 Multi-objective evaluation is supported by the BorgMOEA algorithm. Your fitness function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise the use is similar, here we optimize the Schaffer1 function:
 ```julia
-fitness_schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+fitness_schaffer1(x) = (sum(abs2, x), sum(abs2, x .- 2.0))
 res = bboptimize(fitness_schaffer1; Method=:borg_moea,
             FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true),
             SearchRange=(-10.0, 10.0), NumDimensions=3, ϵ=0.05,
