@@ -39,6 +39,7 @@ mutable struct DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionSt
         d = numdims(search_space(embed))
         if lambda == 0
             lambda = 4 + 3*floor(Int, log(d))
+            isodd(lambda) && (lambda += 1) # make sure lambda is even
         end
         if ini_x === nothing
             ini_x = rand_individual(search_space(embed))
