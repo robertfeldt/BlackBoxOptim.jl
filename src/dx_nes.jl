@@ -93,7 +93,7 @@ end
 
 function ask(dxnes::DXNESOpt)
     hlambda = dxnes.lambda÷2
-    for i in 1:hlambda
+    @inbounds for i in 1:hlambda
         for j in 1:size(dxnes.Z, 1)
             dxnes.Z[j, i] = randn()
             dxnes.Z[j, i+hlambda] = -dxnes.Z[j, i]
