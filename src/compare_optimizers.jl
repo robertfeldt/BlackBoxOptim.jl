@@ -1,3 +1,5 @@
+using CPUTime
+
 function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
     Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
@@ -5,18 +7,26 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
 
     results = Any[]
     for m in Methods
-        tic()
-        res = bboptimize(functionOrProblem, parameters; Method = m)
-        push!( results,  (m, best_candidate(res), best_fitness(res), toq()) )
+        CPUtic()
+        res = nothing
+        try
+            res = bboptimize(functionOrProblem, parameters; Method = m)
+        catch e
+            @warn "$e when running $m"
+            push!(results, (m, e, nothing, missing, missing))
+        end
+        if res !== nothing
+            push!(results, (m, "ok", best_candidate(res), best_fitness(res), CPUtoq()))
+        end
     end
 
-    sorted = sort( results, by = (t) -> t[3] )
+    sorted = sort( results, by = (t) -> t[4] )
 
     if get(parameters, :TraceMode, :compact) != :silent
         println("\n********************************************************************************")
         #println(describe(evaluator))
         for i in 1:length(sorted)
-            println("$(i). $(sorted[i][1]), fitness = $(sorted[i][3]), time = $(sorted[i][4])")
+            println("$(i). $(sorted[i][1]): $(sorted[i][2]), fitness = $(sorted[i][4]), time = $(sorted[i][5])")
         end
         println("********************************************************************************\n")
     end
