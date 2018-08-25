@@ -14,11 +14,15 @@ function latin_hypercube_sampling(mins::AbstractVector{T},
     all(xy -> xy[1] <= xy[2], zip(mins, maxs)) ||
         throw(ArgumentError("mins[i] should not exceed maxs[i]"))
     dims = length(mins)
-    result = zeros(T, n, dims)
+    result = zeros(T, dims, n)
+    cubedim = Vector{T}(undef, n)
     @inbounds for i in 1:dims
-        interval_len = (maxs[i] - mins[i]) / n
-        result[:,i] = shuffle!(range(mins[i], stop=maxs[i] - interval_len, length=n) +
-                               interval_len*rand(n))
+        imin = mins[i]
+        dimstep = (maxs[i] - imin) / n
+        for j in 1:n
+            cubedim[j] = imin + dimstep * (j - 1 + rand(T))
+        end
+        result[i, :] .= shuffle!(cubedim)
     end
-    return result'
+    return result
 end
