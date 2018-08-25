@@ -1,4 +1,8 @@
 @testset "Latin hypercube sampling" begin
+    @test_throws DimensionMismatch BlackBoxOptim.Utils.latin_hypercube_sampling(Float64[], [1.0], 1)
+    @test_throws DimensionMismatch BlackBoxOptim.Utils.latin_hypercube_sampling([1.0, 2.0], [1.0], 1)
+    @test_throws ArgumentError BlackBoxOptim.Utils.latin_hypercube_sampling([2.0], [1.0], 1)
+
     samples = BlackBoxOptim.Utils.latin_hypercube_sampling([0.0], [1.0], 1)
     @test size(samples, 1) == 1
     @test (0.0 <= samples[1,1] <= 1.0)
