@@ -112,4 +112,4 @@ The default placeholder value for parameters argument.
 """
 const EMPTY_PARAMS = ParamsDict()
 
-kwargs2dict(kwargs::Iterators.Pairs{Symbol}) = ParamsDict(kwargs)
+kwargs2dict(kwargs...) = ParamsDict(kwargs...)
