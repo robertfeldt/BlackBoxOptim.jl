@@ -36,3 +36,7 @@ Note however that if an opt controller is set up with bbsetup and then used in i
 ### BorgMOEA
  - Currently: Similar to DiffEvoOpt but calls population(problem, opts, nafitness(IndexedTupleFitness{N,F}), ntransient=1).
  - Solution should be same as for DiffEvoOpt but ensure all variants of population method are fixed.
+
+## Current solution chose
+
+It seems complex to allow updating with a new solution candidate after an optimizer has already executed. For now we opt to only allow setting a solution candidate as a parameter or as a direct argument to bbsetup or bboptimize(functionOrProblem).
