@@ -23,9 +23,11 @@ Note however that if an opt controller is set up with bbsetup and then used in i
 
 ### RandomSearcher
  - Doesn't really make sense for this one. Probably do nothing. Throwing an exception or warning might be bad for compare_optimizers etc when one really wants to do the same thing for all optimizers.
+ - Let's not use initial candidates for random searcher and just warn that they are not used.
 
 ### SeparableNESOpt, XNESOpt, DXNESOpt
  - Currently: Has an ini_x parameter to constructor. Starts from random point unless specified.
+ - Not clear what it would mean to insert a new solution candidate for these optimizers since they have a "memory" in the sense of remembering which "directions" have been good to take steps in. If the incumbent (current "best") solution can jump wildly if given from the outside maybe we would also have to "reset" this "memory". Maybe just let the incumbent be inserted from the outside but warn that the effects are unknown?
 
 ### DiffEvoOpt
  - Currently: Calls population(problem, opts) to create the population. 
