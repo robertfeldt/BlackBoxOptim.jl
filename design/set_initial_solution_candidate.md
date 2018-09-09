@@ -12,6 +12,8 @@ To set an initial solution we can either:
 
 3 can utilize either 1 or 2 as a way to enable this.
 
+Note however that if an opt controller is set up with bbsetup and then used in iterations we might want to provide new starting points for each iteration rather than only doing it during setup. So we might need the insert_candidate method implied by solution 2 above for this scenario anyway. Hmm.
+
 ## Check of existing ways that optimizers are initialized
 
 ### GeneratingSetSearch, ResamplingMemeticSearcher, SimultaneousPerturbationSA2
