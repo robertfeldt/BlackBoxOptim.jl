@@ -30,6 +30,9 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
     save_trace::Bool # FIXME if traces should be saved to a file
     trace_interval::Float64 # periodicity of calling trace_progress()
 
+    callback_function::Function
+    callback_interval::Float64
+
     # termination conditions
     max_steps::Int      # maximal number of steps
     max_fevals::Int # maximal number of fitness evaluations
@@ -52,6 +55,7 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
     start_time::Float64 # time optimization started, 0 if not running yet
     stop_time::Float64  # time optimization stopped, 0 if still running
     last_report_time::Float64 # last time trace_progress() was called
+    last_callback_time::Float64 # last time callback function was called
 
     stop_reason::String # the reason for algorithm termination, empty if it's not terminated
 end
@@ -80,9 +84,10 @@ Create `OptRunController` for a given problem using specified `optimizer`.
 function OptRunController(optimizer::O, evaluator::E, params) where {O<:Optimizer, E<:Evaluator}
     OptRunController{O,E}(optimizer, evaluator,
         [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
+                      :CallbackFunction, :CallbackInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
-        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, "")
+        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "")
 end
 
 # stepping optimizer has it's own evaluator, get a reference
@@ -201,6 +206,13 @@ function check_stop_condition(ctrl::OptRunController)
     return "" # empty string, no termination
 end
 
+@inline function callback(ctrl::OptRunController)
+    if ctrl.callback_interval > 0.0
+        ctrl.callback_function(ctrl)
+        ctrl.last_callback_time = time()
+    end
+end
+
 function trace_progress(ctrl::OptRunController)
     # update the counters
     ctrl.last_report_time = time()
@@ -281,7 +293,7 @@ function run!(ctrl::OptRunController)
                 trace_progress(ctrl)
             end
 
-            # update the counters
+            # Take the step and then update the counters
             nstep_better = step!(ctrl)
             ctrl.num_better += nstep_better
             ctrl.num_better_since_last_report += nstep_better
@@ -294,6 +306,14 @@ function run!(ctrl::OptRunController)
             end
             ctrl.last_num_fevals = num_func_evals(ctrl)
 
+            # Callback every now and then (if a callback interval has been set)...
+            if ctrl.callback_interval > 0.0 && 
+                (ctrl.last_callback_time <= 0.0 ||
+                    (time() - ctrl.last_callback_time) > ctrl.callback_interval)
+                callback(ctrl)
+            end            
+            
+            # Check if we have a reason to stop on next loop
             ctrl.stop_reason = check_stop_condition(ctrl)
         end
         ctrl.stop_time = time()

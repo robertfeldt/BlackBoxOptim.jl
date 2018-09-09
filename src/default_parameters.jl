@@ -29,6 +29,9 @@ const DefaultParameters = ParamsDict(
     :SaveFitnessTraceToCsv => false, # Save a csv file with information about the major fitness improvement events (only the first event in each fitness magnitude class is saved)
     :SaveParameters => false, # Save parameters to a json file for later scrutiny
 
+    :CallbackFunction => x -> x, # Function to callback to, here just the identity function.
+    :CallbackInterval  => 0.0,  # Minimum number of seconds between consecutive callbacks. If 0.0 we never callback.
+
     :RandomizeRngSeed => true, # Randomize the RngSeed value before using any random numbers.
     :RngSeed        => 1234,   # The specific random seed to set before any random numbers are generated. The seed is randomly selected if RandomizeRngSeed is true, and this parameter is updated with its actual value.
 

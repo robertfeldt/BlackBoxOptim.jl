@@ -77,8 +77,7 @@ end
 
 desc "Run only the latest changed test file"
 task :t do
-  latest_changed_test_file = filter_latest_changed_files Dir["test/**/test*.jl"]
-  sh "#{Command} -e 'include(\"test/helper.jl\"); include(\"#{latest_changed_test_file.first}\")'"
+  sh "#{Command} test/runtests.jl latestchanged"
 end
 
 desc "Run and create code coverage information"

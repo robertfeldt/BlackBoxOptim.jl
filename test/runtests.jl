@@ -7,49 +7,39 @@ module BlackBoxOptimTests
 using LinearAlgebra, Random
 using Printf: @printf, @sprintf
 
+TestDir = first(splitdir(@__FILE__()))
+
+# If two arguments the second one if filename of a testset file
+# listing the testfiles to use.
+if length(ARGS) == 2 && isfile(ARGS[2])
+    test_file_list = ARGS[2]
+else
+    test_file_list = joinpath(TestDir, "testset_normal.txt")
+end
+
+TestFiles = filter(fn -> isfile(joinpath(TestDir, fn)), 
+    readlines(test_file_list))
+
+function latest_changed_file(files, dir = "")
+    files[first(sortperm(map(fn -> mtime(joinpath(dir, fn)), files), rev = true))]
+end
+
+# If a first argument is given it must be either:
+#  all =>           run all test files in the testset
+#  latestchanged => run only the latest changed file in the testset
+if length(ARGS) > 0
+    if ARGS[1] == "all"
+        TestFiles = TestFiles # Change nothing so run them all
+    elseif ARGS[1] == "latestchanged"
+        TestFiles = AbstractString[latest_changed_file(TestFiles, TestDir)]
+        println("Testing files: $(TestFiles)")
+    end
+end
+
 startclocktime = time()
 include("helper.jl")
 
 import Compat.String
-
-my_tests = [
-
-    "utilities/test_latin_hypercube_sampling.jl",
-    "utilities/test_halton_sequence.jl",
-    "utilities/test_assign_ranks.jl",
-
-    "test_parameters.jl",
-    "test_fitness.jl",
-    "test_evaluator.jl",
-    "test_population.jl",
-    "test_bimodal_cauchy_distribution.jl",
-    "test_search_space.jl",
-    "test_mutation_operators.jl",
-    "test_crossover_operators.jl",
-    "test_selectors.jl",
-    "test_embedders.jl",
-    "test_frequency_adaptation.jl",
-    "test_archive.jl",
-    "test_epsbox_archive.jl",
-    "test_optimizationresult.jl",
-
-    "test_random_search.jl",
-    "test_differential_evolution.jl",
-    "test_adaptive_differential_evolution.jl",
-    "test_natural_evolution_strategies.jl",
-
-    "test_borg_moea.jl",
-
-    "test_tracing.jl",
-    "test_toplevel_bboptimize.jl",
-    "test_smoketest_bboptimize.jl",
-
-    "problems/test_problem.jl",
-    "problems/test_single_objective.jl",
-
-    "test_generating_set_search.jl",
-    "test_direct_search_with_probabilistic_descent.jl",
-]
 
 if Main.TimeTestExecution
 
@@ -86,7 +76,7 @@ using CPUTime
 starttime = CPUtime_us()
 @testset "BlackBoxOptim test suite" begin
 
-for t in my_tests
+for t in TestFiles
     Main.TimeTestExecution && CPUtic()
 
     # Including the test file runs the tests in there...
@@ -106,13 +96,13 @@ elapsed = float(CPUtime_us() - starttime)/1e6
 if Main.TimeTestExecution
     datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
     using SHA
-    hash = bytes2hex(sha512(join(map(fn -> read(open(joinpath("test", fn)), String), my_tests))))[1:16]
-    push!(timing_data, [datestr, versionstr, gitstr, "TOTAL TIME for $(length(my_tests)) test files, $(hash)", elapsed])
+    hash = bytes2hex(sha512(join(map(fn -> read(open(joinpath("test", fn)), String), TestFiles))))[1:16]
+    push!(timing_data, [datestr, versionstr, gitstr, "TOTAL TIME for $(length(TestFiles)) test files, $(hash)", elapsed])
     CSV.write(TestTimingFileName, timing_data)
     println("Wrote $(nrow(timing_data)) rows to file $TestTimingFileName")
 end
 
 elapsedclock = time() - startclocktime
-println("Tested $(length(my_tests)) files in $(round(elapsedclock, digits=1)) seconds.")
+println("Tested $(length(TestFiles)) files in $(round(elapsedclock, digits=1)) seconds.")
 
 end # module BlackBoxOptimTests

@@ -1,6 +1,11 @@
 @testset "Top-level interface" begin
     rosenbrock(x) = sum(i -> 100*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x)-1))
 
+    # Ensure things have compiled before we start testing:
+    bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+        MaxSteps = 10, TraceMode = :silent)
+
+
     @testset "run a simple optimization" begin
         @testset "using bboptimize() with mostly defaults" begin
             res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
@@ -182,5 +187,38 @@
                              MaxSteps = 1000000, TraceMode = :silent)
         @test best_fitness(result1) < 1e-5
         @test result1.iterations < result2.iterations
+    end
+
+    @testset "callback" begin
+        global callbacktimes = Float64[]
+        function callbackfn(optctrl)
+            global callbacktimes
+            push!(callbacktimes, time())
+        end
+        interval = 0.005
+        NumCalls = 30
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
+            TraceMode = :silent, 
+            MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
+            CallbackInterval = interval, CallbackFunction = callbackfn)
+        @test length(callbacktimes) >= NumCalls
+        for i in 1:(length(callbacktimes) - 1)
+            d = (callbacktimes[i+1] - callbacktimes[i])
+            @test d >= interval
+        end
+
+        # If we call with an internval which is 0.0 or negative there are no callbacks
+        prenumcalls = length(callbacktimes)
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
+            TraceMode = :silent, 
+            MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
+            CallbackInterval = 0.0, CallbackFunction = callbackfn)
+        @test length(callbacktimes) == prenumcalls
+
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
+            TraceMode = :silent, 
+            MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
+            CallbackInterval = -0.6, CallbackFunction = callbackfn)
+        @test length(callbacktimes) == prenumcalls
     end
 end
