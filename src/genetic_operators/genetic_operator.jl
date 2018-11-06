@@ -32,11 +32,11 @@ The concrete implementations must provide `select()` method.
 abstract type IndividualsSelector end
 
 """
-    select(selector<:IndividualsSelector, population, numSamples::Int)
+    select(selector::IndividualsSelector, population, numSamples::Int)
 
 Select `numSamples` random candidates from the `population`.
 """
-function select(::IndividualsSelector, population, numSamples::Int) end
+select
 
 apply(o::MutationOperator, parents::AbstractVector{<:AbstractVector{<:Real}}) =
     map(p -> apply(o, p), parents)
