@@ -2,8 +2,7 @@ using Distributed, SharedArrays
 
 #= master <-> worker params_status/fitness_status codes =#
 
-const PEStatus_Msg = 1
-const PEStatus_OK = 0
+const PEStatus_OK = 0 # message received; positive statuses = job_id
 const PEStatus_Shutdown = -1
 const PEStatus_Error = -2
 
@@ -11,7 +10,7 @@ const PEStatus_Error = -2
 Internal data for the worker process of the parallel evaluator.
 """
 mutable struct ParallelEvaluatorWorker{T, P<:OptimizationProblem}
-    id::Int
+    id::Int                             # worker ID
     problem::P
     param_status::SharedVector{Int}     # master notifies worker about new requests
     shared_param::SharedVector{T}       # master puts candidates parameters
@@ -36,7 +35,7 @@ function run!(worker::ParallelEvaluatorWorker)
         # continuously poll the worker for the delivery notification for
         # the last job or for the new job notification
         i = 0
-        while param_status(worker) == PEStatus_OK || fitness_status(worker) == PEStatus_Msg
+        while param_status(worker) == PEStatus_OK || fitness_status(worker) > 0
             if (i+=1) > 1000 # allow executing the other tasks once in a while
                 yield()
                 i = 0
@@ -50,11 +49,11 @@ function run!(worker::ParallelEvaluatorWorker)
         elseif p_status == PEStatus_Error # master error (currently not set?)
             worker.fitness_status[1] = PEStatus_Shutdown # stopped after receiving an error
             break
-        elseif p_status == PEStatus_Msg # new job
+        elseif p_status > 0 # new job (status is job_id)
             worker.param_status[1] = PEStatus_OK # received, reset the statuts
             #@info "PE worker #$(worker.id): got job"
             @inbounds setfitness!(worker.shared_fitness, fitness(worker.shared_param, worker.problem))
-            worker.fitness_status[1] = PEStatus_Msg # fitness ready
+            worker.fitness_status[1] = p_status # fitness ready
         end
     end
 end
@@ -127,8 +126,8 @@ mutable struct ParallelEvaluator{F, FA, T, FS, P<:OptimizationProblem, A<:Archiv
     waiting_candidates::PECandidateDict{FA}     # candidates waiting their fitness calculation to be completed
     unclaimed_candidates::PECandidateDict{FA}   # candidates with calculated fitness that were not yet checked for completion (by process_completed())
 
-    worker2job::Vector{Int}         # job IDs assigned to workers
-    job_assignment::ReentrantLock   # lock to provide exclusive access to worker2job
+    busy_workers::BitVector         # workers available for accepting jobs
+    job_assignment::ReentrantLock   # lock to provide exclusive access to busy_workers
 
     max_seq_done_job::Int   # all jobs from 1 to max_seq_done_job are done
     max_done_job::Int       # max Id of done job
@@ -159,7 +158,7 @@ mutable struct ParallelEvaluator{F, FA, T, FS, P<:OptimizationProblem, A<:Archiv
             [SharedArray{T}((numobjectives(fs),), pids=vcat(pid,[myid()])) for pid in pids],
             Base.Semaphore(length(pids)),
             PECandidateDict{FA}(), PECandidateDict{FA}(),
-            zeros(length(pids)), ReentrantLock(), 0, 0, BitSet(),
+            falses(length(pids)), ReentrantLock(), 0, 0, BitSet(),
             1, false
         )
         etor.worker_refs = _create_workers(etor, pids)
@@ -252,7 +251,7 @@ function shutdown!(etor::ParallelEvaluator)
     for i in 1:nworkers(etor)
         Base.acquire(etor.fitness_slots)
     end
-    @assert all(isequal(0), etor.worker2job) "Some workers have not finished"
+    @assert !any(etor.busy_workers) "Some workers have not finished"
     # release any waiting
     for i in 1:nworkers(etor)
         Base.release(etor.fitness_slots)
@@ -318,22 +317,19 @@ function workers_listener!(etor::ParallelEvaluator{F}) where F
         @inbounds for worker_ix in 1:nworkers(etor)
             #@info "workers_listener!(): checking worker #$worker_ix..."
             #@assert check_worker_running(etor.worker_refs[worker_ix])
-            if (job_id = etor.worker2job[worker_ix]) > 0 &&
-               (fitness_status = etor.fitnesses_status[worker_ix][1]) != PEStatus_OK
-                @assert (fitness_status == PEStatus_Msg || is_stopping(etor)) "Worker #$worker_ix bad status: $(fitness_status)"
+            if etor.busy_workers[worker_ix] && (job_id = etor.fitnesses_status[worker_ix][1]) != PEStatus_OK
+                @assert (job_id > 0 || is_stopping(etor)) "Worker #$worker_ix bad status: $job_id"
                 #@info "worker_listener!(): fitness_evaluated"
                 lock(etor.job_assignment)
-                param_status = etor.params_status[worker_ix][1]
                 @inbounds new_fitness = getfitness(F, etor.shared_fitnesses[worker_ix])
-                @assert job_id > 0
-
                 #@info "worker_listener!($worker_ix): got fitness for job #$job_id"
-                etor.worker2job[worker_ix] = 0 # clear job state
-
                 etor.fitnesses_status[worker_ix][1] = PEStatus_OK # received
+                etor.busy_workers[worker_ix] = false # available again
+
                 unlock(etor.job_assignment)
                 Base.release(etor.fitness_slots)
 
+                param_status = etor.params_status[worker_ix][1]
                 if param_status == PEStatus_OK # communication in normal state, update the archive
                     update_archive!(etor, job_id, new_fitness)
                 elseif param_status < 0 # error/stopping on the master side
@@ -373,6 +369,7 @@ function async_update_fitness(
         etor::ParallelEvaluator{F,FA}, candi::Candidate{FA};
         force::Bool=false, wait::Bool=false) where {F, FA}
     #@info "async_update_fitness(): starting to assign job #$(etor.next_job_id)"
+    job_id = etor.next_job_id # tentative job id, but not assigned yet
     if etor.is_stopping
         return -2 # doesn't accept jobs
     elseif !force && !isnafitness(fitness(candi), fitness_scheme(etor.archive))
@@ -384,11 +381,11 @@ function async_update_fitness(
     end
     #@info "async_update_fitness(): waiting to assign job #$(etor.next_job_id)"
     Base.acquire(etor.fitness_slots)
-    #@info "async_update_fitness(): initial slot_state: $(etor.worker2job), $(etor.fitness_slots.curr_cnt)"
+    #@info "async_update_fitness(): initial slot_state: $(etor.busy_workers), $(etor.fitness_slots.curr_cnt)"
     lock(etor.job_assignment)
-    worker_ix = findfirst(isequal(0), etor.worker2job)
+    worker_ix = Base.findfirstnot(etor.busy_workers)
     @assert worker_ix !== nothing "Cannot find a worker #$(worker_ix) to put a job to"
-    etor.worker2job[worker_ix] = job_id = etor.next_job_id
+    etor.busy_workers[worker_ix] = true # busy
     etor.next_job_id += 1
     copyto!(etor.shared_params[worker_ix], candi.params) # share candidate with the workers
     #@info "async_update_fitness(): assigning job #$job_id to worker #$worker_ix"
@@ -397,7 +394,7 @@ function async_update_fitness(
     #@assert etor.fitnesses_status[worker_ix][1] == PEStatus_OK
     #@assert etor.params_status[worker_ix][1] == PEStatus_OK
     #@info "async_update_fitness(): flip param status"
-    etor.params_status[worker_ix][1] = PEStatus_Msg # announce a message
+    etor.params_status[worker_ix][1] = job_id # announce a message (status = job_id)
     #@info "async_update_fitness(): assigned job #$job_id to worker #$worker_ix"
     #@info "async_update_fitness(): unlock job assignment"
     unlock(etor.job_assignment)
