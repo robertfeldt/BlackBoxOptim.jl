@@ -1,6 +1,6 @@
 module BlackBoxOptim
 
-using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
+using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, SharedArrays, Compat
 using Printf: @printf, @sprintf
 using Compat: String, view
 
