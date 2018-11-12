@@ -139,7 +139,7 @@ mutable struct ParallelEvaluator{F, FA, T, FS, P<:OptimizationProblem, A<:Archiv
     is_stopping::Bool       # whether the evaluator is in shutdown sequence
 
     worker_refs::Vector{Future} # references to worker processes
-    workers_handler::Task   # task in the main process that runs workers_handler()
+    workers_listener::Task  # task in the main process that runs workers_listener!()
 
     function ParallelEvaluator(
         problem::P, archive::A;
@@ -163,7 +163,7 @@ mutable struct ParallelEvaluator{F, FA, T, FS, P<:OptimizationProblem, A<:Archiv
             1, false
         )
         etor.worker_refs = _create_workers(etor, pids)
-        etor.workers_handler = @async workers_handler!(etor)
+        etor.workers_listener = @async workers_listener!(etor)
 
         #finalizer(etor, _shutdown!)
         return etor
@@ -245,7 +245,7 @@ function shutdown!(etor::ParallelEvaluator)
     etor.is_stopping = true
     # notify the workers that they should shutdown (each worker should pick exactly one message)
     _shutdown!(etor)
-    # resume workers handler if it is waiting for the new jobs
+    # resume workers listener if it is waiting for the new jobs
     lock(etor.job_assignment)
     unlock(etor.job_assignment)
     # wait for all the workers
@@ -311,23 +311,23 @@ end
 """
 Process all incoming "fitness ready" messages until the evaluator is stopped.
 """
-function workers_handler!(etor::ParallelEvaluator{F}) where F
-    @info "workers_handler!() started"
+function workers_listener!(etor::ParallelEvaluator{F}) where F
+    @info "workers_listener!() started"
     while !is_stopping(etor) || !isempty(etor.waiting_candidates)
         # master critical section
         @inbounds for worker_ix in 1:nworkers(etor)
-            #@info "workers_handler!(): checking worker #$worker_ix..."
+            #@info "workers_listener!(): checking worker #$worker_ix..."
             #@assert check_worker_running(etor.worker_refs[worker_ix])
             if (job_id = etor.worker2job[worker_ix]) > 0 &&
                (fitness_status = etor.fitnesses_status[worker_ix][1]) != PEStatus_OK
                 @assert (fitness_status == PEStatus_Msg || is_stopping(etor)) "Worker #$worker_ix bad status: $(fitness_status)"
-                #@info "worker_handler!(): fitness_evaluated"
+                #@info "worker_listener!(): fitness_evaluated"
                 lock(etor.job_assignment)
                 param_status = etor.params_status[worker_ix][1]
                 @inbounds new_fitness = getfitness(F, etor.shared_fitnesses[worker_ix])
                 @assert job_id > 0
 
-                #@info "worker_handler!($worker_ix): got fitness for job #$job_id"
+                #@info "worker_listener!($worker_ix): got fitness for job #$job_id"
                 etor.worker2job[worker_ix] = 0 # clear job state
 
                 etor.fitnesses_status[worker_ix][1] = PEStatus_OK # received
@@ -340,7 +340,7 @@ function workers_handler!(etor::ParallelEvaluator{F}) where F
                     # remove the candidate
                     delete!(etor.waiting_candidates, job_id)
                 end
-                #@info "workers_handler!(): yield to other tasks after archive update"
+                #@info "workers_listener!(): yield to other tasks after archive update"
                 #yield() # free slots available, switch to the main task
             end
         end
@@ -348,7 +348,7 @@ function workers_handler!(etor::ParallelEvaluator{F}) where F
             if !is_stopping(etor) && isempty(etor.waiting_candidates)
                 wait(etor.job_assignment.cond_wait)
             else
-                #@info "workers_handler!(): yield to other tasks"
+                #@info "workers_listener!(): yield to other tasks"
                 if !isempty(fitness_done(etor).waitq)
                     # somebody still waiting, notify
                     notify(fitness_done(etor))
@@ -357,7 +357,7 @@ function workers_handler!(etor::ParallelEvaluator{F}) where F
             end
         end
     end
-    @info "workers_handler!() stopped"
+    @info "workers_listener!() stopped"
 end
 
 """
