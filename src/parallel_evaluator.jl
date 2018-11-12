@@ -31,7 +31,7 @@ fitness_status(worker::ParallelEvaluatorWorker) = @inbounds first(worker.fitness
 # run the wrapper (called in the "main" task)
 function run!(worker::ParallelEvaluatorWorker)
     while true
-        #@info "Checking in worker #$(worker.id)"
+        ##@debug "Checking state of worker #$(worker.id)"
         # continuously poll the worker for the delivery notification for
         # the last job or for the new job notification
         i = 0
@@ -51,8 +51,9 @@ function run!(worker::ParallelEvaluatorWorker)
             break
         elseif p_status > 0 # new job (status is job_id)
             worker.param_status[1] = PEStatus_OK # received, reset the statuts
-            #@info "PE worker #$(worker.id): got job"
+            #@debug "PE worker #$(worker.id): got job #$p_status"
             @inbounds setfitness!(worker.shared_fitness, fitness(worker.shared_param, worker.problem))
+            #@debug "PE worker #$(worker.id): job #$p_status done"
             worker.fitness_status[1] = p_status # fitness ready
         end
     end
@@ -75,24 +76,23 @@ function run_parallel_evaluator_worker(id::Int,
         worker = ParallelEvaluatorWorker(id, deepcopy(problem),
                      param_status, shared_param,
                      fitness_status, shared_fitness)
-    catch e
+    catch ex
         # send -id to notify about an error and to release
         # the master from waiting for worker readiness
-        @warn "Exception at ParallelEvaluatorWorker initialization: $e"
+        @warn "Exception at ParallelEvaluatorWorker initialization" exception=ex
         put!(worker_ready, -id)
-        rethrow(e)
+        rethrow(ex)
     end
-    # create immigrants receiving tasks=#
-    put!(worker_ready, id)
+    put!(worker_ready, id) # notify
     @info "Running worker #$id..."
     try
         run!(worker)
-    catch e
+    catch ex
         # send error candidate to notify about an error and to release
         # the master from waiting for worker messages
-        @warn "Exception while running ParallelEvaluatorWorker: $e"
+        @warn "Exception while running ParallelEvaluatorWorker" exception=ex
         worker.fitness_status[1] = PEStatus_Error
-        rethrow(e)
+        rethrow(ex)
     end
     @info "Worker #$id stopped"
     nothing
@@ -261,7 +261,7 @@ function shutdown!(etor::ParallelEvaluator)
 end
 
 function _shutdown!(etor::ParallelEvaluator)
-    #@info "_shutdown!(ParallelEvaluator)"
+    #@debug "_shutdown!(ParallelEvaluator)"
     if !etor.is_stopping
         etor.is_stopping = true
         #close(etor.in_fitnesses)
@@ -292,7 +292,7 @@ end
 
 function get_updated_candidate!(etor::ParallelEvaluator{F}, job_id::Int, fness::F) where F
     # update the list of done jobs
-    #@info "get_updated_candidate(job_id=#$job_id)"
+    #@debug "get_updated_candidate(job_id=#$job_id)"
     candi = pop!(etor.waiting_candidates, job_id)
     etor.unclaimed_candidates[job_id] = candi
     @assert length(etor.unclaimed_candidates) <= 1000_000 # sanity check
@@ -312,36 +312,45 @@ function workers_listener!(etor::ParallelEvaluator{F}) where F
         # master critical section
         worker_ix = findfirst(etor.busy_workers)
         while worker_ix !== nothing
-            #@info "workers_listener!(): checking busy worker #$worker_ix..."
+            #@debug "workers_listener!(): checking busy worker #$worker_ix..."
             #@assert check_worker_running(etor.worker_refs[worker_ix])
-            if etor.busy_workers[worker_ix] && (job_id = etor.fitnesses_status[worker_ix][1]) != PEStatus_OK
+            if (job_id = etor.fitnesses_status[worker_ix][1]) != PEStatus_OK
                 @assert (job_id > 0 || is_stopping(etor)) "Worker #$worker_ix bad status: $job_id"
-                #@info "worker_listener!(): fitness_evaluated"
+                #@debug "worker_listener!(worker=#$worker_ix): job #$job_id done"
+
+                #@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): locking job_assignment to get fitness"
                 lock(etor.job_assignment)
                 @inbounds new_fitness = getfitness(F, etor.shared_fitnesses[worker_ix])
-                #@info "worker_listener!($worker_ix): got fitness for job #$job_id"
                 candi = get_updated_candidate!(etor, job_id, new_fitness)
                 etor.fitnesses_status[worker_ix][1] = PEStatus_OK # received
                 etor.busy_workers[worker_ix] = false # available again
-
+                #@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): unlocking job_assignment after getting fitness"
                 unlock(etor.job_assignment)
+
+                #@debug "workers_listener!(worker=#$worker_ix, job=#$job_id): releasing fitness_slots (sem_size=$(etor.fitness_slots.sem_size) cur_count=$(etor.fitness_slots.curr_cnt))"
                 Base.release(etor.fitness_slots)
+                #@debug "workers_listener!(worker=#$worker_ix, job=#$job_id): released fitness_slots (sem_size=$(etor.fitness_slots.sem_size) cur_count=$(etor.fitness_slots.curr_cnt))"
+                #@debug "workers_listener!(): notify fitness calculation done"
                 notify(etor.job_done)
 
+                ##@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): checking param status"
                 param_status = etor.params_status[worker_ix][1]
                 if param_status == PEStatus_OK # communication in normal state, update the archive
+                    #@debug "workers_listener(job_id=#$job_id): add_candidate(archive)"
                     add_candidate!(etor.archive, candi.fitness, candi.params, candi.tag, etor.num_evals)
+                    #@debug "workers_listener(job_id=#$job_id): done"
                 end
                 worker_ix = findnext(etor.busy_workers, worker_ix+1)
-                #@info "workers_listener!(): yield to other tasks after archive update"
-                #yield() # free slots available, switch to the main task
+                ##@debug "workers_listener!(): yield to other tasks after archive update (worker_ix=#$worker_ix, job_id=#$job_id)"
+                ##yield() # free slots available, switch to the main task
             end
         end
         if !is_stopping(etor)
             if isempty(etor.waiting_candidates)
+                #@debug "workers_listener!(): all jobs done, waiting for the new assignment..."
                 wait(etor.job_submitted)
             else
-                #@info "workers_listener!(): yield to other tasks"
+                #@debug "workers_listener!(): yield to other tasks"
                 yield() # free slots available, switch to the main task
             end
         end
@@ -361,40 +370,43 @@ Returns -2 if evaluator does not accept jobs because it's shutting down
 function async_update_fitness(
         etor::ParallelEvaluator{F,FA}, candi::Candidate{FA};
         force::Bool=false, wait::Bool=false) where {F, FA}
-    #@info "async_update_fitness(): starting to assign job #$(etor.next_job_id)"
     job_id = etor.next_job_id # tentative job id, but not assigned yet
+    #@debug "async_update_fitness(): starting to assign job #$job_id"
     if etor.is_stopping
         return -2 # doesn't accept jobs
     elseif !force && !isnafitness(fitness(candi), fitness_scheme(etor.archive))
+        #@debug "async_update_fitness(): don't recalculate job #$job_id"
         return 0 # the candidate has fitness, skip recalculation
     end
     if length(etor.waiting_candidates) >= queue_capacity(etor) && !wait
-        #@info "async_update_fitness(): queue is full, skip"
+        #@debug "async_update_fitness(): queue is full, skip job #$job_id"
         return -1 # queue full, job not submitted
     end
-    #@info "async_update_fitness(): waiting to assign job #$(etor.next_job_id)"
+    #@debug "async_update_fitness(job_id=#$job_id): sem_size=$(etor.fitness_slots.sem_size) cur_count=$(etor.fitness_slots.curr_cnt)"
+    #@debug "async_update_fitness(): waiting to assign job #$job_id"
     Base.acquire(etor.fitness_slots)
-    #@info "async_update_fitness(): initial slot_state: $(etor.busy_workers), $(etor.fitness_slots.curr_cnt)"
+    #@debug "async_update_fitness(job_id=#$job_id): sem_size=$(etor.fitness_slots.sem_size) cur_count=$(etor.fitness_slots.curr_cnt)"
+    #@debug "async_update_fitness(job_id=#$job_id): busy_workers=$(etor.busy_workers), $(etor.fitness_slots.curr_cnt)"
+
     lock(etor.job_assignment)
     worker_ix = Base.findfirstnot(etor.busy_workers)
-    @assert worker_ix !== nothing "Cannot find a worker #$(worker_ix) to put a job to"
+    @assert worker_ix !== nothing "Cannot find a worker to put a job to"
+    ##@debug "async_update_fitness(job_id=#$job_id, worker=#$worker_ix): assert fitness status"
+    ##@assert etor.fitnesses_status[worker_ix][1] == PEStatus_OK
+    ##@assert etor.params_status[worker_ix][1] == PEStatus_OK
+    #@debug "async_update_fitness(): assigning job #$job_id to worker #$worker_ix"
     etor.busy_workers[worker_ix] = true # busy
     etor.next_job_id += 1
     copyto!(etor.shared_params[worker_ix], candi.params) # share candidate with the workers
-    #@info "async_update_fitness(): assigning job #$job_id to worker #$worker_ix"
     etor.waiting_candidates[job_id] = candi
-    #@info "async_update_fitness(): assert fitness status"
-    #@assert etor.fitnesses_status[worker_ix][1] == PEStatus_OK
-    #@assert etor.params_status[worker_ix][1] == PEStatus_OK
-    #@info "async_update_fitness(): flip param status"
     etor.params_status[worker_ix][1] = job_id # announce a message (status = job_id)
-    #@info "async_update_fitness(): assigned job #$job_id to worker #$worker_ix"
-    #@info "async_update_fitness(): unlock job assignment"
+    #@debug "async_update_fitness(job_id=#$job_id, worker=#$worker_ix): unlock job assignment"
     unlock(etor.job_assignment)
+    #@debug "async_update_fitness(job_id=#$job_id, worker=#$worker_ix): assigned job #$job_id to worker #$worker_ix"
     notify(etor.job_submitted)
 
-    #@info "async_update_fitness(): yield()"
-    #yield() # dispatch the job ASAP, without this it's not getting queued
+    ##@debug "async_update_fitness(job_id=#$job_id, worker=#$worker_ix): yield()"
+    ##yield() # dispatch the job ASAP, without this it's not getting queued
     return job_id
 end
 
@@ -422,7 +434,7 @@ function process_completed!(f::Function, etor::ParallelEvaluator)
     for (job_id, candi) in etor.unclaimed_candidates
         if f(job_id, candi)
             # remove job_id from the waiting list and from the unclaimed list
-            #@info "process_completed!($job_id)"
+            #@debug "process_completed!(job_id=#$job_id)"
             delete!(etor.unclaimed_candidates, job_id)
         end
     end
@@ -444,7 +456,7 @@ function update_fitness!(etor::ParallelEvaluator{F,FA},
     n_pending = 0
     for candi in candidates
         job_id = async_update_fitness(etor, candi, force=force, wait=true)
-        #@info "update_fitness!(): got job id #$job_id"
+        #@debug "update_fitness!(): got job_id=#$job_id"
         if job_id > 0
             n_pending += 1
             push!(job_ids, job_id)
@@ -455,7 +467,7 @@ function update_fitness!(etor::ParallelEvaluator{F,FA},
     # wait until it's done and the evaluator is active
     while n_pending > 0 && !is_stopping(etor) &&
           !(isempty(etor.waiting_candidates) && isempty(etor.unclaimed_candidates))
-        #@info "job_ids: $job_ids"
+        #@debug "update_fitness!(): job_ids=$job_ids"
         # pick up the candidates that are for us
         process_completed!(etor) do job_id, candi
             our_job = pop!(job_ids, job_id, 0)>0
@@ -464,7 +476,7 @@ function update_fitness!(etor::ParallelEvaluator{F,FA},
         end
         # wait until another fitness calculation event
         if n_pending > 0 && isempty(etor.unclaimed_candidates)
-            #@info "update_fitness!(): wait()"
+            #@debug "update_fitness!(): wait for $n_pending job(s)..."
             wait(etor.job_done)
         end
     end
@@ -478,15 +490,18 @@ function fitness(params::Individual, etor::ParallelEvaluator{F,FA}) where {F, FA
     candi = Candidate{FA}(params, -1, etor.arch_nafitness)
     job_id = async_update_fitness(etor, candi, wait=true)
     @assert job_id > 0
+    #@debug "fitness(): is_stopping=$(is_stopping(etor)) waiting_candidates=$(isempty(etor.waiting_candidates)) unclaimed_candidates=$(isempty(etor.unclaimed_candidates))"
     while !is_stopping(etor) &&
           !(isempty(etor.waiting_candidates) && isempty(etor.unclaimed_candidates))
         if isready(etor, job_id)
-            #@info "fitness(): done"
+            #@debug "fitness(): job #$job_id done"
             return fitness(candi)
         else
-            #@info "fitness(): wait()"
+            #@debug "fitness(): job #$job_id wait()"
             wait(etor.job_done)
+            #@debug "fitness(): job #$job_id wait() done"
         end
+        #@debug "fitness(): is_stopping=$(is_stopping(etor)) waiting_candidates=$(isempty(etor.waiting_candidates)) unclaimed_candidates=$(isempty(etor.unclaimed_candidates))"
     end
     error("Fitness not evaluated")
 end
