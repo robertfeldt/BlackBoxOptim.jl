@@ -1,4 +1,5 @@
 using BlackBoxOptim
+using Serialization
 
 # Lets start an optimization of 2D rosenbrock
 # as in the README, then save its state to disc,
