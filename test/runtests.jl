@@ -6,6 +6,9 @@ module BlackBoxOptimTests
 
 using LinearAlgebra, Random
 using Printf: @printf, @sprintf
+using SpatialIndexing
+
+const SI = SpatialIndexing
 
 TestDir = first(splitdir(@__FILE__()))
 
@@ -14,7 +17,7 @@ TestDir = first(splitdir(@__FILE__()))
 if length(ARGS) == 2 && isfile(ARGS[2])
     test_file_list = ARGS[2]
 else
-    test_file_list = joinpath(TestDir, "testset_normal.txt")
+    test_file_list = joinpath(TestDir, "testset_borg.txt")
 end
 
 TestFiles = filter(fn -> isfile(joinpath(TestDir, fn)), 

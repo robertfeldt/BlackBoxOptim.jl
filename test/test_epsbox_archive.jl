@@ -33,30 +33,35 @@
 
         @test capacity(a) == 100
         @test length(a)   == 0
+        @test isempty(a)
+        @test best_candidate(a) === nothing
         @test BlackBoxOptim.noprogress_streak(a) == 0
         @test BlackBoxOptim.tagcounts(a) == Dict{Int,Int}()
 
         BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (2.21, 1.12), scheme), [0.0, 5.0], 1, 8)
         @test capacity(a)         == 100
         @test length(a)           == 1
-        @test a.best_candidate_ix == 1
-        @test a.frontier[1].num_fevals == 8
+        @test !isempty(a)
+        @test best_candidate(a) == first(pareto_frontier(a))
+        @test first(pareto_frontier(a)).num_fevals == 8
         @test BlackBoxOptim.noprogress_streak(a) == 0
         @test BlackBoxOptim.tagcounts(a) == Dict{Int,Int}(1=>1)
 
         BlackBoxOptim.add_candidate!(a, (3.21, 1.12), [1.0, 5.0], 2)
         @test capacity(a)         == 100
         @test length(a)           == 1
-        @test a.best_candidate_ix == 1
-        @test a.frontier[1].num_fevals == 8
+        @test best_candidate(a) == first(pareto_frontier(a))
+        @test first(pareto_frontier(a)).num_fevals == 8
         @test BlackBoxOptim.noprogress_streak(a) == 1
         @test BlackBoxOptim.tagcounts(a) == Dict{Int,Int}(1=>1)
 
         BlackBoxOptim.add_candidate!(a, (1.21, 2.11), [1.2, 3.0], 3)
         @test capacity(a)         == 100
         @test length(a)           == 2
-        @test a.frontier[2].num_fevals == 3
-        @test a.best_candidate_ix == 2
+        @test SI.findleaf(a.frontier, SI.Point((12,21))) !== nothing
+        candi_leaf, candi_ix = SI.findleaf(a.frontier, SI.Point((12,21)))
+        @test candi_leaf[candi_ix].num_fevals == 3
+        @test best_candidate(a) == candi_leaf[candi_ix]
         @test BlackBoxOptim.noprogress_streak(a) == 0
         @test BlackBoxOptim.tagcounts(a) == Dict{Int,Int}(1=>1, 3=>1)
 
