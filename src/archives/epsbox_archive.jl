@@ -90,55 +90,11 @@ capacity(a::EpsBoxArchive) = a.max_size
 numdims(a::EpsBoxArchive) = !isempty(a.frontier) ? length(a.frontier[1].params) : 0
 
 """
-Iterates occupied elements of the `archive.frontier`.
-"""
-struct EpsBoxArchiveFrontierIterator{A<:EpsBoxArchive}
-    archive::A
-    EpsBoxArchiveFrontierIterator(a::A) where {A<:EpsBoxArchive} = new{A}(a)
-end
-
-Base.eltype(::Type{EpsBoxArchiveFrontierIterator{A}}) where A = eltype(A)
-Base.length(it::EpsBoxArchiveFrontierIterator) = length(it.archive.frontier)
-
-@inline function Base.iterate(it::EpsBoxArchiveFrontierIterator)
-    isempty(it.archive.frontier) && return nothing
-    node = it.archive.frontier.root
-    # get the first leaf of the frontier
-    while SI.level(node) > 0
-        node = node[1]
-    end
-    first_leaf = node::SI.leaftype(it.archive.frontier)
-    return (first_leaf[1], (first_leaf, 1)) # first element of the first leaf
-end
-
-@inline function Base.iterate(it::EpsBoxArchiveFrontierIterator,
-                              state::Tuple{SI.Leaf, Int})
-    leaf, ix = state
-    (ix < length(leaf)) && return leaf[ix+1], (leaf, ix+1)
-    # leaf iterations is done, go up until the first non-visited branch
-    node = leaf
-    while ix >= length(node)
-        SI.hasparent(node) || return nothing # returned to root, iteration finished
-        ix = SI.pos_in_parent(node)
-        node = SI.parent(node)
-    end
-    # go down into the first leaf
-    node = node[ix+1]
-    while SI.level(node) > 0
-        node = node[1]
-    end
-    leaf = node::SI.leaftype(it.archive.frontier)
-    return (leaf[1], (leaf, 1)) # first element of the leaf
-end
-
-"""
     pareto_frontier(a::EpsBoxArchive)
 
 Get the iterator to the individuals on the Pareto frontier.
 """
-pareto_frontier(a::EpsBoxArchive) = EpsBoxArchiveFrontierIterator(a)
-
-occupied_frontier_indices(a::EpsBoxArchive) = findall(a.frontier_isoccupied)
+pareto_frontier(a::EpsBoxArchive) = a.frontier
 
 """
     rand_frontier_elem(a::EpsBoxArchive)
