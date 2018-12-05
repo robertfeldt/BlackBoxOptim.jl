@@ -130,7 +130,7 @@ function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOper
     if !isempty(archive(alg))
         # get one parent from the archive and copy it to the fitrst transient member
         arch_ix = transient_range(alg.population)[1]
-        alg.population[arch_ix] = rand_frontier_elem(archive(alg))
+        alg.population[arch_ix] = rand_front_elem(archive(alg))
         push!(parent_indices, arch_ix)
     end
     # Crossover parents and target

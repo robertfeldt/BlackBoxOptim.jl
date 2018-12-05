@@ -46,7 +46,7 @@
         @test !isempty(a)
         @test best_fitness(a) == fitness(first(pareto_frontier(a)))
         @test best_candidate(a) === params(first(pareto_frontier(a)))
-        @test a.best_frontel == first(pareto_frontier(a))
+        @test BlackBoxOptim.best_front_elem(a) == first(pareto_frontier(a))
         @test first(pareto_frontier(a)).num_fevals == 8
         @test BlackBoxOptim.noprogress_streak(a) == 0
         @test BlackBoxOptim.tagcounts(a) == Dict(1=>1)
@@ -55,7 +55,7 @@
         BlackBoxOptim.add_candidate!(a, (3.21, 1.12), [1.0, 5.0], 2)
         @test capacity(a)         == 100
         @test length(a)           == 1
-        @test a.best_frontel == first(pareto_frontier(a))
+        @test BlackBoxOptim.best_front_elem(a) == first(pareto_frontier(a))
         @test first(pareto_frontier(a)).num_fevals == 8
         @test BlackBoxOptim.noprogress_streak(a) == 1
         @test BlackBoxOptim.tagcounts(a) == Dict(1=>1)
@@ -69,7 +69,7 @@
         @test candi_leaf[candi_ix].num_fevals == 3
         @test best_fitness(a).orig == (1.21, 2.11)
         @test best_candidate(a) == [1.2, 3.0]
-        @test a.best_frontel == candi_leaf[candi_ix]
+        @test BlackBoxOptim.best_front_elem(a) == candi_leaf[candi_ix]
         @test BlackBoxOptim.noprogress_streak(a) == 0
         @test BlackBoxOptim.tagcounts(a) == Dict(1=>1, 3=>1)
 
@@ -130,7 +130,7 @@
             a = EpsBoxArchive(scheme, max_size=100)
 
             BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (1.25, 0.0), scheme), [0.0, 1.0], 1)
-            @test a.best_frontel == first(pareto_frontier(a))
+            @test BlackBoxOptim.best_front_elem(a) == first(pareto_frontier(a))
             @test length(a)         == 1
             BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (0.6, 0.6), scheme), [0.0, 2.0], 2)
             @test best_fitness(a).orig == (0.6, 0.6)

@@ -49,7 +49,7 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
     start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
     num_candidates::Int               # Number of calls to add_candidate!()
-    best_frontel::EpsBoxFrontierIndividual{N,F} # best frontier element: the candidate with the best aggregated fitness
+    best_front_elem::EpsBoxFrontierIndividual{N,F} # best frontier element: the candidate with the best aggregated fitness
     last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
     last_restart::Int                 # when (wrt num_dlast) last restart has occured
     n_restarts::Int                   # the counter of the method restarts
@@ -97,13 +97,13 @@ Get the iterator to the individuals on the Pareto frontier.
 pareto_frontier(a::EpsBoxArchive) = a.frontier
 
 """
-    rand_frontier_elem(a::EpsBoxArchive)
+    rand_front_elem(a::EpsBoxArchive)
 
 Get random Pareto frontier element.
 
 Returns `nothing` if frontier is empty.
 """
-function rand_frontier_elem(a::EpsBoxArchive)
+function rand_front_elem(a::EpsBoxArchive)
     isempty(a) && return nothing
 
     node = a.frontier.root
@@ -126,10 +126,10 @@ noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
         a.num_candidates - max(a.last_progress, a.last_restart) :
         a.num_candidates - a.last_progress
 
-has_best_frontel(a::EpsBoxArchive) = isfinite(a.best_frontel.timestamp)
-best_frontel(a::EpsBoxArchive) = has_best_frontel(a) ? a.best_frontel : nothing
-best_candidate(a::EpsBoxArchive) = has_best_frontel(a) ? params(a.best_frontel) : nothing
-best_fitness(a::EpsBoxArchive) = has_best_frontel(a) ? fitness(a.best_frontel) : nafitness(a.fit_scheme)
+has_best_front_elem(a::EpsBoxArchive) = isfinite(a.best_front_elem.timestamp)
+best_front_elem(a::EpsBoxArchive) = has_best_front_elem(a) ? a.best_front_elem : nothing
+best_candidate(a::EpsBoxArchive) = has_best_front_elem(a) ? params(a.best_front_elem) : nothing
+best_fitness(a::EpsBoxArchive) = has_best_front_elem(a) ? fitness(a.best_front_elem) : nafitness(a.fit_scheme)
 
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
@@ -199,13 +199,13 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
         end
     end
     # check if the new candidate has better aggregate score
-    if !has_best_frontel(a)
-        a.best_frontel = frontel
+    if !has_best_front_elem(a)
+        a.best_front_elem = frontel
     elseif hat < 0 # only if the candidate was dominating some old frontier element
-        d = a.best_frontel.fitness.agg - frontel.fitness.agg
+        d = a.best_front_elem.fitness.agg - frontel.fitness.agg
         if (d > zero(d) && is_minimizing(a.fit_scheme)) || (d < zero(d) && !is_minimizing(a.fit_scheme))
             #@debug "New best candidate"
-            a.best_frontel = frontel
+            a.best_front_elem = frontel
         end
     end
     if length(a.frontier) <= a.max_size
