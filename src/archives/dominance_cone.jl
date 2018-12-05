@@ -28,7 +28,7 @@ isordered(lt::Bool, a::Number, b::Number) = lt ? a < b : a > b
     quote
         isordered(MIN, a.pt[1], b[1]) && return false
         anylt = isordered(MIN, b[1], a.pt[1])
-        @inbounds Base.Cartesian.@nall $(N-1) i -> begin
+        @inbounds Base.Cartesian.@nexprs $(N-1) i -> begin
             isordered(MIN, a.pt[i+1], b[i+1]) && return false
             anylt || (anylt = isordered(MIN, b[i+1], a.pt[i+1]))
         end

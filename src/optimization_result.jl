@@ -103,7 +103,7 @@ struct FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
     inner::FrontierIndividual{FA}
     fitness::F
 
-    FrontierIndividualWrapper{F}(
+    FrontierIndividualWrapper{F,FA}(
             indi::FrontierIndividual{FA},
             fit_scheme::FitnessScheme{FA}) where {F, FA} =
         new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
@@ -123,10 +123,10 @@ struct EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutpu
 
     function EpsBoxArchiveOutput(archive::EpsBoxArchive{N,F}) where {N,F}
         fit_scheme = fitness_scheme(archive)
+        FIW = FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}
         new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme),
                                     best_candidate(archive),
-                                    FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}[FrontierIndividualWrapper{NTuple{N,F}}(archive.frontier[i], fit_scheme)
-                                                                                                     for i in findall(archive.frontier_isoccupied)],
+                                    FIW[FIW(frontel, fit_scheme) for frontel in pareto_frontier(archive)],
                                     fit_scheme)
     end
 end

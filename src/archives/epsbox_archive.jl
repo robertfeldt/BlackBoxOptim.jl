@@ -49,7 +49,7 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
     start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
     num_candidates::Int               # Number of calls to add_candidate!()
-    best_candidate::EpsBoxFrontierIndividual{N,F} # the candidate with the best aggregated fitness
+    best_frontel::EpsBoxFrontierIndividual{N,F} # best frontier element: the candidate with the best aggregated fitness
     last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
     last_restart::Int                 # when (wrt num_dlast) last restart has occured
     n_restarts::Int                   # the counter of the method restarts
@@ -106,12 +106,12 @@ Returns `nothing` if frontier is empty.
 function rand_frontier_elem(a::EpsBoxArchive)
     isempty(a) && return nothing
 
-    node = a.frontier.parent
-    while level(node) > 0
+    node = a.frontier.root
+    while SI.level(node) > 1
         # descend to a random child
-        node = node[rand(eachindex(children(node)))]
+        node = node[rand(eachindex(SI.children(node)))]
     end
-    return node[rand(eachindex(children(node)))]
+    return node[rand(eachindex(SI.children(node)))]
 end
 
 """
@@ -126,8 +126,10 @@ noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
         a.num_candidates - max(a.last_progress, a.last_restart) :
         a.num_candidates - a.last_progress
 
-best_candidate(a::EpsBoxArchive) = isfinite(a.best_candidate.timestamp) ? a.best_candidate : nothing
-best_fitness(a::EpsBoxArchive) = best_candidate(a) !== nothing ? fitness(best_candidate(a)) : nafitness(a.fit_scheme)
+has_best_frontel(a::EpsBoxArchive) = isfinite(a.best_frontel.timestamp)
+best_frontel(a::EpsBoxArchive) = has_best_frontel(a) ? a.best_frontel : nothing
+best_candidate(a::EpsBoxArchive) = has_best_frontel(a) ? params(a.best_frontel) : nothing
+best_fitness(a::EpsBoxArchive) = has_best_frontel(a) ? fitness(a.best_frontel) : nafitness(a.fit_scheme)
 
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
@@ -135,7 +137,7 @@ function notify!(a::EpsBoxArchive, event::Symbol)
         a.last_restart = a.num_candidates
         # TODO check if the pareto frontier needs to be compactified
     end
-    a
+    return a
 end
 
 """
@@ -167,43 +169,43 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
     end
     #@debug "New fitness: $(cand_fitness.orig) agg=$(cand_fitness.agg)"
     #@debug "Params: $candidate"
-    if !isempty(a.frontier, DominanceCone{!is_minimizing(a.fit_scheme)}(cand_fitness.index)) # candidate is dominated by frontier
+    if !isempty(a.frontier, DominanceCone{is_minimizing(a.fit_scheme)}(cand_fitness.index)) # candidate is dominated by frontier
         if length(a.frontier) <= a.max_size
             a.n_oversize_inserts = 0 # reset the counter since the size is ok
         end
         return a
     end
-    front_ix = SI.findleaf(a.frontier, SI.Point(cand_fitness.index))
-    if front_ix !== nothing # indexed fitness the same as on frontier, no eps-progress
-        front_node, front_el_pos = front_ix
-        front_elem = front_node[front_el_pos]
-        front_fitness = fitness(front_elem)
+    frontix = findfirst(a.frontier, SI.Point(cand_fitness.index))
+    if frontix !== nothing # indexed fitness the same as on frontier, no eps-progress
+        front_leaf, frontel_pos = frontix
+        frontel = front_leaf[frontel_pos]
+        front_fitness = fitness(frontel)
         hat, index_match = hat_compare(cand_fitness, front_fitness, a.fit_scheme)
         @assert index_match # should have the same indexed fitness since that's how it was found
-        if hat < 0 # new fitness dominates (but not eps-dominates) the one in archive
-            front_node[front_ix] = front_elem =
-                EpsBoxFrontierIndividual(cand_fitness, copyto!(front_elem.params, candidate), tag, num_fevals, a.n_restarts)
+        if hat < 0 # new fitness dominates (but not eps-dominates) the one in archive, replace the element
+            SI.children(front_leaf)[frontel_pos] = frontel =
+                EpsBoxFrontierIndividual(cand_fitness, copyto!(frontel.params, candidate), tag, num_fevals, a.n_restarts)
         end
     else # eps-progress: non-dominated solution that has some eps-indices different from the existing ones
         a.last_progress = a.num_candidates
         hat = -1
         # remove all dominated frontier elements
-        SI.subtract!(a.frontier, DominanceCone{is_minimizing(a.fit_scheme)}(cand_fitness.index))
+        SI.subtract!(a.frontier, DominanceCone{!is_minimizing(a.fit_scheme)}(cand_fitness.index))
         #@debug "Appended non-dominated element to the frontier"
-        front_elem = EpsBoxFrontierIndividual(cand_fitness, copy(candidate), tag, num_fevals, a.n_restarts)
-        insert!(a.frontier, front_elem)
+        frontel = EpsBoxFrontierIndividual(cand_fitness, copy(candidate), tag, num_fevals, a.n_restarts)
+        insert!(a.frontier, frontel)
         if length(a.frontier) > a.max_size
             a.n_oversize_inserts += 1 # throw(error("Pareto frontier exceeds maximum size"))
         end
     end
     # check if the new candidate has better aggregate score
-    if isnan(a.best_candidate.timestamp) # best candidate is not set yet
-        a.best_candidate = front_elem
+    if !has_best_frontel(a)
+        a.best_frontel = frontel
     elseif hat < 0 # only if the candidate was dominating some old frontier element
-        d = best_candidate(a).fitness.agg - cand_fitness.agg
+        d = a.best_frontel.fitness.agg - frontel.fitness.agg
         if (d > zero(d) && is_minimizing(a.fit_scheme)) || (d < zero(d) && !is_minimizing(a.fit_scheme))
             #@debug "New best candidate"
-            a.best_candidate = front_elem
+            a.best_frontel = frontel
         end
     end
     if length(a.frontier) <= a.max_size
