@@ -135,7 +135,12 @@ function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
         a.n_restarts += 1
         a.last_restart = a.num_candidates
-        # TODO check if the pareto frontier needs to be compactified
+        # rebuild the frontier upon the first restart, or if the frontier has changed significantly
+        if a.n_restarts == 1 || a.frontier.nelem_insertions > 3length(a.frontier)
+            # bulk-reload R-tree (leave leaves underfilled to postpone reinserts)
+            a.frontier = SI.load!(similar(a.frontier), a.frontier,
+                                  leaf_fill = floor(Int, a.frontier.fill_factor * SI.capacity(SI.Leaf, a.frontier)))
+        end
     end
     return a
 end
@@ -169,14 +174,16 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
     end
     #@debug "New fitness: $(cand_fitness.orig) agg=$(cand_fitness.agg)"
     #@debug "Params: $candidate"
+    # TODO don't traverse the tree twice: some SpatialIndexing API to combine isempty() with the follow-up findfirst() call?
     if !isempty(a.frontier, DominanceCone{is_minimizing(a.fit_scheme)}(cand_fitness.index)) # candidate is dominated by frontier
         if length(a.frontier) <= a.max_size
             a.n_oversize_inserts = 0 # reset the counter since the size is ok
         end
         return a
     end
+    # find the Pareto front element with exactly the same indexed fitness as the candidate
     frontix = findfirst(a.frontier, SI.Point(cand_fitness.index))
-    if frontix !== nothing # indexed fitness the same as on frontier, no eps-progress
+    if frontix !== nothing # found front element, no eps-progress
         front_leaf, frontel_pos = frontix
         frontel = front_leaf[frontel_pos]
         front_fitness = fitness(frontel)
@@ -186,10 +193,10 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
             SI.children(front_leaf)[frontel_pos] = frontel =
                 EpsBoxFrontierIndividual(cand_fitness, copyto!(frontel.params, candidate), tag, num_fevals, a.n_restarts)
         end
-    else # eps-progress: non-dominated solution that has some eps-indices different from the existing ones
+    else # eps-progress: non-dominated solution that has some eps-indices different from all current ones
         a.last_progress = a.num_candidates
         hat = -1
-        # remove all dominated frontier elements
+        # remove all dominated frontier elements, if any
         SI.subtract!(a.frontier, DominanceCone{!is_minimizing(a.fit_scheme)}(cand_fitness.index))
         #@debug "Appended non-dominated element to the frontier"
         frontel = EpsBoxFrontierIndividual(cand_fitness, copy(candidate), tag, num_fevals, a.n_restarts)
