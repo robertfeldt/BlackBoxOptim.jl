@@ -206,11 +206,16 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
         end
     end
     # check if the new candidate has better aggregate score
-    if !has_best_front_elem(a)
+    if !has_best_front_elem(a) # initialize best element
         a.best_front_elem = frontel
-    elseif hat < 0 # only if the candidate was dominating some old frontier element
+    elseif hat < 0 # candidate replaced frontier element
+        # update best_front_elem if it was replaced or if the new aggscore is better
+        # NOTE: when the old best element is replaced, the new aggscore might be
+        #       worse due to differences in aggscore and eps-progress metrics
         d = a.best_front_elem.fitness.agg - frontel.fitness.agg
-        if (d > zero(d) && is_minimizing(a.fit_scheme)) || (d < zero(d) && !is_minimizing(a.fit_scheme))
+        if  a.best_front_elem.fitness.index == frontel.fitness.index ||
+           (d > zero(d) && is_minimizing(a.fit_scheme)) ||
+           (d < zero(d) && !is_minimizing(a.fit_scheme))
             #@debug "New best candidate"
             a.best_front_elem = frontel
         end
