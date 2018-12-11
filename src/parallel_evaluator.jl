@@ -318,10 +318,12 @@ function workers_listener!(etor::ParallelEvaluator{F}) where F
                 @assert (job_id > 0 || is_stopping(etor)) "Worker #$worker_ix bad status: $job_id"
                 #@debug "worker_listener!(worker=#$worker_ix): job #$job_id done"
 
-                #@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): locking job_assignment to get fitness"
-                lock(etor.job_assignment)
                 @inbounds new_fitness = getfitness(F, etor.shared_fitnesses[worker_ix])
                 candi = get_updated_candidate!(etor, job_id, new_fitness)
+                ##@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): getting param status"
+                param_status = etor.params_status[worker_ix][1]
+                @debug "worker_listener!(worker=#$worker_ix, job=#$job_id): locking job_assignment to update status"
+                lock(etor.job_assignment)
                 etor.fitnesses_status[worker_ix][1] = PEStatus_OK # received
                 etor.busy_workers[worker_ix] = false # available again
                 #@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): unlocking job_assignment after getting fitness"
@@ -333,8 +335,6 @@ function workers_listener!(etor::ParallelEvaluator{F}) where F
                 #@debug "workers_listener!(): notify fitness calculation done"
                 notify(etor.job_done)
 
-                ##@debug "worker_listener!(worker=#$worker_ix, job=#$job_id): checking param status"
-                param_status = etor.params_status[worker_ix][1]
                 if param_status == PEStatus_OK # communication in normal state, update the archive
                     #@debug "workers_listener(job_id=#$job_id): add_candidate(archive)"
                     add_candidate!(etor.archive, candi.fitness, candi.params, candi.tag, etor.num_evals)
@@ -399,6 +399,8 @@ function async_update_fitness(
     etor.next_job_id += 1
     copyto!(etor.shared_params[worker_ix], candi.params) # share candidate with the workers
     etor.waiting_candidates[job_id] = candi
+    @assert etor.params_status[worker_ix][1] == PEStatus_OK "async_update_fitness(): worker #$worker_ix input in error state ($(etor.params_status[worker_ix][1]))"
+    @assert etor.fitnesses_status[worker_ix][1] == PEStatus_OK "async_update_fitness(): worker #$worker_ix output in error state ($(etor.params_status[worker_ix][1]))"
     etor.params_status[worker_ix][1] = job_id # announce a message (status = job_id)
     #@debug "async_update_fitness(job_id=#$job_id, worker=#$worker_ix): unlock job assignment"
     unlock(etor.job_assignment)
