@@ -12,6 +12,7 @@ Internal data for the worker process of the parallel evaluator.
 mutable struct ParallelEvaluatorWorker{T, P<:OptimizationProblem}
     id::Int                             # worker ID
     problem::P
+    nevals::Integer                     # number of fitness evaluations
     param_status::SharedVector{Int}     # master notifies worker about new requests
     shared_param::SharedVector{T}       # master puts candidates parameters
     fitness_status::SharedVector{Int}   # worker notifies master about completed evaluation
@@ -22,7 +23,7 @@ mutable struct ParallelEvaluatorWorker{T, P<:OptimizationProblem}
         param_status::SharedVector{Int}, shared_param::SharedVector{T},
         fitness_status::SharedVector{Int}, shared_fitness::SharedVector{T}
     ) where {T, P<:OptimizationProblem} =
-        new{T,P}(id, problem, param_status, shared_param, fitness_status, shared_fitness)
+        new{T,P}(id, problem, 0, param_status, shared_param, fitness_status, shared_fitness)
 end
 
 param_status(worker::ParallelEvaluatorWorker) = @inbounds first(worker.param_status)
@@ -53,6 +54,7 @@ function run!(worker::ParallelEvaluatorWorker)
             worker.param_status[1] = PEStatus_OK # received, reset the statuts
             #@debug "PE worker #$(worker.id): got job #$p_status"
             @inbounds setfitness!(worker.shared_fitness, fitness(worker.shared_param, worker.problem))
+            worker.nevals += 1
             #@debug "PE worker #$(worker.id): job #$p_status done"
             worker.fitness_status[1] = p_status # fitness ready
         end
@@ -94,7 +96,7 @@ function run_parallel_evaluator_worker(id::Int,
         worker.fitness_status[1] = PEStatus_Error
         rethrow(ex)
     end
-    @info "Worker #$id stopped"
+    @info "Worker #$id stopped ($(worker.nevals) fitness evaluation(s))"
     nothing
 end
 
