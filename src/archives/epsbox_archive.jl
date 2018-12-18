@@ -77,7 +77,7 @@ EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme, params::Parameters) =
                   branch_capacity=params[:BranchCapacity])
 
 const EpsBoxArchive_DefaultParameters = ParamsDict(
-    :MaxArchiveSize => 10_000,
+    :MaxArchiveSize => 100_000,
     :LeafCapacity => 10,
     :BranchCapacity => 10
 )
