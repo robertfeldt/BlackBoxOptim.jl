@@ -2,7 +2,7 @@ NumTestRepetitions = 100
 
 @testset "Adaptive differential evolution optimizer" begin
 
-ss = symmetric_search_space(1, (0.0, 10.0))
+ss = RectSearchSpace(1, (0.0, 10.0))
 fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", MinimizingFitnessScheme, ss)
 
 ade = adaptive_de_rand_1_bin(fake_problem, ParamsDict(

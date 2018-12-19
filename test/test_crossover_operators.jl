@@ -1,6 +1,6 @@
 @testset "Crossover operators" begin
 
-ss = symmetric_search_space(1, (0.0, 10.0))
+ss = RectSearchSpace(1, (0.0, 10.0))
 fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", MinimizingFitnessScheme, ss)
 DE = de_rand_1_bin(fake_problem, ParamsDict(
     :Population => reshape(collect(1.0:10.0), (1, 10)),
@@ -63,7 +63,7 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
 end
 
 @testset "MutationWrapper" begin
-    ss = symmetric_search_space(2, (0.0, 10.0))
+    ss = RectSearchSpace(2, (0.0, 10.0))
     pop = reshape(collect(1.0:8.0), 2, 4)
     gibbs = UniformMutation(ss)
     gibbs_wrapper = BlackBoxOptim.MutationWrapper(gibbs)

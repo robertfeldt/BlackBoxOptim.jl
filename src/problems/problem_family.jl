@@ -44,7 +44,7 @@ Construct search space for `FunctionBasedProblem` with the given number of dimen
 function instantiate_search_space(family::FunctionBasedProblemFamily, ndim::Int)
     ndim >= numdims(family.reserved_ss) ||
         throw(ArgumentError("Cannot create $ndim-problem: number of dimensions less than reserved dimensions"))
-    vcat(family.reserved_ss, symmetric_search_space(ndim - numdims(family.reserved_ss), family.range_per_dim))
+    vcat(family.reserved_ss, RectSearchSpace(ndim - numdims(family.reserved_ss), family.range_per_dim))
 end
 
 """

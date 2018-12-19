@@ -179,5 +179,7 @@ RectSearchSpace(ranges::AbstractVector) =
 Create `RectSearchSpace` with given number of dimensions
 and given range of valid values for each dimension.
 """
-symmetric_search_space(numdims::Integer, range=(0.0, 1.0)) =
+RectSearchSpace(numdims::Integer, range=(0.0, 1.0)) =
     RectSearchSpace(fill(range, numdims))
+
+@deprecate symmetric_search_space(numdims, range=(0.0, 1.0)) RectSearchSpace(numdims, range)

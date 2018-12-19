@@ -4,7 +4,7 @@ const ADE_DefaultOptions = chain(DE_DefaultOptions, ParamsDict(
     # Distributions we will use to generate new F and CR values.
     :fdistr => BimodalCauchy(0.65, 0.1, 1.0, 0.1, clampBelow0 = false),
     :crdistr => BimodalCauchy(0.1, 0.1, 0.95, 0.1, clampBelow0 = false),
-    :SearchSpace => symmetric_search_space(1)
+    :SearchSpace => RectSearchSpace(1)
 ))
 
 """

@@ -2,7 +2,7 @@
     @testset "in()" begin
         for i in 1:NumTestRepetitions
             reps = rand(1:10)
-            ss1 = symmetric_search_space(reps, (0.0, 1.0))
+            ss1 = RectSearchSpace(reps, (0.0, 1.0))
             ind = rand_individual(ss1)
             for j in 1:reps
                 @test (dimmin(ss1, j) <= ind[j] <= dimmax(ss1, j))
@@ -11,7 +11,7 @@
     end
 
     @testset "Symmetric search space with default range" begin
-        ss1 = symmetric_search_space(1)
+        ss1 = RectSearchSpace(1)
         @test numdims(ss1) == 1
         @test dimmin(ss1) == [0.0]
         @test dimmin(ss1, 1) == 0.0
@@ -28,7 +28,7 @@
             @test in(ind, ss1)
         end
 
-        ss3 = symmetric_search_space(3)
+        ss3 = RectSearchSpace(3)
         @test numdims(ss3) == 3
         @test dimmin(ss3) == [0.0, 0.0, 0.0]
         @test dimmin(ss3, 2) == 0.0
@@ -49,8 +49,8 @@
     end
 
     @testset "ContinuousRectSearchSpace with given range" begin
-        ss1 = symmetric_search_space(1, (-1.0, 1.0))
-        @test_throws ArgumentError symmetric_search_space(1, (0.0, -1.0))
+        ss1 = RectSearchSpace(1, (-1.0, 1.0))
+        @test_throws ArgumentError RectSearchSpace(1, (0.0, -1.0))
         @test ss1 isa ContinuousRectSearchSpace
         @test numdims(ss1) == 1
         @test dimrange(ss1) == [(-1.0, 1.0)]
@@ -60,7 +60,7 @@
             reps = rand(1:100)
             a = rand()
             range = (a, a + (1-a)*rand())
-            ss = symmetric_search_space(reps, range)
+            ss = RectSearchSpace(reps, range)
             @test numdims(ss) == reps
             @test all(dr -> dr == range, dimrange(ss))
         end
@@ -71,7 +71,7 @@
             reps = rand(1:100)
             mm = sort(rand(2,1), dims=1)
             range = (mm[1], mm[2])
-            ss = symmetric_search_space(reps, range)
+            ss = RectSearchSpace(reps, range)
             ind = rand_individual(ss)
             @test length(ind) == numdims(ss)
             @test in(ind, ss)
@@ -83,7 +83,7 @@
             reps = rand(1:10)
             mm = sort(rand(2,1), dims=1)
             range = (mm[1], mm[2])
-            ss = symmetric_search_space(reps, range)
+            ss = RectSearchSpace(reps, range)
             numinds = rand(1:10)
             inds = rand_individuals(ss, numinds)
             @test size(inds,1) == numdims(ss)

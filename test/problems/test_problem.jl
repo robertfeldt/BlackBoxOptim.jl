@@ -9,7 +9,7 @@ fsum_abs_and_sq(x) = (sum(abs, x), sum(abs2, x))
     @test fitness_scheme(p) == MinimizingFitnessScheme
     @test numobjectives(p) == 1
     @test numdims(p) == 1
-    @test search_space(p) == symmetric_search_space(1, (-1.0, 1.0))
+    @test search_space(p) == RectSearchSpace(1, (-1.0, 1.0))
 
     @test fitness([0.0], p) == 0.0
     @test fitness([1.2], p) == 1.2
@@ -22,14 +22,14 @@ end
     @test fitness_scheme(p) == MinimizingFitnessScheme
     @test numobjectives(p) == 1
     @test numdims(p) == 3
-    @test search_space(p) == symmetric_search_space(3, (-1.0, 1.0))
+    @test search_space(p) == RectSearchSpace(3, (-1.0, 1.0))
 
     @test fitness([0.0, 1.0, 2.0], p) == 3.0
     @test fitness([-1.0, 1.0, 2.0], p) == 4.0
 end
 
 @testset "1-dimensional, multi-objective sumabs_sumsq" begin
-    ss = symmetric_search_space(1)
+    ss = RectSearchSpace(1)
     p = FunctionBasedProblem(fsum_abs_and_sq, "sumabs_sumsq",
                              ParetoFitnessScheme{2}(), ss, (0.0, 0.0))
 
@@ -73,7 +73,7 @@ end
     @test BlackBoxOptim.orig_problem(sp) === p
     @test numobjectives(sp) == 1
     @test numdims(sp) == 1
-    @test search_space(sp) == symmetric_search_space(1, (-1.0, 1.0))
+    @test search_space(sp) == RectSearchSpace(1, (-1.0, 1.0))
     xs = sp.xshift
     @test xs == [0.5]
     @test sp.fitshift == 0.0
@@ -84,7 +84,7 @@ end
 end
 
 @testset "Shifted and biased 2-dim" begin
-    ss = symmetric_search_space(2, (-0.5, 1.0))
+    ss = RectSearchSpace(2, (-0.5, 1.0))
     p = minimization_problem(fsabs, "sumabs", (-0.5, 1.0), 2, 0.0)
     sp = BlackBoxOptim.ShiftedAndBiasedProblem(p; fitshift = 1.3)
 
@@ -93,7 +93,7 @@ end
     @test numdims(sp) == 2
     @test sp.xshift == [0.0, 0.0]
     @test sp.fitshift == 1.3
-    @test search_space(sp) == symmetric_search_space(2, (-0.5, 1.0))
+    @test search_space(sp) == RectSearchSpace(2, (-0.5, 1.0))
 
     xs = sp.xshift
     @test fitness([0.0, 1.0], sp) == 1.0 + 1.3

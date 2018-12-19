@@ -148,8 +148,8 @@ See http://dces.essex.ac.uk/staff/zhang/MOEAcompetition/cec09testproblem0904.pdf
 const CEC09_Unconstrained_Set = Dict{Int,FunctionBasedProblemFamily}(
     8 => FunctionBasedProblemFamily(CEC09_UP8, "CEC09 UP8",  ParetoFitnessScheme{3}(is_minimizing=true),
                                     (-2.0, 2.0),
-                                    Hypersurface(CEC09_UP8_PF, symmetric_search_space(2, (0.0, 1.0))),
-                                    symmetric_search_space(2, (0.0, 1.0)))
+                                    Hypersurface(CEC09_UP8_PF, RectSearchSpace(2, (0.0, 1.0))),
+                                    RectSearchSpace(2, (0.0, 1.0)))
 )
 
 schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
@@ -157,4 +157,4 @@ schaffer1_PF(t, ::Type{Val{NP}}) where {NP} = (NP*t[1]^2, NP*(2-t[1])^2)
 
 const Schaffer1Family = FunctionBasedProblemFamily(schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing=true),
                                 (-10.0, 10.0),
-                                Hypersurface(schaffer1_PF, symmetric_search_space(1, (0.0, 2.0))))
+                                Hypersurface(schaffer1_PF, RectSearchSpace(1, (0.0, 2.0))))
