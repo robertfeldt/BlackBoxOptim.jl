@@ -6,6 +6,9 @@ module BlackBoxOptimTests
 
 using LinearAlgebra, Random
 using Printf: @printf, @sprintf
+using SpatialIndexing
+
+const SI = SpatialIndexing
 
 TestDir = first(splitdir(@__FILE__()))
 

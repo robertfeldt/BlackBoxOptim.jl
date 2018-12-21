@@ -130,7 +130,7 @@ function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOper
     if !isempty(archive(alg))
         # get one parent from the archive and copy it to the fitrst transient member
         arch_ix = transient_range(alg.population)[1]
-        alg.population[arch_ix] = archive(alg).frontier[rand_frontier_index(archive(alg))]
+        alg.population[arch_ix] = rand_front_elem(archive(alg))
         push!(parent_indices, arch_ix)
     end
     # Crossover parents and target
@@ -261,17 +261,23 @@ Resize and refills the population from the archive.
 """
 function restart!(alg::BorgMOEA)
     notify!(archive(alg), :restart)
-    frontier_ixs = occupied_frontier_indices(archive(alg))
-    narchived = length(frontier_ixs)
+    narchived = length(archive(alg))
     new_popsize = max(alg.min_popsize, ceil(Int, alg.γ * narchived))
     # fill populations with the solutions from the archive
     resize!(alg.population, new_popsize)
-    last_archived = min(narchived, new_popsize)
-    @inbounds for i in 1:last_archived
-        alg.population[i] = archive(alg).frontier[frontier_ixs[i]]
+    ndelegates = min(narchived, new_popsize)
+    # get the indexes of the frontier elements to put into the population
+    delegate_ixs = sort!(sample(1:narchived, ndelegates, replace=false))
+    delegate_pos = 1 # position of the current delegate index
+    for (candi_ix, candi) in enumerate(pareto_frontier(archive(alg)))
+        delegate_pos > length(delegate_ixs) && break
+        @inbounds if delegate_ixs[delegate_pos] == candi_ix
+            alg.population[delegate_pos] = candi
+            delegate_pos += 1 # move to the next delegate
+        end
     end
     # inject mutated archive members
-    populate_by_mutants(alg, last_archived)
+    populate_by_mutants(alg, ndelegates)
     alg.select.size = min(new_popsize, max(3, ceil(Int, alg.τ * new_popsize)))
     alg.last_restart = alg.n_steps
     alg.n_restarts+=1

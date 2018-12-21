@@ -1,6 +1,7 @@
 module BlackBoxOptim
 
 using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
+using SpatialIndexing
 using Printf: @printf, @sprintf
 using Compat: String, view
 
@@ -91,6 +92,8 @@ module Utils
     include("utilities/halton_sequence.jl")
 end
 
+const SI = SpatialIndexing
+
 include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
@@ -102,6 +105,7 @@ include("frequency_adaptation.jl")
 
 include("fit_individual.jl")
 include("archive.jl")
+include("archives/dominance_cone.jl")
 include("archives/epsbox_archive.jl")
 
 include("genetic_operators/genetic_operator.jl")
