@@ -40,7 +40,7 @@ end
 function ackley(x)
     D = length(x)
     try
-        return 20 - 20*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + e
+        return 20 - 20*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + MathConstants.e
     catch ex
         # Sometimes we have gotten a DomainError from the cos function so we protect this call
         println(ex)
