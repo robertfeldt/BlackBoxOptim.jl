@@ -5,7 +5,7 @@ See
     Deb, K., Anand, A., and Joshi, D., "A Computationally Efficient Evolutionary Algorithm for Real-Parameter Optimization," Evolutionary Computation, vol. 10, no. 4, pp. 371-395, 2002.
 """
 struct ParentCentricCrossover{NP} <: CrossoverOperator{NP,1}
-	ζ::Float64 # sd for the orthogonal directions defined by 2nd,3rd etc parents
+    ζ::Float64 # sd for the orthogonal directions defined by 2nd,3rd etc parents
     η::Float64 # sd for the direction of the 1st parent
 
     function ParentCentricCrossover{NP}(ζ::Number, η::Number) where NP
@@ -22,40 +22,34 @@ const PCX_DefaultOptions = ParamsDict(
     :PCX_η => 0.5
 )
 
-function apply!(xover::ParentCentricCrossover{NP},
+function apply!(xover::ParentCentricCrossover,
                 target::Individual, targetIndex::Int,
-                pop, parentIndices) where NP
-    @assert length(parentIndices) == NP
+                pop, parentIndices)
+    @assert length(parentIndices) == numparents(xover)
 
-    parents_centered = pop[:, parentIndices]
-    center = mean(parents_centered, dims=2)
-    parents_centered .-= center
-    # project other parents vectors orthogonal to
-    # the subspace orthogonal to the selected parent
-    tmp_mtx = view(parents_centered, :, 1) * transpose(view(parents_centered, :, 1))
-    @inbounds for i in 1:size(tmp_mtx, 1)
-        tmp_mtx[i,i] -= 1.0
+    center = mean(viewer(pop, parentIndices), dims=2)
+    # project other parents vectors to the subspace
+    # orthogonal to the 1st (central) parent
+    parent_1 = viewer(pop, parentIndices[1]) .- dropdims(center, dims=2)
+    other_parents_centered = viewer(pop, parentIndices[2:end]) .- center
+    if (parent_1_sqnorm = sum(abs2, parent_1)) > 0.0
+        dotprods = transpose(parent_1) * other_parents_centered
+        dotprods ./= parent_1_sqnorm
+        other_parents_centered .-= dotprods .* parent_1
     end
-    other_parents_centered = tmp_mtx *
-            view(parents_centered, :, 2:length(parentIndices))
-    sd = mean(map(sqrt, sum(abs2, other_parents_centered, dims=2)))
+    sd = mean(sqrt.(sum(abs2, other_parents_centered, dims=2)))
     if sd > 1E-8
         svdf = svd(other_parents_centered, full=false)
         svals_norm = norm(svdf.S)
         svals = svdf.S * sd * xover.ζ / svals_norm
-        svals .*= rand(Normal(), length(svals))
-
+        svals .*= randn(length(svals))
         mul!(target, svdf.U, svals)
     else # degenerated
         fill!(target, zero(eltype(target)))
     end
 
     selParent = viewer(pop, parentIndices[1])
-    selScale = rand(Normal()) * xover.η
-    selParentOffset = view(parents_centered, :, 1)
-    @inbounds @simd for i in eachindex(target)
-        target[i] += selParent[i] + selScale * selParentOffset[i]
-    end
-
+    selScale = randn() * xover.η
+    @inbounds target .+= selParent .+ selScale .* parent_1
     return target
 end

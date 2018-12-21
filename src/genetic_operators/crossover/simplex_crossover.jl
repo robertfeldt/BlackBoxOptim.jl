@@ -20,26 +20,22 @@ const SPX_DefaultOptions = ParamsDict(
 
 #masscenter(pop, parentIndices) = mapslices(mean, pop[:, parentIndices], 2)
 
-function apply!(xover::SimplexCrossover{NP},
+function apply!(xover::SimplexCrossover,
                 target::Individual, targetIndex::Int,
-                pop, parentIndices) where NP
-    @assert length(parentIndices) == NP
+                pop, parentIndices)
+    @assert length(parentIndices) == numparents(xover)
 
     offset = fill!(similar(target), 0)
     parentSum = copy(viewer(pop, parentIndices[1]))
-    for i in 1:(NP-1)
+    for i in 1:(numparents(xover)-1)
         s = rand()^(1/i)
         parent = viewer(pop, parentIndices[i])
         parentNext = viewer(pop, parentIndices[i+1])
-        @inbounds for j in 1:numdims(pop)
-            offset[j] = s * (xover.ϵ*(parent[j] - parentNext[j]) + offset[j])
-            parentSum[j] += parentNext[j]
-        end
+        @inbounds offset .= s * (xover.ϵ * (parent .- parentNext) .+ offset)
+        @inbounds parentSum .+= parentNext
     end
-    s = (1-xover.ϵ)/NP
+    s = (1-xover.ϵ)/numparents(xover)
     parentLast = viewer(pop, parentIndices[end])
-    @inbounds for j in 1:numdims(pop)
-        target[j] = s*parentSum[j] + xover.ϵ*parentLast[j] + offset[j]
-    end
+    @inbounds target .= s .* parentSum + xover.ϵ .* parentLast .+ offset
     return target
 end

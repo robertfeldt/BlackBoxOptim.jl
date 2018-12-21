@@ -17,13 +17,13 @@ mutable struct RadiusLimitedSelector <: IndividualsSelector
     radius::Int
 end
 
-function select(sel::RadiusLimitedSelector, population, numSamples::Int)
+function select(sel::RadiusLimitedSelector, population, n::Integer)
     # The radius must be at least as big as the number of samples + 2 so that
     # there is something to sample from.
-    radius = max(sel.radius, numSamples+2)
+    radius = max(sel.radius, n+2)
     psize = popsize(population)
     deme_start = rand(1:psize)
-    ixs = rand_indexes(deme_start:(deme_start+radius-1), numSamples)
+    ixs = sample(deme_start:(deme_start+radius-1), n, replace=false, ordered=false)
     # Ensure they are not out of bounds by wrapping over at the end.
     ixs .= mod1.(ixs, psize)
 end

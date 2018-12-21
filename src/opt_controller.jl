@@ -307,12 +307,12 @@ function run!(ctrl::OptRunController)
             ctrl.last_num_fevals = num_func_evals(ctrl)
 
             # Callback every now and then (if a callback interval has been set)...
-            if ctrl.callback_interval > 0.0 && 
+            if ctrl.callback_interval > 0.0 &&
                 (ctrl.last_callback_time <= 0.0 ||
                     (time() - ctrl.last_callback_time) > ctrl.callback_interval)
                 callback(ctrl)
-            end            
-            
+            end
+
             # Check if we have a reason to stop on next loop
             ctrl.stop_reason = check_stop_condition(ctrl)
         end
@@ -320,7 +320,7 @@ function run!(ctrl::OptRunController)
     finally
         shutdown_optimizer!(ctrl)
     end
-    trace(ctrl, "\nOptimization stopped after $(ctrl.num_steps) steps and $(elapsed_time(ctrl)) seconds\n")
+    trace(ctrl, @sprintf "\nOptimization stopped after %d steps and %.2f seconds\n" ctrl.num_steps elapsed_time(ctrl))
 
     return ctrl.stop_reason
 end
@@ -328,9 +328,9 @@ end
 function show_report(ctrl::OptRunController, population_stats=false)
     final_elapsed_time = elapsed_time(ctrl)
     trace(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
-    trace(ctrl, "Steps per second = $(num_steps(ctrl)/final_elapsed_time)\n")
-    trace(ctrl, "Function evals per second = $(num_func_evals(ctrl)/final_elapsed_time)\n")
-    trace(ctrl, "Improvements/step = $(ctrl.num_better/ctrl.max_steps)\n")
+    trace(ctrl, @sprintf "Steps per second = %.2f\n" num_steps(ctrl)/final_elapsed_time)
+    trace(ctrl, @sprintf "Function evals per second = %.2f\n" num_func_evals(ctrl)/final_elapsed_time)
+    trace(ctrl, @sprintf "Improvements/step = %.5f\n" ctrl.num_better/ctrl.max_steps)
     trace(ctrl, "Total function evaluations = $(num_func_evals(ctrl))\n")
 
     if population_stats && isa(ctrl.optimizer, PopulationOptimizer)
