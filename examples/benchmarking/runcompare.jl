@@ -3,7 +3,7 @@ reports_dir = (length(ARGS) > 0 ? ARGS[1] : "examples/benchmarking")
 
 isdir(reports_dir) || throw(error("Benchmark results folder $reports_dir not found"))
 
-bfiles = filter!(f->ismatch(r"^benchmark_runs_\d.+\.csv$", f), readdir(reports_dir))
+bfiles = filter!(f->occursin(r"^benchmark_runs_\d.+\.csv$", f), readdir(reports_dir))
 
 isempty(bfiles) && throw(error("No benchmark runs found"))
 bf = joinpath(reports_dir, bfiles[end])
