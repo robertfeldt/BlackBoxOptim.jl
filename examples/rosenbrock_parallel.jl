@@ -4,7 +4,7 @@ using Distributed
 # what you actually gain from this though)
 addprocs(2)
 
-# BlackBoxOptim does not get automatically used on all workers
+# Ensure BlackBoxOptim loaded on all workers
 @everywhere using BlackBoxOptim
 
 # define the function to optimize on all workers. Parallel eval only gives a gain
