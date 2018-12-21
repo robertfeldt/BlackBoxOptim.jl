@@ -40,36 +40,36 @@ const ParamBounds = Tuple{Float64,Float64}
 """
 Get the range of valid values for a specific dimension.
 """
-range_for_dim(css::ContinuousSearchSpace, i) = (mins(css)[i], maxs(css)[i])
+range_for_dim(ss::ContinuousSearchSpace, i) = (mins(ss)[i], maxs(ss)[i])
 
-ranges(css::ContinuousSearchSpace) = collect(zip(mins(css), maxs(css)))
+ranges(ss::ContinuousSearchSpace) = collect(zip(mins(ss), maxs(ss)))
 
 """
 Generate `numIndividuals` individuals by random sampling in the search space.
 """
-rand_individuals(css::ContinuousSearchSpace, numIndividuals) =
-    mins(css) .+ deltas(css) .* rand(numdims(css), numIndividuals)
+rand_individuals(ss::ContinuousSearchSpace, numIndividuals) =
+    mins(ss) .+ deltas(ss) .* rand(numdims(ss), numIndividuals)
 
 """
 Generate `numIndividuals` individuals by latin hypercube sampling (LHS).
 This should be the default way to create the initial population.
 """
-rand_individuals_lhs(css::ContinuousSearchSpace, numIndividuals) =
-    Utils.latin_hypercube_sampling(mins(css), maxs(css), numIndividuals)
+rand_individuals_lhs(ss::ContinuousSearchSpace, numIndividuals) =
+    Utils.latin_hypercube_sampling(mins(ss), maxs(ss), numIndividuals)
 
 """
 Generate one random candidate.
 """
-rand_individual(css::ContinuousSearchSpace) =
-    mins(css) .+ deltas(css) .* rand(numdims(css))
+rand_individual(ss::ContinuousSearchSpace) =
+    mins(ss) .+ deltas(ss) .* rand(numdims(ss))
 
 """
 Check if given individual lies in the given search space.
 """
-function Base.in(ind::AbstractIndividual, css::ContinuousSearchSpace)
-    @assert length(ind) == numdims(css)
+function Base.in(ind::AbstractIndividual, ss::ContinuousSearchSpace)
+    @assert length(ind) == numdims(ss)
     @inbounds for i in eachindex(ind)
-        (mins(css)[i] <= ind[i] <= maxs(css)[i]) || return false
+        (mins(ss)[i] <= ind[i] <= maxs(ss)[i]) || return false
     end
     return true
 end
@@ -92,12 +92,12 @@ struct RangePerDimSearchSpace <: ContinuousSearchSpace
     RangePerDimSearchSpace(mins, maxs) = new(mins, maxs, maxs .- mins)
 end
 
-mins(rss::RangePerDimSearchSpace) = rss.mins
-maxs(rss::RangePerDimSearchSpace) = rss.maxs
-deltas(rss::RangePerDimSearchSpace) = rss.deltas
-numdims(rss::RangePerDimSearchSpace) = length(mins(rss))
+mins(ss::RangePerDimSearchSpace) = ss.mins
+maxs(ss::RangePerDimSearchSpace) = ss.maxs
+deltas(ss::RangePerDimSearchSpace) = ss.deltas
+numdims(ss::RangePerDimSearchSpace) = length(mins(ss))
 
-diameters(rss::RangePerDimSearchSpace) = deltas(rss)
+diameters(ss::RangePerDimSearchSpace) = deltas(ss)
 
 Base.:(==)(a::RangePerDimSearchSpace, b::RangePerDimSearchSpace) =
     numdims(a) == numdims(b) && (a.mins == b.mins) && (a.maxs == b.maxs)
