@@ -16,11 +16,11 @@ DE = de_rand_1_bin(fake_problem, ParamsDict(
 
         @test ndims(trial.params) == 1
         @test (1 <= trial.index <= popsize(DE.population))
-        @test in(trial.params, DE.embed.searchSpace)
+        @test in(trial.params, search_space(DE.embed))
 
         @test ndims(target.params) == 1
         @test (1 <= target.index <= popsize(DE.population))
-        @test in(target.params, DE.embed.searchSpace)
+        @test in(target.params, search_space(DE.embed))
 
         @test trial.index == target.index
 

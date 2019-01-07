@@ -12,7 +12,7 @@ fitness_type(::Type{P}) where P <: OptimizationProblem = fitness_type(fitness_sc
 fitness_scheme(p::OptimizationProblem) = p.fitness_scheme
 fitness_type(p::P) where P <: OptimizationProblem = fitness_type(P)
 numobjectives(p::OptimizationProblem) = numobjectives(fitness_scheme(p))
-search_space(p::OptimizationProblem) = p.ss
+search_space(p::OptimizationProblem) = p.search_space
 numdims(p::OptimizationProblem) = numdims(search_space(p))
 
 """
@@ -33,11 +33,11 @@ mutable struct FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: Opt
     objfunc::Function     # Objective function
     name::String
     fitness_scheme::FS
-    ss::SS                # search space
+    search_space::SS      # search space
     opt_value::FO         # known optimal value or nothing
 
     function FunctionBasedProblem(objfunc::Function, name::String,
-                                  fitness_scheme::FS, ss::SS,
+                                  fitness_scheme::FS, search_space::SS,
                                   opt_value::FO = nothing) where {FS<:FitnessScheme,SS<:SearchSpace,FO}
         if FO <: Number
             fitness_type(fitness_scheme) == FO ||
@@ -47,7 +47,7 @@ mutable struct FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: Opt
                 #throw(ArgumentError("Known optimal value cannot be NA"))
             end
         end
-        new{FS,SS,typeof(opt_value)}(objfunc, name, fitness_scheme, ss, opt_value)
+        new{FS,SS,typeof(opt_value)}(objfunc, name, fitness_scheme, search_space, opt_value)
     end
 end
 
@@ -62,7 +62,7 @@ fitness(x, p::FunctionBasedProblem) = objfunc(p)(x)
 
 Base.copy(p::FunctionBasedProblem) =
     FunctionBasedProblem(deepcopy(p.objfunc), deepcopy(p.name),
-                         p.fitness_scheme, p.ss, p.opt_value)
+                         p.fitness_scheme, p.search_space, p.opt_value)
 
 opt_value(p::FunctionBasedProblem) = p.opt_value
 

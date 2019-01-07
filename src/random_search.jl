@@ -1,14 +1,14 @@
 """
 Optimize by randomly generating the candidates.
 """
-mutable struct RandomSearcher{S<:SearchSpace} <: AskTellOptimizer
+mutable struct RandomSearcher{SS<:SearchSpace} <: AskTellOptimizer
     name::String
-    search_space::S
+    search_space::SS
     best_fitness          # FIXME fitness type should be known
     best::Individual
 
-    RandomSearcher(searchSpace::S) where {S<:SearchSpace} =
-        new{S}("Random Search", searchSpace, nothing)
+    RandomSearcher(search_space::SS) where {SS<:SearchSpace} =
+        new{SS}("Random Search", search_space, nothing)
 end
 
 function ask(rs::RandomSearcher)
@@ -31,5 +31,5 @@ end
 random_search(problem::OptimizationProblem, parameters::Parameters) =
     RandomSearcher(search_space(problem))
 
-random_search(ss::SearchSpace) =
-    RandomSearcher(ss)
+random_search(search_space::SearchSpace) =
+    RandomSearcher(search_space)

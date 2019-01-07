@@ -3,23 +3,23 @@ Embedding operator that randomly samples
 between parent's value and the nearest parameter boundary
 to get the new valid value if target's parameter is out-of-bounds.
 """
-struct RandomBound{S<:SearchSpace} <: EmbeddingOperator
-    searchSpace::S
+struct RandomBound{S<:RangePerDimSearchSpace} <: EmbeddingOperator
+    search_space::S
 
-    RandomBound(searchSpace::S) where {S<:SearchSpace} = new{S}(searchSpace)
+    RandomBound(search_space::S) where {S<:RangePerDimSearchSpace} = new{S}(search_space)
 end
 
 # outer ctors
 RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RangePerDimSearchSpace(dimBounds))
 
-search_space(rb::RandomBound) = rb.searchSpace
+search_space(rb::RandomBound) = rb.search_space
 
 function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndividual)
-    length(target) == length(ref) == numdims(eo.searchSpace) ||
+    length(target) == length(ref) == numdims(eo.search_space) ||
         throw(ArgumentError("Dimensions of problem/individuals do not match"))
     ss = search_space(eo)
-    ssmins = mins(eo.searchSpace)
-    ssmaxs = maxs(eo.searchSpace)
+    ssmins = mins(ss)
+    ssmaxs = maxs(ss)
 
     @inbounds for i in eachindex(target)
         l, u = ssmins[i], ssmaxs[i]

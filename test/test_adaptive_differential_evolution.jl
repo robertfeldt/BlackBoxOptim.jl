@@ -31,11 +31,11 @@ end
 
         @test ndims(trial.params) == 1
         @test (1 <= trial.index <= popsize(ade))
-        @test in(trial.params, ade.embed.searchSpace)
+        @test in(trial.params, search_space(ade.embed))
 
         @test ndims(target.params) == 1
         @test (1 <= target.index <= popsize(ade))
-        @test in(target.params, ade.embed.searchSpace)
+        @test in(target.params, search_space(ade.embed))
 
         @test trial.index == target.index
     end
