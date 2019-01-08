@@ -308,10 +308,10 @@ function run!(ctrl::OptRunController)
 
             # Callback every now and then (if a callback interval has been set)...
             if ctrl.callback_interval >= 0.0
-                if ctrl.callback_interval == 0.0 ||
-                    (ctrl.last_callback_time <= 0.0 ||
+                if ctrl.callback_interval == 0.0 || (ctrl.last_callback_time <= 0.0 ||
                         (time() - ctrl.last_callback_time) > ctrl.callback_interval)
-                callback(ctrl)
+                    callback(ctrl)
+                end
             end
 
             # Check if we have a reason to stop on next loop
