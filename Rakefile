@@ -26,7 +26,8 @@ end
 Command06 = "#{Julia06} --color=yes -L src/BlackBoxOptim.jl"
 Command07 = "#{Julia07} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
 Command1 = "#{Julia1} --color=yes -L src/BlackBoxOptim.jl"
-Command = Command07
+CommandMain = "#{Julia} --color=yes -L src/BlackBoxOptim.jl"
+Command = CommandMain
 
 desc "Run normal (fast) tests"
 task :runtest do
