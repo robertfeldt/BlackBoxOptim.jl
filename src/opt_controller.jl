@@ -207,7 +207,7 @@ function check_stop_condition(ctrl::OptRunController)
 end
 
 @inline function callback(ctrl::OptRunController)
-    if ctrl.callback_interval > 0.0
+    if ctrl.callback_interval >= 0.0
         ctrl.callback_function(ctrl)
         ctrl.last_callback_time = time()
     end
@@ -307,9 +307,10 @@ function run!(ctrl::OptRunController)
             ctrl.last_num_fevals = num_func_evals(ctrl)
 
             # Callback every now and then (if a callback interval has been set)...
-            if ctrl.callback_interval > 0.0 &&
-                (ctrl.last_callback_time <= 0.0 ||
-                    (time() - ctrl.last_callback_time) > ctrl.callback_interval)
+            if ctrl.callback_interval >= 0.0
+                if ctrl.callback_interval == 0.0 ||
+                    (ctrl.last_callback_time <= 0.0 ||
+                        (time() - ctrl.last_callback_time) > ctrl.callback_interval)
                 callback(ctrl)
             end
 
