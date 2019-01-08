@@ -207,18 +207,12 @@
             @test d >= interval
         end
 
-        # If we call with an internval which is 0.0 or negative there are no callbacks
+        # If we call with an interval which is negative there are no callbacks
         prenumcalls = length(callbacktimes)
         res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
             TraceMode = :silent, 
             MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
-            CallbackInterval = 0.0, CallbackFunction = callbackfn)
-        @test length(callbacktimes) == prenumcalls
-
-        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
-            TraceMode = :silent, 
-            MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
-            CallbackInterval = -0.6, CallbackFunction = callbackfn)
+            CallbackInterval = -2.0, CallbackFunction = callbackfn)
         @test length(callbacktimes) == prenumcalls
     end
 end
