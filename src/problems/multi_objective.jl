@@ -28,8 +28,8 @@ discretization defined by ϵ-box fitness schema.
         pf = Dict{NTuple{N,Int}, IndexedTupleFitness{N,F}}()
         param = fill!(Vector{Float64}(undef, N-1), 0.0)
         #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N-1) t d->range(dimmin(surf.parameter_space)[d], stop=dimmax(surf.parameter_space)[d],
-                                                 length=ceil(Int, dimdelta(surf.parameter_space)[d]/param_step[d])) d->param[d]=t_d begin
+        Base.Cartesian.@nloops $(N-1) t d->range(dimmin(surf.parameter_space, d), stop=dimmax(surf.parameter_space, d),
+                                                 length=ceil(Int, dimdelta(surf.parameter_space, d)/param_step[d])) d->param[d]=t_d begin
             fit = surf.manifold(param, Val{NP})
             if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
                 ifit = convert(IndexedTupleFitness, fit, fs)

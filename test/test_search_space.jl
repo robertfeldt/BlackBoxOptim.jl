@@ -5,7 +5,7 @@
             ss1 = symmetric_search_space(reps, (0.0, 1.0))
             ind = rand_individual(ss1)
             for j in 1:reps
-                @test (dimmin(ss1)[j] <= ind[j] <= dimmax(ss1)[j])
+                @test (dimmin(ss1, j) <= ind[j] <= dimmax(ss1, j))
             end
         end
     end
@@ -13,8 +13,14 @@
     @testset "Symmetric search space with default range" begin
         ss1 = symmetric_search_space(1)
         @test numdims(ss1) == 1
+        @test dimmin(ss1) == [0.0]
+        @test dimmin(ss1, 1) == 0.0
+        @test dimmax(ss1) == [1.0]
+        @test dimmax(ss1, 1) == 1.0
+        @test dimdelta(ss1) == [1.0]
+        @test dimdelta(ss1, 1) == 1.0
         @test dimrange(ss1) == [(0.0, 1.0)]
-        @test dimrange(ss1,1) == (0.0, 1.0)
+        @test dimrange(ss1, 1) == (0.0, 1.0)
 
         for i in 1:NumTestRepetitions
             ind = rand_individual(ss1)
@@ -24,10 +30,16 @@
 
         ss3 = symmetric_search_space(3)
         @test numdims(ss3) == 3
+        @test dimmin(ss3) == [0.0, 0.0, 0.0]
+        @test dimmin(ss3, 2) == 0.0
+        @test dimmax(ss3) == [1.0, 1.0, 1.0]
+        @test dimmax(ss3, 2) == 1.0
+        @test dimdelta(ss3) == [1.0, 1.0, 1.0]
+        @test dimdelta(ss3, 2) == 1.0
         @test dimrange(ss3) == [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
-        @test dimrange(ss3,1) == (0.0, 1.0)
-        @test dimrange(ss3,2) == (0.0, 1.0)
-        @test dimrange(ss3,3) == (0.0, 1.0)
+        @test dimrange(ss3, 1) == (0.0, 1.0)
+        @test dimrange(ss3, 2) == (0.0, 1.0)
+        @test dimrange(ss3, 3) == (0.0, 1.0)
 
         for i in 1:NumTestRepetitions
             ind = rand_individual(ss3)
@@ -42,7 +54,7 @@
         @test ss1 isa ContinuousRectSearchSpace
         @test numdims(ss1) == 1
         @test dimrange(ss1) == [(-1.0, 1.0)]
-        @test dimrange(ss1,1) == (-1.0, 1.0)
+        @test dimrange(ss1, 1) == (-1.0, 1.0)
 
         for i in 1:NumTestRepetitions
             reps = rand(1:100)

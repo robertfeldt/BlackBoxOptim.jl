@@ -13,7 +13,7 @@ abstract type FixedDimensionSearchSpace <: SearchSpace end
 
 """
 A `SearchSpace` with `N`-dimensional rectangle as a set of valid points.
-I.e. `dimmin(ss)[i]` ≤ `x[i]` ≤ `dimmax(ss)[i]` for each dimension `i`.
+I.e. `dimmin(ss, i)` ≤ `x[i]` ≤ `dimmax(ss, i)` for each dimension `i`.
 """
 abstract type RectSearchSpace <: FixedDimensionSearchSpace end
 
@@ -42,26 +42,35 @@ const ParamBounds = Tuple{Float64,Float64}
 numdims(ss::RectSearchSpace) = length(dimmin(ss))
 
 """
-    dimmin(ss::SearchSpace)
+    dimmin(ss::SearchSpace, [i::Integer])
 
-A vector of minimal valid values for each dimension of `ss`.
+A minimal valid value for `i`-th dimension of `ss`, or a vector of
+minimal valid values for each dimension of `ss` if no `i` was given.
 """
 dimmin(ss::RectSearchSpace) = ss.dimmin
 
-"""
-    dimmax(ss::SearchSpace)
+dimmin(ss::RectSearchSpace, i::Integer) = ss.dimmin[i]
 
-A vector of maximal valid values for each dimension of `ss`.
+"""
+    dimmax(ss::SearchSpace, [i::Integer])
+
+A maximal valid value for `i`-th dimension of `ss`, or a vector of
+maximal valid values for each dimension of `ss` if no `i` was given.
 """
 dimmax(ss::RectSearchSpace) = ss.dimmax
 
-"""
-    dimdelta(ss::SearchSpace)
+dimmax(ss::RectSearchSpace, i::Integer) = ss.dimmax[i]
 
-A vector of deltas between maximal and minimal valid values
-for each dimension of `ss`.
+"""
+    dimdelta(ss::SearchSpace, [i::Integer])
+
+A delta of maximal and minimal valid values for `i`-th dimension of `ss`
+(*diameter* of `i`-th dimension), or a vector of deltas for each dimension
+if no `i` given.
 """
 dimdelta(ss::RectSearchSpace) = ss.dimdelta
+
+dimdelta(ss::RectSearchSpace, i::Integer) = ss.dimdelta[i]
 
 @deprecate mins(ss) dimmin(ss)
 @deprecate maxs(ss) dimmax(ss)
@@ -75,19 +84,21 @@ Gets a `ParamsRange` tuple of minimal and maximal valid values for
 `i`-th dimension of `ss`, or a vector of `ParamsRange` tuples
 for each dimension if no `i` given.
 """
-dimrange(ss::RectSearchSpace, i::Integer) = (dimmin(ss)[i], dimmax(ss)[i])
+dimrange(ss::RectSearchSpace, i::Integer) = (dimmin(ss, i), dimmax(ss, i))
 @deprecate range_for_dim(ss, i) dimrange(ss, i)
 
 dimrange(ss::RectSearchSpace) = tuple.(dimmin(ss), dimmax(ss))
 @deprecate ranges(ss) dimrange(ss)
 
 """
+    in(ind::AbstractIndividual, ss::SearchSpace)
+
 Check if given individual lies in the given search space.
 """
 function Base.in(ind::AbstractIndividual, ss::RectSearchSpace)
     @assert length(ind) == numdims(ss)
     @inbounds for i in eachindex(ind)
-        (dimmin(ss)[i] <= ind[i] <= dimmax(ss)[i]) || return false
+        (dimmin(ss, i) <= ind[i] <= dimmax(ss, i)) || return false
     end
     return true
 end

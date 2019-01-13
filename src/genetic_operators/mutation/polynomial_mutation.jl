@@ -24,9 +24,9 @@ function apply(m::PolynomialMutation, v::Number, dim::Int, target_index::Int)
     u = 2.0*rand()
     if u <= 1.0
         ΔL = u^(1.0/(1.0+m.η)) - 1.0
-        return (v + ΔL * (v - dimmin(search_space(m))[dim]))
+        return v + ΔL * (v - dimmin(search_space(m), dim))
     else
         ΔR = 1.0 - (2.0-u)^(1.0/(1.0+m.η))
-        return (v + ΔR * (dimmax(search_space(m))[dim] - v))
+        return v + ΔR * (dimmax(search_space(m), dim) - v)
     end
 end
