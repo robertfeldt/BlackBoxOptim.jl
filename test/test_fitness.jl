@@ -18,9 +18,15 @@
     @testset "ScalarFitnessScheme" begin
         @testset "is_minimizing()" begin
             mins = MinimizingFitnessScheme
+            @test numobjectives(mins) == 1
+            @test fitness_type(mins) === Float64
+            @test fitness_eltype(mins) === Float64
             @test is_minimizing(mins)
 
             maxs = MaximizingFitnessScheme
+            @test numobjectives(maxs) == 1
+            @test fitness_type(maxs) === Float64
+            @test fitness_eltype(maxs) === Float64
             @test is_minimizing(maxs) == false
         end
 
@@ -57,6 +63,8 @@
             @testset "ParetoFitnessScheme{1}" begin
                 scheme = ParetoFitnessScheme{1}()
                 @test numobjectives(scheme) == 1
+                @test fitness_type(scheme) === Tuple{Float64}
+                @test fitness_eltype(scheme) === Float64
                 @test is_minimizing(scheme)
                 @test isnafitness(nafitness(scheme), scheme)
                 @test isequal(nafitness(scheme), (NaN,))
@@ -66,6 +74,8 @@
 
             @testset "ParetoFitnessScheme{1}(is_minimizing=false)" begin
                 scheme = ParetoFitnessScheme{1}(is_minimizing=false)
+                @test fitness_type(scheme) == NTuple{1, Float64}
+                @test fitness_eltype(scheme) === Float64
                 @test numobjectives(scheme) == 1
                 @test is_minimizing(scheme) == false
                 @test isnafitness(nafitness(scheme), scheme)
@@ -74,8 +84,23 @@
                 @test isnafitness((1.0,), scheme) == false
             end
 
+            @testset "ParetoFitnessScheme{2}()" begin
+                scheme = ParetoFitnessScheme{2}()
+                @test fitness_type(scheme) == NTuple{2, Float64}
+                @test fitness_eltype(scheme) === Float64
+                @test isequal(nafitness(scheme), (NaN,NaN))
+                @test numobjectives(scheme) == 2
+                @test is_minimizing(scheme)
+                @test isnafitness(nafitness(scheme), scheme)
+                @test isnafitness((NaN, NaN), scheme)
+                @test isnafitness((1.0, NaN), scheme)
+                @test !isnafitness((1.0, 2.0), scheme)
+            end
+
             @testset "ParetoFitnessScheme{3}()" begin
                 scheme = ParetoFitnessScheme{3}()
+                @test fitness_type(scheme) == NTuple{3, Float64}
+                @test fitness_eltype(scheme) === Float64
                 @test isequal(nafitness(scheme), (NaN,NaN,NaN))
                 @test numobjectives(scheme) == 3
                 @test is_minimizing(scheme)
@@ -238,6 +263,10 @@
         @testset "hat_compare(..., EpsBoxDominanceFitnessScheme{2}(...))" begin
             minscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=true)
             maxscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=false)
+
+            @test numobjectives(minscheme) == numobjectives(maxscheme) == 2
+            @test fitness_type(minscheme) === fitness_type(maxscheme) === IndexedTupleFitness{2, Float64}
+            @test fitness_eltype(minscheme) === fitness_eltype(maxscheme) === Float64
 
             @test isnafitness(nafitness(minscheme), minscheme)
             @test isnafitness(nafitness(maxscheme), minscheme)
