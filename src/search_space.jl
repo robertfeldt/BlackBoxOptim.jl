@@ -13,7 +13,7 @@ abstract type FixedDimensionSearchSpace <: SearchSpace end
 
 """
 A `SearchSpace` with `N`-dimensional rectangle as a set of valid points.
-I.e. `mins(ss)[i]` ≤ `x[i]` ≤ `maxs(ss)[i]` for each dimension `i`.
+I.e. `dimmin(ss)[i]` ≤ `x[i]` ≤ `dimmax(ss)[i]` for each dimension `i`.
 """
 abstract type RectSearchSpace <: FixedDimensionSearchSpace end
 
@@ -35,22 +35,51 @@ The concrete type that could be used for storage.
 const Individual = Vector{Float64}
 
 """
-The valid range of values for a specific dimension in a `RectSearchSpace`.
+The valid range of values for a specific dimension of `SearchSpace`.
 """
 const ParamBounds = Tuple{Float64,Float64}
 
-numdims(ss::RectSearchSpace) = length(mins(ss))
-
-mins(ss::RectSearchSpace) = ss.mins
-maxs(ss::RectSearchSpace) = ss.maxs
-deltas(ss::RectSearchSpace) = ss.deltas
-diameters(ss::RectSearchSpace) = deltas(ss)
+numdims(ss::RectSearchSpace) = length(dimmin(ss))
 
 """
-Get the range of valid values for a specific dimension.
+    dimmin(ss::SearchSpace)
+
+A vector of minimal valid values for each dimension of `ss`.
 """
-range_for_dim(ss::RectSearchSpace, i::Integer) = (mins(ss)[i], maxs(ss)[i])
-ranges(ss::RectSearchSpace) = collect(zip(dimmins(ss), dimmaxs(ss)))
+dimmin(ss::RectSearchSpace) = ss.dimmin
+
+"""
+    dimmax(ss::SearchSpace)
+
+A vector of maximal valid values for each dimension of `ss`.
+"""
+dimmax(ss::RectSearchSpace) = ss.dimmax
+
+"""
+    dimdelta(ss::SearchSpace)
+
+A vector of deltas between maximal and minimal valid values
+for each dimension of `ss`.
+"""
+dimdelta(ss::RectSearchSpace) = ss.dimdelta
+
+@deprecate mins(ss) dimmin(ss)
+@deprecate maxs(ss) dimmax(ss)
+@deprecate deltas(ss) dimdelta(ss)
+@deprecate diameters(ss) dimdelta(ss)
+
+"""
+    dimrange(ss::SearchSpace, [i::Integer])
+
+Gets a `ParamsRange` tuple of minimal and maximal valid values for
+`i`-th dimension of `ss`, or a vector of `ParamsRange` tuples
+for each dimension if no `i` given.
+"""
+dimrange(ss::RectSearchSpace, i::Integer) = (dimmin(ss)[i], dimmax(ss)[i])
+@deprecate range_for_dim(ss, i) dimrange(ss, i)
+
+dimrange(ss::RectSearchSpace) = tuple.(dimmin(ss), dimmax(ss))
+@deprecate ranges(ss) dimrange(ss)
 
 """
 Check if given individual lies in the given search space.
@@ -58,7 +87,7 @@ Check if given individual lies in the given search space.
 function Base.in(ind::AbstractIndividual, ss::RectSearchSpace)
     @assert length(ind) == numdims(ss)
     @inbounds for i in eachindex(ind)
-        (mins(ss)[i] <= ind[i] <= maxs(ss)[i]) || return false
+        (dimmin(ss)[i] <= ind[i] <= dimmax(ss)[i]) || return false
     end
     return true
 end
@@ -67,20 +96,19 @@ end
 `SearchSpace` defined by a continuous range of valid values for each dimension.
 """
 struct ContinuousRectSearchSpace <: RectSearchSpace
-    # We save the ranges as individual mins, maxs and deltas for faster access later.
-    mins::Vector{Float64}
-    maxs::Vector{Float64}
-    deltas::Vector{Float64}
+    dimmin::Vector{Float64}    # minimal valid value per dimension
+    dimmax::Vector{Float64}    # maximal valid value per dimension
+    dimdelta::Vector{Float64}  # delta/diameter (dimmax-dimmin) per dimension
 
     function ContinuousRectSearchSpace(
-        mins::AbstractVector{<:Real},
-        maxs::AbstractVector{<:Real}
+        dimmin::AbstractVector{<:Real},
+        dimmax::AbstractVector{<:Real}
     )
-        length(mins) == length(maxs) ||
-            throw(DimensionMismatch("mins and maxs should have the same length"))
-        all(xy -> xy[1] <= xy[2], zip(mins, maxs)) ||
-            throw(ArgumentError("mins should not exceed maxs"))
-        new(mins, maxs, maxs .- mins)
+        length(dimmin) == length(dimmax) ||
+            throw(DimensionMismatch("dimmin and dimmax should have the same length"))
+        all(xy -> xy[1] <= xy[2], zip(dimmin, dimmax)) ||
+            throw(ArgumentError("dimmin should not exceed dimmax"))
+        new(dimmin, dimmax, dimmax .- dimmin)
     end
 end
 
@@ -89,38 +117,40 @@ ContinuousRectSearchSpace(ranges) =
 
 Base.:(==)(a::ContinuousRectSearchSpace,
            b::ContinuousRectSearchSpace) =
-    numdims(a) == numdims(b) && (a.mins == b.mins) && (a.maxs == b.maxs)
+    (numdims(a) == numdims(b)) &&
+    (dimmin(a) == dimmin(b)) &&
+    (dimmax(a) == dimmax(b))
 
 """
 Generate one random candidate.
 """
 rand_individual(ss::ContinuousRectSearchSpace) =
-    mins(ss) .+ deltas(ss) .* rand(numdims(ss))
+    dimmin(ss) .+ dimdelta(ss) .* rand(numdims(ss))
 
 """
 Generate `n` individuals by random sampling in the search space.
 """
 rand_individuals(ss::ContinuousRectSearchSpace, n::Integer) =
-    mins(ss) .+ deltas(ss) .* rand(numdims(ss), n)
+    dimmin(ss) .+ dimdelta(ss) .* rand(numdims(ss), n)
 
 """
 Generate `n` individuals by latin hypercube sampling (LHS).
 This should be the default way to create the initial population.
 """
 rand_individuals_lhs(ss::ContinuousRectSearchSpace, n::Integer) =
-    Utils.latin_hypercube_sampling(mins(ss), maxs(ss), n)
+    Utils.latin_hypercube_sampling(dimmin(ss), dimmax(ss), n)
 
 """
 Projects a given point onto the search space coordinate-wise.
 """
-feasible(v::AbstractIndividual, ss::ContinuousRectSearchSpace) =
-    clamp.(v, mins(ss), maxs(ss))
+feasible(v::AbstractIndividual, ss::RectSearchSpace) =
+    clamp.(v, dimmin(ss), dimmax(ss))
 
 # concatenates two range-based search spaces
 Base.vcat(ss1::ContinuousRectSearchSpace,
           ss2::ContinuousRectSearchSpace) =
-    ContinuousRectSearchSpace(vcat(mins(ss1), mins(ss2)),
-                              vcat(maxs(ss1), maxs(ss2)))
+    ContinuousRectSearchSpace(vcat(dimmin(ss1), dimmin(ss2)),
+                              vcat(dimmax(ss1), dimmax(ss2)))
 
 """
 0-dimensional search space.

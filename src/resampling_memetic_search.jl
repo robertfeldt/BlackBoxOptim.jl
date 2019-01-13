@@ -26,7 +26,7 @@ mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
     resampling_func::Function
 
     precisions      # Cache the starting precision values so we need not calc them for each step
-    diameters       # Cache the diameters...
+    diameters       # Cache the dimdelta()...
 
     elite           # Current elite (best) candidate
     elite_fitness   # Fitness of current elite
@@ -36,7 +36,7 @@ mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
             resampling_function::Function, name::String) where {E<:Evaluator}
         params = chain(RSDefaultParameters, parameters)
         elite = rand_individual(search_space(evaluator))
-        diams = diameters(search_space(evaluator))
+        diams = dimdelta(search_space(evaluator))
         new{E}(name, params, evaluator, resampling_function,
                params[:PrecisionRatio] * diams, diams,
                elite, fitness(elite, evaluator))
@@ -128,7 +128,7 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
     tfitness = copy(fitness)
 
     searchSpace = search_space(rms.evaluator)
-    ssmins, ssmaxs = mins(searchSpace), maxs(searchSpace)
+    ssmins, ssmaxs = dimmin(searchSpace), dimmax(searchSpace)
     n = numdims(rms.evaluator)
 
     indices = collect(1:n)

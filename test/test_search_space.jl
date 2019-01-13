@@ -5,7 +5,7 @@
             ss1 = symmetric_search_space(reps, (0.0, 1.0))
             ind = rand_individual(ss1)
             for j in 1:reps
-                @test (mins(ss1)[j] <= ind[j] <= maxs(ss1)[j])
+                @test (dimmin(ss1)[j] <= ind[j] <= dimmax(ss1)[j])
             end
         end
     end
@@ -13,8 +13,8 @@
     @testset "Symmetric search space with default range" begin
         ss1 = symmetric_search_space(1)
         @test numdims(ss1) == 1
-        @test ranges(ss1) == [(0.0, 1.0)]
-        @test range_for_dim(ss1,1) == (0.0, 1.0)
+        @test dimrange(ss1) == [(0.0, 1.0)]
+        @test dimrange(ss1,1) == (0.0, 1.0)
 
         for i in 1:NumTestRepetitions
             ind = rand_individual(ss1)
@@ -24,10 +24,10 @@
 
         ss3 = symmetric_search_space(3)
         @test numdims(ss3) == 3
-        @test ranges(ss3) == [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
-        @test range_for_dim(ss3,1) == (0.0, 1.0)
-        @test range_for_dim(ss3,2) == (0.0, 1.0)
-        @test range_for_dim(ss3,3) == (0.0, 1.0)
+        @test dimrange(ss3) == [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
+        @test dimrange(ss3,1) == (0.0, 1.0)
+        @test dimrange(ss3,2) == (0.0, 1.0)
+        @test dimrange(ss3,3) == (0.0, 1.0)
 
         for i in 1:NumTestRepetitions
             ind = rand_individual(ss3)
@@ -36,13 +36,13 @@
         end
     end
 
-    @testset "SymmetricSearchSpace with given range" begin
+    @testset "ContinuousRectSearchSpace with given range" begin
         ss1 = symmetric_search_space(1, (-1.0, 1.0))
         @test_throws ArgumentError symmetric_search_space(1, (0.0, -1.0))
         @test ss1 isa ContinuousRectSearchSpace
         @test numdims(ss1) == 1
-        @test ranges(ss1) == [(-1.0, 1.0)]
-        @test range_for_dim(ss1,1) == (-1.0, 1.0)
+        @test dimrange(ss1) == [(-1.0, 1.0)]
+        @test dimrange(ss1,1) == (-1.0, 1.0)
 
         for i in 1:NumTestRepetitions
             reps = rand(1:100)
@@ -50,7 +50,7 @@
             range = (a, a + (1-a)*rand())
             ss = symmetric_search_space(reps, range)
             @test numdims(ss) == reps
-            @test all([(dr == range) for dr in ranges(ss)])
+            @test all(dr -> dr == range, dimrange(ss))
         end
     end
 
@@ -90,9 +90,9 @@
             maxbounds = minbounds .+ ds
             parambounds = collect(zip(minbounds, maxbounds))
             ss = RectSearchSpace(parambounds)
-            @test mins(ss) == minbounds
-            @test maxs(ss) == maxbounds
-            @test round.(deltas(ss), digits=6) == round.(ds, digits=6)
+            @test dimmin(ss) == minbounds
+            @test dimmax(ss) == maxbounds
+            @test round.(dimdelta(ss), digits=6) == round.(ds, digits=6)
 
             # Now generate 100 individuals and make sure they are all within bounds
             inds = rand_individuals(ss, 100)
@@ -107,14 +107,14 @@
 
     @testset "RectSearchSpace" begin
         ss = RectSearchSpace([(0.0, 1.0)])
-        @test mins(ss) == [0.0]
-        @test maxs(ss) == [1.0]
-        @test deltas(ss) == [1.0]
+        @test dimmin(ss) == [0.0]
+        @test dimmax(ss) == [1.0]
+        @test dimdelta(ss) == [1.0]
 
         ss = RectSearchSpace([(0.0, 1.0), (0.5, 10.0)])
-        @test mins(ss) == [0.0, 0.5]
-        @test maxs(ss) == [1.0, 10.0]
-        @test deltas(ss) == [1.0, 9.5]
+        @test dimmin(ss) == [0.0, 0.5]
+        @test dimmax(ss) == [1.0, 10.0]
+        @test dimdelta(ss) == [1.0, 9.5]
     end
 
     @testset "rand_individuals_lhs samples in LHS intervals" begin
@@ -163,12 +163,12 @@
         @test BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0]
     end
 
-    @testset "diameters" begin
+    @testset "dimrange" begin
         ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
-        diams = diameters(ss)
+        diams = dimdelta(ss)
 
         @test length(diams) == 3
-        @test diams[:] == [1.0, 1.0, 1.0]
+        @test diams == [1.0, 1.0, 1.0]
     end
 
     @testset "concat(ss1, ss2)" begin
@@ -177,8 +177,8 @@
 
         sscat = vcat(ss1, ss2)
         @test numdims(sscat) == 5
-        @test mins(sscat) == [0.0, 2.0, 4.0, 6.0, 8.0]
-        @test maxs(sscat) == [1.0, 3.0, 5.0, 7.0, 9.0]
-        @test deltas(sscat) == fill(1.0, 5)
+        @test dimmin(sscat) == [0.0, 2.0, 4.0, 6.0, 8.0]
+        @test dimmax(sscat) == [1.0, 3.0, 5.0, 7.0, 9.0]
+        @test dimdelta(sscat) == fill(1.0, 5)
     end
 end

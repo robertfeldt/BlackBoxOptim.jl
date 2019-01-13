@@ -26,7 +26,7 @@ end
 search_space(m::UniformMutation) = m.search_space
 
 apply(m::UniformMutation, v::Number, dim::Int, target_index::Int) =
-    mins(search_space(m))[dim] + rand() * deltas(search_space(m))[dim]
+    dimmin(search_space(m))[dim] + rand() * dimdelta(search_space(m))[dim]
 
 """
 Mutation clock operator is a more efficient way to mutate vectors than to generate

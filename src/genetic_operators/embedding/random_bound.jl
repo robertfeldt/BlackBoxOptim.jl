@@ -18,8 +18,8 @@ function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndivi
     length(target) == length(ref) == numdims(eo.search_space) ||
         throw(ArgumentError("Dimensions of problem/individuals do not match"))
     ss = search_space(eo)
-    ssmins = mins(ss)
-    ssmaxs = maxs(ss)
+    ssmins = dimmin(ss)
+    ssmaxs = dimmax(ss)
 
     @inbounds for i in eachindex(target)
         l, u = ssmins[i], ssmaxs[i]

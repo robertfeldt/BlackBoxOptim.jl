@@ -9,10 +9,10 @@
         @test_throws BoundsError BlackBoxOptim.apply(gibbs, 2.0, 0, 1)
         @test_throws BoundsError BlackBoxOptim.apply(gibbs, 2.0, 4, 1)
 
-        for dim in 1:numdims(ss)
-            dim_range = range_for_dim(ss, dim)
-            for i in 1:NumTestRepetitions
-                t = BlackBoxOptim.apply(gibbs, 0.0, dim, 1)
+        for i in 1:numdims(ss)
+            dim_range = dimrange(ss, i)
+            for _ in 1:NumTestRepetitions
+                t = BlackBoxOptim.apply(gibbs, 0.0, i, 1)
                 @test t >= dim_range[1]
                 @test t <= dim_range[2]
             end

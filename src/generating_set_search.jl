@@ -37,7 +37,7 @@ const GSSDefaultParameters = ParamsDict(
     :StepSizeMax => prevfloat(typemax(Float64)) # A limit on the step size can be set but is typically not => Inf.
 )
 
-calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(diameters(ss))
+calc_initial_step_size(ss, stepSizeFactor = 0.5) = stepSizeFactor * minimum(dimdelta(ss))
 
 """
 Generating Set Search as described in Kolda2003:
