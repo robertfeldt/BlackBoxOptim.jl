@@ -189,16 +189,17 @@ end
 candi_pool_size(pop::FitPopulation) = length(pop.candi_pool)
 
 """
-Generate a population for a given problem.
+Generate a population for a given optimization `problem`.
 
-The default method to generate a population, uses Latin Hypercube Sampling.
+`method` specifies a method for sampling random individuals, defaults to `:latin_hypercube`.
 """
 function population(problem::OptimizationProblem,
                     options::Parameters = EMPTY_PARAMS,
                     nafitness::F = nafitness(fitness_scheme(problem));
-                    ntransient::Integer = 0) where F
+                    ntransient::Integer = 0,
+                    method::Symbol = :latin_hypercube) where F
     if !haskey(options, :Population)
-        pop = rand_individuals_lhs(search_space(problem), get(options, :PopulationSize, 50) + ntransient)
+        pop = rand_individuals(search_space(problem), get(options, :PopulationSize, 50) + ntransient, method=method)
     else
         pop = options[:Population]
     end

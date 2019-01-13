@@ -133,25 +133,6 @@ Base.:(==)(a::ContinuousRectSearchSpace,
     (dimmax(a) == dimmax(b))
 
 """
-Generate one random candidate.
-"""
-rand_individual(ss::ContinuousRectSearchSpace) =
-    dimmin(ss) .+ dimdelta(ss) .* rand(numdims(ss))
-
-"""
-Generate `n` individuals by random sampling in the search space.
-"""
-rand_individuals(ss::ContinuousRectSearchSpace, n::Integer) =
-    dimmin(ss) .+ dimdelta(ss) .* rand(numdims(ss), n)
-
-"""
-Generate `n` individuals by latin hypercube sampling (LHS).
-This should be the default way to create the initial population.
-"""
-rand_individuals_lhs(ss::ContinuousRectSearchSpace, n::Integer) =
-    Utils.latin_hypercube_sampling(dimmin(ss), dimmax(ss), n)
-
-"""
 Projects a given point onto the search space coordinate-wise.
 """
 feasible(v::AbstractIndividual, ss::RectSearchSpace) =
@@ -183,3 +164,29 @@ RectSearchSpace(numdims::Integer, range=(0.0, 1.0)) =
     RectSearchSpace(fill(range, numdims))
 
 @deprecate symmetric_search_space(numdims, range=(0.0, 1.0)) RectSearchSpace(numdims, range)
+
+"""
+Generate one random candidate.
+"""
+rand_individual(ss::ContinuousRectSearchSpace) =
+    rand(numdims(ss)) .* dimdelta(ss) .+ dimmin(ss)
+
+"""
+    rand_individuals(ss, n; [method=:latin_hypercube])
+
+Generate `n` individuals by randomly sampling in the `ss` search space using
+specified sampling `method`. The supported methods are:
+ * `uniform`: uniform independent sampling for each dimension
+ * `latin_hypercube` (the default): use latin hypercube sampling method
+"""
+function rand_individuals(ss::RectSearchSpace, n::Integer; method::Symbol=:latin_hypercube)
+    if method == :uniform
+        return _round!(rand(numdims(ss), n) .* dimdelta(ss) .+ dimmin(ss), ss)
+    elseif method == :latin_hypercube
+        return _round!(Utils.latin_hypercube_sampling(dimmin(ss), dimmax(ss), n), ss)
+    else
+        throw(ArgumentError("Unknown sampling method \"$method\""))
+    end
+end
+
+@deprecate rand_individuals_lhs(ss::RectSearchSpace, n::Integer) rand_individuals(ss, n, method=:latin_hypercube)

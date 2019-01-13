@@ -109,7 +109,8 @@
             end
         end
 
-        @testset "rand_individuals() correctly handles individual dimensions" begin
+        @testset "rand_individuals(method=:$method) correctly handles individual dimensions" for
+                method in (:uniform, :latin_hypercube)
             for _ in 1:NumTestRepetitions÷10
                 numdimensions = rand(1:13)
                 minbounds = rand(numdimensions)
@@ -120,7 +121,7 @@
                 @test round.(dimdelta(ss), digits=6) == round.(maxbounds .- minbounds, digits=6)
 
                 # Now generate 100 individuals and make sure they are all within bounds
-                inds = rand_individuals(ss, 100)
+                inds = rand_individuals(ss, 100, method=method)
                 @test size(inds, 2) == 100
                 @inbounds for i in 1:size(inds, 2)
                     indi = view(inds, :, i)
@@ -130,7 +131,7 @@
             end
         end
 
-        @testset "rand_individuals_lhs() samples in LHS intervals" begin
+        @testset "rand_individuals(method=:latin_hypercube) samples in LHS intervals" begin
             ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
             inds = rand_individuals_lhs(ss, 2)
@@ -146,6 +147,10 @@
 
             @test (4.0 <= sorted[3,1] <= 4.5)
             @test (4.5 <= sorted[3,2] <= 5.0)
+        end
+
+        @testset "rand_individuals() unknown sampling method" begin
+            @test_throws ArgumentError rand_individuals(RectSearchSpace([(0.0, 1.0), (2.0, 3.0)]), 5, method=:simple)
         end
     end
 

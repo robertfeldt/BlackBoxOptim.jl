@@ -62,7 +62,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace,
         RectSearchSpace, ContinuousRectSearchSpace,
         numdims, dimmin, dimmax, dimdelta, dimrange,
-        rand_individual, rand_individuals, rand_individuals_lhs,
+        rand_individual, rand_individuals,
 
         # Population
         FitPopulation,
