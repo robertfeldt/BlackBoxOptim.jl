@@ -9,9 +9,6 @@ struct RandomBound{S<:RectSearchSpace} <: EmbeddingOperator
     RandomBound(search_space::S) where {S<:RectSearchSpace} = new{S}(search_space)
 end
 
-# outer ctors
-RandomBound(dimBounds::Vector{ParamBounds}) = RandomBound(RectSearchSpace(dimBounds))
-
 search_space(rb::RandomBound) = rb.search_space
 
 function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndividual)
