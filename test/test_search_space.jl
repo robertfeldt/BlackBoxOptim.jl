@@ -68,6 +68,9 @@
             @test numdims(ss1) == 1
             @test dimrange(ss1) == [(-1.0, 1.0)]
             @test dimrange(ss1, 1) == (-1.0, 1.0)
+            @test dimdigits(ss1) == [-1]
+            @test dimdigits(ss1, 1) == -1
+            #@test_throws BoundsError dimdigits(ss1, 2) # FIXME
 
             for i in 1:NumTestRepetitions
                 dims = rand(1:100)
@@ -78,15 +81,33 @@
                 @test all(dr -> dr == range, dimrange(ss))
             end
         end
+
+        @testset "MixedPrecisionRectSearchSpace with given range" begin
+            ss1 = RectSearchSpace(1, (-1.0, 1.0), dimdigits=2)
+            @test ss1 isa MixedPrecisionRectSearchSpace
+            @test numdims(ss1) == 1
+            @test dimrange(ss1) == [(-1.0, 1.0)]
+            @test dimmin(ss1) == fill(-1.0, numdims(ss1))
+            @test dimmin(ss1, 1) == -1.0
+            @test dimmax(ss1) == fill(1.0, numdims(ss1))
+            @test dimmax(ss1, 1) == 1.0
+            @test dimrange(ss1) == [(-1.0, 1.0)]
+            @test dimdelta(ss1) == fill(2.0, numdims(ss1))
+            @test dimdelta(ss1, 1) == 2.0
+            @test dimdigits(ss1) == fill(2, numdims(ss1))
+            @test dimdigits(ss1, 1) == 2
+            @test_throws BoundsError dimdigits(ss1, 2)
+        end
     end
 
     @testset "rand_individuals()" begin
-        @testset "rand_individual() is within the search space" begin
+        @testset "rand_individual($SS) is within the search space" for
+                SS in (ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace)
             for i in 1:NumTestRepetitions
-                reps = rand(1:100)
-                mm = sort(rand(2,1), dims=1)
+                dims = rand(1:100)
+                mm = sort!(rand(2))
                 range = (mm[1], mm[2])
-                ss = RectSearchSpace(reps, range)
+                ss = RectSearchSpace(dims, range, dimdigits = SS == MixedPrecisionRectSearchSpace ? rand(-1:2) : nothing)
                 ind = rand_individual(ss)
                 @test length(ind) == numdims(ss)
                 @test in(ind, ss)
@@ -109,13 +130,22 @@
             end
         end
 
-        @testset "rand_individuals(method=:$method) correctly handles individual dimensions" for
-                method in (:uniform, :latin_hypercube)
+        @testset "rand_individuals(method=:$method) correctly handles individual dimensions in $SS" for
+                method in (:uniform, :latin_hypercube), SS in (ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace)
             for _ in 1:NumTestRepetitions÷10
                 numdimensions = rand(1:13)
                 minbounds = rand(numdimensions)
                 maxbounds = minbounds .+ rand(1:10, numdimensions) .* rand(numdimensions)
-                ss = RectSearchSpace(tuple.(minbounds, maxbounds))
+                digits = SS == MixedPrecisionRectSearchSpace ? rand(-1:2, numdimensions) : nothing
+                if digits !== nothing
+                    for d in 1:numdimensions
+                        if digits[d] >= 0
+                            minbounds[d] = round(minbounds[d], digits=digits[d])
+                            maxbounds[d] = round(maxbounds[d], digits=digits[d])
+                        end
+                    end
+                end
+                ss = RectSearchSpace(tuple.(minbounds, maxbounds), dimdigits = digits)
                 @test dimmin(ss) == minbounds
                 @test dimmax(ss) == maxbounds
                 @test round.(dimdelta(ss), digits=6) == round.(maxbounds .- minbounds, digits=6)
@@ -155,29 +185,39 @@
     end
 
     @testset "feasible(x, ss) projects `x` to the search space `ss`" begin
-        ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
+        @testset "ContinuousSearchSpace" begin
+            ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
-        @test BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) == [1.0, 2.0, 4.0]
-        @test BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) == [1.0, 3.0, 4.0]
-        @test BlackBoxOptim.feasible([1.1, 2.0, 5.0], ss) == [1.0, 2.0, 5.0]
-        @test BlackBoxOptim.feasible([1.1, 3.0, 5.0], ss) == [1.0, 3.0, 5.0]
+            @test BlackBoxOptim.feasible([1.1, 2.0, 4.0], ss) == [1.0, 2.0, 4.0]
+            @test BlackBoxOptim.feasible([1.1, 3.0, 4.0], ss) == [1.0, 3.0, 4.0]
+            @test BlackBoxOptim.feasible([1.1, 2.0, 5.0], ss) == [1.0, 2.0, 5.0]
+            @test BlackBoxOptim.feasible([1.1, 3.0, 5.0], ss) == [1.0, 3.0, 5.0]
 
-        @test BlackBoxOptim.feasible([-0.1, 2.0, 4.0], ss) == [0.0, 2.0, 4.0]
-        @test BlackBoxOptim.feasible([-0.1, 3.0, 4.0], ss) == [0.0, 3.0, 4.0]
-        @test BlackBoxOptim.feasible([-0.1, 2.0, 5.0], ss) == [0.0, 2.0, 5.0]
-        @test BlackBoxOptim.feasible([-0.1, 3.0, 5.0], ss) == [0.0, 3.0, 5.0]
+            @test BlackBoxOptim.feasible([-0.1, 2.0, 4.0], ss) == [0.0, 2.0, 4.0]
+            @test BlackBoxOptim.feasible([-0.1, 3.0, 4.0], ss) == [0.0, 3.0, 4.0]
+            @test BlackBoxOptim.feasible([-0.1, 2.0, 5.0], ss) == [0.0, 2.0, 5.0]
+            @test BlackBoxOptim.feasible([-0.1, 3.0, 5.0], ss) == [0.0, 3.0, 5.0]
 
-        @test BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0]
-        @test BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0]
-        @test BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0]
-        @test BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0]
+            @test BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0]
+            @test BlackBoxOptim.feasible([0.0, 1.9, 4.0], ss) == [0.0, 2.0, 4.0]
+            @test BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0]
+            @test BlackBoxOptim.feasible([1.0, 1.9, 5.0], ss) == [1.0, 2.0, 5.0]
 
-        @test BlackBoxOptim.feasible([0.0, 3.3, 4.0], ss) == [0.0, 3.0, 4.0]
-        @test BlackBoxOptim.feasible([0.0, 3.2, 4.0], ss) == [0.0, 3.0, 4.0]
-        @test BlackBoxOptim.feasible([1.0, 3.1, 5.0], ss) == [1.0, 3.0, 5.0]
-        @test BlackBoxOptim.feasible([1.0, 3.9, 5.0], ss) == [1.0, 3.0, 5.0]
+            @test BlackBoxOptim.feasible([0.0, 3.3, 4.0], ss) == [0.0, 3.0, 4.0]
+            @test BlackBoxOptim.feasible([0.0, 3.2, 4.0], ss) == [0.0, 3.0, 4.0]
+            @test BlackBoxOptim.feasible([1.0, 3.1, 5.0], ss) == [1.0, 3.0, 5.0]
+            @test BlackBoxOptim.feasible([1.0, 3.9, 5.0], ss) == [1.0, 3.0, 5.0]
 
-        @test BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0]
+            @test BlackBoxOptim.feasible([-0.4, 3.3, 14.5], ss) == [0.0, 3.0, 5.0]
+        end
+
+        @testset "MixedPrecisionRectSearchSpace" begin
+            ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)], dimdigits=[-1, 2, 0])
+
+            @test BlackBoxOptim.feasible([1.124, 2.001, 4.0], ss) == [1.0, 2.0, 4.0]
+            @test BlackBoxOptim.feasible([0.124, 2.555, 3.9], ss) == [0.124, 2.56, 4.0]
+            @test BlackBoxOptim.feasible([0.12345, 2.555, 3.5], ss) == [0.12345, 2.56, 4.0]
+        end
     end
 
     @testset "dimrange()" begin
@@ -197,5 +237,16 @@
         @test dimmin(sscat) == [0.0, 2.0, 4.0, 6.0, 8.0]
         @test dimmax(sscat) == [1.0, 3.0, 5.0, 7.0, 9.0]
         @test dimdelta(sscat) == fill(1.0, 5)
+        @test dimdigits(sscat) == fill(-1, 5)
+
+        # concat continuous and mixed precision space
+        ss3 = RectSearchSpace([(6.0, 7.0), (8.0, 9.0), (10.0, 11.0)], dimdigits=[1, 0, -1])
+        sscat2 = vcat(ss1, ss3)
+        @test sscat2 isa MixedPrecisionRectSearchSpace
+        @test numdims(sscat2) == 6
+        @test dimmin(sscat2) == [0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+        @test dimmax(sscat2) == [1.0, 3.0, 5.0, 7.0, 9.0, 11.0]
+        @test dimdelta(sscat2) == fill(1.0, 6)
+        @test dimdigits(sscat2) == [-1, -1, -1, 1, 0, -1]
     end
 end

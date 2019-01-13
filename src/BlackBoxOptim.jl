@@ -60,8 +60,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Search spaces
         ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace,
-        RectSearchSpace, ContinuousRectSearchSpace,
-        numdims, dimmin, dimmax, dimdelta, dimrange,
+        RectSearchSpace, ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace,
+        numdims, dimmin, dimmax, dimdelta, dimrange, dimdigits,
         rand_individual, rand_individuals,
 
         # Population

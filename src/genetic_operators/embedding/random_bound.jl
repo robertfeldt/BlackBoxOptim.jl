@@ -25,8 +25,11 @@ function apply!(eo::RandomBound, target::AbstractIndividual, ref::AbstractIndivi
             target[i] = l + rand() * (ref[i]-l)
         elseif target[i] > u
             target[i] = u + rand() * (ref[i]-u)
-        else
-            continue
+        else # continuous range doesn't need further checks
+            (ss isa MixedPrecisionRectSearchSpace) || continue
+        end
+        if (ss isa MixedPrecisionRectSearchSpace) && (dimdigits(ss, i) >= 0)
+            target[i] = round(target[i], digits=dimdigits(ss, i))
         end
         @assert l <= target[i] <= u "target[$i]=$(target[i]) is out of [$l, $u]"
     end
