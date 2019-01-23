@@ -12,7 +12,7 @@
         @test isnafitness(fitness(p1, 4), fs)
 
         @testset "accessing individuals" begin
-    		@test isa(p1[1], Vector{Float64})
+            @test isa(p1[1], Vector{Float64})
             @test length(p1[1]) == numdims(p1)
             @test isa(BlackBoxOptim.viewer(p1, 1), AbstractVector{Float64})
             @test length(BlackBoxOptim.viewer(p1, 1)) == numdims(p1)

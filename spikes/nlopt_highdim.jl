@@ -3,9 +3,9 @@ using DataFrames
 
 include(joinpath("..", "src", "problems", "single_objective_base_functions.jl"))
 
-@compat abstract type Evaluator end
+abstract type Evaluator end
 
-type NonGradientEvaluator <: Evaluator
+mutable struct NonGradientEvaluator <: Evaluator
   func::Function
   fevals::Int
   NonGradientEvaluator(func) = new(func, 0)
@@ -76,13 +76,13 @@ function compare_nlopt_algs(funcToOpt, dim;
         println("Dims = ", dim)
         println("Alg = ", alg)
         println("time given = ", maxt, " seconds")
-        println("time taken = ", t, " seconds (", round(t/maxt*100.0, 2), "%)")
+        println("time taken = ", t, " seconds (", round(t/maxt*100.0, digits=2), "%)")
         println("fmin = ", fmin)
         println("Fevals = ", numfevals)
         println("Return value = ", ret, "\n\n")
 
         res = rbind(res, DataFrame(Alg = alg, D = dim, Rep = rep, Fevals = numfevals,
-          TimeGiven = maxt, TimeTaken = t, TimeUsed = round(100.0*t/maxt, 2), fmin = fmin))
+          TimeGiven = maxt, TimeTaken = t, TimeUsed = round(100.0*t/maxt, digits=2), fmin = fmin))
       end
     end
   end
@@ -148,7 +148,7 @@ function combine_nlopt_algs(func, dim;
       tic()
       (fmin, x, ret) = optimize(opt, x)
       t = toq()
-      println(Algs[i], " for ", round(t, 3), " s (", round(t/maxt*100.0, 2), "%), fmin = ", fmin, ", ret = ", ret)
+      println(Algs[i], " for ", round(t, digits=3), " s (", round(t/maxt*100.0, digits=2), "%), fmin = ", fmin, ", ret = ", ret)
     catch err
       println(Algs[i], " failed. Skipping...")
     end
@@ -223,7 +223,7 @@ function compare_optimizers(optimizers, problems, dim, numreps = 10;
         r = opt(problem, dim)
         t = toq()
         res = rbind(res, cbind(
-          DataFrame(Opt = optname, Prob = probname, Dim = dim, Time = round(t, 2)),
+          DataFrame(Opt = optname, Prob = probname, Dim = dim, Time = round(t, digits=2)),
           dataframe_mapper(r)
           ))
         writetable(filename, res)

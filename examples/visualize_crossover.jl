@@ -1,25 +1,25 @@
-using BlackBoxOptim, Gadfly
+using BlackBoxOptim, Plots, Random
 
 """
     plot_crossover(xover::CrossoverOperator, parents::Matrix{Float64};
                    n=5000, shuffle_parents=false)
 
-    Plot the distribution of offsprings for the crossover operator `xover`
-    and given `parents`.
+Plot the distribution of offsprings for the crossover operator `xover`
+and given `parents`.
 """
-function plot_crossover{NP,NC}(xover::CrossoverOperator{NP,NC}, parents::Matrix{Float64};
+function plot_crossover(xover::CrossoverOperator, parents::Matrix{Float64};
                         n=5000, shuffle_parents=false)
-    @assert size(parents, 2) == NP
+    @assert size(parents, 2) == numparents(xover)
     parents_pop = FitPopulation(parents, NaN)
-    parent_ixs = collect(1:NP)
-    children_mtx = hcat([hcat(apply!(xover, [Individual(size(parents, 1)) for _ in 1:NC],
-                              zeros(Int, NC), parents_pop,
+    parent_ixs = collect(1:numparents(xover))
+    children_mtx = hcat([hcat(apply!(xover, [fill!(Individual(undef, size(parents, 1)), NaN) for _ in 1:numchildren(xover)],
+                              zeros(Int, numchildren(xover)), parents_pop,
                               shuffle_parents ? shuffle(parent_ixs) : parent_ixs)...) for _ in 1:n]...)
-    plot(layer(x=parents_pop.individuals[1,:], y=parents_pop.individuals[2,:], Geom.point, # parents
-               Theme(default_color=colorant"purple", default_point_size=8.0pt, highlight_width=0pt)),
-         layer(x=children_mtx[1,:], y=children_mtx[2,:], Geom.point,
-               Theme(default_color=colorant"orange", default_point_size=1.5pt, highlight_width=0pt))
-    )
+    plot(view(children_mtx, 1, :), view(children_mtx, 2, :),
+         seriestype=:scatter, title=string(typeof(xover)), label="children",
+         markersize=1.5, markerstrokewidth=0, markercolor=colorant"orange")
+    scatter!(view(parents_pop.individuals, 1, :), view(parents_pop.individuals, 2, :),
+             markersize=5, markercolor=colorant"purple", label="parents")
 end
 
 plot_crossover(SimplexCrossover{3}(1.2),

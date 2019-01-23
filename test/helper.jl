@@ -1,5 +1,5 @@
 using BlackBoxOptim
-using Base.Test
+using Test
 
 const NumTestRepetitions = 100
 

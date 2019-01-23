@@ -1,20 +1,20 @@
-# Several genetic operators can be chained together.
+"""
+Several genetic operators chained together.
+"""
+struct OperatorPipeline <: GeneticOperator
+    ops::Vector{GeneticOperator}
 
-type OperatorPipeline <: GeneticOperator
-  ops::Vector{GeneticOperator}
-  OperatorPipeline(operators...) = begin
-    if !ensure_nargs_match(operators)
-      throw("The number of ")
+    function OperatorPipeline(operators...)
+        ensure_nargs_match(operators) || throw("The number of ")
+        new(operators)
     end
-    new(operators)
-  end
 end
 
-function apply{T <: Real}(p::OperatorPipeline, parents::Vector{Vector{T}})
-  for i in 1:length(p.ops)
-    parents = apply(p.ops[i], parents)
-  end
-  parents
+function apply(p::OperatorPipeline, parents::AbstractVector{<:AbstractVector{<:Real}})
+    for i in 1:length(p.ops)
+        parents = apply(p.ops[i], parents)
+    end
+    return parents
 end
 
 match(o1::GeneticOperator, o2::GeneticOperator) = numchildren(o1) == numparents(o2)
@@ -22,10 +22,8 @@ match(o1::GeneticOperator, o2::GeneticOperator) = numchildren(o1) == numparents(
 match(o1::GeneticOperator, o2::MutationOperator) = true
 
 function ensure_nargs_match(operators)
-  for i in 1:(length(operators)-1)
-    if !match(operators[i], operators[i+1])
-      return false
+    for i in 1:(length(operators)-1)
+        match(operators[i], operators[i+1]) || return false
     end
-  end
-  true
+    return true
 end

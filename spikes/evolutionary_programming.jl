@@ -11,9 +11,9 @@ PopulationBasedEvolutionaryProgrammingDefaultParameters = {
 # datum while the generic population-based EP is kept in a single type. This
 # way we can easily change the strategy without having to rewrite the common parts
 # throughout.
-@compat abstract type EvolutionaryProgrammingStrategy end
+abstract type EvolutionaryProgrammingStrategy end
 
-type PopulationBasedEvolutionaryProgramming <: PopulationOptimizer
+mutable struct PopulationBasedEvolutionaryProgramming <: PopulationOptimizer
   parameters::Parameters
 
   generation::Int
@@ -125,7 +125,7 @@ end
 # Specific EP variants are implemented in their own types and have the PBEP
 # structure in them
 
-type GaussianEvolutionaryProgramming <: EvolutionaryProgrammingStrategy
+mutable struct GaussianEvolutionaryProgramming <: EvolutionaryProgrammingStrategy
   pep::PopulationBasedEvolutionaryProgramming
 end
 

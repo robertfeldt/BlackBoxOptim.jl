@@ -1,10 +1,10 @@
 """
-  Simple random `IndividualsSelector`.
+Simple random `IndividualsSelector`.
 
-  The probabilties of all candidates are equal.
+The probabilties of all candidates are equal.
 """
-immutable SimpleSelector <: IndividualsSelector
+struct SimpleSelector <: IndividualsSelector
 end
 
-select(::SimpleSelector, population, numSamples::Int) =
-    rand_indexes(1:popsize(population), numSamples)
+select(::SimpleSelector, population, n::Integer) =
+    sample(1:popsize(population), n, ordered=false, replace=false)

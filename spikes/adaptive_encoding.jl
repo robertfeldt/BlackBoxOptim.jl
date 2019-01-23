@@ -1,7 +1,7 @@
-@compat abstract type CoordinateTransform end
+abstract type CoordinateTransform end
 
 # Based on the pseudo-code on page 156 in Loschchilov's PhD Thesis from 2013.
-type AdaptiveEncoding <: CoordinateTransform
+mutable struct AdaptiveEncoding <: CoordinateTransform
   n::Int
   sqrtn::Float64
   initialized::Bool
@@ -18,8 +18,8 @@ type AdaptiveEncoding <: CoordinateTransform
     c_p = 1.0 / sqrt(n)
     c_mu = c_1 = 0.5 / n
     p = zeros(n, 1)
-    C = eye(n, n)
-    B = eye(n, n)
+    C = Matrix{Float64}(I, n, n)
+    B = Matrix{Float64}(I, n, n)
     new(n, sqrt(n), false, c_p, c_mu, c_1,
       p, C, B, zeros(n, 1), zeros(n, 1))
   end
@@ -63,7 +63,7 @@ function update_transform!(ae::AdaptiveEncoding, x::Array{Float64, 2}, us::Array
 
   # Should we enforce symmetry in C?
   # tc = triu(ae.C)
-  # ae.C = tc + tc' - eye(ae.C) * diag(ae.C)
+  # ae.C = tc + tc' - Matrix{Float64}(I, ae.C, ae.C) * diag(ae.C)
 
   # Now B is the square root of the covar matrix, but faster to do eig decomposition.
   eigvalues, eigvectors = eig(ae.C)

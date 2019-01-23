@@ -1,7 +1,10 @@
 @testset "Top-level interface" begin
-    function rosenbrock(x)
-        return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
-    end
+    rosenbrock(x) = sum(i -> 100*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x)-1))
+
+    # Ensure things have compiled before we start testing:
+    bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+        MaxSteps = 10, TraceMode = :silent)
+
 
     @testset "run a simple optimization" begin
         @testset "using bboptimize() with mostly defaults" begin
@@ -102,7 +105,7 @@
 
     @testset "fitness decrease monotonically if optimizing with same optctrl repeatedly" begin
         # There was a bug in 0.3.0 that did not give monotonically decreasing
-        # fitness with repeated runs. The bug only happened for very short MaxSteps 
+        # fitness with repeated runs. The bug only happened for very short MaxSteps
         # lengths, such as 10. This test ensures it does not resurface.
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
             MaxSteps = 10, TraceMode = :silent)
@@ -114,34 +117,36 @@
     end
 
     @testset "return results after interruption" begin
+        i = 0
+        function rosenbrock_throwing(x)
+            i += 1
+            if i < 50
+                return sum(i -> 100*(x[i+1] - x[i])^2 + (x[i] - 1)^2, 1:(length(x)-1))
+            else
+                throw(InterruptException())
+            end
+        end
+        @testset ":RecoverResults on" begin
             i = 0
-            function rosenbrock_throwing(x)
-                    i += 1
-                    if i < 50
-                            return( sum( 100*( x[2:end] - x[1:end-1].^2 ).^2 + ( x[1:end-1] - 1 ).^2 ) )
-                    else
-                            throw(InterruptException())
-                    end
-            end
-            @testset ":RecoverResults on" begin
-                i = 0
-                optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-                        MaxSteps=100, TraceMode=:silent, RecoverResults=true)
-                res = bboptimize(optctrl)
-                @test BlackBoxOptim.stop_reason(res) == (@sprintf "%s" InterruptException())
-            end
+            optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+                              MaxSteps=100, TraceMode=:silent, RecoverResults=true)
+            res = bboptimize(optctrl)
+            @test BlackBoxOptim.isinterrupted(res)
+        end
 
-            @testset ":RecoverResults off" begin
-                i = 0 # reset the counter, otherwise it will throw in the setup
-                optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-                        MaxSteps=100, TraceMode=:silent, RecoverResults=false)
-                @test_throws InterruptException bboptimize(optctrl)
-            end
+        @testset ":RecoverResults off" begin
+            i = 0 # reset the counter, otherwise it will throw in the setup
+            optctrl = bbsetup(rosenbrock_throwing; SearchRange = (-5.0, 5.0), NumDimensions = 100,
+                              MaxSteps=100, TraceMode=:silent, RecoverResults=false)
+            @test_throws InterruptException bboptimize(optctrl)
+        end
     end
 
     @testset "continue running an optimization after serializing to disc" begin
+        using Serialization: serialize, deserialize
+
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
-            MaxTime = 0.5, TraceMode = :silent)
+                          MaxTime = 0.5, TraceMode = :silent)
         res1 = bboptimize(optctrl)
 
         local tempfilename = "./temp" * string(rand(1:10^8)) * ".tmp"
@@ -152,7 +157,7 @@
             end
 
             # Try to make sure its not in mem:
-            opctrl = nothing; gc()
+            opctrl = nothing; GC.gc()
 
             local ocloaded
             open(tempfilename, "r") do fh
@@ -174,13 +179,40 @@
     @testset "TargetFitness option works" begin
         # FIXME use the same (fixed?) random seed to guarantee reproducibility
         result1 = bboptimize(rosenbrock, SearchRange = (-5.0, 5.0), NumDimensions = 5,
-                                                Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
-                                                MaxSteps = 1000000, TraceMode = :silent,
-                                                TargetFitness = 0.0)
+                             Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
+                             MaxSteps = 1000000, TraceMode = :silent,
+                             TargetFitness = 0.0)
         result2 = bboptimize(rosenbrock, SearchRange = (-5.0, 5.0), NumDimensions = 5,
-                                                Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
-                                                MaxSteps = 1000000, TraceMode = :silent)
+                             Method = :de_rand_1_bin, FitnessTolerance = 1e-5,
+                             MaxSteps = 1000000, TraceMode = :silent)
         @test best_fitness(result1) < 1e-5
         @test result1.iterations < result2.iterations
+    end
+
+    @testset "callback" begin
+        global callbacktimes = Float64[]
+        function callbackfn(optctrl)
+            global callbacktimes
+            push!(callbacktimes, time())
+        end
+        interval = 0.005
+        NumCalls = 30
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
+            TraceMode = :silent, 
+            MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
+            CallbackInterval = interval, CallbackFunction = callbackfn)
+        @test length(callbacktimes) >= NumCalls
+        for i in 1:(length(callbacktimes) - 1)
+            d = (callbacktimes[i+1] - callbacktimes[i])
+            @test d >= interval
+        end
+
+        # If we call with an interval which is negative there are no callbacks
+        prenumcalls = length(callbacktimes)
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
+            TraceMode = :silent, 
+            MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
+            CallbackInterval = -2.0, CallbackFunction = callbackfn)
+        @test length(callbacktimes) == prenumcalls
     end
 end

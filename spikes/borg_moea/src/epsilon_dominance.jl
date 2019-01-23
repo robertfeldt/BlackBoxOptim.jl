@@ -56,7 +56,7 @@ end
 
 # An EpsilonBoxArchive keeps a epsilon Pareto set of the best, non-dominated solutions
 # found so far for a multi-objective search/optimization problem.
-type EpsilonBoxArchive
+mutable struct EpsilonBoxArchive
   epsilon
   numsolutions::Int
   solutions::Matrix{Float64}       # solutions in this archive, one solution per column

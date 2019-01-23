@@ -1,8 +1,8 @@
-__precompile__()
-
 module BlackBoxOptim
 
-using Distributions, StatsBase, Compat
+using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
+using SpatialIndexing
+using Printf: @printf, @sprintf
 using Compat: String, view
 
 export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
@@ -36,7 +36,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         Problems,
         OptimizationProblem, FunctionBasedProblem,
         minimization_problem,
-        name, fitness_scheme, search_space, numdims, opt_value,
+        name, fitness_scheme_type, fitness_scheme, search_space, numdims, opt_value,
         fitness_is_within_ftol, objfunc, fitness,
 
         # Problem factory/family
@@ -53,6 +53,7 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # OptimizationResults
         minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
+        archived_fitness,
 
         # OptController
         numruns, lastrun, problem,
@@ -84,10 +85,14 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         name
 
 module Utils
-  include("utilities/latin_hypercube_sampling.jl")
-  include("utilities/assign_ranks.jl")
-  include("utilities/halton_sequence.jl")
+    using Random
+
+    include("utilities/latin_hypercube_sampling.jl")
+    include("utilities/assign_ranks.jl")
+    include("utilities/halton_sequence.jl")
 end
+
+const SI = SpatialIndexing
 
 include("search_space.jl")
 include("parameters.jl")
@@ -100,6 +105,7 @@ include("frequency_adaptation.jl")
 
 include("fit_individual.jl")
 include("archive.jl")
+include("archives/dominance_cone.jl")
 include("archives/epsbox_archive.jl")
 
 include("genetic_operators/genetic_operator.jl")

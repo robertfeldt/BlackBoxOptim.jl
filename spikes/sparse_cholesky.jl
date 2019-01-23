@@ -12,7 +12,7 @@ num_reps = 10
 Ds = [0.01, 0.10, 0.50]
 
 function non_sparse_sqrtm(C, randsamples)
-  sqrtC = sqrtm(C)
+  sqrtC = sqrt(C)
   s = sqrtC * randsamples
   C + (s * s')
 end
@@ -25,7 +25,7 @@ end
 
 for n in Ns
   # Non-sparse, sqrtm
-  C = eye(n)
+  C = Matrix{Float64}(I, n, n)
   if n <= 2000
     tic()
     for rep in 1:num_reps

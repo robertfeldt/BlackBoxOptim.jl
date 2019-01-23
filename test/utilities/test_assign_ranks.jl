@@ -39,7 +39,7 @@
     @testset "Ranks correctly for a complex example testing many aspects" begin
         values = shuffle([(-11.0, :a), (1.0, :b), (1.0+1e-6, :c), (1.0-1e-6, :d), 
             (2000, :e), (3000, :f)])
-        res = BlackBoxOptim.Utils.assign_ranks_within_tolerance(values; 
+        res = BlackBoxOptim.Utils.assign_ranks_within_tolerance(values;
             tolerance = 1e-5, by = (p) -> p[1], rev = true)
         @test length(res) == length(values)
         @test res[1] == (1, (3000, :f), 3000)

@@ -2,9 +2,10 @@ Lib = "BlackBoxOptim"
 TestDir = "test"
 
 # General parameters that the user can set from the command line.
-Julia = ENV["minreps"] || "julia"
-Julia05 = "julia05"
+Julia = "julia"
 Julia06 = "julia06"
+Julia07 = "julia07"
+Julia1 = "julia1"
 MinReps = (ENV["minreps"] || 30).to_i
 MaxReps = (ENV["maxreps"] || 1000).to_i
 MaxRepTime = (ENV["maxreptime"] || 1.0).to_f
@@ -22,18 +23,15 @@ task :atest do
   sh "#{BaseCommand} test/run_autotests.jl"
 end
 
-Command = "#{Julia} --color=yes -L src/BlackBoxOptim.jl"
-Command05 = "#{Julia05} --color=yes -L src/BlackBoxOptim.jl"
-Command06 = "#{Julia06} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
+Command06 = "#{Julia06} --color=yes -L src/BlackBoxOptim.jl"
+Command07 = "#{Julia07} --depwarn=no --color=yes -L src/BlackBoxOptim.jl"
+Command1 = "#{Julia1} --color=yes -L src/BlackBoxOptim.jl"
+CommandMain = "#{Julia} --color=yes -L src/BlackBoxOptim.jl"
+Command = CommandMain
 
 desc "Run normal (fast) tests"
 task :runtest do
   sh "#{Command} test/runtests.jl"
-end
-
-desc "Run normal (fast) tests on Julia 0.6"
-task :runtest6 do
-  sh "#{Command06} test/runtests.jl"
 end
 
 desc "Run normal (fast) tests, while timing test execution"
@@ -41,14 +39,19 @@ task :timedruntest do
   sh "#{Command} test/timedruntests.jl"
 end
 
-desc "Run normal (fast) tests on Julia 0.5"
-task :runtest5 do
-  sh "#{Command05} test/runtests.jl"
+desc "Run normal (fast) tests on Julia 0.7"
+task :runtest7 do
+  sh "#{Command07} test/runtests.jl"
 end
 
-desc "Run normal (fast) tests on Julia 0.5, while timing test execution"
-task :timedruntest5 do
-  sh "#{Command05} test/timedruntests.jl"
+desc "Run normal (fast) tests on Julia 1.0"
+task :runtest1 do
+  sh "#{Command1} test/runtests.jl"
+end
+
+desc "Run normal (fast) tests on Julia 0.7, while timing test execution"
+task :timedruntest7 do
+  sh "#{Command07} test/timedruntests.jl"
 end
 
 desc "Run slow tests"
@@ -75,8 +78,7 @@ end
 
 desc "Run only the latest changed test file"
 task :t do
-  latest_changed_test_file = filter_latest_changed_files Dir["test/**/test*.jl"]
-  sh "#{Command} -e 'include(\"test/helper.jl\"); include(\"#{latest_changed_test_file.first}\")'"
+  sh "#{Command} test/runtests.jl latestchanged"
 end
 
 desc "Run and create code coverage information"
@@ -98,7 +100,6 @@ end
 
 task :at => :runalltest
 task :st => :runslowtest
-
 task :default => :runtest
 
 def loc_of_files(files)
@@ -123,6 +124,16 @@ end
 desc "Benchmark (against latest, saved set of benchmark runs)"
 task :bench do
   cd("./examples/benchmarking")
-  sh("julia runcompare.jl 10")
+  sh("#{Command} runcompare.jl examples/benchmarking 10")
   cd("../..")
+end
+
+desc "Benchmark on 0.7 (against the latest benchmark reference)"
+task :bench07 do
+  sh("#{Command07} ./examples/benchmarking/runcompare.jl examples/benchmarking 10")
+end
+
+desc "Generate benchmark reference"
+task :benchref07 do
+  sh("#{Command07} ./examples/benchmarking/runupdate.jl examples/benchmarking 10")
 end

@@ -2,19 +2,19 @@ BlackBoxOptim.jl
 ==============
 
 [![Build Status](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl.svg?branch=master)](https://travis-ci.org/robertfeldt/BlackBoxOptim.jl)
-[![Coverage Status](https://coveralls.io/repos/robertfeldt/BlackBoxOptim.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/BlackBoxOptim.jl?branch=master)
-[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.4.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
-[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.5.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
+[![Coverage Status](https://coveralls.io/repos/github/robertfeldt/BlackBoxOptim.jl/badge.svg?branch=master)](https://coveralls.io/github/robertfeldt/BlackBoxOptim.jl?branch=master)
+[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.7.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
+[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_1.0.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
 
 `BlackBoxOptim` is a global optimization package for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability. It also supports parallel evaluation to speed up optimization for functions that are slow to evaluate.
 
 # Installation
 ```julia
-Pkg.add("BlackBoxOptim")
+using Pkg; Pkg.add("BlackBoxOptim")
 ```
-or directly from github:
+or latest master directly from github:
 ```julia
-Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
+using Pkg; Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
 ```
 from a Julia repl.
 
@@ -65,7 +65,7 @@ You can find more examples of using `BlackBoxOptim` in [the examples directory](
 
 Multi-objective evaluation is supported by the BorgMOEA algorithm. Your fitness function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise the use is similar, here we optimize the Schaffer1 function:
 ```julia
-fitness_schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
+fitness_schaffer1(x) = (sum(abs2, x), sum(abs2, x .- 2.0))
 res = bboptimize(fitness_schaffer1; Method=:borg_moea,
             FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true),
             SearchRange=(-10.0, 10.0), NumDimensions=3, ϵ=0.05,

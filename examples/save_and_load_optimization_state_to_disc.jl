@@ -1,15 +1,14 @@
 using BlackBoxOptim
+using Serialization
 
 # Lets start an optimization of 2D rosenbrock
 # as in the README, then save its state to disc,
 # read it back in and continue optimization.
-function rosenbrock2d(x)
-  return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
+rosenbrock2d(x) = abs2(1.0 - x[1]) + 100.0 * abs2(x[2] - x[1]^2)
 
 # If you want to restart optimization you need to get a handle
 # to an optimization controller. Use the function bbsetup
-# instead of bboptimize, but with the same parameters. 
+# instead of bboptimize, but with the same parameters.
 # We just run it for 100 steps though:
 optctrl = bbsetup(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
     MaxSteps = 100, TraceMode = :silent);

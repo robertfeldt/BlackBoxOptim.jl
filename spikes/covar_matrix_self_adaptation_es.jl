@@ -26,7 +26,7 @@
 #
 #    sigma = 1.0                   # Mutation strength, sigma (self-adapted)
 #    sigmas = sigma * ones(1, n)
-#    C = eye(n, n)                 # Covariance matrix
+#    C = Matrix{Float64}(I, n, n)                 # Covariance matrix
 #
 #    new(n, mu, lambda, decomposeFunc, tau, tau_c,
 #      sigma, sigmas, C, decomposeFunc(C))
@@ -137,7 +137,7 @@ function cmsa_es(p;
     num_fevals += lambda
 
     # Check if best new fitness is best ever and print some info if tracing.
-    indbest = indmin(fitnesses)
+    indbest = argmin(fitnesses)
     fbest_new = fitnesses[indbest]
 
     if fbest_new < fbest
@@ -300,20 +300,20 @@ end
 
 # We create different types of Covariance matrix samplers based on different
 # decompositions.
-@compat abstract type CovarianceMatrixSampler end
+abstract type CovarianceMatrixSampler end
 
 function update_covariance_matrix!(cms::CovarianceMatrixSampler, delta, a)
   C = a * cms.C + (1 - a) * delta
   cms.C = triu(C) + triu(C,1)' # Ensure C is symmetric. Should not be needed, investigate...
 end
 
-type EigenCovarSampler <: CovarianceMatrixSampler
+mutable struct EigenCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   B::Array{Float64,2}
   diagD::Array{Float64,1}
 
   EigenCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n), ones(n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n), ones(n))
   end
 end
 
@@ -331,12 +331,12 @@ function multivariate_normal_sample(cms::CovarianceMatrixSampler, n, m)
   cms.B * (cms.diagD .* randn(n, m))
 end
 
-type CholeskyCovarSampler <: CovarianceMatrixSampler
+mutable struct CholeskyCovarSampler <: CovarianceMatrixSampler
   C::Array{Float64,2}
   sqrtC::Array{Float64,2}
 
   CholeskyCovarSampler(n) = begin
-    new(eye(n,n), eye(n,n))
+    new(Matrix{Float64}(I, n,n), Matrix{Float64}(I, n,n))
   end
 end
 

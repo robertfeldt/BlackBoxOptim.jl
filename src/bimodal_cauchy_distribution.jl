@@ -2,12 +2,12 @@ using Distributions
 
 # FIXME implement actual distribution using Distributions.MixtureModel
 """
-    A mixture of 2 Cauchy distributions.
-    Random values are further constrained to `[0.0, 1.0]` range either by
-    truncating the initial unconstrained value or by generating new random value
-    until it fits the range.
+A mixture of 2 Cauchy distributions.
+Random values are further constrained to `[0.0, 1.0]` range either by
+truncating the initial unconstrained value or by generating new random value
+until it fits the range.
 """
-immutable BimodalCauchy
+struct BimodalCauchy
     a::Cauchy
     b::Cauchy
     mix_prob::Float64
@@ -21,7 +21,7 @@ immutable BimodalCauchy
             mix_prob, clampBelow0, clampAbove1)
 end
 
-function Base.rand(distr::BimodalCauchy)
+function Random.rand(distr::BimodalCauchy)
     while true
         value = rand() < distr.mix_prob ? rand(distr.a) : rand(distr.b)
         if value >= 1.0
@@ -34,7 +34,7 @@ function Base.rand(distr::BimodalCauchy)
     end
 end
 
-function Base.rand!(distr::BimodalCauchy, A::AbstractArray)
+function Random.rand!(distr::BimodalCauchy, A::AbstractArray)
     for i in eachindex(A)
         @inbounds A[i] = rand(distr)
     end

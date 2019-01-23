@@ -12,7 +12,7 @@ function compass_search(f, n; max_fevals = 1e6, delta_tol = 1e-20,
     x = randn(n, 1)
   end
 
-  directions = [eye(n,n) -eye(n, n)]
+  directions = [Matrix{Float64}(I, n,n) -Matrix{Float64}(I, n, n)]
 
   num_fevals = 0
   fc = fbest = Inf

@@ -1,4 +1,4 @@
-type RandWalker
+mutable struct RandWalker
   i::Int
   x::Float64
   y::Float64
@@ -24,7 +24,7 @@ end
 
 function rand_walk!(rw::RandWalker)
   while true
-    print("."); flush(STDOUT);
+    print("."); flush(stdout);
     step!(rw)
     sleep(0.4 * rand())
   end

@@ -6,52 +6,49 @@
 #
 
 """
-  Generate `num` random vectors on the `n`-dimensional, unit (hyper)sphere.
-  This is the Muller-Marsaglia method as described on the page:
-    http://mathworld.wolfram.com/HyperspherePointPicking.html
+Generate `num` random vectors on the `n`-dimensional, unit (hyper)sphere.
+This is the Muller-Marsaglia method as described [here](http://mathworld.wolfram.com/HyperspherePointPicking.html).
 """
 function sample_unit_hypersphere(n, num = 1)
-  X = randn(n, num)
-  sqrootsums = 1 ./ sqrt.(sum(abs2, X, 1))
-  broadcast(*, sqrootsums, X)
+    X = randn(n, num)
+    sqrootsums = 1 ./ sqrt.(sum(abs2, X, dims=1))
+    sqrootsums .* X
 end
 
-immutable RandomDirectionGen <: DirectionGenerator
-  numDimensions::Int
-  numDirections::Int
+struct RandomDirectionGen <: DirectionGenerator
+    numDimensions::Int
+    numDirections::Int
 end
 
-function directions_for_k(rdg::RandomDirectionGen, k)
-  sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections)
-end
+directions_for_k(rdg::RandomDirectionGen, k) =
+    sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections)
 
 """
-  Generate half of the directions randomly and then
-  mirrors by negating them.
+Generate half of the directions randomly and then
+mirrors by negating them.
 """
-immutable MirroredRandomDirectionGen <: DirectionGenerator
-  numDimensions::Int
-  numDirections::Int
+struct MirroredRandomDirectionGen <: DirectionGenerator
+    numDimensions::Int
+    numDirections::Int
 
-  MirroredRandomDirectionGen(numDims, numDirections) = begin
-    if !iseven(numDirections)
-      throw(ArgumentError("the number of directions must be even"))
+    function MirroredRandomDirectionGen(numDims, numDirections)
+        iseven(numDirections) ||
+            throw(ArgumentError("the number of directions must be even"))
+        new(numDims, numDirections)
     end
-    new(numDims, numDirections)
-  end
 end
 
 function directions_for_k(rdg::MirroredRandomDirectionGen, k)
-  r = sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections÷2)
-  [r -r]
+    r = sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections÷2)
+    [r -r]
 end
 
 const DirectSearchProbabilisticDescentDefaultParameters = ParamsDict(
-  :NumDirections => 2, # This should be a function of Gamma and Phi for the GSS but 2 is often enough
+    :NumDirections => 2, # This should be a function of Gamma and Phi for the GSS but 2 is often enough
 )
 
 function direct_search_probabilistic_descent(problem::OptimizationProblem, parameters::Parameters)
-  params = chain(DirectSearchProbabilisticDescentDefaultParameters, parameters)
-  params[:DirectionGenerator] = MirroredRandomDirectionGen(numdims(problem), params[:NumDirections])
-  GeneratingSetSearcher(problem, params)
+    params = chain(DirectSearchProbabilisticDescentDefaultParameters, parameters)
+    params[:DirectionGenerator] = MirroredRandomDirectionGen(numdims(problem), params[:NumDirections])
+    GeneratingSetSearcher(problem, params)
 end

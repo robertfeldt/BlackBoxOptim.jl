@@ -4,14 +4,18 @@
 #
 function rosenbrock(x)
   n = length(x)
-  return( sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 ) )
+  return sum( 100*( x[2:n] - x[1:(n-1)].^2 ).^2 + ( x[1:(n-1)] - 1 ).^2 )
 end
+# FIXME this should be a more efficient implementation, but switching to it would reset all benchmarks
+#rosenbrock(x) = sum(i -> 100*abs2(x[i+1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x)-1))
 
 function sphere(x)
   sum(x.^2)
 end
+# FIXME this should be a more efficient implementation, but switching to it would reset all benchmarks
+#sphere(x) = sum(abs2, x)
 
-type SparseShiftedProblem
+mutable struct SparseShiftedProblem
   active_factors::Array{Int, 1}
   shift::Array{Float64, 2}
   func::Function
@@ -38,7 +42,7 @@ end
 function correlation_selection(xs, y, maxSelected)
   correlations = y' * xs'
   find_top_largest_correlations = sort(correlations[:], rev=true)[1:maxSelected]
-  index_of_largest_correlations = findin(correlations, find_top_largest_correlations)
+  index_of_largest_correlations = findall(in(find_top_largest_correlations), correlations)
   index_of_largest_correlations
 end
 
@@ -47,7 +51,7 @@ end
 function abs_correlation_selection(xs, y, maxSelected)
   correlations = abs(y' * xs')
   find_top_largest_correlations = sort(correlations[:], rev=true)[1:maxSelected]
-  index_of_largest_correlations = findin(correlations, find_top_largest_correlations)
+  index_of_largest_correlations = findall(in(find_top_largest_correlations), correlations)
   index_of_largest_correlations
 end
 
@@ -147,7 +151,7 @@ for problem in Problems
             println(csvfile, css, ",", problem, ",", dim, ",", asd, ",", gsd, ",", size, ",",
               mean(times[:,cssi]), ",",
               std(percent_missed[:,cssi]), ",", mean(percent_missed[:,cssi]))
-            flush(STDOUT)
+            flush(stdout)
           end
           ms = mean(percent_missed, 1) # ms = mean(percent_missed, 1)
           best_method = best_of_if_better(percent_missed[:,1], percent_missed[:,2], CovariateSelectionSchemes)
