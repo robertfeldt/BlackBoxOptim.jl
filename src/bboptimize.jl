@@ -34,10 +34,11 @@ function setup_problem(func::Function, parameters::Parameters)
     # validate fitness: create a random solution from the search space and ensure that fitness(problem) returns fitness_type(problem).
     ind = rand_individual(search_space(problem))
     res = fitness(ind, problem)
-    if !isa(res, fitness_type(problem))
-      throw(ArgumentError("The supplied fitness function does NOT return the expected fitness type "*
+    fitnessT = fitness_type(problem)
+    if !isa(res, fitnessT)
+      throw(ArgumentError("The supplied fitness function does NOT return the expected fitness type $(fitnessT)"*
                           "when called with a potential solution "*
-                          "(when called with $(ind) it returned $(res)) so we cannot optimize it!"))
+                          "(when called with $(ind) it returned $(res) of type $(typeof(res)) so we cannot optimize it!"))
     end
 
     return problem, parameters
