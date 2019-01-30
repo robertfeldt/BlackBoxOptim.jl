@@ -164,7 +164,7 @@
         @testset "rand_individuals(method=:latin_hypercube) samples in LHS intervals" begin
             ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
-            inds = rand_individuals_lhs(ss, 2)
+            inds = rand_individuals(ss, 2, method=:latin_hypercube)
             @test size(inds, 1) == 3
             @test size(inds, 2) == 2
 
