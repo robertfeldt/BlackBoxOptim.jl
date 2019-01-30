@@ -45,7 +45,7 @@ function check_and_create_search_space(params::Parameters)
         if isa(ss, SearchSpace)
             return ss
         elseif isa(ss, typeof([(0.0, 1.0)]))
-            return RangePerDimSearchSpace(ss)
+            return RectSearchSpace(ss)
         elseif ss == false
             # silently fallthrough to the other means of search space specification
         else
@@ -64,9 +64,9 @@ function check_and_create_search_space(params::Parameters)
             if ndim == :NotSpecified
                 throw(ArgumentError("You MUST specify NumDimensions= in a solution when giving a SearchRange=$(sr)"))
             end
-            return symmetric_search_space(params[:NumDimensions], sr)
+            return RectSearchSpace(params[:NumDimensions], sr)
         elseif isa(sr, typeof([(0.0, 1.0)]))
-            return RangePerDimSearchSpace(sr)
+            return RectSearchSpace(sr)
         else
             throw(ArgumentError("Using $(typeof(sr)) for SearchRange is not supported."))
         end

@@ -10,9 +10,9 @@ Type parameters:
 """
 abstract type TupleFitnessScheme{N,F<:Number,FA,MIN,AGG} <: FitnessScheme{FA} end
 
-@inline numobjectives(::TupleFitnessScheme{N}) where {N} = N
-@inline fitness_eltype(::TupleFitnessScheme{N,F}) where {N,F} = F
-@inline is_minimizing(::TupleFitnessScheme{N,F,FA,MIN}) where {N,F,FA,MIN} = MIN
+numobjectives(::TupleFitnessScheme{N}) where {N} = N
+fitness_eltype(::Type{<:TupleFitnessScheme{N,F}}) where {N,F} = F
+is_minimizing(::TupleFitnessScheme{N,F,FA,MIN}) where {N,F,FA,MIN} = MIN
 
 @generated nafitness(::TupleFitnessScheme{N,F,NTuple{N,F}}) where {N,F} = ntuple(_ -> convert(F, NaN), N)
 isnafitness(f::NTuple{N,F}, ::TupleFitnessScheme{N,F}) where {N,F} = any(isnan, f)

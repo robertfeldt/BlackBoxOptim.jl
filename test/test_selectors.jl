@@ -1,6 +1,6 @@
 @testset "Selection operators" begin
 
-ss = symmetric_search_space(1, (0.0, 10.0))
+ss = RectSearchSpace(1, (0.0, 10.0))
 fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", MinimizingFitnessScheme, ss)
 fake_pop = reshape(collect(1.0:10.0), (1, 10))
 

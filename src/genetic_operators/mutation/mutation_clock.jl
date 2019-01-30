@@ -1,4 +1,4 @@
-num_vars_to_next_mutation_point(probMutation) = ceil( Int, (-log(rand())) / probMutation)
+num_vars_to_next_mutation_point(probMutation) = ceil(Int, (-log(rand())) / probMutation)
 
 """
 Provides `apply()` operator that mutates one specified dimension of a parameter
@@ -18,15 +18,15 @@ end
 Uniform mutation of a parameter vector.
 """
 struct UniformMutation{SS<:SearchSpace} <: GibbsMutationOperator
-    ss::SS
+    search_space::SS
 
     UniformMutation(ss::SS) where {SS<:SearchSpace} = new{SS}(ss)
 end
 
-search_space(m::UniformMutation) = m.ss
+search_space(m::UniformMutation) = m.search_space
 
-@inline apply(m::UniformMutation, v::Number, dim::Int, target_index::Int) =
-    return (mins(m.ss)[dim] + rand() * deltas(m.ss)[dim])
+apply(m::UniformMutation, v::Number, dim::Int, target_index::Int) =
+    dimmin(search_space(m), dim) + rand() * dimdelta(search_space(m), dim)
 
 """
 Mutation clock operator is a more efficient way to mutate vectors than to generate

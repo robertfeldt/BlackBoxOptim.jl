@@ -2,7 +2,7 @@ NumTestRepetitions = 100
 
 @testset "Adaptive differential evolution optimizer" begin
 
-ss = symmetric_search_space(1, (0.0, 10.0))
+ss = RectSearchSpace(1, (0.0, 10.0))
 fake_problem = FunctionBasedProblem(x -> 0.0, "test_problem", MinimizingFitnessScheme, ss)
 
 ade = adaptive_de_rand_1_bin(fake_problem, ParamsDict(
@@ -31,11 +31,11 @@ end
 
         @test ndims(trial.params) == 1
         @test (1 <= trial.index <= popsize(ade))
-        @test in(trial.params, ade.embed.searchSpace)
+        @test in(trial.params, search_space(ade.embed))
 
         @test ndims(target.params) == 1
         @test (1 <= target.index <= popsize(ade))
-        @test in(target.params, ade.embed.searchSpace)
+        @test in(target.params, search_space(ade.embed))
 
         @test trial.index == target.index
     end

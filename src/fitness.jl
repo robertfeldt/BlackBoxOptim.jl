@@ -17,11 +17,10 @@ abstract type FitnessScheme{F} end
 
 Get the type of fitness values for fitness scheme `fs`.
 """
-fitness_type(::Type{FitnessScheme{F}}) where F = F
-fitness_type(::FitnessScheme{F}) where F = F
-fitness_type(::Type{FS}) where {FS<:FitnessScheme} = fitness_type(supertype(FS))
-fitness_eltype(::Type{FitnessScheme{F}}) where {F<:Number} = F
-fitness_eltype(::FitnessScheme{F}) where {F<:Number} = F
+fitness_type(::Type{<:FitnessScheme{F}}) where F = F
+fitness_type(fs::FitnessScheme) = fitness_type(typeof(fs))
+fitness_eltype(::Type{<:FitnessScheme{F}}) where {F<:Number} = F
+fitness_eltype(fs::FitnessScheme) = fitness_eltype(typeof(fs))
 
 # trivial convert() between calculated and archived fitness
 Base.convert(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) where F = fit
@@ -54,7 +53,7 @@ is_minimizing(::ScalarFitnessScheme{MIN}) where {MIN} = MIN
 nafitness(::Type{F}) where {F<:Number} = convert(F, NaN)
 @inline nafitness(fs::FitnessScheme) = nafitness(fitness_type(fs))
 isnafitness(f::F, ::RatioFitnessScheme{F}) where {F<:Number} = isnan(f)
-numobjectives(::RatioFitnessScheme{F}) where {F<:Number} = 1
+numobjectives(::RatioFitnessScheme) = 1
 
 """
 Aggregation is just the identity function for scalar fitness.

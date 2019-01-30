@@ -13,7 +13,7 @@
 
     p2 = instantiate(p, 3)
     @test numdims(p2) == 3
-    @test ranges(search_space(p2)) == [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
+    @test dimrange(search_space(p2)) == [(-100.0, 100.0), (-100.0, 100.0), (-100.0, 100.0)]
 end
 
 @testset "Schwefel2.22" begin
@@ -29,7 +29,7 @@ end
 
     p2 = instantiate(p, 4)
     @test numdims(p2) == 4
-    @test ranges(search_space(p2)) == [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
+    @test dimrange(search_space(p2)) == [(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)]
 end
 
 @testset "Schwefel1.2" begin

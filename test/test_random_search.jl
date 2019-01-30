@@ -6,7 +6,7 @@
         min = rand(1:123)
         range = (min * rand(), min + rand() * min)
 
-        ss = BlackBoxOptim.symmetric_search_space(dims, range)
+        ss = RectSearchSpace(dims, range)
         opt = BlackBoxOptim.random_search(ss)
 
         res1 = BlackBoxOptim.ask(opt)
