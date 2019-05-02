@@ -131,7 +131,7 @@ function ParallelEvaluator(
                      ch = Channel{ParallelEvaluatorWorker{P}}(1)
                      put!(ch, ParallelEvaluatorWorker(copy(problem)))
                      ch
-                   end, pid) for pid in pids],
+                   end, myid()) for pid in pids],
         ParallelEvaluationState(fs, length(pids))
     )
 end
