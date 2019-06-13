@@ -96,7 +96,7 @@ bbfree=bboptimize(opt_free);
 bsfix=fixvalues(best_candidate(bbfix), problemfixed,dims) # then is our best solution to the general DAE problem with a fixed param.
 bsfree=best_candidate(bbfree) # then is our best solution to the general DAE problem with full freedom.
 
-Note that within error bsfix and bs free are equal
+# Note that within error bsfix and bs free are equal
 
 (bsfree, origfitness(bsfree)), (bsfix, origfitness(bsfix))
 
