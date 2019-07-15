@@ -116,7 +116,7 @@
         dc = DictChain(d1, d2, d3)
         iob = IOBuffer()
         show(iob, dc)
-        @test String(take!(iob)) == "BlackBoxOptim.DictChain{Symbol,$Int}[Dict(:a=>1),Dict(:a=>2,:b=>4),Dict(:a=>3,:b=>5)]"
+        @test replace(String(take!(iob)), ' '=>"") == "BlackBoxOptim.DictChain{Symbol,$Int}[Dict(:a=>1),Dict(:a=>2,:b=>4),Dict(:a=>3,:b=>5)]"
     end
 
     @testset "flatten" begin
