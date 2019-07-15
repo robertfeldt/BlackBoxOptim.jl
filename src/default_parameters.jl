@@ -97,7 +97,7 @@ function check_valid!(params::Parameters)
             throw(ArgumentError("MaxFuncEvals parameter MUST be a non-negative integer"))
         elseif params[:MaxFuncEvals] > 0.0
             if params[:MaxFuncEvals] >= 1e8
-                @warn("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG   time")
+                @warn("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
             end
             params[:MaxFuncEvals] = convert(Int, params[:MaxFuncEvals])
             params[:MaxSteps] = 0
