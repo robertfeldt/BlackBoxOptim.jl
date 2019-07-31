@@ -124,7 +124,7 @@ This list is not complete though, please refer to the `examples` and `tests` dir
   - Exponential NES: `xnes`
   - Distance-weighted Exponential NES: `dxnes`
 * Differential Evolution optimizers, 5 different:
-  - Adaptive DE/rand/1/bin: `de_rand_1_bin`
+  - Adaptive DE/rand/1/bin: `adaptive_de_rand_1_bin`
   - Adaptive DE/rand/1/bin with radius limited sampling: `adaptive_de_rand_1_bin_radiuslimited`
   - DE/rand/1/bin: `de_rand_1_bin`
   - DE/rand/1/bin with radius limited sampling (a type of trivial geography): `de_rand_1_bin_radiuslimited`
