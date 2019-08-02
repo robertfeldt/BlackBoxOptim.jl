@@ -29,14 +29,14 @@ defined by some Julia `Function` and search space.
 Optionally, a known optimal value could be provided to terminate
 the optimization once it is reached.
 """
-mutable struct FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: OptimizationProblem{FS}
-    objfunc::Function     # Objective function
+mutable struct FunctionBasedProblem{F,FS<:FitnessScheme,SS<:SearchSpace,FO} <: OptimizationProblem{FS}
+    objfunc::F            # Objective function
     name::String
     fitness_scheme::FS
     search_space::SS      # search space
     opt_value::FO         # known optimal value or nothing
 
-    function FunctionBasedProblem(objfunc::Function, name::String,
+    function FunctionBasedProblem(objfunc, name::String,
                                   fitness_scheme::FS, search_space::SS,
                                   opt_value::FO = nothing) where {FS<:FitnessScheme,SS<:SearchSpace,FO}
         if FO <: Number
@@ -47,7 +47,7 @@ mutable struct FunctionBasedProblem{FS<:FitnessScheme,SS<:SearchSpace,FO} <: Opt
                 #throw(ArgumentError("Known optimal value cannot be NA"))
             end
         end
-        new{FS,SS,typeof(opt_value)}(objfunc, name, fitness_scheme, search_space, opt_value)
+        new{typeof(objfunc),FS,SS,typeof(opt_value)}(objfunc, name, fitness_scheme, search_space, opt_value)
     end
 end
 

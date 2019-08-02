@@ -198,7 +198,7 @@
         interval = 0.005
         NumCalls = 30
         res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
-            TraceMode = :silent, 
+            TraceMode = :silent,
             MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
             CallbackInterval = interval, CallbackFunction = callbackfn)
         @test length(callbacktimes) >= NumCalls
@@ -210,9 +210,16 @@
         # If we call with an interval which is negative there are no callbacks
         prenumcalls = length(callbacktimes)
         res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 20,
-            TraceMode = :silent, 
+            TraceMode = :silent,
             MaxTime = 1.0 + interval * NumCalls, # Some extra time for startup/compilation etc
             CallbackInterval = -2.0, CallbackFunction = callbackfn)
         @test length(callbacktimes) == prenumcalls
+    end
+
+    @testset "callable as objective" begin
+        struct CallableObjective1 end
+        (::CallableObjective1)(x) = sum(abs2, x)
+        res = bboptimize(CallableObjective1(); SearchRange = [(-2.0, 3.0), (-4.0, 5.0)])
+        @test best_candidate(res) ≈ zeros(2) atol = 1e-5
     end
 end

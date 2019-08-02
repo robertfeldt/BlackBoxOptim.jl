@@ -23,7 +23,7 @@ function setup_problem(family::FunctionBasedProblemFamily, parameters::Parameter
     return problem, parameters
 end
 
-function setup_problem(func::Function, parameters::Parameters)
+function setup_problem(func, parameters::Parameters)
     ss = check_and_create_search_space(parameters)
 
     # Now create an optimization problem with the given information. We currently reuse the type
