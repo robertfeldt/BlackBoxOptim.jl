@@ -24,7 +24,7 @@ res = bboptimize(rosenbrock;
         PopulationSize=10, MaxFuncEvals=MaxFuncEvals,
         CallbackFunction = callback_progress_stepper, 
         CallbackInterval = 0.0,
-        TraceMode = :silent # So that output from BBO doesn't interfer with progress bar...
+        TraceMode = :silent # So that output from BBO doesn't interfere with progress bar...
 );
 
 # We can adapt this to other use cases (such as max time etc) by keeping track of start time
