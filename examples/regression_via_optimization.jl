@@ -18,8 +18,10 @@
 # we select. Common to many of them is that they first calculate the deviances
 # between the model and the actual values the model should predict:
 function discrepancies(betas, x, y)
-  y' .- ( betas[1] + sum(broadcast(*, betas[2:end], x), 1) )
+  y' .- ( betas[1] .+ sum(broadcast(*, betas[2:end], x), dims=1) )
 end
+
+using LinearAlgebra
 
 # Given this setup we can now create an objective function for
 # Ordinare Least Squares (OLS) regression. This is actually just the L2 norm:
@@ -90,6 +92,7 @@ ridgeres2 = regularized_opt(2, ridge_regression_objective, x1, y1, 4)
 ridgeres3 = regularized_opt(3, ridge_regression_objective, x1, y1, 4)
 
 # Now lets create some support functions for printing models nicely.
+using Printf
 linear_terms(num) = [@sprintf(" * X%d", i) for i in 1:num]
 squared_terms(num) = [@sprintf(" * X%d^2", i) for i in 1:num]
 linsq_terms(num) = vcat(linear_terms(num), squared_terms(num))
