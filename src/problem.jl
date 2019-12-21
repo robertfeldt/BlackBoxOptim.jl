@@ -67,8 +67,8 @@ Base.copy(p::FunctionBasedProblem) =
 opt_value(p::FunctionBasedProblem) = p.opt_value
 
 # checks if the optimal fitness is reached for bounded scalar problem
-fitness_is_within_ftol(p::FunctionBasedProblem{<:FitnessScheme, <:SearchSpace, <:Number},
-                       fitness, atol::Number) = norm(opt_value(p) - fitness) < atol
+fitness_is_within_ftol(p::FunctionBasedProblem, fitness::Number, atol::Number) = 
+    isnothing(opt_value(p)) ? false : (abs(opt_value(p) - fitness) < atol)
 
 # no check for unbounded problem (by default, see the definition for OptimizationProblem above)
 # fitness_is_within_ftol{FS,SS}(p::FunctionBasedProblem{FS,SS,Void}, fitness::Number, atol::Number) = true
