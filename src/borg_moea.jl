@@ -238,17 +238,30 @@ function acquire_mutant(alg::BorgMOEA, ix::Int, last_nonmutant::Int)
     apply!(alg.modify, mutant.params, ix)
     # project using the archived individual as the reference
     apply!(alg.embed, mutant.params, alg.population, rand(1:last_nonmutant))
-    mutant
+    return mutant
 end
 
-function populate_by_mutants(alg::BorgMOEA, last_nonmutant::Int)
-    popsz = popsize(alg.population)
-    for i in (last_nonmutant+1):popsz
-        mutant = acquire_mutant(alg, i, last_nonmutant)
-        update_fitness!(alg.evaluator, mutant)
+"""
+Iterates the mutants.
+"""
+struct BorgMutantsIterator{P<:PopulationWithFitness, A<:BorgMOEA} <: AbstractPopulationCandidatesIterator{P}
+    alg::A
+    last_nonmutant::Int
+
+    BorgMutantsIterator(alg::A, last_nonmutant::Int) where A<:BorgMOEA =
+        new{typeof(alg.population), A}(alg, last_nonmutant)
+end
+
+Base.IteratorSize(::Type{<:BorgMutantsIterator}) = Base.HasLength()
+Base.length(it::BorgMutantsIterator) = popsize(it.alg.population) - it.last_nonmutant
+
+Base.iterate(it::BorgMutantsIterator, ix::Integer = it.last_nonmutant) =
+    ix < popsize(it.alg.population) ? (acquire_mutant(it.alg, ix+1, it.last_nonmutant), ix+1) : nothing
+
+populate_by_mutants(alg::BorgMOEA, last_nonmutant::Integer) =
+    update_fitness!(alg.evaluator, BorgMutantsIterator(alg, last_nonmutant)) do mutant
         accept_candi!(alg.population, mutant)
     end
-end
 
 """
 Restart Borg MOEA.
