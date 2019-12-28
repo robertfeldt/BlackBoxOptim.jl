@@ -54,6 +54,26 @@ function evaluator_tests(make_eval::Function)
     end
 end
 
+function multiobj_evaluator_tests(make_eval::Function)
+    @testset "multi-objective problem" begin
+        schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
+        p = BlackBoxOptim.FunctionBasedProblem(schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing=true),
+                                               RectSearchSpace(5, (-10.0, 10.0)))
+        a = EpsBoxArchive(EpsBoxDominanceFitnessScheme(fitness_scheme(p)), max_size=100)
+
+        e = make_eval(p, a)
+        fit1 = fitness([0.0, 1.0, 2.0, 3.0, 4.0], e)
+        @test BlackBoxOptim.num_evals(e) == 1
+        @test BlackBoxOptim.last_fitness(e) == fit1.orig
+
+        fit2 = fitness([0.0, -1.0, -2.0, -3.0, -4.0], e)
+        @test BlackBoxOptim.num_evals(e) == 2
+        @test BlackBoxOptim.last_fitness(e) == fit2.orig
+
+        BlackBoxOptim.shutdown!(e)
+    end
+end
+
 @testset "Evaluator" begin
     # Set up a small example problem
     f(x) = sum(abs2, x)
@@ -79,6 +99,7 @@ end
         using Distributed
 
         evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
+        multiobj_evaluator_tests((p, a) -> BlackBoxOptim.ParallelEvaluator(p, a))
     end
 
 end
