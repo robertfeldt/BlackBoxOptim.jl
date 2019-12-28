@@ -213,3 +213,46 @@ function population(problem::OptimizationProblem,
         throw(ArgumentError("\"Population\" parameter is of unsupported type: $(typeof(pop))"))
     end
 end
+
+"""
+Iterator of the population individuals as `Candidate{F}` object.
+"""
+abstract type AbstractPopulationCandidatesIterator{P<:PopulationWithFitness} end
+
+fitness_type(::Type{<:AbstractPopulationCandidatesIterator{P}}) where P = fitness_type(P)
+fitness_type(::T) where T<:AbstractPopulationCandidatesIterator = fitness_type(T)
+
+Base.IteratorEltype(::Type{<:AbstractPopulationCandidatesIterator}) = Base.HasEltype()
+Base.eltype(itt::Type{<:AbstractPopulationCandidatesIterator{P}}) where P = candidate_type(population_type(P))
+Base.eltype(::T) where T<:AbstractPopulationCandidatesIterator = eltype(T)
+
+"""
+Iterates the candidates of population.
+"""
+struct PopulationCandidatesIterator{P<:PopulationWithFitness, F} <: AbstractPopulationCandidatesIterator{P}
+    pop::P
+    nafitness::F
+
+    PopulationCandidatesIterator(pop::PopulationWithFitness, nafitness::F = nothing) where F =
+        new{typeof(pop), F}(pop, nafitness)
+
+    PopulationCandidatesIterator(pop::FitPopulation; skipHasFitness::Bool=false) =
+        PopulationCandidatesIterator(pop, skipHasFitness ? nothing : pop.nafitness)
+end
+
+Base.IteratorSize(::Type{<:PopulationCandidatesIterator}) = Base.SizeUnknown()
+Base.IteratorSize(::Type{<:PopulationCandidatesIterator{<:Any, Nothing}}) = Base.HasLength()
+Base.length(it::PopulationCandidatesIterator{<:Any, Nothing}) = popsize(it.pop)
+
+Base.iterate(it::PopulationCandidatesIterator{<:Any, Nothing}, ix::Integer = 0) =
+    ix < length(it) ? (acquire_candi(it.pop, ix+1), ix+1) : nothing
+
+function Base.iterate(it::PopulationCandidatesIterator, ix::Integer = 0)
+    while ix < popsize(it.pop)
+        ix += 1
+        if isequal(fitness(it.pop, ix), it.nafitness)
+            return (acquire_candi(it.pop, ix), ix)
+        end
+    end
+    return nothing
+end
