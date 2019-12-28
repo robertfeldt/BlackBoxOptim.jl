@@ -12,6 +12,11 @@ fitness.
 """
 abstract type PopulationWithFitness{F} <: Population end
 
+fitness_type(::Type{<:PopulationWithFitness{F}}) where F = F
+fitness_type(pop::PopulationWithFitness) = fitness_type(typeof(pop))
+candidate_type(::Type{P}) where P<:PopulationWithFitness = Candidate{fitness_type(P)}
+candidate_type(pop::PopulationWithFitness) = candidate_type(typeof(pop))
+
 const AbstractPopulationMatrix = AbstractMatrix{Float64}
 
 """
@@ -121,9 +126,6 @@ function Base.append!(pop::FitPopulation{F}, extra_pop::FitPopulation{F}) where 
     append!(pop.fitness, extra_pop.fitness)
     return pop
 end
-
-fitness_type(pop::FitPopulation{F}) where {F} = F
-candidate_type(pop::FitPopulation{F}) where {F} = Candidate{F}
 
 """
     acquire_candi(pop::FitPopulation[, {ix::Int, candi::Candidate}])
