@@ -209,17 +209,13 @@ function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
     end
 end
 
-function update_population_fitness!(alg::BorgMOEA)
-    fs = fitness_scheme(alg.evaluator.archive)
-    for i in 1:popsize(alg.population)
-        if isnafitness(fitness(alg.population, i), fs)
-            candi = acquire_candi(alg.population, i)
-            update_fitness!(alg.evaluator, candi)
-            alg.population.fitness[candi.index] = candi.fitness
-            release_candi(alg.population, candi)
-        end
+update_population_fitness!(alg::BorgMOEA) =
+    update_fitness!(alg.evaluator,
+                    PopulationCandidatesIterator(alg.population,
+                                                 alg.population.nafitness)) do candi
+        alg.population.fitness[candi.index] = candi.fitness
+        release_candi(alg.population, candi)
     end
-end
 
 """
 Update recombination operator probabilities based on the archive tag counts.
