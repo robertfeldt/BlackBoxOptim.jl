@@ -51,16 +51,14 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
     results::Dict{Int, Candidate{FA}} # yet unclaimed candidates with calculated fitness
 
     done_workers::Channel{Int}
-    busy_workers::Base.Semaphore   # gets acquired when a worker needs to be assigned to a task;
-                                   # used to organize waiting when all workers are busy
-    #job_assignment::ReentrantLock # workers assignment critical section
+    #busy_workers::Base.Semaphore   # gets acquired when a worker needs to be assigned to a task;
+    #                               # used to organize waiting when all workers are busy
+    #job_assignment::ReentrantLock  # workers assignment critical section
 
     done_jobids::SlidingBitset      # ids of completed jobs
     next_jobid::Threads.Atomic{Int} # ID to assign for the next job
 
     is_stopping::Bool       # whether the evaluator is in the shutdown sequence
-
-    workers_listener::Task  # task in the main process that runs workers_listener!()
 
     function MultithreadEvaluator(
         problem::P, archive::A;
@@ -79,10 +77,9 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
             Vector{MTEvaluatorWorker{FA}}(),
             #Condition(), ReentrantLock(),
             Dict{Int, Candidate{FA}}(),
-            Channel{Int}(10*nworkers), Base.Semaphore(nworkers), #ReentrantLock(),
+            Channel{Int}(10*nworkers), #Base.Semaphore(nworkers), #ReentrantLock(),
             SlidingBitset(), Threads.Atomic{Int}(1),
-            false,
-            @async workers_listener!(eval) # create listener before workers
+            false
         )
         create_workers!(eval, nworkers)
 
@@ -104,10 +101,10 @@ archfitness_type(::Type{<:MultithreadEvaluator{F,FA}}) where {F, FA} = FA
 archfitness_type(eval::MultithreadEvaluator) = archfitness_type(typeof(eval))
 
 nworkers(eval::MultithreadEvaluator) = length(eval.workers)
-queue_capacity(eval::MultithreadEvaluator) = nworkers(eval)
-nbusyworkers(eval::MultithreadEvaluator) = eval.busy_workers.curr_cnt
+#queue_capacity(eval::MultithreadEvaluator) = nworkers(eval)
+#nbusyworkers(eval::MultithreadEvaluator) = eval.busy_workers.curr_cnt
 
-is_stopping(eval::MultithreadEvaluator) = eval.is_stopping || istaskdone(eval.workers_listener)
+is_stopping(eval::MultithreadEvaluator) = eval.is_stopping
 
 # Create and run the evaluator worker.
 # It runs in the separate thread than the master process.
@@ -191,8 +188,6 @@ function shutdown!(eval::MultithreadEvaluator)
     end
     # resume workers listener if it is waiting for the new jobs
     put!(eval.done_workers, 0)
-    wait(eval.workers_listener)
-    @assert istaskdone(eval.workers_listener) "Workers listener is still running"
     # make sure all the workers tasks are done
     for (i, worker) in enumerate(eval.workers)
         if isrunning(worker)
@@ -205,63 +200,48 @@ function shutdown!(eval::MultithreadEvaluator)
     @info "shutdown!(MultithreadEvaluator): all $(nworkers(eval)) workers stopped"
 end
 
-# Process all incoming fitness completion (or any other) notifications from the workers
-# until the evaluator is stopped.
+# Wait until the first incoming fitness completion (or any other) notification from any worker.
 # Completed worker is made available again, the candidate is put to the results,
 # and its fitness is put to the archive
-function workers_listener!(eval::MultithreadEvaluator)
-    @info "MultithreadEvaluator: workers_listener!() started"
-    workers_ok = true
-    try while workers_ok & !is_stopping(eval)
-        #@debug "workers_listener!(): yield to other tasks"
-        # avoid yielding when all workers are busy, since the main task may
-        # be waiting on busy_workers for the worker to be released,
-        # which would result in deadlock
-        (nbusyworkers(eval) < nworkers(eval)) && !isempty(eval.results) && yield()
+function wait_workers!(eval::MultithreadEvaluator)
+    #@debug "check_workers!(): taking next done worker..."
+    workerix = take!(eval.done_workers)
+    if workerix <= 0
+        @debug "check_workers!(): got worker #$workerix, stopping"
+        return false
+    end
 
-        #@debug "workers_listener!(): taking next done worker..."
-        workerix = take!(eval.done_workers)
-        workerix > 0 || continue # skip stop signal
-        worker = eval.workers[workerix]
-        if worker.status == MEStatus_Success # communication in normal state, update the archive
-            #@debug "workers_listener!(): worker #$workerix jobid=$(worker.jobid) success"
-            @assert worker.candi !== nothing
-            candi = worker.candi
-            #@debug "workers_listener!(): store jobid=#$(worker.jobid) result"
-            #lock(eval.results_lock)
-            push!(eval.done_jobids, worker.jobid)
-            eval.results[worker.jobid] = candi
-            if length(eval.results) > 10*nworkers(eval)
-                @warn "$(length(eval.results)) unclaimed result(s)"
-            end
-            #unlock(eval.results_lock)
-            #@debug "workers_listener!(): notify new result"
-            #notify(eval.new_result)
-        else
-            @debug "workers_listener!(): worker #$workerix jobid=#$(worker.jobid) status=$(worker.status), stopping"
-            workers_ok = false
-            candi = nothing
-        end
-        #@debug "workers_listener!(): making worker #$workerix available for assignments"
-        #lock(eval.job_assignment)
-        if worker.status == MEStatus_Success
-            worker.status = MEStatus_Available
-        end
+    worker = eval.workers[workerix]
+    if worker.status != MEStatus_Success # communication not in a normal state
+        @warn "check_workers!(): worker #$workerix jobid=#$(worker.jobid) status=$(worker.status), shutting down"
         worker.jobid = 0
         worker.candi = nothing
-        #unlock(eval.job_assignment)
-        Base.release(eval.busy_workers)
-        if candi !== nothing
-            #@debug "workers_listener!(): add_candidate(archive)"
-            add_candidate!(eval.archive, candi.fitness, candi.params, candi.tag, num_evals(eval))
-            #@debug "workers_listener!(): add_candidate(archive) done"
-        end
+        shutdown!(eval)
+        return false
     end
-    catch ex
-        @warn "workers_listener!(): got exception, stopping" exception=ex
-        rethrow(ex)
+
+    #@debug "check_workers!(): worker #$workerix jobid=$(worker.jobid) success"
+    @assert worker.candi !== nothing
+    candi = worker.candi
+    #@debug "check_workers!(): store jobid=#$(worker.jobid) result"
+    #lock(eval.results_lock)
+    push!(eval.done_jobids, worker.jobid)
+    eval.results[worker.jobid] = candi
+    if length(eval.results) > 10*nworkers(eval)
+        @warn "$(length(eval.results)) unclaimed result(s)"
     end
-    @info "MultithreadEvaluator: workers_listener!() stopped normally"
+    #unlock(eval.results_lock)
+    #@debug "check_workers!(): notify new result"
+    #notify(eval.new_result)
+    #lock(eval.job_assignment)
+    worker.status = MEStatus_Available
+    worker.jobid = 0
+    worker.candi = nothing
+    #unlock(eval.job_assignment)
+    #@debug "check_workers!(): add_candidate(archive)"
+    add_candidate!(eval.archive, candi.fitness, candi.params, candi.tag, num_evals(eval))
+    #@debug "check_workers!(): add_candidate(archive) done"
+    return true
 end
 
 function async_update_fitness(
@@ -276,14 +256,16 @@ function async_update_fitness(
         @debug "async_update_fitness(jobid=$jobid?): don't recalculate fitness, quit"
         return 0 # the candidate has fitness, skip recalculation
     end
-    if nbusyworkers(eval) >= nworkers(eval) && !wait
-        @debug "async_update_fitness(jobid=$jobid?): queue is full, quit"
-        return -1 # queue full, job not submitted
+    if !any(isavailable, eval.workers)
+        if wait
+            #@debug "async_update_fitness(): wait for the completed jobs..."
+            wait_workers!(eval) || return -2
+            #@debug "async_update_fitness(): done waiting"
+        else
+            @debug "async_update_fitness(jobid=$jobid?): queue is full, quit"
+            return -1 # queue full, job not submitted
+        end
     end
-    #@debug "async_update_fitness(jobid=$jobid?): sem_size=$(eval.busy_workers.sem_size) cur_count=$(eval.busy_workers.curr_cnt)"
-    #@debug "async_update_fitness(jobid=$jobid?): waiting to assign jobid..."
-    Base.acquire(eval.busy_workers)
-    #@debug "async_update_fitness(jobid=$jobid?): sem_size=$(eval.busy_workers.sem_size) cur_count=$(eval.busy_workers.curr_cnt)"
     #lock(eval.job_assignment)
     #@debug "worker statuses: $([(worker.status, length(worker.jobid_chan.data)) for worker in eval.workers])"
     workerix = Base.findfirst(isavailable, eval.workers)
@@ -300,7 +282,6 @@ function async_update_fitness(
     #unlock(eval.job_assignment)
 
     #@debug "async_update_fitness(jobid=$jobid): job assigned"
-    #yield() # dispatch the job ASAP, without this it's not getting queued
     return jobid
 end
 
@@ -325,7 +306,7 @@ end
 
 function sync_update_fitness!(f::Any, eval::MultithreadEvaluator, jobids::Any)
     while !is_stopping(eval) && !isempty(jobids) &&
-          (nbusyworkers(eval) > 0 || !isempty(eval.results))
+          (any(isrunning, eval.workers) || !isempty(eval.results))
         #@debug "sync_update_fitness!(): jobids=$jobids"
         # pick up the candidates that are for us
         claim_calculated!(eval) do jobid, candi
@@ -335,16 +316,14 @@ function sync_update_fitness!(f::Any, eval::MultithreadEvaluator, jobids::Any)
             end
             return our_job
         end
-        # switch to listener if all the workers are busy or all the candidates queued
-        if !is_stopping(eval) && !isempty(jobids) && (nbusyworkers(eval) > 0)
-            #@debug "sync_update_fitness!(): yield to listener..."
-            yield()
-            # waiting for new result is not a good idea, since, apparently,
-            # combined with waiting in the listener it will result in a deadlock
-            #@debug "sync_update_fitness!(): wait for any of $n_queued job(s)..."
-            #wait(eval.new_result)
+        # wait if all the workers are busy or all the candidates queued
+        if !is_stopping(eval) && !isempty(jobids) && any(isrunning, eval.workers)
+            #@debug "sync_update_fitness!(): wait for the completed jobs..."
+            wait_workers!(eval)
+            #@debug "sync_update_fitness!(): waiting done"
         end
     end
+    return nothing
 end
 
 function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any;
@@ -381,15 +360,12 @@ function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any;
             end
             next = iterate(candidates, state)
         end
-        # switch to listener if all the workers are busy or all the candidates queued
+        # wait if all the workers are busy or all the candidates queued
         if !is_stopping(eval) && n_queued > 0 &&
-           (next === nothing || nbusyworkers(eval) >= nworkers(eval))
-            #@debug "update_fitness!(): yield to listener..."
-            yield()
-            # waiting for new result is not a good idea, since, apparently,
-            # combined with waiting in the listener it will result in a deadlock
-            #@debug "update_fitness!(): wait for any of $n_queued job(s)..."
-            #wait(eval.new_result)
+           (next === nothing || !any(isavailable, eval.workers))
+            #@debug "update_fitness!(): wait for the completed jobs..."
+            wait_workers!(eval)
+            #@debug "update_fitness!(): waiting done"
         end
     end
     @assert (Base.IteratorSize(typeof(candidates)) === Base.HasLength() ?
@@ -404,17 +380,16 @@ function fitness(params::Individual, eval::MultithreadEvaluator{F,FA}, tag::Int=
     candi = Candidate{FA}(params, -1, eval.arch_nafitness, nothing, tag)
     jobid = async_update_fitness(eval, candi, wait=true)
     @assert jobid > 0
-    @debug "fitness(): is_stopping=$(is_stopping(eval)) busy_workers=$(nbusyworkers(eval)) has_results=$(!isempty(eval.results))"
+    @debug "fitness(): is_stopping=$(is_stopping(eval)) has_busy_workers=$(any(isrunning, eval.workers)) has_results=$(!isempty(eval.results))"
     while !is_stopping(eval) && !all(isavailable, eval.workers)
         if is_fitness_ready(eval, jobid)
             break
         else
-            #@debug "fitness(): job #$jobid yield()"
-            #wait(eval.new_result)
-            yield()
+            #@debug "fitness(): job #$jobid wait for workers"
+            wait_workers!(eval)
             #@debug "fitness(): job #$jobid resumed"
         end
-        #@debug "fitness(): is_stopping=$(is_stopping(eval)) busy_workers=$(nbusyworkers(eval)) has_results=$(!isempty(eval.results))"
+        #@debug "fitness(): is_stopping=$(is_stopping(eval)) has_busy_workers=$(any(isrunning, eval.workers)) has_results=$(!isempty(eval.results))"
     end
     if is_fitness_ready(eval, jobid)
         #@debug "fitness(): job #$jobid done"
