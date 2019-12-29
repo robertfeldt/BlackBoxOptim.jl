@@ -115,6 +115,7 @@ include("genetic_operators/genetic_operator.jl")
 
 include("evaluator.jl")
 include("parallel_evaluator.jl")
+include("multithread_evaluator.jl")
 
 include("population.jl")
 include("optimizer.jl")

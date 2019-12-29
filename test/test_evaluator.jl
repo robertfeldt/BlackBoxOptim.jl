@@ -102,4 +102,13 @@ end
         multiobj_evaluator_tests((p, a) -> BlackBoxOptim.ParallelEvaluator(p, a))
     end
 
+    @testset "MultithreadEvaluator" begin
+        if Threads.nthreads() > 1
+            evaluator_tests(() -> BlackBoxOptim.MultithreadEvaluator(p))
+            multiobj_evaluator_tests((p, a) -> BlackBoxOptim.MultithreadEvaluator(p, a))
+        else
+            @warn "MultithreadEvaluator tests require >1 threads, $(Threads.nthreads()) found, use JULIA_NUM_THREADS"
+            @test_skip Threads.nthreads() > 1
+        end
+    end
 end
