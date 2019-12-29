@@ -15,6 +15,43 @@ problem_summary(e::Evaluator) = "$(name(e.problem))_$(numdims(e))d"
 shutdown!(e::Evaluator) = e # do nothing
 
 """
+    update_fitness!([f], eval::Evaluator, candidate::Candidate; force::Bool=false) -> Candidate
+
+Calculate fitness of `candidate` and optionally apply `f`.
+`force` specifies whether to re-evaluate fitness, if the candidate already has non-NA one.
+"""
+function update_fitness!(f::Any, e::Evaluator, candidate::Candidate; force::Bool=false)
+    # evaluate fitness if not known yet
+    if force || isnafitness(candidate.fitness, fitness_scheme(e.archive))
+        candidate.fitness = fitness(candidate.params, e, candidate.tag)
+        (f !== nothing) && f(candidate)
+    end
+    return candidate
+end
+
+update_fitness!(e::Evaluator, candidate::Candidate; force::Bool=false) =
+    update_fitness!(nothing, e, candidate, force=force)
+
+"""
+    update_fitness!([f], eval::Evaluator, candidates; force::Bool=false)
+
+Calculate fitness of `candidates` and optionally apply `f` to each processed one.
+`force` specifies if already existing non-NA fitnesses should be re-evaluated.
+"""
+function update_fitness!(f::Any, e::Evaluator, candidates::Any; force::Bool=false)
+    fs = fitness_scheme(e.archive)
+    for candi in candidates
+        if force || isnafitness(fitness(candi), fs)
+            update_fitness!(f, e, candi)
+        end
+    end
+    return candidates
+end
+
+update_fitness!(e::Evaluator, candidates::Any; force::Bool=false) =
+    update_fitness!(nothing, e, candidates, force=force)
+
+"""
 Default implementation of the `Evaluator`.
 
 `FP` is the original problem's fitness type
@@ -78,21 +115,6 @@ function best_of(candidate1::Individual, candidate2::Individual, e::Evaluator)
     else
         return candidate2, f2
     end
-end
-
-function update_fitness!(e::ProblemEvaluator{FP,FA}, candidate::Candidate{FA}) where {FP,FA}
-    # evaluate fitness if not known yet
-    if isnafitness(candidate.fitness, fitness_scheme(e.archive))
-        candidate.fitness = fitness(candidate.params, e, candidate.tag)
-    end
-    return candidate
-end
-
-function update_fitness!(e::ProblemEvaluator{FP,FA}, candidates::AbstractVector{Candidate{FA}}) where {FP,FA}
-    @inbounds for candidate in candidates
-        update_fitness!(e, candidate)
-    end
-    return candidates
 end
 
 function rank_by_fitness!(e::Evaluator, candidates::AbstractVector{<:Candidate})
