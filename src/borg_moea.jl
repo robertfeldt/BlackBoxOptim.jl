@@ -14,6 +14,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     last_restart_check::Int
     last_restart::Int
     last_wrecombinate_update::Int
+    recomb_fit_jobids::BitSet   # jobids for fitness calculation of recombined candidates (for AsyncEval version)
 
     τ::Float64        # tournament size, fraction of the population
     γ::Float64        # recommended population-to-archive ratio
@@ -49,7 +50,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
         fit_scheme = EpsBoxDominanceFitnessScheme(fit_scheme, params[:ϵ])
         archive = EpsBoxArchive(fit_scheme, params)
         evaluator = make_evaluator(problem, archive, params)
-        new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
+        new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0, BitSet(),
                 params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
                 Categorical(ones(length(recombinate))/length(recombinate)),
                 params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
@@ -114,14 +115,16 @@ function step!(alg::BorgMOEA)
     if alg.n_steps >= alg.last_wrecombinate_update + alg.wrecombinate_update_period
         update_recombination_weights!(alg)
     end
+
+    prepare_recombination(alg)
     # Select the operators to apply based on their probabilities
     recomb_op_ix = rand(alg.recombinate_distr)
-    recombinate!(alg, recomb_op_ix, alg.recombinate[recomb_op_ix])
+    recombine_individuals!(alg, recomb_op_ix, alg.recombinate[recomb_op_ix])
     return alg
 end
 
 # "kernel function" of step() that would specialize to given xover operator type
-function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOperator)
+function recombine_individuals!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOperator)
     # select parents for recombination
     n_parents = numparents(recomb_op)
     # parent indices
@@ -138,16 +141,44 @@ function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOper
     apply!(recomb_op, Individual[child.params for child in children],
            zeros(Int, length(children)), alg.population, parent_indices)
     for child in children
+        apply!(alg.embed, child.params, alg.population, parent_indices[1])
+        reset_fitness!(child, alg.population)
         child.extra = recomb_op
         child.tag = recomb_op_ix
-        process_candidate!(alg, child, parent_indices[1])
+        postprocess_recombined!(alg, child)
     end
 end
 
-function process_candidate!(alg::BorgMOEA, candi::Candidate, ref_index::Int)
-    apply!(alg.embed, candi.params, alg.population, ref_index)
-    reset_fitness!(candi, alg.population)
-    ifitness = fitness(update_fitness!(alg.evaluator, candi)) # implicitly updates the archive
+prepare_recombination(alg::BorgMOEA) = nothing # do nothing
+
+# AsyncEvaluator version -- process previously submitted candidates with the completed fitness
+function prepare_recombination(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator})
+    sync_update_fitness!(alg.evaluator, alg.recomb_fit_jobids) do candi
+        process_candidate!(alg, candi)
+        return true
+    end
+    @assert isempty(alg.recomb_fit_jobids)
+    empty!(alg.recomb_fit_jobids) # reset bitset (resets offset, so that bits do not grow over time)
+    return nothing
+end
+
+function postprocess_recombined!(alg::BorgMOEA, candi::Candidate)
+    update_fitness!(alg.evaluator, candi) # implicitly updates the archive
+    process_candidate!(alg, candi)
+end
+
+# AsyncEvaluator version, just submit to fitness calculation, nothing else
+# if the queue is full, waits until some jobs are processed -- that established the
+# balance between recombining and fitness evaluation
+function postprocess_recombined!(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator}, candi::Candidate)
+    jobid = async_update_fitness(alg.evaluator, candi, wait=true)
+    @assert jobid > 0
+    push!(alg.recomb_fit_jobids, jobid)
+    return candi
+end
+
+function process_candidate!(alg::BorgMOEA, candi::Candidate)
+    ifitness = fitness(candi)
     # test the population
     hat_comp = HatCompare(fitness_scheme(archive(alg)))
     popsz = popsize(alg.population)
@@ -190,7 +221,7 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, ref_index::Int)
     else
         release_candi(alg.population, candi)
     end
-    alg
+    return nothing
 end
 
 # trace current optimization state,
