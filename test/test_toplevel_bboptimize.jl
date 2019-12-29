@@ -79,6 +79,18 @@
             @test isa(BlackBoxOptim.evaluator(lastrun(opt)), BlackBoxOptim.ParallelEvaluator)
         end
 
+        @testset "using population optimizer and multithread evaluator" begin
+            if Threads.nthreads() > 1
+                opt = bbsetup(rosenbrock; Method=:adaptive_de_rand_1_bin,
+                                            SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                                            MaxSteps = 2000, TraceMode = :silent, NThreads=Threads.nthreads()-1)
+                res = bboptimize(opt) 
+                @test isa(BlackBoxOptim.evaluator(lastrun(opt)), BlackBoxOptim.MultithreadEvaluator)
+            else
+                @warn "Top-level MultithreadEvaluator tests require >1 threads, $(Threads.nthreads()) found, use JULIA_NUM_THREADS"
+                @test_skip Threads.nthreads() > 1
+            end
+        end
     end
 
     @testset "continue running an optimization after it finished" begin
