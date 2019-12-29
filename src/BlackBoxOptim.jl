@@ -98,6 +98,7 @@ include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
 include("ntuple_fitness.jl")
+include("sliding_bitset.jl")
 
 include("problem.jl")
 
