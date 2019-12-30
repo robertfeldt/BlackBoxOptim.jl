@@ -131,16 +131,18 @@ best_front_elem(a::EpsBoxArchive) = has_best_front_elem(a) ? a.best_front_elem :
 best_candidate(a::EpsBoxArchive) = has_best_front_elem(a) ? params(a.best_front_elem) : nothing
 best_fitness(a::EpsBoxArchive) = has_best_front_elem(a) ? fitness(a.best_front_elem) : nafitness(a.fit_scheme)
 
+function rebuild_frontier!(a::EpsBoxArchive)
+    # bulk-reload R-tree (leave leaves underfilled to postpone reinserts)
+    a.frontier = SI.load!(similar(a.frontier), a.frontier,
+                          leaf_fill = floor(Int, a.frontier.fill_factor * SI.capacity(SI.Leaf, a.frontier)))
+    return a
+end
+
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
         a.n_restarts += 1
         a.last_restart = a.num_candidates
-        # rebuild the frontier upon the first restart, or if the frontier has changed significantly
-        if a.n_restarts == 1 || a.frontier.nelem_insertions > 3length(a.frontier)
-            # bulk-reload R-tree (leave leaves underfilled to postpone reinserts)
-            a.frontier = SI.load!(similar(a.frontier), a.frontier,
-                                  leaf_fill = floor(Int, a.frontier.fill_factor * SI.capacity(SI.Leaf, a.frontier)))
-        end
+        a.n_restarts == 1 && rebuild_frontier!(a)
     end
     return a
 end
@@ -203,6 +205,10 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
         insert!(a.frontier, frontel)
         if length(a.frontier) > a.max_size
             a.n_oversize_inserts += 1 # throw(error("Pareto frontier exceeds maximum size"))
+        end
+        # rebuild the frontier if it has changed significantly since the last rebuild
+        if a.n_restarts > 1 && a.frontier.nelem_insertions > 3length(a.frontier)
+            rebuild_frontier!(a)
         end
     end
     # check if the new candidate has better aggregate score
