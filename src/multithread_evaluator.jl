@@ -59,6 +59,7 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
     next_jobid::Threads.Atomic{Int} # ID to assign for the next job
 
     is_stopping::Bool       # whether the evaluator is in the shutdown sequence
+    jobids_pool::Vector{BitSet}     # pool of temporary jobids sets for update_fitness!()
 
     function MultithreadEvaluator(
         problem::P, archive::A;
@@ -79,7 +80,8 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
             Dict{Int, Candidate{FA}}(),
             Channel{Int}(10*nworkers), #Base.Semaphore(nworkers), #ReentrantLock(),
             SlidingBitset(), Threads.Atomic{Int}(1),
-            false
+            false,
+            Vector{BitSet}()
         )
         create_workers!(eval, nworkers)
 
@@ -330,7 +332,7 @@ function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any;
                          force::Bool=false)
     # submit the jobs
     isempty(candidates) && return candidates
-    jobids = BitSet()
+    jobids = isempty(eval.jobids_pool) ? BitSet() : empty!(pop!(eval.jobids_pool))
     (Base.IteratorSize(candidates) === Base.HasLength()) && sizehint!(jobids, length(candidates))
     next = iterate(candidates)
     n_queued = 0
@@ -368,6 +370,7 @@ function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any;
             #@debug "update_fitness!(): waiting done"
         end
     end
+    push!(eval.jobids_pool, jobids)
     @assert (Base.IteratorSize(typeof(candidates)) === Base.HasLength() ?
              n_processed == length(candidates) :
              n_queued == 0) "Fitnesses not evaluated ($jobids)"
