@@ -40,7 +40,7 @@ among several worker threads.
 mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archive} <: AbstractAsyncEvaluator{P}
     problem::P          # optimization problem
     archive::A          # archive where good candidates are automatically stored
-    num_evals::Threads.Atomic{Int}  # fitness evaluations counter
+    num_evals::Int      # fitness evaluations counter
     last_fitness::F     # last fitness
     arch_nafitness::FA  # NA fitness
 
@@ -56,7 +56,7 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
     #job_assignment::ReentrantLock  # workers assignment critical section
 
     done_jobids::SlidingBitset      # ids of completed jobs
-    next_jobid::Threads.Atomic{Int} # ID to assign for the next job
+    next_jobid::Int                 # ID to assign for the next job
 
     is_stopping::Bool       # whether the evaluator is in the shutdown sequence
     jobids_pool::Vector{BitSet}     # pool of temporary jobids sets for update_fitness!()
@@ -74,12 +74,12 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
 
         eval = new{F, FA, typeof(fs), P, A}(
             problem, archive,
-            Threads.Atomic{Int}(0), nafitness(fs), nafitness(FA),
+            0, nafitness(fs), nafitness(FA),
             Vector{MTEvaluatorWorker{FA}}(),
             #Condition(), ReentrantLock(),
             Dict{Int, Candidate{FA}}(),
             Channel{Int}(10*nworkers), #Base.Semaphore(nworkers), #ReentrantLock(),
-            SlidingBitset(), Threads.Atomic{Int}(1),
+            SlidingBitset(), 1,
             false,
             Vector{BitSet}()
         )
@@ -97,7 +97,7 @@ MultithreadEvaluator(
     MultithreadEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
                          nworkers=nworkers)
 
-num_evals(eval::MultithreadEvaluator) = eval.num_evals[]
+num_evals(eval::MultithreadEvaluator) = eval.num_evals
 
 archfitness_type(::Type{<:MultithreadEvaluator{F,FA}}) where {F, FA} = FA
 archfitness_type(eval::MultithreadEvaluator) = archfitness_type(typeof(eval))
@@ -136,7 +136,6 @@ function run_mteval_worker(
             worker.candi.fitness = archived_fitness(candi_fitness, eval.archive)
             # clear busy state and notify completion
             worker.status = MEStatus_Success
-            Threads.atomic_add!(eval.num_evals, 1)
             #@debug "worker #$workerix: notifying jobid=$jobid done"
             put!(eval.done_workers, workerix)
         end
@@ -241,6 +240,7 @@ function wait_workers!(eval::MultithreadEvaluator)
     worker.candi = nothing
     #unlock(eval.job_assignment)
     #@debug "check_workers!(): add_candidate(archive)"
+    eval.num_evals += 1
     add_candidate!(eval.archive, candi.fitness, candi.params, candi.tag, num_evals(eval))
     #@debug "check_workers!(): add_candidate(archive) done"
     return true
@@ -250,7 +250,7 @@ function async_update_fitness(
     eval::MultithreadEvaluator{F,FA}, candi::Candidate{FA};
     force::Bool=false, wait::Bool=false
 ) where {F, FA}
-    jobid = eval.next_jobid[] # tentative job id, but not assigned yet, only for logging
+    jobid = eval.next_jobid # tentative job id, but not assigned yet, only for logging
     @debug "async_update_fitness(jobid=$jobid?): starting to assign job"
     if is_stopping(eval)
         return -2 # doesn't accept jobs
@@ -276,11 +276,11 @@ function async_update_fitness(
         #unlock(eval.job_assignment)
         error("Cannot find a worker to put a job to")
     end
-    jobid = eval.next_jobid[] # now assign job id
+    jobid = eval.next_jobid # now assign job id
     #@debug "async_update_fitness(jobid=$jobid): assigning job to worker #$workerix"
     assign!(eval.workers[workerix], jobid, candi)
     @debug "async_update_fitness(jobid=$jobid): assigned job to worker #$workerix"
-    Threads.atomic_add!(eval.next_jobid, 1)
+    eval.next_jobid += 1
     #unlock(eval.job_assignment)
 
     #@debug "async_update_fitness(jobid=$jobid): job assigned"
