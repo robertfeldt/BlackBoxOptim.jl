@@ -201,7 +201,11 @@ function check_stop_condition(ctrl::OptRunController)
         return "Max number of steps ($(ctrl.max_steps)) reached"
     end
 
-    return check_stop_condition(ctrl.evaluator, ctrl)
+    eval_check = check_stop_condition(ctrl.evaluator, ctrl)
+    isempty(eval_check) || return eval_check
+
+    optimizer_check = check_stop_condition(ctrl.optimizer, ctrl)
+    return optimizer_check
 
     return "" # empty string, no termination
 end
