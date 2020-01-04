@@ -13,9 +13,10 @@ mutable struct MTEvaluatorWorker{FA}
     task::Task
     jobid_chan::Channel{Int}
     candi::Union{Candidate{FA}, Nothing}
+    num_evals::Int
 
     MTEvaluatorWorker{FA}(task::Task, ch::Channel{Int}) where FA =
-        new{FA}(MEStatus_Available, 0, task, ch, nothing)
+        new{FA}(MEStatus_Available, 0, task, ch, nothing, 0)
 end
 
 isbusy(worker::MTEvaluatorWorker) = worker.status == MEStatus_Working || worker.status == MEStatus_Assigned
@@ -134,6 +135,7 @@ function run_mteval_worker(
             worker.status = MEStatus_Working
             eval.last_fitness = candi_fitness = fitness(params(worker.candi), eval.problem)
             worker.candi.fitness = archived_fitness(candi_fitness, eval.archive)
+            worker.num_evals += 1
             # clear busy state and notify completion
             worker.status = MEStatus_Success
             #@debug "worker #$workerix: notifying jobid=$jobid done"
@@ -199,6 +201,7 @@ function shutdown!(eval::MultithreadEvaluator)
     end
     #@assert nbusyworkers(eval) == 0 "Some workers are still busy" upon abnormal termination might not hold
     @info "shutdown!(MultithreadEvaluator): all $(nworkers(eval)) workers stopped"
+    @info "shutdown!(MultithreadEvaluator): function evals per worker: $(join([worker.num_evals for worker in eval.workers], ", "))"
 end
 
 # Wait until the first incoming fitness completion (or any other) notification from any worker.
