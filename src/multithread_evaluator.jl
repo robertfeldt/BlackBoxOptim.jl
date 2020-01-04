@@ -296,14 +296,16 @@ is_fitness_ready(eval::MultithreadEvaluator, jobid::Integer) =
 # returns `true` if the candidate was successfully claimed by `f` and
 # removes the candidate from the unclaimed dict.
 function claim_calculated!(f::Function, eval::MultithreadEvaluator)
+    nclaimed = 0
     for (jobid, candi) in eval.results
         if f(jobid, candi)
             # remove jobid from the results
-            #@debug "process_completed!(jobid=#$jobid)"
+            #@debug "claim_calculated!(jobid=#$jobid)"
             delete!(eval.results, jobid)
+            nclaimed += 1
         end
     end
-    return eval
+    return nclaimed
 end
 
 function sync_update_fitness!(f::Any, eval::MultithreadEvaluator, jobids::Any)
@@ -340,15 +342,15 @@ function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any;
     while ((next !== nothing) || n_queued > 0) && !is_stopping(eval)
         #@debug "update_fitness!(): jobids=$jobids"
         # claim candidates that are for us
-        claim_calculated!(eval) do jobid, candi
+        nclaimed = claim_calculated!(eval) do jobid, candi
             our_job = pop!(jobids, jobid, 0)>0
             if our_job # job for one of our candidates
-                n_queued -= 1
                 f !== nothing && f(candi) # externally process the candidate
-                n_processed += 1
             end
             return our_job
         end
+        n_queued -= nclaimed
+        n_processed += nclaimed
         if next !== nothing
             # queue the next candidate
             candi, state = next
