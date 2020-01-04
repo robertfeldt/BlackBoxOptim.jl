@@ -160,7 +160,7 @@ end
 function MTEvaluatorWorker(eval::MultithreadEvaluator, workerix::Integer, tid::Integer)
     ch = Channel{Int}(1)
     task = Task(() -> run_mteval_worker(eval, workerix, ch))
-    task.sticky = false
+    task.sticky = true
     bind(ch, task)
     ccall(:jl_set_task_tid, Cvoid, (Any, Cint), task, tid-1)
     push!(Base.Workqueues[tid], task)
