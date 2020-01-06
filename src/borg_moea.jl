@@ -14,7 +14,6 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     last_restart_check::Int
     last_restart::Int
     last_wrecombinate_update::Int
-    recomb_fit_jobids::BitSet   # jobids for fitness calculation of recombined candidates (for AsyncEval version)
 
     τ::Float64        # tournament size, fraction of the population
     γ::Float64        # recommended population-to-archive ratio
@@ -31,6 +30,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     max_steps_without_ϵ_progress::Int
 
     recombinate::Vector{CrossoverOperator} # recombination operators
+    recomb_fit_job::Union{AbstractFitnessEvaluationJob, Nothing} # job for fitness calculation of recombined candidates (for AsyncEval version)
 
     # Set of operators that together define a specific DE strategy.
     select::TournamentSelector{HatCompare{FS}}         # random individuals selector
@@ -50,12 +50,12 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
         fit_scheme = EpsBoxDominanceFitnessScheme(fit_scheme, params[:ϵ])
         archive = EpsBoxArchive(fit_scheme, params)
         evaluator = make_evaluator(problem, archive, params)
-        new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0, BitSet(),
+        new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
                 params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
                 Categorical(ones(length(recombinate))/length(recombinate)),
                 params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
                 params[:MaxStepsWithoutEpsProgress],
-                recombinate,
+                recombinate, nothing,
                 TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
     end
 end
@@ -145,36 +145,39 @@ function recombine_individuals!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::Cro
         reset_fitness!(child, alg.population)
         child.extra = recomb_op
         child.tag = recomb_op_ix
-        postprocess_recombined!(alg, child)
     end
+    postprocess_recombined!(alg, children)
 end
 
 prepare_recombination(alg::BorgMOEA) = nothing # do nothing
 
 # AsyncEvaluator version -- process previously submitted candidates with the completed fitness
 function prepare_recombination(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator})
-    sync_update_fitness!(alg.evaluator, alg.recomb_fit_jobids) do candi
-        process_candidate!(alg, candi)
-        return true
+    if !isnothing(alg.recomb_fit_job)
+        sync_update_fitness(alg.recomb_fit_job, alg.evaluator) do candi
+            process_candidate!(alg, candi)
+            return true
+        end
+        @assert isready(alg.recomb_fit_job)
+        alg.recomb_fit_job = nothing
     end
-    @assert isempty(alg.recomb_fit_jobids)
-    empty!(alg.recomb_fit_jobids) # reset bitset (resets offset, so that bits do not grow over time)
     return nothing
 end
 
-function postprocess_recombined!(alg::BorgMOEA, candi::Candidate)
-    update_fitness!(alg.evaluator, candi) # implicitly updates the archive
-    process_candidate!(alg, candi)
+function postprocess_recombined!(alg::BorgMOEA, candidates::Any)
+    update_fitness!(alg.evaluator, candidates, force=true) # implicitly updates the archive
+    process_candidate!.(Ref(alg), candidates)
+    return candidates
 end
 
 # AsyncEvaluator version, just submit to fitness calculation, nothing else
 # if the queue is full, waits until some jobs are processed -- that established the
 # balance between recombining and fitness evaluation
-function postprocess_recombined!(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator}, candi::Candidate)
-    jobid = async_update_fitness(alg.evaluator, candi, wait=true)
-    @assert jobid > 0
-    push!(alg.recomb_fit_jobids, jobid)
-    return candi
+function postprocess_recombined!(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator}, candidates::Any)
+    @assert isnothing(alg.recomb_fit_job)
+    alg.recomb_fit_job = async_update_fitness!(alg.evaluator, candidates, force=true)
+    @assert !isnothing(alg.recomb_fit_job)
+    return candidates
 end
 
 function process_candidate!(alg::BorgMOEA, candi::Candidate)
