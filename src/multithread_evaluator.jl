@@ -80,6 +80,7 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
 
     is_stopping::Bool       # whether the evaluator is in the shutdown sequence
     workers::Vector{MTEvaluatorWorker}
+    last_woken_worker::Int  # index of the last worker, which thread was waken by the master
 
     jobs_queue::Vector{MTFitnessEvalJob} # jobs for workers to pick up
     jobs_queue_lock::Threads.SpinLock
@@ -105,7 +106,7 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
         eval = new{F, FA, typeof(fs), P, A}(
             problem, archive,
             0, 0, nafitness(fs), nafitness(FA), false,
-            Vector{MTEvaluatorWorker}(),
+            Vector{MTEvaluatorWorker}(), 0,
             Vector{MTFitnessEvalJob}(), Threads.SpinLock(),
             Vector{MTFitnessEvalJob}(), Threads.SpinLock(),
             Threads.SpinLock(),
@@ -345,6 +346,7 @@ function shutdown!(eval::MultithreadEvaluator)
         end
     end
     @info "shutdown!(MultithreadEvaluator): all $(nworkers(eval)) workers stopped"
+    @info "shutdown!(MultithreadEvaluator): num_evals=$(num_evals(eval)), num_jobs=$(eval.num_jobs)"
     @info "shutdown!(MultithreadEvaluator): function evals per worker: $(join([worker.num_evals for worker in eval.workers], ", "))"
 end
 
