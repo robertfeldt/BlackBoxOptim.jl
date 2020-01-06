@@ -28,6 +28,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     wrecombinate_update_period::Int
     restart_check_period::Int
     max_steps_without_ϵ_progress::Int
+    max_restarts::Union{Int, Nothing} # how many restarts before termination
 
     recombinate::Vector{CrossoverOperator} # recombination operators
 
@@ -53,7 +54,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
                 params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
                 Categorical(ones(length(recombinate))/length(recombinate)),
                 params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
-                params[:MaxStepsWithoutEpsProgress],
+                params[:MaxStepsWithoutEpsProgress], params[:MaxRestarts],
                 recombinate,
                 TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
     end
@@ -68,7 +69,8 @@ const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, Params
     :ζ => 1.0,        # dampening coefficient for recombination operator weights
     :RestartCheckPeriod => 1000,
     :OperatorsUpdatePeriod => 100,
-    :MaxStepsWithoutEpsProgress => 100
+    :MaxStepsWithoutEpsProgress => 100,
+    :MaxRestarts => nothing,
 ))
 
 function borg_moea(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
@@ -119,6 +121,10 @@ function step!(alg::BorgMOEA)
     recombinate!(alg, recomb_op_ix, alg.recombinate[recomb_op_ix])
     return alg
 end
+
+check_stop_condition(alg::BorgMOEA, ctrl) =
+    isnothing(alg.max_restarts) || (alg.n_restarts < alg.max_restarts) ? "" :
+    "Max number of restarts ($(alg.max_restarts)) reached"
 
 # "kernel function" of step() that would specialize to given xover operator type
 function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOperator)
