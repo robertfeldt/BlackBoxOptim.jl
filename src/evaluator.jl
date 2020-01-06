@@ -55,52 +55,52 @@ update_fitness!(e::Evaluator, candidates::Any; force::Bool=false) =
 The abstract base type for asynchronous evaluators.
 
 Asynchronous evaluator allows submitting fitness calculation requests via
-[`async_update_fitness`](@ref) method that returns *jobid* without waiting for
-the calculation completion. Job Ids could then be passed to [`sync_update_fitness!`](@ref)
-that waits until fitnesses for all specified jobs is calculated.
+[`async_update_fitness!`](@ref) method that returns
+[`AbstractFitnessEvaluationJob`](@ref) object without waiting for
+the calculation completion. Job object could then be passed to
+[`sync_update_fitness`](@ref) that waits until fitnesses for all specified jobs
+is calculated.
 """
 abstract type AbstractAsyncEvaluator{P <: OptimizationProblem} <: Evaluator{P} end
 
 """
-    async_update_fitness(eval::AbstractAsyncEvaluator, candi::Candidate;
-                         force::Bool=false, wait::Bool=false) -> Int
+The abstract base type for the fitness evaluation jobs returned by
+[`async_update_fitness!`](@ref) and accepted by [`sync_update_fitness`](@ref).
 
-Asynchronously calculate the fitness of a candidate.
+One can also check whether the fitness completed with [`Base.isready`](@ref) method.
+"""
+abstract type AbstractFitnessEvaluationJob{F} end
 
-Returns
-  - the id of the fitness calculation job
-  - *0* if the candidate already has fitness
-  - *-1* if no fitness calculation was scheduled (`wait` unset, and all resources occupied)
-  - *-2* if evaluator does not accept jobs because it's shutting down
+"""
+    async_update_fitness!(eval::AbstractAsyncEvaluator, candidates::Any;
+                          force::Bool=false) ->
+                          Union{AbstractFitnessEvaluationJob, Nothing}
+
+Asynchronously calculate the fitnesses.
+*candidates* should support the `iterate()` interface and return
+[`Candidate`](@ref) elements.
+
+Returns [`AbstractFitnessEvaluationJob`](@ref) or `nothing` if *candidates*
+does not contain any candidates.
 
 # Arguments
  - `force::Bool`: force fitness calculation even if the candidate already has
    non-NA fitness
- - `wait::Bool`: if all calculation resources are occupied, wait until the
-   calculation slot becomes available
 
-See also: [`sync_update_fitness!`](@ref), [`is_fitness_ready`](@ref)
+See also: [`sync_update_fitness`](@ref)
 """
-async_update_fitness
+async_update_fitness!
 
 """
-    sync_fitness_update!([f], eval::AbstractAsyncEvaluator, jobids)
+    sync_fitness_update([f], job::AbstractFitnessEvaluationJob,
+                        eval::AbstractAsyncEvaluator)
 
-Waits until all fitness `jobids` are calculated and optionally applies `f`
+Waits until fitnesses for `job` are calculated and optionally applies `f`
 function to each processed candidate.
 
-See also: [`async_update_fitness`](@ref), [`update_fitness!`](@ref).
+See also: [`async_update_fitness!`](@ref), [`update_fitness!`](@ref).
 """
-sync_update_fitness!
-
-"""
-    is_fitness_ready(eval::AbstractAsyncEvaluator, jobid::Integer) -> Bool
-
-Check if given asynchronous fitness job calculation is complete.
-
-See also [`async_update_fitness`](@ref), [`sync_update_fitness!`](@ref).
-"""
-is_fitness_ready
+sync_update_fitness
 
 """
     is_stopping(eval::AbstractAsyncEvaluator) -> Bool

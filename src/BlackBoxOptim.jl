@@ -31,8 +31,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Evaluator
         #ProblemEvaluator,
-        AbstractAsyncEvaluator,
-        update_fitness!, async_update_fitness, sync_update_fitness!, is_fitness_ready,
+        AbstractAsyncEvaluator, AbstractFitnessEvaluationJob,
+        update_fitness!, async_update_fitness!, sync_update_fitness,
 
         # Problems
         Problems,
