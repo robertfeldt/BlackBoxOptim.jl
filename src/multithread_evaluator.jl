@@ -3,13 +3,16 @@
 mutable struct MTEvaluatorWorker
     task::Task
     num_evals::Int
+    is_available::Bool
 
-    MTEvaluatorWorker(task::Task) = new(task, 0)
+    MTEvaluatorWorker(task::Task) = new(task, 0, false)
 end
 
 # check whether the worker task is running
 isactive(worker::MTEvaluatorWorker) =
     istaskstarted(worker.task) && !(istaskdone(worker.task) || istaskfailed(worker.task))
+# check whether the worker is waiting for the job to be assigned
+isavailable(worker::MTEvaluatorWorker) = worker.is_available
 
 # Job object returned by async_update_fitness() method of MultithreadEvaluator
 mutable struct MTFitnessEvalJob{FA, NFA, I, S} <: AbstractFitnessEvaluationJob{FA}
@@ -240,6 +243,7 @@ function run_mteval_worker(
     @debug "MultithreadEvaluator worker #$workerix started"
     try
         worker = eval.workers[workerix]
+        worker.is_available = true
         i = 0
         nlock_failed = 0
         while !is_stopping(eval)
@@ -258,7 +262,9 @@ function run_mteval_worker(
                 nlock_failed = 0
                 if !is_stopping(eval) && !isempty(eval.jobs_queue)
                     #@debug "worker #$workerix: got job, calculating"
+                    worker.is_available = false
                     calculate_fitness(first(eval.jobs_queue), eval, workerix)
+                    worker.is_available = true
                     # jobs_queue unlocked by calculate_fitness()
                 else
                     @debug "worker #$workerix: locked empty jobs queue ($(length(eval.jobs_queue))) or stopping evaluator ($(is_stopping(eval))), worker_num_evals=$(worker.num_evals), total_num_evals=$(num_evals(eval)), num_jobs=$(eval.num_jobs)"
@@ -270,6 +276,7 @@ function run_mteval_worker(
         end
     catch ex
         @warn "Exception at MultithreadEvaluator worker #$workerix" exception=ex
+        worker.is_available = false
         showerror(stderr, ex, catch_backtrace())
         rethrow(ex)
     end
@@ -392,6 +399,15 @@ function async_update_fitness!(eval::MultithreadEvaluator, candidates::Any; forc
     #@debug "async_update_fitness!(): adding the job to the queue"
     if smartlock(eval.jobs_queue_lock, eval)
         push!(eval.jobs_queue, job)
+        # hint the scheduler on which thread to run the job
+        wake_worker = findnext(isavailable, eval.workers, eval.last_woken_worker+1)
+        # if not found, search from the beginning
+        isnothing(wake_worker) && (wake_worker = findfirst(isavailable, eval.workers))
+        if wake_worker !== nothing
+            wake_task = eval.workers[wake_worker].task
+            ccall(:jl_wakeup_thread, Cvoid, (Int16,), (Threads.threadid(wake_task) - 1) % Int16)
+            eval.last_woken_worker = wake_worker
+        end
         unlock(eval.jobs_queue_lock)
     elseif !is_stopping(eval)
         error("Failed to lock jobs_queue")
