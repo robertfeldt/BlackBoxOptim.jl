@@ -100,8 +100,11 @@ MultithreadEvaluator(
 
 num_evals(eval::MultithreadEvaluator) = eval.num_evals
 
+# FIXME move these method to abstract Evaluator (it would need to support A and FA)
 archfitness_type(::Type{<:MultithreadEvaluator{F,FA}}) where {F, FA} = FA
 archfitness_type(eval::MultithreadEvaluator) = archfitness_type(typeof(eval))
+candidate_type(::Type{T}) where T<:MultithreadEvaluator = Candidate{archfitness_type(T)}
+candidate_type(eval::MultithreadEvaluator) = candidate_type(typeof(eval))
 
 nworkers(eval::MultithreadEvaluator) = length(eval.workers)
 #queue_capacity(eval::MultithreadEvaluator) = nworkers(eval)
