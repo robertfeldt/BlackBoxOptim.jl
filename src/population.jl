@@ -46,6 +46,7 @@ mutable struct FitPopulation{F} <: PopulationWithFitness{F}
     ntransient::Int                  # how many transient members are in the population
 
     candi_pool::Vector{Candidate{F}} # pool of reusable candidates
+    candi_pool_lock::Threads.SpinLock
 
     function FitPopulation(individuals::AbstractPopulationMatrix,
                            nafitness::F,
@@ -54,7 +55,7 @@ mutable struct FitPopulation{F} <: PopulationWithFitness{F}
         popsize(individuals) == length(fitness) ||
             throw(DimensionMismatch("Fitness vector length does not match the population size"))
         new{F}(individuals, nafitness, copy(fitness), ntransient,
-               Vector{Candidate{F}}())
+               Vector{Candidate{F}}(), Threads.SpinLock())
     end
 end
 
@@ -138,13 +139,16 @@ function acquire_candi(pop::FitPopulation{F}) where {F}
     if isempty(pop.candi_pool)
         return Candidate{F}(fill!(Individual(undef, numdims(pop)), NaN), -1, pop.nafitness)
     end
+    lock(pop.candi_pool_lock)
     res = pop!(pop.candi_pool)
+    unlock(pop.candi_pool_lock)
     # reset reference to genetic operation
     res.extra = NO_GEN_OP
     res.tag = 0
     return res
 end
 
+# FIXME optimize to avoid excessive locking (need to lock only once)
 acquire_candis(pop::FitPopulation{F}, n::Integer) where F =
     Candidate{F}[acquire_candi(pop) for _ in 1:n]
 
@@ -164,8 +168,12 @@ acquire_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F =
 """
 Put the candidate back to the pool.
 """
-release_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F =
+function release_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F
+    lock(pop.candi_pool_lock)
     push!(pop.candi_pool, candi)
+    unlock(pop.candi_pool_lock)
+    return pop
+end
 
 """
 Put the candidate back into the pool and copy the values
