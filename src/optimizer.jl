@@ -3,6 +3,9 @@ Base abstract class for black-box optimization algorithms.
 """
 abstract type Optimizer end
 
+# by default optimizer doesn't check for stopping conditions
+check_stop_condition(o::Optimizer, ctrl) = ""
+
 """
 Optimizers derived from `SteppingOptimizer` implement classical iterative optimization scheme
 `step!()` → `step!()` → …
