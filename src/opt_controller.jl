@@ -451,7 +451,7 @@ function run!(oc::OptController)
         end
 
         if oc.parameters[:SaveFitnessTraceToCsv]
-            write_results(ctrl)
+            write_result(ctrl)
         end
 
         return OptimizationResults(ctrl, oc)
