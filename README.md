@@ -143,13 +143,17 @@ This list is not complete though, please refer to the `examples` and `tests` dir
 
 For multi-objective optimization only the [BorgMOEA](http://borgmoea.org/) (`borg_moea`) is supported but it is a good one. :)
 
-# Parallel Function Evaluation
+# Multithreaded and Parallel Function Evaluation
 
-For some (slow) functions being optimized and if you have a multi-core CPU you can gain performance by using parallel evaluation. This typically requires an optimization algorithm that evaluates many candidate points in one batch. The NES family (`xnes`, `dxnes` etc) is one such example. See the file
+For some (slow) functions being optimized and if you have a multi-core CPU you can gain performance by using multithreaded or parallel evaluation. This typically requires an optimization algorithm that evaluates many candidate points in one batch. The NES family (`xnes`, `dxnes` etc), for example. See the file
 
 [examples/rosenbrock_parallel.jl](examples/rosenbrock_parallel.jl)
 
-for one example of this.
+for one example of this. On Julia 1.3 and later it is typically better to use multithreading see the file
+
+[examples/multithreaded_optimization.jl](examples/multithreaded_optimization.jl)
+
+for some examples.
 
 # Guide to selecting an optimizer
 
