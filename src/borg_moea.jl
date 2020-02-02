@@ -30,6 +30,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     max_steps_without_ϵ_progress::Int
 
     recombinate::Vector{CrossoverOperator} # recombination operators
+    recomb_fit_job::Union{AbstractFitnessEvaluationJob, Nothing} # job for fitness calculation of recombined candidates (for AsyncEval version)
 
     # Set of operators that together define a specific DE strategy.
     select::TournamentSelector{HatCompare{FS}}         # random individuals selector
@@ -54,7 +55,7 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
                 Categorical(ones(length(recombinate))/length(recombinate)),
                 params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
                 params[:MaxStepsWithoutEpsProgress],
-                recombinate,
+                recombinate, nothing,
                 TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
     end
 end
@@ -114,14 +115,16 @@ function step!(alg::BorgMOEA)
     if alg.n_steps >= alg.last_wrecombinate_update + alg.wrecombinate_update_period
         update_recombination_weights!(alg)
     end
+
+    prepare_recombination(alg)
     # Select the operators to apply based on their probabilities
     recomb_op_ix = rand(alg.recombinate_distr)
-    recombinate!(alg, recomb_op_ix, alg.recombinate[recomb_op_ix])
+    recombine_individuals!(alg, recomb_op_ix, alg.recombinate[recomb_op_ix])
     return alg
 end
 
 # "kernel function" of step() that would specialize to given xover operator type
-function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOperator)
+function recombine_individuals!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOperator)
     # select parents for recombination
     n_parents = numparents(recomb_op)
     # parent indices
@@ -138,16 +141,47 @@ function recombinate!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::CrossoverOper
     apply!(recomb_op, Individual[child.params for child in children],
            zeros(Int, length(children)), alg.population, parent_indices)
     for child in children
+        apply!(alg.embed, child.params, alg.population, parent_indices[1])
+        reset_fitness!(child, alg.population)
         child.extra = recomb_op
         child.tag = recomb_op_ix
-        process_candidate!(alg, child, parent_indices[1])
     end
+    postprocess_recombined!(alg, children)
 end
 
-function process_candidate!(alg::BorgMOEA, candi::Candidate, ref_index::Int)
-    apply!(alg.embed, candi.params, alg.population, ref_index)
-    reset_fitness!(candi, alg.population)
-    ifitness = fitness(update_fitness!(alg.evaluator, candi)) # implicitly updates the archive
+prepare_recombination(alg::BorgMOEA) = nothing # do nothing
+
+# AsyncEvaluator version -- process previously submitted candidates with the completed fitness
+function prepare_recombination(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator})
+    if !isnothing(alg.recomb_fit_job)
+        sync_update_fitness(alg.recomb_fit_job, alg.evaluator) do candi
+            process_candidate!(alg, candi)
+            return true
+        end
+        @assert isready(alg.recomb_fit_job)
+        alg.recomb_fit_job = nothing
+    end
+    return nothing
+end
+
+function postprocess_recombined!(alg::BorgMOEA, candidates::Any)
+    update_fitness!(alg.evaluator, candidates, force=true) # implicitly updates the archive
+    process_candidate!.(Ref(alg), candidates)
+    return candidates
+end
+
+# AsyncEvaluator version, just submit to fitness calculation, nothing else
+# if the queue is full, waits until some jobs are processed -- that established the
+# balance between recombining and fitness evaluation
+function postprocess_recombined!(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator}, candidates::Any)
+    @assert isnothing(alg.recomb_fit_job)
+    alg.recomb_fit_job = async_update_fitness!(alg.evaluator, candidates, force=true)
+    @assert !isnothing(alg.recomb_fit_job)
+    return candidates
+end
+
+function process_candidate!(alg::BorgMOEA, candi::Candidate)
+    ifitness = fitness(candi)
     # test the population
     hat_comp = HatCompare(fitness_scheme(archive(alg)))
     popsz = popsize(alg.population)
@@ -190,7 +224,7 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate, ref_index::Int)
     else
         release_candi(alg.population, candi)
     end
-    alg
+    return nothing
 end
 
 # trace current optimization state,
@@ -209,17 +243,13 @@ function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
     end
 end
 
-function update_population_fitness!(alg::BorgMOEA)
-    fs = fitness_scheme(alg.evaluator.archive)
-    for i in 1:popsize(alg.population)
-        if isnafitness(fitness(alg.population, i), fs)
-            candi = acquire_candi(alg.population, i)
-            update_fitness!(alg.evaluator, candi)
-            alg.population.fitness[candi.index] = candi.fitness
-            release_candi(alg.population, candi)
-        end
+update_population_fitness!(alg::BorgMOEA) =
+    update_fitness!(alg.evaluator,
+                    PopulationCandidatesIterator(alg.population,
+                                                 alg.population.nafitness)) do candi
+        alg.population.fitness[candi.index] = candi.fitness
+        release_candi(alg.population, candi)
     end
-end
 
 """
 Update recombination operator probabilities based on the archive tag counts.
@@ -242,17 +272,30 @@ function acquire_mutant(alg::BorgMOEA, ix::Int, last_nonmutant::Int)
     apply!(alg.modify, mutant.params, ix)
     # project using the archived individual as the reference
     apply!(alg.embed, mutant.params, alg.population, rand(1:last_nonmutant))
-    mutant
+    return mutant
 end
 
-function populate_by_mutants(alg::BorgMOEA, last_nonmutant::Int)
-    popsz = popsize(alg.population)
-    for i in (last_nonmutant+1):popsz
-        mutant = acquire_mutant(alg, i, last_nonmutant)
-        update_fitness!(alg.evaluator, mutant)
+"""
+Iterates the mutants.
+"""
+struct BorgMutantsIterator{P<:PopulationWithFitness, A<:BorgMOEA} <: AbstractPopulationCandidatesIterator{P}
+    alg::A
+    last_nonmutant::Int
+
+    BorgMutantsIterator(alg::A, last_nonmutant::Int) where A<:BorgMOEA =
+        new{typeof(alg.population), A}(alg, last_nonmutant)
+end
+
+Base.IteratorSize(::Type{<:BorgMutantsIterator}) = Base.HasLength()
+Base.length(it::BorgMutantsIterator) = popsize(it.alg.population) - it.last_nonmutant
+
+Base.iterate(it::BorgMutantsIterator, ix::Integer = it.last_nonmutant) =
+    ix < popsize(it.alg.population) ? (acquire_mutant(it.alg, ix+1, it.last_nonmutant), ix+1) : nothing
+
+populate_by_mutants(alg::BorgMOEA, last_nonmutant::Integer) =
+    update_fitness!(alg.evaluator, BorgMutantsIterator(alg, last_nonmutant)) do mutant
         accept_candi!(alg.population, mutant)
     end
-end
 
 """
 Restart Borg MOEA.

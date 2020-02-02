@@ -31,6 +31,8 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
 
         # Evaluator
         #ProblemEvaluator,
+        AbstractAsyncEvaluator, AbstractFitnessEvaluationJob,
+        update_fitness!, async_update_fitness!, sync_update_fitness,
 
         # Problems
         Problems,
@@ -98,6 +100,7 @@ include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
 include("ntuple_fitness.jl")
+include("sliding_bitset.jl")
 
 include("problem.jl")
 
@@ -112,6 +115,7 @@ include("genetic_operators/genetic_operator.jl")
 
 include("evaluator.jl")
 include("parallel_evaluator.jl")
+include("multithread_evaluator.jl")
 
 include("population.jl")
 include("optimizer.jl")

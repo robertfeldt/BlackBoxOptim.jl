@@ -12,6 +12,11 @@ fitness.
 """
 abstract type PopulationWithFitness{F} <: Population end
 
+fitness_type(::Type{<:PopulationWithFitness{F}}) where F = F
+fitness_type(pop::PopulationWithFitness) = fitness_type(typeof(pop))
+candidate_type(::Type{P}) where P<:PopulationWithFitness = Candidate{fitness_type(P)}
+candidate_type(pop::PopulationWithFitness) = candidate_type(typeof(pop))
+
 const AbstractPopulationMatrix = AbstractMatrix{Float64}
 
 """
@@ -41,6 +46,7 @@ mutable struct FitPopulation{F} <: PopulationWithFitness{F}
     ntransient::Int                  # how many transient members are in the population
 
     candi_pool::Vector{Candidate{F}} # pool of reusable candidates
+    candi_pool_lock::Threads.SpinLock
 
     function FitPopulation(individuals::AbstractPopulationMatrix,
                            nafitness::F,
@@ -49,7 +55,7 @@ mutable struct FitPopulation{F} <: PopulationWithFitness{F}
         popsize(individuals) == length(fitness) ||
             throw(DimensionMismatch("Fitness vector length does not match the population size"))
         new{F}(individuals, nafitness, copy(fitness), ntransient,
-               Vector{Candidate{F}}())
+               Vector{Candidate{F}}(), Threads.SpinLock())
     end
 end
 
@@ -122,9 +128,6 @@ function Base.append!(pop::FitPopulation{F}, extra_pop::FitPopulation{F}) where 
     return pop
 end
 
-fitness_type(pop::FitPopulation{F}) where {F} = F
-candidate_type(pop::FitPopulation{F}) where {F} = Candidate{F}
-
 """
     acquire_candi(pop::FitPopulation[, {ix::Int, candi::Candidate}])
 
@@ -136,13 +139,16 @@ function acquire_candi(pop::FitPopulation{F}) where {F}
     if isempty(pop.candi_pool)
         return Candidate{F}(fill!(Individual(undef, numdims(pop)), NaN), -1, pop.nafitness)
     end
+    lock(pop.candi_pool_lock)
     res = pop!(pop.candi_pool)
+    unlock(pop.candi_pool_lock)
     # reset reference to genetic operation
     res.extra = NO_GEN_OP
     res.tag = 0
     return res
 end
 
+# FIXME optimize to avoid excessive locking (need to lock only once)
 acquire_candis(pop::FitPopulation{F}, n::Integer) where F =
     Candidate{F}[acquire_candi(pop) for _ in 1:n]
 
@@ -162,8 +168,12 @@ acquire_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F =
 """
 Put the candidate back to the pool.
 """
-release_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F =
+function release_candi(pop::FitPopulation{F}, candi::Candidate{F}) where F
+    lock(pop.candi_pool_lock)
     push!(pop.candi_pool, candi)
+    unlock(pop.candi_pool_lock)
+    return pop
+end
 
 """
 Put the candidate back into the pool and copy the values
@@ -210,4 +220,47 @@ function population(problem::OptimizationProblem,
     else
         throw(ArgumentError("\"Population\" parameter is of unsupported type: $(typeof(pop))"))
     end
+end
+
+"""
+Iterator of the population individuals as `Candidate{F}` object.
+"""
+abstract type AbstractPopulationCandidatesIterator{P<:PopulationWithFitness} end
+
+fitness_type(::Type{<:AbstractPopulationCandidatesIterator{P}}) where P = fitness_type(P)
+fitness_type(::T) where T<:AbstractPopulationCandidatesIterator = fitness_type(T)
+
+Base.IteratorEltype(::Type{<:AbstractPopulationCandidatesIterator}) = Base.HasEltype()
+Base.eltype(itt::Type{<:AbstractPopulationCandidatesIterator{P}}) where P = candidate_type(population_type(P))
+Base.eltype(::T) where T<:AbstractPopulationCandidatesIterator = eltype(T)
+
+"""
+Iterates the candidates of population.
+"""
+struct PopulationCandidatesIterator{P<:PopulationWithFitness, F} <: AbstractPopulationCandidatesIterator{P}
+    pop::P
+    nafitness::F
+
+    PopulationCandidatesIterator(pop::PopulationWithFitness, nafitness::F = nothing) where F =
+        new{typeof(pop), F}(pop, nafitness)
+
+    PopulationCandidatesIterator(pop::FitPopulation; skipHasFitness::Bool=false) =
+        PopulationCandidatesIterator(pop, skipHasFitness ? nothing : pop.nafitness)
+end
+
+Base.IteratorSize(::Type{<:PopulationCandidatesIterator}) = Base.SizeUnknown()
+Base.IteratorSize(::Type{<:PopulationCandidatesIterator{<:Any, Nothing}}) = Base.HasLength()
+Base.length(it::PopulationCandidatesIterator{<:Any, Nothing}) = popsize(it.pop)
+
+Base.iterate(it::PopulationCandidatesIterator{<:Any, Nothing}, ix::Integer = 0) =
+    ix < length(it) ? (acquire_candi(it.pop, ix+1), ix+1) : nothing
+
+function Base.iterate(it::PopulationCandidatesIterator, ix::Integer = 0)
+    while ix < popsize(it.pop)
+        ix += 1
+        if isequal(fitness(it.pop, ix), it.nafitness)
+            return (acquire_candi(it.pop, ix), ix)
+        end
+    end
+    return nothing
 end

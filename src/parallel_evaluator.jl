@@ -20,9 +20,9 @@ fitness(params::Individual, worker_ref::ParallelEvaluatorWorkerRef{P}) where P =
 """
 Current state of fitness function evaluation for the vector of candidates.
 """
-mutable struct ParallelEvaluationState{F, FS}
-    fitness_scheme::FS
-    candidates::Vector{Candidate{F}}  # candidates to calculate fitness for
+mutable struct ParallelEvaluationState{FA, A}
+    archive::A
+    candidates::Vector{Candidate{FA}}  # candidates to calculate fitness for
 
     worker_busy::Vector{Bool}         # if the worker is busy calculating
     retry_queue::Vector{Int}          # queue to candidate indices to retry
@@ -31,10 +31,9 @@ mutable struct ParallelEvaluationState{F, FS}
                                       # fitness calculation
     next_index::Int                   # index of the next candidate to calculate fitness
 
-    function ParallelEvaluationState(fitness_scheme::FS,
-                                     nworkers::Int) where {FS<:FitnessScheme}
-        F = fitness_type(fitness_scheme)
-        new{F,FS}(fitness_scheme, Vector{Candidate{F}}(),
+    function ParallelEvaluationState(archive::A, nworkers::Int) where {A<:Archive}
+        FA = fitness_type(archive)
+        new{FA,A}(archive, Vector{Candidate{FA}}(),
                   fill(false, nworkers), Vector{Int}(), Condition(), 0)
     end
 end
@@ -47,7 +46,7 @@ abort!(estate::ParallelEvaluationState) = (estate.next_index = 0)
 Reset the current `ParallelEvaluationState` and the vector
 of candidates that need fitness evaluation.
 """
-function reset!(estate::ParallelEvaluationState{F}, candidates::Vector{Candidate{F}}) where F
+function reset!(estate::ParallelEvaluationState{FA}, candidates::Vector{Candidate{FA}}) where FA
     estate.candidates = candidates
     fill!(estate.worker_busy, false)
     empty!(estate.retry_queue)
@@ -66,7 +65,7 @@ function next_candidate!(estate::ParallelEvaluationState, worker_ix::Int)
     if !is_stopped(estate) && estate.next_index <= length(estate.candidates)
         # find the next candidate with unevaluated fitness
         while !is_stopped(estate) && estate.next_index <= length(estate.candidates)
-            if isnafitness(estate.candidates[estate.next_index].fitness, estate.fitness_scheme)
+            if isnafitness(estate.candidates[estate.next_index].fitness, fitness_scheme(estate.archive))
                 task_ix = estate.next_index
                 estate.next_index += 1
                 break;
@@ -109,30 +108,33 @@ end
 Fitness evaluator that distributes candidates fitness calculation
 among several worker processes.
 """
-mutable struct ParallelEvaluator{F, FS, P<:OptimizationProblem} <: Evaluator{P}
+mutable struct ParallelEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archive} <: Evaluator{P}
     problem::P
-    archive::Archive
+    archive::A
     num_evals::Int
     last_fitness::F
+    arch_nafitness::FA  # NA fitness
 
     worker_refs::Vector{ParallelEvaluatorWorkerRef{P}}
-    eval_state::ParallelEvaluationState{F, FS}
+    eval_state::ParallelEvaluationState{FA, A}
 end
 
 function ParallelEvaluator(
-        problem::P, archive::Archive;
-        pids::Vector{Int} = workers()) where {P<:OptimizationProblem}
+        problem::P, archive::A;
+        pids::Vector{Int} = workers()) where {P<:OptimizationProblem, A<:Archive}
     fs = fitness_scheme(problem)
-    ParallelEvaluator{fitness_type(fs), typeof(fs), P}(problem,
+    F = fitness_type(fs)
+    FA = fitness_type(archive)
+    ParallelEvaluator{F, FA, typeof(fs), P, A}(problem,
         archive,
-        0, nafitness(fs),
+        0, nafitness(fs), nafitness(FA),
         [RemoteChannel(function ()
                      # create fake channel and put problem there
                      ch = Channel{ParallelEvaluatorWorker{P}}(1)
                      put!(ch, ParallelEvaluatorWorker(copy(problem)))
                      ch
                    end, pid) for pid in pids],
-        ParallelEvaluationState(fs, length(pids))
+        ParallelEvaluationState(archive, length(pids))
     )
 end
 
@@ -144,7 +146,9 @@ ParallelEvaluator(problem::OptimizationProblem;
 
 num_evals(e::ParallelEvaluator) = e.num_evals
 
-function update_fitness!(e::ParallelEvaluator{F}, candidates::Vector{Candidate{F}}) where F
+function update_fitness!(f::Any, e::ParallelEvaluator, candidates::Any;
+                         force::Bool=false)
+    # FIXME use force
     reset!(e.eval_state, candidates)
 
     # based on pmap() code
@@ -154,10 +158,12 @@ function update_fitness!(e::ParallelEvaluator{F}, candidates::Vector{Candidate{F
                 while (candi_ix = next_candidate!(e.eval_state, widx)) != 0
                     try
                         candi = candidates[candi_ix]
-                        candi.fitness = remotecall_fetch(fitness, wref.where, candi.params, wref)
-                        e.last_fitness = candi.fitness
+                        candi_fitness = remotecall_fetch(fitness, wref.where, candi.params, wref)
+                        candi.fitness = archived_fitness(candi_fitness, e.archive)
+                        e.last_fitness = candi_fitness
                         e.num_evals += 1
                         add_candidate!(e.archive, candi.fitness, candi.params, e.num_evals)
+                        (f !== nothing) && f(candi)
                     catch ex
                         abort!(e.eval_state) # when one worker fails, the whole process is aborted
                         rethrow(ex)
@@ -173,8 +179,12 @@ function update_fitness!(e::ParallelEvaluator{F}, candidates::Vector{Candidate{F
 end
 
 # FIXME it's not efficient to calculate fitness like that with `ParallelEvaluator`
-function fitness(params::Individual, e::ParallelEvaluator{F}) where F
-    candi = Candidate{F}(params)
+update_fitness!(f::Any, e::ParallelEvaluator, candidate::Candidate;
+                force::Bool=false) = update_fitness!(f, e, [candidate])
+
+# FIXME it's not efficient to calculate fitness like that with `ParallelEvaluator`
+function fitness(params::Individual, e::ParallelEvaluator{F, FA}, tag::Int=0) where {F, FA}
+    candi = Candidate{FA}(params, -1, e.arch_nafitness, nothing, tag)
     update_fitness!(e, [candi])
     return candi.fitness
 end

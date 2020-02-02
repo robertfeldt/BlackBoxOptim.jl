@@ -3,6 +3,7 @@ Create `Evaluator` instance for a given `problem`.
 """
 function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
     workers = get(params, :Workers, Vector{Int}())
+    nthreads = get(params, :NThreads, 0)
     if archive===nothing
         # make the default archive
         archiveCapacity = get(params, :ArchiveCapacity, 10)
@@ -10,6 +11,8 @@ function make_evaluator(problem::OptimizationProblem, archive=nothing, params::P
     end
     if length(workers) > 0
         return ParallelEvaluator(problem, archive, pids=workers)
+    elseif nthreads > 0
+        return MultithreadEvaluator(problem, archive, nworkers=nthreads)
     else
         return ProblemEvaluator(problem, archive)
     end
