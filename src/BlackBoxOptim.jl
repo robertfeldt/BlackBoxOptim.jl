@@ -134,6 +134,9 @@ include("direct_search_with_probabilistic_descent.jl")
 # multi-objective optimization algorithms
 include("borg_moea.jl")
 
+# Quality Diversity optimization algorithms
+#include("behavioral_space.jl")
+
 # End-user/top-level interface functions
 include(joinpath("problems", "problem_family.jl"))
 include("optimization_methods.jl")
@@ -146,5 +149,8 @@ include("compare_optimizers.jl")
 # Problems for testing
 include(joinpath("problems", "single_objective.jl"))
 include(joinpath("problems", "multi_objective.jl"))
+
+# GUIs and front-ends
+include(joinpath("gui", "vega_lite_fitness_graph.jl"))
 
 end # module BlackBoxOptim
