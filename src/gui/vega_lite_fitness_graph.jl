@@ -98,7 +98,7 @@ mutable struct VegaLiteGraphFitnessGraph
 end
 
 timestamp(t = time()) = Libc.strftime("%Y-%m-%d %H:%M.%S", t)
-log(vlg::VegaLiteGraphFitnessGraph, msg) = vlg.verbose ? println(timestamp(), ": ", msg) : nothing
+printmsg(vlg::VegaLiteGraphFitnessGraph, msg) = vlg.verbose ? println(timestamp(), ": ", msg) : nothing
 
 function add_data!(vlg::VegaLiteGraphFitnessGraph, newentry::Dict)
     if length(vlg.data) < 1
@@ -107,7 +107,7 @@ function add_data!(vlg::VegaLiteGraphFitnessGraph, newentry::Dict)
     if !haskey(newentry, "Time")
         newentry["Time"] = time() - vlg.starttime
     end
-    log(vlg, "Adding data $newentry")
+    printmsg(vlg, "Adding data $newentry")
     push!(vlg.data, newentry)
 end
 
@@ -127,7 +127,7 @@ function send_new_data_on_socket(vlg::VegaLiteGraphFitnessGraph, ws)
     if hasnewdata(vlg)
         len = length(vlg.data)
         newdata = vlg.data[(vlg.last_sent_index+1):len]
-        log(vlg, "Sending data $newdata")
+        printmsg(vlg, "Sending data $newdata")
         write(ws, JSON.json(newdata))
         vlg.last_sent_index = len
     end
