@@ -9,17 +9,17 @@ const VegaLiteWebsocketFrontEndTemplate = """
 	<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
 </head>
 
-<body> 
+<body>
   <div id="vis"></div>
-  
-  <script>    
+
+  <script>
     const vegalitespec = %%VEGALITESPEC%%;
     vegaEmbed('#vis', vegalitespec, {defaultStyle: true})
     .then(function(result) {
         const view = result.view;
         const port = %%SOCKETPORT%%;
         const conn = new WebSocket("ws://127.0.0.1:" + port);
-    
+
         conn.onopen = function(event) {
           // insert data as it arrives from the socket
           conn.onmessage = function(event) {
@@ -52,7 +52,7 @@ const VegaLiteFitnessOverTimeSpecTemplate = """
             "type": "quantitative"
         },
         "y": {
-            "field": "Fitness", 
+            "field": "Fitness",
             "type": "quantitative",
             "scale": {"type": "log"}
         }
@@ -62,7 +62,7 @@ const VegaLiteFitnessOverTimeSpecTemplate = """
 
 rand_websocket_port() = 9000 + rand(0:42)
 
-function vegalite_websocket_frontend(vegalitespec::String = VegaLiteFitnessOverTimeSpecTemplate; 
+function vegalite_websocket_frontend(vegalitespec::String = VegaLiteFitnessOverTimeSpecTemplate;
     width::Int = 800, height::Int = 600, port::Int = rand_websocket_port())
     res = replace(VegaLiteWebsocketFrontEndTemplate, "%%VEGALITESPEC%%" => vegalitespec)
     res = replace(res, "%%WIDTH%%" => string(width))
@@ -81,7 +81,7 @@ function serve_html_file(file::String)
 end
 
 # Serve a VegaLite front-end on html and then push updates to data
-# over a websocket so that the VegaLite graph is updated. 
+# over a websocket so that the VegaLite graph is updated.
 mutable struct VegaLiteGraphFitnessGraph
     verbose::Bool
     httpport::Int
@@ -90,7 +90,7 @@ mutable struct VegaLiteGraphFitnessGraph
     data::Vector{Any}
     last_sent_index::Int
     starttime::Float64
-    function VegaLiteGraphFitnessGraph(verbose::Bool = true, 
+    function VegaLiteGraphFitnessGraph(verbose::Bool = true,
         httpport::Int = 8081, websocketport::Int = 9000, mindelay::Float64 = 1.0)
         @assert mindelay > 0.0
         new(verbose, httpport, websocketport, mindelay, Any[], 0, 0.0)
@@ -98,7 +98,7 @@ mutable struct VegaLiteGraphFitnessGraph
 end
 
 timestamp(t = time()) = Libc.strftime("%Y-%m-%d %H:%M.%S", t)
-log(vlg::VegaLiteGraphFitnessGraph, msg) = vlg.verbose ? println(timestamp(), ": ", msg) : nothing
+printmsg(vlg::VegaLiteGraphFitnessGraph, msg) = vlg.verbose ? println(timestamp(), ": ", msg) : nothing
 
 function add_data!(vlg::VegaLiteGraphFitnessGraph, newentry::Dict)
     if length(vlg.data) < 1
@@ -107,7 +107,7 @@ function add_data!(vlg::VegaLiteGraphFitnessGraph, newentry::Dict)
     if !haskey(newentry, "Time")
         newentry["Time"] = time() - vlg.starttime
     end
-    log(vlg, "Adding data $newentry")
+    printmsg(vlg, "Adding data $newentry")
     push!(vlg.data, newentry)
 end
 
@@ -127,7 +127,7 @@ function send_new_data_on_socket(vlg::VegaLiteGraphFitnessGraph, ws)
     if hasnewdata(vlg)
         len = length(vlg.data)
         newdata = vlg.data[(vlg.last_sent_index+1):len]
-        log(vlg, "Sending data $newdata")
+        printmsg(vlg, "Sending data $newdata")
         write(ws, JSON.json(newdata))
         vlg.last_sent_index = len
     end
