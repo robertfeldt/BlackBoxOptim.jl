@@ -234,4 +234,17 @@
         res = bboptimize(CallableObjective1(); SearchRange = [(-2.0, 3.0), (-4.0, 5.0)])
         @test best_candidate(res) ≈ zeros(2) atol = 1e-5
     end
+
+    @testset "explicit termination via shutdown method" begin
+        cb = function (oc)
+            if best_fitness(oc) < 50.0
+                BlackBoxOptim.shutdown_optimizer!(oc)
+            end
+        end
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                PopulationSize = 10, TraceMode = :silent, MaxFuncEvals = 1000,
+                CallbackFunction = cb, CallbackInterval = 0.0)
+        reason = BlackBoxOptim.stop_reason(res)
+        @test occursin("stopped", reason) && occursin("shutdown method", reason)
+    end
 end

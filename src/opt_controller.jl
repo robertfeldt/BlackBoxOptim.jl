@@ -42,7 +42,7 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
     max_steps_without_fevals::Int # stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
     max_steps_without_progress::Int # stop optimization if no improvement in this many steps (indicates a converged/degenerate search)
     max_time::Float64   # maximal time, 0 to ignore
-
+    
     min_delta_fitness_tol::Float64 # minimal difference between current best fitness and second-best one
     fitness_tol::Float64  # minimal difference between current best fitness and the known optmimum
 
@@ -61,6 +61,7 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
     last_callback_time::Float64 # last time callback function was called
 
     stop_reason::String # the reason for algorithm termination, empty if it's not terminated
+    shutdown::Bool # shutdown optimization run iff true
 end
 
 """
@@ -90,7 +91,7 @@ function OptRunController(optimizer::O, evaluator::E, params) where {O<:Optimize
                       :CallbackFunction, :CallbackInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
-        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "")
+        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "", false)
 end
 
 # stepping optimizer has it's own evaluator, get a reference
@@ -188,6 +189,10 @@ function elapsed_time(ctrl::OptRunController)
 end
 
 function check_stop_condition(ctrl::OptRunController)
+    if ctrl.shutdown
+        return "Run explicitly stopped via shutdown method"
+    end
+
     if ctrl.max_time > 0 && elapsed_time(ctrl) > ctrl.max_time
         return "Max time ($(ctrl.max_time) s) reached"
     end
@@ -270,12 +275,17 @@ setup_optimizer!(ctrl::OptRunController{<:SteppingOptimizer}) =
 setup_optimizer!(ctrl::OptRunController{<:AskTellOptimizer}) =
     setup!(ctrl.optimizer, ctrl.evaluator)
 
-shutdown_optimizer!(ctrl::OptRunController{<:SteppingOptimizer}) =
+shutdown!(ctrl::OptRunController) = ctrl.shutdown = true
+
+function shutdown_optimizer!(ctrl::OptRunController{<:SteppingOptimizer})
     shutdown!(ctrl.optimizer)
+    shutdown!(ctrl)
+end
 
 function shutdown_optimizer!(ctrl::OptRunController{<:AskTellOptimizer})
     shutdown!(ctrl.optimizer)
     shutdown!(ctrl.evaluator)
+    shutdown!(ctrl)
 end
 
 """

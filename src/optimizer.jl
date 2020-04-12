@@ -91,11 +91,11 @@ function setup!(o::SteppingOptimizer)
 end
 
 function setup!(o::AskTellOptimizer, evaluator::Evaluator)
-    # Do nothing, override if you need to setup prior to the optimization loop
+    # Do nothing, override if optimizer needs specific setup prior to the optimization loop
 end
 
 function shutdown!(o::Optimizer)
-    # Do nothing, override if you need to setup prior to the optimization loop
+    # Do nothing, override if optimizer needs specific shutdown
 end
 
 shutdown!(o::SteppingOptimizer) =
