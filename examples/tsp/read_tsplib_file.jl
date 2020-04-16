@@ -34,7 +34,7 @@ end
 
 function parse_edge_weights!(p, lines, lineindex)
     row = col = 1
-    while !isnothing(match(r"^(\s+(\d+))+\s*$", lines[lineindex]))
+    while !isnothing(match(r"^(\s*(\d+))+\s*$", lines[lineindex]))
         map(split(lines[lineindex], r"\s+")) do dstr
             if length(dstr) > 0
                 p.weights[row, col] = p.weights[col, row] = parse(Int, strip(dstr))

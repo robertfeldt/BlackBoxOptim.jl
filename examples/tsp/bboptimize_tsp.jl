@@ -6,6 +6,7 @@ using BlackBoxOptim
 include("read_tsplib_file.jl")
 
 TspProblemFile = "dantzig42.tsp" # Best known solution is 699
+TspProblemFile = "fri26.tsp" # Best known solution is 937
 const TSP = read_tsplib_file(TspProblemFile)
 
 # We get inspiration from the mapping methods in section 2.4 of the paper:
@@ -36,7 +37,7 @@ struct SortPermMapping <: PermutationMapping
 end
 apply(m::SortPermMapping, v::Vector{Float64}) = sortperm(v, rev=m.reverse)
 
-# The literature on mappings is not impressive with some papers
+# The literature on mappings is strange with some papers
 # basically just reversing the order and claiming novelty.
 # For example: Li, Xiangtao, and Minghao Yin. "A hybrid cuckoo 
 # search via Lévy flights for the permutation flow shop scheduling 
@@ -101,12 +102,14 @@ res_rov = bboptimize(make_perm_mapping_fitness(TSP, ROV);
     PopulationSize = 1000,
     MaxTime = 30.0)
 # dantzig42.tsp best runs: 836, 818
+# fri26.tsp best runs: 977
 
 res_spm = bboptimize(make_perm_mapping_fitness(TSP, SPM);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
     PopulationSize = 1000,
     MaxTime = 30.0)
 # dantzig42.tsp Best runs: 749, 753
+# fri26.tsp best runs: 937
 
 res_spm = bboptimize(make_perm_mapping_fitness(TSP, SPM);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
@@ -127,13 +130,14 @@ res_spm = bboptimize(make_perm_mapping_fitness(TSP, SPM);
 # dantzig42.tsp Best runs: 853
 
 res_trc1000 = bboptimize(make_perm_mapping_fitness(TSP, TRC);
-    SearchRange = (1.0, 42.9999), NumDimensions = size(TSP),
+    SearchRange = searchrange(TRC), NumDimensions = size(TSP),
     PopulationSize = 1000,
     MaxTime = 30.0)
 # dantzig42.tsp Best runs: 699, 722, 699, 699
+# fri26.tsp best runs: 937
 
 res_trc100 = bboptimize(make_perm_mapping_fitness(TSP, TRC);
-    SearchRange = (1.0, 42.999999), NumDimensions = size(TSP),
+    SearchRange = searchrange(TRC), NumDimensions = size(TSP),
     PopulationSize = 100,
     MaxTime = 30.0)
 # dantzig42.tsp Best runs: 737, 778
