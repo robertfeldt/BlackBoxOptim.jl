@@ -360,7 +360,7 @@ end
 
 function write_result(ctrl::OptRunController, filename = "")
     if isempty(filename)
-        timestamp = strftime("%y%m%d_%H%M%S", floor(Int, ctrl.start_time))
+        timestamp = Libc.strftime("%y%m%d_%H%M%S", floor(Int, ctrl.start_time))
         filename = "$(timestamp)_$(problem_summary(ctrl.evaluator))_$(name(ctrl.optimizer)).csv"
         filename = replace(replace(filename, r"\s+", "_"), r"/", "_")
     end
