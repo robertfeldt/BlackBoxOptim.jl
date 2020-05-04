@@ -1,0 +1,203 @@
+New design to be more general as well as closer to JuMP
+-------------------------------------------------------
+Main goals with redesign:
+ - Supporting QualityDiversity algorithms like MAPElites and Aurora
+ - Supporting optimization of not only Float64 but also Int and Mixed-variable problems (we will use this mainly with mappings to Float64 for now)
+ - Being multi-threaded by default since these algorithms are inherently parallel
+ - Supporting visualisation interfaces
+ - Support MathOptimizerInterface to JuMP so we can be backend to JuMP, like NLOpt
+
+Other goals with redesign:
+ - Simplifying interface
+ - Add long-requested things like initial solution
+ - Make it easier to add your own genetic operators
+ - Allowing more multi-objective opt algorithms
+ - Use existing loggers rather than doing our own
+
+Overall I want evaluation to be multi-threaded by default.
+
+Types:
+  OptimizationProblem 
+    = a problem to be optimized, defines a search space
+  SearchSpace   
+    = describes a set/space of allowed values of all decision variables
+    = same type hierarchy can be used to describe also other spaces/sets 
+        that is used during the optimization such as different elements 
+        of the phenotype, i.e. objective space, behavior space etc.
+
+  OptimizerSpec
+    = specification of an optimizer but without problem-specific adaptations
+    = includes all the parameters that determines how the optimizer will behave
+  Optimizer (or OptimizerInstance)
+    = a specific optimizer object that given a spec and a problem can search for
+      candidate solutions to the problem
+
+  Evaluator
+    = given a candidate from an optimizer the evaluator evaluates it and returns a fitness (objective and constraint values) and a behavioral description, i.e. maps from genotype to phenotype
+  
+  FitnessScheme (maybe generalize this to a PreferenceScheme for schemes that can rank also based on behavioral descriptors? So for a MAPElitesOptimizer we would use a combined Preference scheme that prefers higher values for the fitness value (say an accuracy) while it prefers diverse values of the behavioral descriptors? But maybe the archive could rather handle this internally and we need not express it in a PreferenceScheme?!?)
+    = a way to compare and rank candidate solution, i.e. given a set of candidates and their fitnesses a FitnessScheme can rank them in order of preference
+
+  Archive
+    = a container of good and/or interesting candidate solutions and their phenotypes (fitnesses and behavioral descriptors)
+
+  Loggers/UIs
+    = logs values to disk, presents them dynamically to the user etc
+
+Describe problem OptimizationProblem (called Model or ModelLike in MOI?).
+
+- an OptimizationProblem describes the problem to be optimized, including its 
+  - Variables (the elements of a candidate solution)
+  - SearchSpace (the set of values that valid candidate solutions lie in)
+  - Objectives (scalar- or vector-values that quantify how good a candidate solution 
+      is for a set of goals that we have)
+  - Characteristics (scalar- or vector-values that characterises a candidate solution on
+      auxiliary aspects which are not goals but on which candidates can meaningfully vary and 
+      that we want to explore)
+
+- an Evaluator maps from the (concrete) SearchSpace to the candidate space, 
+    then evaluates the candidates and provides objective values and 
+    characterization values.
+
+- an OptimizerSpecification specifies the parameters of an optimizer
+
+- an OptimizerInstance is a concrete instance of an optimizer. It is created from an Evaluator and an OptimizerSpecification. Multiple instances can be generated for a single
+spec and evaluator to utilize parallel optimization/evaluation.
+
+- an Archive is a container of candidate solutions and their associated values (objectives and characteristics), like for example a Population of candidates or a MAPElitesArchive. They keep track of the "best" candidates for each individual objective as well as for an optimization run as a whole.
+
+Concrete examples of the types above:
+- an SubsetSelectionProblem <: OptimizationProblem where we select M elements from an initial set of N elements.
+- a PermutationProblem <: OptimizationProblem where we want to find the best permutation of a set of objects.
+- a MixedTypeVectorProblem <: OptimizationProblem where we are looking for a vector of values but they are of a mixed type i.e. some are binary, some categorical, some continuous etc.
+- a VectorOptimizationProblem{Int64} <: OptimizationProblem where we want to find a vector of ints.
+- a VectorOptimizationProblem{Float64} is a normal continuous optimization problem that most blackbox optimization algorithms focus on.
+
+- an FloatIntMapper{Float64,Int64} <: Mapper maps from a concrete search space of Float64 values to an vector of ints.
+
+abstract type Objective{T} end
+abstract type ScalarObjective{T} <: Objective{T} end
+abstract type VectorObjective{T} <: Objective{T} end
+
+# Evaluator maps from candidate search space (CSP) to objective space (OS) while characterising the candidate in a behavior (BS) space. In evolutionary terms the OS and the BS together makes up the phenotype of a candidate genotype that is in the CSP. The goal of optimization is to find one or a set of candidates that have very good objective values while varying in interesting ways within the behavioral space. In a sense, the objectives are a small part of the BS, but ones we know we prefer over others. Typically, the objectives are summary statistics calculated over long behavioral description vectors.
+abstract type Evaluator{CSP,OS,BS} end
+
+# A common evaluator is to first map from the CSP to the SP of the problem and then simulate/evaluate to get objective and behavioral values.
+
+# Objectives are scalar- och vector-valued functions. Their sense specifies if they
+# are to be minimized (default) or maximized. For vector-valued objectives one
+# provides a vector of senses. (The senses are used to decide which objective values will
+# be multiplied by -1.0 before being used internally. Internally all objectives are minimized.)
+setobjective!(op, fn::Function, objsense::Sense, name = "")
+setobjectives!(op, num::Int, vectorfn::Function, objsenses::Vector{Sense}, name = "") # A function that returns multiple objectives in one call
+
+# Behavioral descriptor functions are scalar och vector-valued functions that
+# characterise a solution. This can be used to group similar solutions together.
+# It is typically much more higher-dimensional that objectives. 
+setcharacterizer!(op, fn::Function, name = "")
+setcharacterizers!(op, num::Int, vectorfn::Function, name = "")
+
+# Variables (same as MOI/JuMP)
+
+# Variables are searched, then Mapped (by a mapper), then evaluated (provides objective values and characterization values).
+
+# Mappers are functions that are applied to the variables before they are sent to the 
+# objectives. See examples in examples/tsp for how this can be done. For categorical
+# data we can embed them in 2D in a way so that one can more easily "jump around" 
+# between them.
+
+# The new design can live in the sub-module BlackBoxOptim.NextGen so we can more smoothly evolve between the old and the new.
+
+# Examples of how I want this to be used.
+
+# Example 1. Normal continuous optimization with a single, scalar objective that we want to maximize:
+using BlackBoxOptim
+const NG = BlackBoxOptim.NextGen
+
+fitnessfn(vs::Vector{Float}) = sum(map(i -> (i + vs)^1/i, 1:length(vs)))
+prob = NG.SingleObjectiveProblem{Vector{Float64}}(fitnessfn, NG.GoalMaximize)
+setdimension!(prob, 5)     # So 5 Float64 variables
+setinitial!(prob, rand(5)) # Set a starting point for the optimization, will be tried first
+setlowerbounds!(prob, zeros(5))
+setupperbounds!(prob, 10 * ones(5))
+
+opt = DifferentialEvolution(PopulationSize = 200)
+
+result = optimize(prob, opt; MaxTime = 5.0)
+
+# A shorthand which simply assumes the above and uses DE optimizer by default:
+result = optimize(prob, rand(5), NG.Maximize)
+
+# Example 2. Similar to above but using the JuMP interface
+using JuMP
+
+opt = DifferentialEvolution(PopulationSize = 200)
+m = Model(solver=BlackBoxOptimSolver(opt))
+
+@variable(m, 0 <= x[5] <= 10)
+@NLobjective(m, Max, fitnessfn) # Not clear that JuMP can be used like this but we want to! ;)
+@NLconstraint(m, x[2] >= (2*x[1]+0)^3)
+setvalue(x, rand(5))
+status = solve(m)
+println("Best fitness = $(getobjectivevalue(m)) for x = $(getvalue(x))")
+
+# Example 3. Multi-objective optimization with BORG MOEA
+
+fitnessfn(vs::Vector{Float}) = (sum(map(i -> (i + vs)^1/i, 1:length(vs))), sum(abs.(vs)))
+# Minmize the first objective and maximize the second:
+prob = NG.MultiObjectiveProblem{Vector{Float64}}(fitnessfn, 
+  [NG.GoalMinimize, NG.GoalMaximize])
+setdimension!(prob, 5)     # So 5 Float64 variables
+setlowerbounds!(prob, zeros(5)) # We don't need to set both lower and upper bounds. Defaults upper bounds of lowerbounds .+ 100 will then be used.
+
+optimize(prob, CmaES) # If we only give the type it will be used with default parameters
+
+# Example 4. Subset selection problem
+
+# Bin packing is subset selection, i.e. select among elements so that remaining, empty
+# space is minimized. The default mapping used under the hood is to optimize selection
+# variables that goes between -1.0 and 1.0. A value below zero means the corresponding
+# element is not included in the subset, a value of zero or more means the element is 
+# included. This is a simple mapping for subset selection problems.
+
+const Volumes = Dict(:a => 10, :b = 5, :c => 2, :d => 1)
+const TotalSpace = 13
+volumeleft(selected::Vector{Symbol}) = TotalSpace - sum(map(e -> Volume[e], selected))
+p = NG.SubsetSelectionProblem{Vector{Symbol}}(keys(Volumes), volumeleft, NG.GoalMinimize)
+result = optimize(p, DifferentialEvolution)
+getobjectivevalue(result) # Should be zero!
+
+# Example 5. QualityDiversity for exploring the search space while saving good candidates.
+
+# 2 objectives:
+mfitnessfn(vs::Vector{Float}) = (sum(map(i -> (i + vs)^1/i, 1:length(vs))), sum(abs.(vs)))
+
+# 2 behavioral properties:
+# Here we just use the genotype (candidate solution) as the first descriptor and 
+# a sum of the variables as another, summary descriptor.
+bds(vs::Vector{Float}) = (vs, sum(vs))
+
+# We use an evaluator which will return the fitnesses and the properties separately.
+# We specify name for the component fitnesses and properties.
+e = Evaluator(mfitnessfn, [:f1, :f2], bds, [:genotype, :l1norm])
+
+p = NG.MultiObjectiveProblem{Vector{Float64}}(keys(Volumes), volumeleft, NG.GoalMinimize)
+
+# We include a custom genetic x-over operator which just takes the average of three parent
+# vectors:
+struct MyAvgXover{Vector{Float64}, 3} <: NG.XoverOperator{Vector{Float64}, 3} end
+apply!(m::MyAvgXover, x1::Vector{Float64}, x2::Vector{Float64}, x3::Vector{Float64}) = 
+  (x1 .+ x2 .+ x3) ./ 3
+
+opt = DifferentialEvolution() # Start from defaults
+add_operator!(opt, MyAvgXover{Vector{Float64}, 3}())
+result = optimize(p, opt)
+# This will return the one with the lowest rank-value, i.e. averaging the ranks per fitness.
+getobjectivevalue(result)
+# However, we can access the archive with the whole QualityDiversity archive with best in each bin
+a = getarchive(result)
+pctcoveredbins = 100.0*nfilledbins(a)/ntotalbins(a) # How many bins of the behavioral space was covered?
+# Get the best candidate of each bin
+elites = map(bin -> getbestcandidate(bin), bins(archive))
+# and their fitness vectors
+fitnesses = map(getfitness, elites)
