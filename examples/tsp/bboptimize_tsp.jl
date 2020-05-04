@@ -144,3 +144,59 @@ res_trc100 = bboptimize(make_perm_mapping_fitness(TSP, TRC);
 
 # The TRC mapping is good on this problem since it "repairs" duplicates
 # by turning them into the closest remaining city in the natural encoding.
+
+# An interesting representation might be to encode the probability 
+# to take the road from one city to another. This scales as O(n^2) but would 
+# enable global learning since the same position in the genome means the same
+# thing for all individuals. We only add the starting city as a rounded float
+# and then use the highest probability of the already non-visited nodes
+# from then on to create a unique TSP traversal.
+struct EdgeTraversalProbabilitiesMapping <: PermutationMapping
+    N::Int
+    EdgeTraversalProbabilitiesMapping(N::Int) = new(N)
+end
+function searchspace(m::EdgeTraversalProbabilitiesMapping)
+    ss = [(1.0, float(m.N)+0.99999999)]
+    for i in 1:(m.N^2)
+        push!(ss, (0.0, 1.0))
+    end
+    ss
+end
+
+apply(m::EdgeTraversalProbabilitiesMapping, v::Vector{Float64}) =
+    apply!(m, v, Array{Int}(undef, m.N))
+
+function apply!(m::EdgeTraversalProbabilitiesMapping, 
+    v::Vector{Float64}, permutation::Vector{Int})
+
+    i = 1
+    permutation[i] = currentcity = floor(Int, v[1])
+    visited = BitArray{1}(zeros(m.N))
+    visited[currentcity] = 1
+    while i < m.N
+        i += 1
+        startidx = 2 + (currentcity-1)*m.N
+        endidx = startidx + m.N - 1
+        perm = sortperm(view(v, startidx:endidx), rev=true)
+        for candidatecity in perm
+            if candidatecity != currentcity && !visited[candidatecity]
+                permutation[i] = candidatecity
+                visited[Int(candidatecity)] = 1
+                currentcity = candidatecity
+                break
+            end
+        end
+    end
+    permutation
+end
+
+const ETP = EdgeTraversalProbabilitiesMapping(size(TSP))
+
+# Doesn't seem to work well, I guess the scaling makes it costly.
+res_etp1000 = bboptimize(make_perm_mapping_fitness(TSP, ETP);
+    SearchSpace = searchspace(ETP),
+    PopulationSize = 1000,
+    MaxTime = 60.0)
+
+# We could try TRC with backups i.e. each also has a backup which is checked
+# and only if that also is not available do we search for the closest remaining one.
