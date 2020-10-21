@@ -44,7 +44,7 @@ function check_and_create_search_space(params::Parameters)
         ss = params[:SearchSpace]
         if isa(ss, SearchSpace)
             return ss
-        elseif isa(ss, typeof([(0.0, 1.0)]))
+        elseif isa(ss, AbstractVector{<:Tuple{<:Real,<:Real}})
             return RectSearchSpace(ss)
         elseif ss == false
             # silently fallthrough to the other means of search space specification
@@ -59,13 +59,13 @@ function check_and_create_search_space(params::Parameters)
         sr = params[:SearchRange]
         # Check that a valid search range has been stated and create the search_space
         # based on it, or bail out.
-        if isa(sr, typeof((0.0, 1.0)))
+        if isa(sr, Tuple{<:Number, <:Number})
             ndim = params[:NumDimensions]
             if ndim == :NotSpecified
                 throw(ArgumentError("You MUST specify NumDimensions= in a solution when giving a SearchRange=$(sr)"))
             end
             return RectSearchSpace(params[:NumDimensions], sr)
-        elseif isa(sr, Vector{<:Tuple{<:Real,<:Real}})
+        elseif isa(sr, AbstractVector{<:Tuple{<:Real,<:Real}})
             return RectSearchSpace(sr)
         else
             throw(ArgumentError("Using $(typeof(sr)) for SearchRange is not supported."))
