@@ -26,12 +26,13 @@ end
 function setup_problem(func, parameters::Parameters)
     ss = check_and_create_search_space(parameters)
 
-    # Now create an optimization problem with the given information. We currently reuse the type
-    # from our pre-defined problems so some of the data for the constructor is dummy.
+    # Now create an optimization problem with the given information. We currently reuse the 
+    # type from our pre-defined problems so some of the data for the constructor is dummy.
     problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss,
                                    parameters[:TargetFitness])
 
-    # validate fitness: create a random solution from the search space and ensure that fitness(problem) returns fitness_type(problem).
+    # validate fitness: create a random solution from the search space and ensure that 
+    # fitness(problem) returns fitness_type(problem).
     ind = rand_individual(search_space(problem))
     res = fitness(ind, problem)
     fitnessT = fitness_type(problem)

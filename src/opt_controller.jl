@@ -65,25 +65,36 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
 end
 
 """
+    OptRunController(optimizer::O, evaluator::E, params)
+
 Create `OptRunController` for a given problem using specified `optimizer`.
 
-#Arguments
-    * `optimizer` initialized optimization method
-    * `evaluator` the evaluator of the problem fitness
-    * `params` controller settings, see `DefaultParameters` for the default values:
-        * `:MaxTime` max time in seconds (takes precedence over the other budget-related params if specified), 0.0 disables the check
-        * `:MaxFuncEvals` max fitness evals (takes precedence over max iterations, but not max time), 0 disables the check
-        * `:MaxSteps` max iterations gives the least control since different optimizers have different "size" of their "iterations"
-        * `:MaxStepsWithoutProgress` max iterations without fitness improvement
-        * `:MinDeltaFitnessTolerance` minimum delta fitness (difference between the two consecutive best fitness improvements) we can accept before terminating
-        * `:FitnessTolerance` stop the optimization when the best fitness found is within this distance of the actual optimum (if known)
-        * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this many steps (indicates a converged/degenerate search)
-        * `:NumRepetitions` number of repetitions to run for each optimizer for each problem
-        * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization (one of `:silent`, `:verbose`)
-        * `:TraceInterval` the trace interval (in seconds)
-        * `:SaveTrace` whether to save it to a file (defaults to `false`)
-        * `:SaveFitnessTraceToCsv` whether the history of fitness changes during optimization should be save to a csv file
-        * `:SaveParameters` save method/controller parameters to a JSON file
+# Arguments
+
+* `optimizer` initialized optimization method
+* `evaluator` the evaluator of the problem fitness
+* `params` controller settings, see `DefaultParameters` for the default values:
+    * `:MaxTime` max time in seconds (takes precedence over the other budget-related params 
+      if specified), 0.0 disables the check
+    * `:MaxFuncEvals` max fitness evals (takes precedence over max iterations, but not max 
+      time), 0 disables the check
+    * `:MaxSteps` max iterations gives the least control since different optimizers have 
+      different "size" of their "iterations"
+    * `:MaxStepsWithoutProgress` max iterations without fitness improvement
+    * `:MinDeltaFitnessTolerance` minimum delta fitness (difference between the two 
+      consecutive best fitness improvements) we can accept before terminating
+    * `:FitnessTolerance` stop the optimization when the best fitness found is within this 
+      distance of the actual optimum (if known)
+    * `:MaxNumStepsWithoutFuncEvals` stop optimization if no new fitness evals in this 
+      many steps (indicates a converged/degenerate search)
+    * `:NumRepetitions` number of repetitions to run for each optimizer for each problem
+    * `:TraceMode` how the optimizer state is traced to the STDOUT during the optimization 
+      (one of `:silent`, `:verbose`)
+    * `:TraceInterval` the trace interval (in seconds)
+    * `:SaveTrace` whether to save it to a file (defaults to `false`)
+    * `:SaveFitnessTraceToCsv` whether the history of fitness changes during optimization 
+      should be save to a csv file
+    * `:SaveParameters` save method/controller parameters to a JSON file
 """
 function OptRunController(optimizer::O, evaluator::E, params) where {O<:Optimizer, E<:Evaluator}
     OptRunController{O,E}(optimizer, evaluator,

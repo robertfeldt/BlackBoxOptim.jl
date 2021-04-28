@@ -1,3 +1,4 @@
+#using FactCheck
 facts("Top-level interface") do
   context("run a simple optimization with mostly defaults") do
     res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
