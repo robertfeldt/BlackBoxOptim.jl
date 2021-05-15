@@ -145,6 +145,8 @@ For multi-objective optimization only the [BorgMOEA](http://borgmoea.org/) (`bor
 
 # Multithreaded and Parallel Function Evaluation
 
+**NB!** There are problems with the multi-threaded evaluation on Julia 1.6 and later. We will be investigating this and hope to fix in a future release. For now the related tests have been deactivated. Sorry for the inconvenience.
+
 For some (slow) functions being optimized and if you have a multi-core CPU you can gain performance by using multithreaded or parallel evaluation. This typically requires an optimization algorithm that evaluates many candidate points in one batch. The NES family (`xnes`, `dxnes` etc), for example. See the file
 
 [examples/rosenbrock_parallel.jl](examples/rosenbrock_parallel.jl)
