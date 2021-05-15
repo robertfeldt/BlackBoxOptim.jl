@@ -12,12 +12,16 @@ const SI = SpatialIndexing
 
 TestDir = first(splitdir(@__FILE__()))
 
-# If two arguments the second one if filename of a testset file
+# If two arguments the second one is filename of a testset file
 # listing the testfiles to use.
 if length(ARGS) == 2 && isfile(ARGS[2])
     test_file_list = ARGS[2]
 else
-    test_file_list = joinpath(TestDir, "testset_normal.txt")
+    test_file_list = if isfile(joinpath(TestDir, "testset_current.txt"))
+        joinpath(TestDir, "testset_current.txt")
+    else
+        joinpath(TestDir, "testset_normal.txt")
+    end
 end
 
 TestFiles = filter(fn -> isfile(joinpath(TestDir, fn)), 

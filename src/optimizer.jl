@@ -79,12 +79,31 @@ See also `ask()`.
 function tell! end # FIXME avoid defining 0-arg function
 
 """
+    set_candidate!(opt, x)(o::Optimizer, x0)
+
+Set a candidate as a starting points for optimization. For population-based 
+optimizers this will randomly overwrite one of the candidate solutions of 
+the current population with `x0`. For optimizers that maintain a single 
+candidate that will be set to `x0`.
+"""
+function set_candidate!(o::Optimizer, x0)
+    error("No set_candidate! method defined for $(typeof(o))")
+end
+
+function set_candidate!(o::SteppingOptimizer, x0)
+    o.xfitness = fitness(x0, evaluator(o))
+    o.x = x0
+end
+
+"""
 Base class for population-based optimization methods.
 """
 abstract type PopulationOptimizer <: AskTellOptimizer end
 
 population(popopt::PopulationOptimizer) = popopt.population
 popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
+
+set_candidate!(o::PopulationOptimizer, x0) = set_candidate!(population(o), x0)
 
 function setup!(o::SteppingOptimizer)
     # Do nothing, override if you need to setup prior to the optimization loop

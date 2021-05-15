@@ -111,6 +111,11 @@ function Base.setindex!(pop::FitPopulation, indi::Individual, indi_ix::Integer)
     return pop
 end
 
+function set_candidate!(pop::FitPopulation, x0)
+    idx = rand(1:popsize(pop))
+    pop[idx] = x0
+end
+
 function Base.setindex!(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_ix::Integer) where F
     pop.individuals[:, indi_ix] = params(indi)
     pop.fitness[indi_ix] = fitness(indi)

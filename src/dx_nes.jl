@@ -64,6 +64,9 @@ mutable struct DXNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionSt
     end
 end
 
+set_candidate!(o::DXNESOpt, x0) = (o.x = x0)
+candidate(o::DXNESOpt) = o.x
+
 function trace_state(io::IO, dxnes::DXNESOpt, mode::Symbol)
     evol_path_norm = norm(dxnes.evol_path)
     println(io,

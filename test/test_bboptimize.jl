@@ -30,6 +30,11 @@ end
         end
 
         @testset "example #5" begin
+            res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2)
+            @test isapprox(best_fitness(res), 0.0)
+        end
+
+        @testset "example #6" begin
             res = BlackBoxOptim.compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 3,
                             MaxTime = 2.0, TraceMode = :compact)
 

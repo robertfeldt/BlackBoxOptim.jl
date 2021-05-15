@@ -409,6 +409,7 @@ OptController(
     params::ParamsDictChain) where {O<:Optimizer, P<:OptimizationProblem} =
     OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
 
+optimizer(oc::OptController) = oc.optimizer
 problem(oc::OptController) = oc.problem
 numruns(oc::OptController) = length(oc.runcontrollers)
 lastrun(oc::OptController) = oc.runcontrollers[end]

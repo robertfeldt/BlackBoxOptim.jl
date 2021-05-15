@@ -46,9 +46,10 @@ function setup_problem(func, parameters::Parameters)
 end
 
 """
-    bboptimize(problem[; parameters::Associative, kwargs...])
+    bboptimize(problem[, x0, parameters::Associative; kwargs...])
 
-Solve given optimization `problem`.
+Solve given optimization `problem`. Optionally a starting point `x0`
+can be specified.
 
 See `setup_problem()` for the types of `problem` supported.
 In addition, the `problem` could be `OptController` containing the
@@ -60,11 +61,19 @@ Returns `OptimizationResults` instance.
 
 See also `bbsetup()` and [`BlackBoxOptim.OptRunController`](@ref) for a full list of supported parameters.
 """
-function bboptimize(optctrl::OptController; kwargs...)
+function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
     if length(kwargs) > 0
         update_parameters!(optctrl, kwargs2dict(kwargs))
     end
+    if !isnothing(x0)
+        set_candidate!(optimizer(optctrl), x0)
+    end
     run!(optctrl)
+end
+
+function bboptimize(functionOrProblem, x0, parameters::Parameters = EMPTY_PARAMS; kwargs...)
+    optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
+    bboptimize(optctrl, x0)
 end
 
 function bboptimize(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)

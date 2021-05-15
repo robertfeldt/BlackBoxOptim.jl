@@ -32,3 +32,9 @@ To set an initial solution we can either:
 ### BorgMOEA
  - Currently: Similar to DiffEvoOpt but calls population(problem, opts, nafitness(IndexedTupleFitness{N,F}), ntransient=1).
  - Solution should be same as for DiffEvoOpt but ensure all variants of population method are fixed.
+
+ ## Chosen solution
+
+ Simplest is to add a set_candidate!(opt, x) which can set/initialize a new starting point. For population optimizers
+ it will be randomly inserted in one position of the population while for the hill climbing style optimizers it will
+ supplant the single, current solution/candidate.

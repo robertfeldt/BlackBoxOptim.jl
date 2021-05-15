@@ -35,6 +35,9 @@ name(spsa::SimultaneousPerturbationSA2) = "SPSA2 (Simultaneous Perturbation Stoc
 
 sample_bernoulli_vector(n::Int) = [2.0*round(rand()) - 1.0 for _ in 1:n]
 
+set_candidate!(o::SimultaneousPerturbationSA2, x0) = (o.theta = x0)
+candidate(o::SimultaneousPerturbationSA2) = o.theta
+
 function ask(spsa::SimultaneousPerturbationSA2)
     delta = sample_bernoulli_vector(spsa.n)
     ck = spsa.parameters[:c]/(spsa.k + 1)^spsa.parameters[:Gamma]

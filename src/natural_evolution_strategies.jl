@@ -54,6 +54,9 @@ end
 population(o::NaturalEvolutionStrategyOpt) = o.candidates
 numdims(o::NaturalEvolutionStrategyOpt) = numdims(search_space(o.embed))
 
+set_candidate!(o::SeparableNESOpt, x0) = (o.mu = x0)
+candidate(o::SeparableNESOpt) = o.mu
+
 const NES_DefaultOptions = ParamsDict(
     :lambda => 0,              # If 0 it will be set based on the number of dimensions
     :ini_x => nothing,         # starting point, "nothing" generates random point in a search space
@@ -270,6 +273,9 @@ mutable struct XNESOpt{F,E<:EmbeddingOperator} <: ExponentialNaturalEvolutionStr
         )
     end
 end
+
+set_candidate!(o::XNESOpt, x0) = (o.x = x0)
+candidate(o::XNESOpt) = o.x
 
 const XNES_DefaultOptions = chain(NES_DefaultOptions, ParamsDict(
     :B_learnrate => 0.0,   # If 0.0 it will be set based on the number of dimensions

@@ -43,6 +43,12 @@ mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
     end
 end
 
+function set_candidate!(o::ResamplingMemeticSearcher, x0)
+    o.elite_fitness = fitness(x0, evaluator(o))
+    o.elite = x0
+end
+candidate(o::ResamplingMemeticSearcher) = o.elite
+
 name(rs::ResamplingMemeticSearcher) = rs.name
 
 const RISDefaultParameters = ParamsDict(

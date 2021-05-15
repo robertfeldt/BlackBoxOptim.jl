@@ -1,11 +1,6 @@
 BlackBoxOptim.jl
 ==============
 
-[![Build Status](https://travis-ci.com/robertfeldt/BlackBoxOptim.jl.svg?branch=master)](https://travis-ci.com/robertfeldt/BlackBoxOptim.jl)
-[![Coverage Status](https://coveralls.io/repos/github/robertfeldt/BlackBoxOptim.jl/badge.svg?branch=master)](https://coveralls.io/github/robertfeldt/BlackBoxOptim.jl?branch=master)
-[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_0.7.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
-[![BlackBoxOptim](http://pkg.julialang.org/badges/BlackBoxOptim_1.0.svg)](http://pkg.julialang.org/?pkg=BlackBoxOptim)
-
 `BlackBoxOptim` is a global optimization package for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability. It also supports parallel evaluation to speed up optimization for functions that are slow to evaluate.
 
 # Installation
@@ -51,7 +46,17 @@ Note that the `rosenbrock2d()` function is quite easy to optimize. Even a random
 ```julia
 bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :random_search, MaxTime = 10.0)
 ```
-But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give them some time. We can compare optimizers using the `compare_optimizers()` function:
+But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give them some time. 
+
+You can give a starting (initial candidate) point for the search when calling `bboptimize` but beware
+that very little checking is done on it so be sure to provide a candidate of the right length and 
+inside the search space:
+```julia
+res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2)
+isapprox(best_fitness(res), 0.0)
+```
+
+We can compare optimizers using the `compare_optimizers()` function:
 ```julia
 function rosenbrock(x)
   return( sum( 100*( x[2:end] .- x[1:end-1].^2 ).^2 .+ ( x[1:end-1] .- 1 ).^2 ) )

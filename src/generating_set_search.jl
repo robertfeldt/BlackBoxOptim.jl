@@ -97,6 +97,8 @@ name(opt::GeneratingSetSearcher) = "GeneratingSetSearcher($(typeof(opt.direction
 
 has_converged(gss::GeneratingSetSearcher) = gss.step_size < gss.step_tol
 
+candidate(gss::GeneratingSetSearcher) = gss.x
+
 function step!(gss::GeneratingSetSearcher)
     if has_converged(gss)
         # Restart from a random point
