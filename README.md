@@ -42,21 +42,19 @@ If you want to use a different optimizer that can be specified with the `Method`
 ```julia
 bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :de_rand_1_bin)
 ```
-Note that the `rosenbrock2d()` function is quite easy to optimize. Even a random search will come close if we give it more time:
-```julia
-bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :random_search, MaxTime = 10.0)
-```
-But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give them some time. 
-
 You can give a starting (initial candidate) point for the search when calling `bboptimize` but beware
 that very little checking is done on it so be sure to provide a candidate of the right length and 
 inside the search space:
 ```julia
-res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2)
+res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2, MaxTime = 0.1)
 isapprox(best_fitness(res), 0.0)
 ```
 
-We can compare optimizers using the `compare_optimizers()` function:
+Note that the `rosenbrock2d()` function is quite easy to optimize. Even a random search will come close if we give it more time:
+```julia
+bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :random_search, MaxTime = 10.0)
+```
+But if we optimize the same rosenbrock function in, say, 30 dimensions that will be very hard for a random searcher while sNES or DE can find good solutions if we give them some time. We can compare optimizers using the `compare_optimizers()` function:
 ```julia
 function rosenbrock(x)
   return( sum( 100*( x[2:end] .- x[1:end-1].^2 ).^2 .+ ( x[1:end-1] .- 1 ).^2 ) )

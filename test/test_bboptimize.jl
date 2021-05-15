@@ -24,14 +24,14 @@ end
         end
 
         @testset "example #4" begin
-            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-                            Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
-            @test best_fitness(res) < 0.2
+            res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2, MaxTime = 0.1)
+            @test isapprox(best_fitness(res), 0.0)
         end
 
         @testset "example #5" begin
-            res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2)
-            @test isapprox(best_fitness(res), 0.0)
+            res = bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                            Method = :random_search, MaxTime = 10.0, TraceMode = :silent)
+            @test best_fitness(res) < 0.2
         end
 
         @testset "example #6" begin
