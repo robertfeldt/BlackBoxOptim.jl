@@ -48,7 +48,8 @@ You can give a starting (initial candidate) point for the search when calling `b
 that very little checking is done on it so be sure to provide a candidate of the right length and 
 inside the search space:
 ```julia
-res = bboptimize(rosenbrock2d, [1.0, 1.0]; SearchRange = (-5.0, 5.0), NumDimensions = 2, MaxTime = 0.1)
+x0 = [1.0, 1.0] # starting point (aka initial candidate)
+res = bboptimize(rosenbrock2d, x0; SearchRange = (-5.0, 5.0), NumDimensions = 2, MaxTime = 0.1)
 isapprox(best_fitness(res), 0.0)
 ```
 
