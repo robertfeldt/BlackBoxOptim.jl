@@ -10,6 +10,6 @@ end
 
 nreps = (length(ARGS) > 0 ? parse(Int, ARGS[2]) : 10)
 
-cmd = `$(Sys.BINDIR)/julia --color=yes -L $scripts_dir/activate_pwd_env.jl -- $scripts_dir/compare_optimizers.jl update --benchmarkfile $nbfile --numreps $nreps`
+cmd = `$(Sys.BINDIR)/julia --color=yes -L $scripts_dir/activate_pwd_env.jl -- $scripts_dir/compare_optimizers.jl update --benchmarkfile $nbfile --numreps $nreps --optimizers all`
 
 run(cmd)

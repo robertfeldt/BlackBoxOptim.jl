@@ -267,22 +267,22 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
 
             start_time = time()
             ftn, dur = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), method)
-            df[:ElapsedTime] = dur
-            df[:StartTime] = Libc.strftime("%Y-%m-%d %H:%M:%S", start_time)
-            df[:Fitness] = ftn
+            df[!, :ElapsedTime] = [dur]
+            df[!, :StartTime] = [Libc.strftime("%Y-%m-%d %H:%M:%S", start_time)]
+            df[!, :Fitness] = [ftn]
 
             push!(dfs, df)
         end
     end
 
-    vcat(dfs)
+    vcat(dfs...)
 end
 
 using CSV
 
 function read_benchmark_db(filename)
     if isfile(filename)
-        return CSV.read(filename)
+        return CSV.read(filename, DataFrame)
     else
         @warn "Benchmark results file $filename not found, returning empty frame"
         return DataFrame()
@@ -290,10 +290,11 @@ function read_benchmark_db(filename)
 end
 
 function add_rank_per_group(df, groupcols, rankcol, resultcol)
-    by(df, groupcols) do subdf
-        orderedsubdf = subdf[sortperm(subdf[:,rankcol]), :]
-        orderedsubdf[resultcol] = collect(1:size(orderedsubdf,1))
-        return orderedsubdf
+    gdf = groupby(df, groupcols)
+    combine(gdf) do subdf
+        ordered = subdf[sortperm(subdf[:, rankcol]), :]
+        ordered[!, resultcol] = collect(1:size(ordered,1))
+        return ordered
     end
 end
 
@@ -303,21 +304,19 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
 
     if numrows > 1
         # Find min fitness per problem
-        minfitpp = by(db, [:Problem, :NumDims]) do df
-            DataFrame(
-                MinFitness = minimum(df[:Fitness])
-            )
+        minfitpp = combine(groupby(db, [:Problem, :NumDims])) do df
+            DataFrame(MinFitness = minimum(df.Fitness))
         end
 
         # Add col with order of magnitude worse than min fitness for each run
-        db = join(db, minfitpp, on = [:Problem, :NumDims])
-        db[:LogTimesWorseFitness] = log10.(db[:Fitness] ./ db[:MinFitness])
+        db = leftjoin(db, minfitpp, on = [:Problem, :NumDims])
+        db[:, :LogTimesWorseFitness] = log10.(db.Fitness ./ db.MinFitness)
 
         # Calc median fitness and time per problem and method.
-        sumdf = by(db, [:Problem, :NumDims, :Method]) do df
+        sumdf = combine(groupby(db, [:Problem, :NumDims, :Method])) do df
             DataFrame(N = size(df, 1),
-                      MedianFitness = median(df[:,:Fitness]),
-                      MedianTime = median(df[:,:ElapsedTime]))
+                      MedianFitness = median(df.Fitness),
+                      MedianTime = median(df.ElapsedTime))
         end
 
         # Rank on median fitness and median time for each problem.
@@ -325,23 +324,25 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
         sumdf = add_rank_per_group(sumdf, [:Problem, :NumDims], :MedianTime, :RankTime)
 
         # Get number of runs and median magnitude worse per method
-        permethod = by(db, [:Method]) do df
+        permethod = combine(groupby(db, [:Method])) do df
             DataFrame(
                 NumRuns = size(df, 1),
-                MedianLogTimesWorseFitness = round(median(df[:, :LogTimesWorseFitness]), digits=1)
+                MedianLogTimesWorseFitness = round(median(df.LogTimesWorseFitness), digits=1)
             )
         end
 
         # and merge with table with mean ranks of fitness and time.
-        summarydf = by(sumdf, [:Method]) do df
+        summarydf = combine(groupby(sumdf, [:Method])) do df
+            rfs = df.RankFitness
+            rts = df.RankTime
             DataFrame(
-                MeanRank = round(mean(df[:RankFitness]), digits=3),
-                Num1sFitness = sum(r -> (r == 1) ? 1 : 0, df[:RankFitness]),
-                MeanRankTime = round(mean(df[:RankTime]), digits=3),
-                Num1sTime = sum(r -> (r == 1) ? 1 : 0, df[:RankTime]),
+                MeanRank = round(mean(rfs), digits=3),
+                Num1sFitness = sum(r -> (r == 1) ? 1 : 0, rfs),
+                MeanRankTime = round(mean(rts), digits=3),
+                Num1sTime = sum(r -> (r == 1) ? 1 : 0, rts),
             )
         end
-        df = join(summarydf, permethod, on = :Method)
+        df = leftjoin(summarydf, permethod, on = :Method)
 
         # Now sort and print
         sort!(df, [:MeanRank, :MeanRankTime, :Num1sFitness])
@@ -381,14 +382,14 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
         totalruns = length(optimizers) * nreps * length(pset)
         runnum = 0
         for optmethod in optimizers
-            optsel = db[:Method] .== string(optmethod)
+            optsel = db.Method .== string(optmethod)
             for pd in pset
                 probname, numdims, popsize, numfevals = pd
-                psel = db[:Problem] .== probname
-                dsel = db[:NumDims] .== numdims
+                psel = db.Problem .== probname
+                dsel = db.NumDims .== numdims
                 df = db[optsel .& psel .& dsel, :]
-                benchfitnesses = convert(Vector{Float64}, df[:Fitness])
-                benchtimes = convert(Vector{Float64}, df[:ElapsedTime])
+                benchfitnesses = convert(Vector{Float64}, df.Fitness)
+                benchtimes = convert(Vector{Float64}, df.ElapsedTime)
                 newfs = Float64[]
                 newtimes = Float64[]
                 prob = BlackBoxOptim.example_problems[probname]
@@ -437,19 +438,19 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
 
         # Use Benjamini-Hochberg to judge which pvalues are significant given we did
         # many comparisons.
-        ftn_pvs = convert(Vector{Float64}, df[:FitnessPvalue])
-        df[:FitnessSignificantBH001] = benjamini_hochberg(ftn_pvs, 0.01)
-        df[:FitnessSignificantBH005] = benjamini_hochberg(ftn_pvs, 0.05)
-        df[:FitnessSignificantBH010] = benjamini_hochberg(ftn_pvs, 0.10)
+        ftn_pvs = convert(Vector{Float64}, df.FitnessPvalue)
+        df[!, :FitnessSignificantBH001] = benjamini_hochberg(ftn_pvs, 0.01)
+        df[!, :FitnessSignificantBH005] = benjamini_hochberg(ftn_pvs, 0.05)
+        df[!, :FitnessSignificantBH010] = benjamini_hochberg(ftn_pvs, 0.10)
 
-        time_pvs = convert(Vector{Float64}, df[:TimePvalue])
-        df[:TimeSignificantBH001] = benjamini_hochberg(time_pvs, 0.01)
-        df[:TimeSignificantBH005] = benjamini_hochberg(time_pvs, 0.05)
-        df[:TimeSignificantBH010] = benjamini_hochberg(time_pvs, 0.10)
+        time_pvs = convert(Vector{Float64}, df.TimePvalue)
+        df[!, :TimeSignificantBH001] = benjamini_hochberg(time_pvs, 0.01)
+        df[!, :TimeSignificantBH005] = benjamini_hochberg(time_pvs, 0.05)
+        df[!, :TimeSignificantBH010] = benjamini_hochberg(time_pvs, 0.10)
 
         CSV.write(Libc.strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
     else
-        df = CSV.read(comparisonfile)
+        df = CSV.read(comparisonfile, DataFrame)
     end
     sort!(df, [:FitnessPvalue])
     report_below_pvalue(df, col_prefix="Fitness", pvalue=1.00)
@@ -461,14 +462,14 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
 
     # Report (in color) on number of significant differences after Benjamini-Hochberg
     # correction.
-    n_ftn_reg = sum(df[:FitnessSignificantBH005] .& (df[:FitnessOrder] .== "<"))
-    n_ftn_imp = sum(df[:FitnessSignificantBH005] .& (df[:FitnessOrder] .== ">"))
+    n_ftn_reg = sum(df.FitnessSignificantBH005 .& (df.FitnessOrder .== "<"))
+    n_ftn_imp = sum(df.FitnessSignificantBH005 .& (df.FitnessOrder .== ">"))
     printstyled("\n$n_ftn_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
                 color=n_ftn_reg > 0 ? :red : :green)
     printstyled("\n$n_ftn_imp significant fitness improvments at Benjamini-Hochberg 0.05 level\n",
                 color=n_ftn_imp > 0 ? :green : :white)
-    n_time_reg = sum(df[:TimeSignificantBH005] .& (df[:TimeOrder] .== "<"))
-    n_time_imp = sum(df[:TimeSignificantBH005] .& (df[:TimeOrder] .== ">"))
+    n_time_reg = sum(df.TimeSignificantBH005 .& (df.TimeOrder .== "<"))
+    n_time_imp = sum(df.TimeSignificantBH005 .& (df.TimeOrder .== ">"))
     printstyled("\n$n_time_reg significant time regressions at Benjamini-Hochberg 0.05 level\n",
                 color=n_time_reg > 0 ? :red : :green)
     printstyled("\n$n_time_imp significant time improvments at Benjamini-Hochberg 0.05 level\n",
@@ -491,7 +492,7 @@ function benjamini_hochberg(pvals, alpha = 0.05)
 end
 
 function report_below_pvalue(df; col_prefix="Fitness", pvalue = 0.05)
-    selection = df[Symbol(col_prefix, "Pvalue")] .< pvalue
+    selection = df[:, Symbol(col_prefix, "Pvalue")] .< pvalue
     log("Num problems with $col_prefix p-values < $(pvalue): $(sum(selection))\n")
     # workaround sum(isequal, []) throws
     num_new_worse = sum(df[selection, Symbol(col_prefix, "Order")] .== "<")

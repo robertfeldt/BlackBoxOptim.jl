@@ -1,0 +1,2 @@
+Circa 2015-2021: Apple MacBook Pro 13" 2015, different Julia versions
+20210516: Apple MacBook Air with Apple M1 processor, Julia 1.6.1
