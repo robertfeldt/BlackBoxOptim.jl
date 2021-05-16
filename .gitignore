@@ -4,3 +4,4 @@ spikes/**/*.csv
 examples/benchmarking/*.log
 examples/benchmarking/comparison*.csv
 *Manifest.toml
+.vscode/*
