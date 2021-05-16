@@ -441,8 +441,8 @@ end
 function init_rng!(parameters::Parameters)
     if parameters[:RandomizeRngSeed]
         parameters[:RngSeed] = rand(1:1_000_000)
-        Random.seed!(parameters[:RngSeed])
     end
+    Random.seed!(parameters[:RngSeed])
 end
 
 """
