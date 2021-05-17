@@ -261,6 +261,10 @@ end
             u = float(typemax(Int)) * 2.0 # Ensure large enough it will overflow Int
             @test_warns BlackBoxOptim.ϵ_index(u, 1.0, Val{true})
             @test_warns BlackBoxOptim.ϵ_index(u, 1.0, Val{false})
+
+            # But if the ϵ is higher we should be fine:
+            idx, dist = BlackBoxOptim.ϵ_index(u, 10.0, Val{true})
+            @test isa(idx, Int)
         end
 
         @testset "IndexedTupleFitness" begin
