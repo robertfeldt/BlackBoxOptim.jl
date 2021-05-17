@@ -1,3 +1,16 @@
+using Logging
+
+macro test_warns(expr)
+    quote
+        iob = IOBuffer()
+        with_logger(SimpleLogger(iob)) do
+            $(esc(expr))
+        end
+        flush(iob)
+        @test occursin(r"^┌ Warning:", String(take!(iob)))
+    end
+end
+
 @testset "Fitness" begin
     @testset "hat_compare() Float64" begin
         @test hat_compare(1.0, 2.0) == -1
@@ -238,6 +251,16 @@
                 @test res[1] == u_ix
                 @test isapprox(res[2], delta; atol=1E-12)
             end
+        end
+
+        @testset "ϵ_index() warns when clamping large fitness values" begin
+            # To address the issue reported here: https://github.com/robertfeldt/BlackBoxOptim.jl/issues/163
+            # We warn if the ϵ-box iindex has to be clamped since there are big risks with this, i.e.
+            # all fitness values that are large will end up in the same ϵ-box.
+
+            u = float(typemax(Int)) * 2.0 # Ensure large enough it will overflow Int
+            @test_warns BlackBoxOptim.ϵ_index(u, 1.0, Val{true})
+            @test_warns BlackBoxOptim.ϵ_index(u, 1.0, Val{false})
         end
 
         @testset "IndexedTupleFitness" begin

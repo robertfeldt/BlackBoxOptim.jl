@@ -133,8 +133,23 @@ hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,
     end
 end
 
-floorclamp(x::F) where F = x > maxfloatint(F) ? typemax(Int) : floor(Int, x)
-ceilclamp(x::F) where F = x > maxfloatint(F) ? typemax(Int) : ceil(Int, x)
+function floorclamp(x::F) where F
+    if x > maxfloatint(F)
+        @warn "Clamping the epsilon-box index. Probably you need to increase the ϵ value of your fitness scheme."
+        typemax(Int)
+    else
+        floor(Int, x)
+    end
+end
+
+function ceilclamp(x::F) where F
+    if x > maxfloatint(F)
+        @warn "Clamping the epsilon-box index. Probably you need to increase the ϵ value of your fitness scheme."
+        typemax(Int)
+    else
+        ceil(Int, x)
+    end
+end
 
 # ϵ-index of the fitness component for minimizing scheme
 @inline function ϵ_index(u::F, ϵ::F, ::Type{Val{true}}) where F
