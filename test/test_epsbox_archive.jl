@@ -126,7 +126,7 @@
             @test length(a)           == 3
         end
 
-        @testset "handling dulicate elements" begin
+        @testset "handling duplicate elements" begin
             a = EpsBoxArchive(scheme, max_size=100)
 
             BlackBoxOptim.add_candidate!(a, convert(IndexedTupleFitness, (1.25, 0.0), scheme), [0.0, 1.0], 1)
