@@ -127,13 +127,22 @@ hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,
 hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,false}, expected::Int=0) where {N,F} =
     hat_compare_ϵ(f2, f1, fs.ϵ, expected)
 
+@generated function maxfloatint(::Type{F}) where F
+    setrounding(BigFloat, RoundDown) do
+        convert(F, BigFloat(typemax(Int)))
+    end
+end
+
+floorclamp(x::F) where F = x > maxfloatint(F) ? typemax(Int) : floor(Int, x)
+ceilclamp(x::F) where F = x > maxfloatint(F) ? typemax(Int) : ceil(Int, x)
+
 # ϵ-index of the fitness component for minimizing scheme
 @inline function ϵ_index(u::F, ϵ::F, ::Type{Val{true}}) where F
     if isnan(u)
         return (typemax(Int), zero(F))
     else
         u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
-        ix = floor(Int, u_div_ϵ+10eps(F))
+        ix = floorclamp(u_div_ϵ+10eps(F))
         return (ix, max(zero(F), u_div_ϵ-ix))
     end
 end
@@ -144,7 +153,7 @@ end
         return (typemin(Int), zero(F))
     else
         u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
-        ix = ceil(Int, u_div_ϵ)
+        ix = ceilclamp(u_div_ϵ)
         return (ix, ix-u_div_ϵ)
     end
 end
