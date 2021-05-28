@@ -44,7 +44,7 @@ If you want to use a different optimizer that can be specified with the `Method`
 ```julia
 bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :de_rand_1_bin)
 ```
-You can give a starting (initial candidate) point for the search when calling `bboptimize` but beware
+You can (this currently requires the master branch so `] add BlackBoxOptim#master`) give a starting (initial candidate) point for the search when calling `bboptimize` but beware
 that very little checking is done on it so be sure to provide a candidate of the right length and 
 inside the search space:
 ```julia
