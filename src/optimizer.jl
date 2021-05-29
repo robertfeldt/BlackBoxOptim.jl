@@ -79,7 +79,7 @@ See also `ask()`.
 function tell! end # FIXME avoid defining 0-arg function
 
 """
-    set_candidate!(opt, x)(o::Optimizer, x0)
+    set_candidate!(o::Optimizer, x0)
 
 Set a candidate as a starting points for optimization. For population-based 
 optimizers this will randomly overwrite one of the candidate solutions of 

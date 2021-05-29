@@ -112,6 +112,7 @@ function Base.setindex!(pop::FitPopulation, indi::Individual, indi_ix::Integer)
 end
 
 function set_candidate!(pop::FitPopulation, x0)
+    @assert numdims(pop) == length(x0)
     idx = rand(1:popsize(pop))
     pop[idx] = x0
 end

@@ -49,3 +49,25 @@ end
         @test isapprox(best_fitness(res), FitnessOptimum, atol = 1e-1)
     end
 end
+
+@testset "set_candidate! for BORG" begin
+    # Best aggregated fitness should be for [0.5, 0.5, 0.5]:
+    fitness_2obj(x) = (sum(abs2, x), sum(abs2, x .- 1.0))
+    x0 = 0.5 * ones(3)
+
+    PopSize = 10
+    b = bbsetup(fitness_2obj; Method=:borg_moea,
+            FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true),
+            MaxFuncEvals = 10*PopSize, PopulationSize = PopSize,
+            SearchRange=(-10.0, 10.0), NumDimensions=3, ϵ=0.05);
+
+    set_candidate!(b.optimizer, x0)
+
+    inds = b.optimizer.population.individuals
+    # There is at least one position in the population that is set to x0
+    @test any(i -> inds[:, i] == x0, 1:PopSize)
+
+    # Now ensure we actually get back (sum(abs2, x0), sum(abs2, x0 .- 1.0)) as the best fitness (since it is the best aggregated one).
+    res = bboptimize(b; TraceMode = :silent)
+    @test best_fitness(res) == fitness_2obj(x0) 
+end
