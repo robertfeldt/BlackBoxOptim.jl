@@ -38,8 +38,11 @@ close(fh)
 # Print the same candidates:
 best100b  = best_candidate(res100b)
 acand100b = optctrlb.optimizer.population[idx]
-println("Best candidate after load: ", best100)
-println("Candidate num $(idx) after load: ", acand100)
+println("Best candidate after load: ", best100b)
+println("Candidate num $(idx) after load: ", acand100b)
+
+@assert best100b == best100
+@assert acand100b == acand100
 
 # Clean up the temp file:
 rm(tempfilename)
