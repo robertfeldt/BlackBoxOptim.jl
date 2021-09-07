@@ -95,6 +95,8 @@ archive(alg::BorgMOEA) = alg.evaluator.archive
 
 set_candidate!(o::BorgMOEA, x0) = set_candidate!(o.population, x0)
 
+set_multi_candidate!(o::BorgMOEA, x0_list) = set_multi_candidate!(o.population, x0_list)
+
 # Take one step of Borg MOEA.
 function step!(alg::BorgMOEA)
     if alg.n_steps == 0

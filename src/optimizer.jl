@@ -105,6 +105,8 @@ popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
 set_candidate!(o::PopulationOptimizer, x0) = set_candidate!(population(o), x0)
 
+set_multi_candidate!(o::PopulationOptimizer, x0_list) = set_multi_candidate!(population(o), x0_list)
+
 function setup!(o::SteppingOptimizer)
     # Do nothing, override if you need to setup prior to the optimization loop
 end

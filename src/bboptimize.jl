@@ -65,8 +65,10 @@ function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
     if length(kwargs) > 0
         update_parameters!(optctrl, kwargs2dict(kwargs))
     end
-    if !isnothing(x0)
+    if isa(x0, Vector{T} where T <: Number) #Provided a single x0
         set_candidate!(optimizer(optctrl), x0)
+    elseif isa(x0, Vector{T} where T <: Vector) #Provided a list of multiple x0s
+        set_multi_candidate!(optimizer(optctrl), x0)
     end
     run!(optctrl)
 end

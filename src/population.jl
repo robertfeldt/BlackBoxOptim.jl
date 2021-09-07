@@ -117,6 +117,22 @@ function set_candidate!(pop::FitPopulation, x0)
     pop[idx] = x0
 end
 
+
+#Function for adding multiple elements to the starting population of the multi-obj optim
+# assumes all elements of x0_list have been verified as within search range 
+# (based on BlackBoxOptim.set_candidate at BlackBoxOptim/src/population.jl ln:114) 
+function set_multi_candidate!(pop::FitPopulation, x0_list)
+    idxs = StatsBase.sample(1:popsize(pop), length(x0_list), replace=false) #Use sample instead of rand(1:popsize(pop), length(x0_list)) to ensure no duplicates
+    for (i, x0) in zip(idxs, x0_list)
+        @assert numdims(pop) == length(x0)
+        pop[i] = x0
+    end
+end
+
+# #Convenience methods to dispatch on OptController
+# set_multi_candidate!(oc::BlackBoxOptim.OptController, x0_list) = set_multi_candidate!(oc.optimizer.population, x0_list)
+
+
 function Base.setindex!(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_ix::Integer) where F
     pop.individuals[:, indi_ix] = params(indi)
     pop.fitness[indi_ix] = fitness(indi)
