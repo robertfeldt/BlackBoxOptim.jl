@@ -117,6 +117,15 @@ function set_candidate!(pop::FitPopulation, x0)
     pop[idx] = x0
 end
 
+function set_candidates!(pop::FitPopulation, x0::Vector)
+    indices = randperm(popsize(pop))
+    for i in 1:min(length(x0), length(indices))
+        @assert numdims(pop) == length(x0[i])
+        pop[indices[i]] = x0[i]
+    end
+    x0
+end
+
 function Base.setindex!(pop::FitPopulation{F}, indi::FitIndividual{F}, indi_ix::Integer) where F
     pop.individuals[:, indi_ix] = params(indi)
     pop.fitness[indi_ix] = fitness(indi)

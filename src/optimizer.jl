@@ -90,6 +90,18 @@ function set_candidate!(o::Optimizer, x0)
     error("No set_candidate! method defined for $(typeof(o))")
 end
 
+"""
+    set_candidates!(o::Optimizer, x0)
+
+Set a vector of candidates as starting points for optimization. For population-based 
+optimizers this will randomly overwrite positions in the current population.
+Optimizers that maintain a single candidate doesn't implement this method since
+it would not be clear which of the supplied starting points should be chosen.
+"""
+function set_candidates!(o::Optimizer, x0)
+    error("No set_candidates! method defined for $(typeof(o))")
+end
+
 function set_candidate!(o::SteppingOptimizer, x0)
     o.xfitness = fitness(x0, evaluator(o))
     o.x = x0
@@ -104,6 +116,7 @@ population(popopt::PopulationOptimizer) = popopt.population
 popsize(popopt::PopulationOptimizer) = popsize(population(popopt))
 
 set_candidate!(o::PopulationOptimizer, x0) = set_candidate!(population(o), x0)
+set_candidates!(o::PopulationOptimizer, x0) = set_candidates!(population(o), x0)
 
 function setup!(o::SteppingOptimizer)
     # Do nothing, override if you need to setup prior to the optimization loop

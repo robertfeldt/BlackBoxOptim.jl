@@ -1,4 +1,4 @@
-using BlackBoxOptim: set_candidate!, candidate
+using BlackBoxOptim: set_candidate!, candidate, set_candidates!
 
 # a 2d optimization problem with an optimum at (3.14, 7.2)
 fixed_optimum_prob(x) = (x[1] - 3.14)^2 + (x[2] - 7.2)^4
@@ -13,6 +13,7 @@ const FitnessOptimum = fixed_optimum_prob(FixedOptimum)
             NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize)
         set_candidate!(b.optimizer, FixedOptimum)
         inds = population(b.optimizer).individuals
+        
         # There is at least one position in the population that is set to the FixedOptimum:
         @test any(i -> inds[:, i] == FixedOptimum, 1:PopSize)
 
@@ -70,4 +71,51 @@ end
     # Now ensure we actually get back (sum(abs2, x0), sum(abs2, x0 .- 1.0)) as the best fitness (since it is the best aggregated one).
     res = bboptimize(b; TraceMode = :silent)
     @test best_fitness(res) == fitness_2obj(x0) 
+end
+
+@testset "set_candidates! for DE population optimizers" begin
+    for m in [:de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited, 
+                :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited]
+        PopSize = 10
+        b = bbsetup(fixed_optimum_prob; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize)
+
+        # Get a random population and then add the optimum to ensure it is in there
+        randval() = -10.0 + rand() * 20.0
+        initial_population = [[randval(), randval()] for _ in 1:(PopSize-rand(1:2))]
+        push!(initial_population, FixedOptimum)
+
+        # Now set the population
+        set_candidates!(b.optimizer, initial_population)
+
+        # There is at least one position in the population that is set to the FixedOptimum:
+        inds = population(b.optimizer).individuals
+        @test any(i -> inds[:, i] == FixedOptimum, 1:PopSize)
+
+        # and all of the starting points can be found somewhere in the population
+        for startingpoint in initial_population
+            @test any(i -> inds[:, i] == startingpoint, 1:PopSize)
+        end
+    
+        res = bboptimize(b; TraceMode = :silent)
+        @test isapprox(best_fitness(res), FitnessOptimum)
+    end
+end
+
+@testset "set_candidates! when calling bboptimize directly" begin
+    PopSize = 10
+
+    for m in [:de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited, 
+        :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited]
+        
+        # Get a random population and then add the optimum to ensure it is in there
+        randval() = -10.0 + rand() * 20.0
+        startingpoints = [[randval(), randval()] for _ in 1:(PopSize-rand(1:2))]
+        push!(startingpoints, FixedOptimum)
+
+        res = bboptimize(fixed_optimum_prob, startingpoints; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize,
+            TraceMode = :silent)
+        @test isapprox(best_fitness(res), FitnessOptimum)
+    end
 end
