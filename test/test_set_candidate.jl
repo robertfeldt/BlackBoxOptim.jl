@@ -102,7 +102,7 @@ end
     end
 end
 
-@testset "set_candidates! when calling bboptimize directly" begin
+@testset "set_candidate! and set_candidates! when calling bboptimize directly" begin
     PopSize = 10
 
     for m in [:de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited, 
@@ -117,5 +117,10 @@ end
             NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize,
             TraceMode = :silent)
         @test isapprox(best_fitness(res), FitnessOptimum)
+
+        res2 = bboptimize(fixed_optimum_prob, FixedOptimum; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize,
+            TraceMode = :silent)
+        @test isapprox(best_fitness(res2), FitnessOptimum)
     end
 end

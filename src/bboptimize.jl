@@ -66,8 +66,8 @@ function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
         update_parameters!(optctrl, kwargs2dict(kwargs))
     end
     if !isnothing(x0)
-        if isa(x0, AbstractVector)
-            set_candidates!(optimizer(optctrl), collect(x0))
+        if isa(x0, Vector) && length(x0) > 0 && isa(first(x0), Vector{<:Number})
+            set_candidates!(optimizer(optctrl), x0)
         else
             set_candidate!(optimizer(optctrl), x0)
         end

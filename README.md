@@ -67,6 +67,22 @@ res = compare_optimizers(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 
 ```
 You can find more examples of using `BlackBoxOptim` in [the examples directory](examples).
 
+## Providing initial solution(s)
+
+One or multiple initial solutions can be provided as the 2nd argument to the `bboptimize` function, for example:
+
+```julia
+myproblem(x) = (x[1] - 3.14)^2 + (x[2] - 7.2)^4
+optimum = [3.14, 7.2]
+good_guess = [3.0, 7.2]
+res1 = bboptimize(myproblem, good_guess; NumDimensions = 2, SearchRange = (-10.0, 10.0));
+@assert isapprox(best_fitness(res1), myproblem(optimum); atol = 1e-30)
+
+two_good_guesses = [good_guess, [3.1, 7.3]]
+res2 = bboptimize(myproblem, two_good_guesses; NumDimensions = 2, SearchRange = (-10.0, 10.0));
+@assert isapprox(best_fitness(res2), myproblem(optimum); atol = 1e-30)
+```
+
 # Multi-objective optimization
 
 Multi-objective evaluation is supported by the BorgMOEA algorithm. Your fitness function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise the use is similar, here we optimize the Schaffer1 function:
