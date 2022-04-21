@@ -67,8 +67,16 @@ function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
     end
     if !isnothing(x0)
         if isa(x0, Vector) && length(x0) > 0 && isa(first(x0), Vector{<:Number})
+            for i in eachindex(x0)
+                if !in(x0[i], search_space(problem(optctrl)))
+                    throw(ArgumentError("Starting point $(x0[i]), at position $i, is not in the search space/range."))
+                end
+            end
             set_candidates!(optimizer(optctrl), x0)
         else
+            if !in(x0, search_space(problem(optctrl)))
+                throw(ArgumentError("Starting point $x0 is not in the search space/range."))
+            end
             set_candidate!(optimizer(optctrl), x0)
         end
     end

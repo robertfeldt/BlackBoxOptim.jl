@@ -124,3 +124,14 @@ end
         @test isapprox(best_fitness(res2), FitnessOptimum)
     end
 end
+
+@testset "error if starting point outside search range" begin
+    sp = startingpoint = [-20.0, 0.0]
+    @test_throws ArgumentError bboptimize(fixed_optimum_prob, startingpoint; 
+        SearchRange = (-10.0, 10.0), NumDimensions = 2)
+
+    sp2 = [0.0, 0.0]
+    startingpoints = [sp2, sp] # One inside and one outside
+    @test_throws ArgumentError bboptimize(fixed_optimum_prob, startingpoints; 
+            SearchRange = (-10.0, 10.0), NumDimensions = 2)
+end
