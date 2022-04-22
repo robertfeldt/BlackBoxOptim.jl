@@ -101,8 +101,13 @@ candidate(gss::GeneratingSetSearcher) = gss.x
 
 function step!(gss::GeneratingSetSearcher)
     if has_converged(gss)
+        candidate = rand_individual(gss.search_space)
+        if !in(candidate, gss.search_space)
+            @info "about to set a random point (after converging) outside of the search_space"
+        end
+
         # Restart from a random point
-        gss.x = rand_individual(gss.search_space)
+        gss.x = candidate
         gss.xfitness = fitness(gss.x, gss.evaluator)
         gss.step_size = calc_initial_step_size(gss.search_space, gss.step_size_factor)
     end
@@ -133,6 +138,11 @@ function step!(gss::GeneratingSetSearcher)
     end
 
     if found_better
+        if !in(candidate, gss.search_space)
+            @info "about to set a candidate outside of the search_space"
+            @info "current best = $(gss.x) (fitness = $(gss.xfitness))"
+            @info "new candidate = $(candidate) (fitness = $(last_fitness(gss.evaluator)))"
+        end
         gss.x = candidate
         gss.xfitness = last_fitness(gss.evaluator)
         gss.step_size *= gss.step_size_gamma
