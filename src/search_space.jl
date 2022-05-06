@@ -118,8 +118,11 @@ struct ContinuousRectSearchSpace <: RectSearchSpace
     )
         length(dimmin) == length(dimmax) ||
             throw(DimensionMismatch("dimmin and dimmax should have the same length"))
-        all(xy -> xy[1] <= xy[2], zip(dimmin, dimmax)) ||
-            throw(ArgumentError("dimmin should not exceed dimmax"))
+        for i in eachindex(dimmin)
+            if dimmin[i] > dimmax[i]
+                throw(ArgumentError("at index $(i) of search space, the low bound ($(dimmin[i])) exceeds the high bound ($(dimmax[i]))"))
+            end
+        end
         new(dimmin, dimmax, dimmax .- dimmin)
     end
 end
