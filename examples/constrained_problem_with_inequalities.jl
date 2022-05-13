@@ -5,8 +5,8 @@ using BlackBoxOptim
 # Original fitness function:
 origfitness(x::Vector{Float64}) = sqrt(x[2])
 
-# where x[2] >= 0.0. The other dimensions and upper bounds are unclear but let's go for 3 and 
-# some arbitrary one.
+# where x[2] >= 0.0. The other dimensions and upper bounds are unclear but let's go for 2 and 
+# some arbitrary high bound.
 Dim = 2
 lowbounds = 0.0 .* ones(Dim)
 HB = 1e6 # This should be Inf but let's be practical...
