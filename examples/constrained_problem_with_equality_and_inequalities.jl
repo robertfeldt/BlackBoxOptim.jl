@@ -23,22 +23,21 @@ l2(vals::Vector{Float64}) = sqrt(sum(v -> v^2, vals))
 residual(x::Vector{Float64}) = l2(subpenalties(x))
 
 # To use a static penalty function we need to select a penalty constant K, which is typically large.
-# However, I tried for K from 10.0 and up to 1e6 and they all give the same result... The problem
-# is a very simple one though.
-K = 1e3
+# However, I tried for K from 10.0 and up to 1e4 and it seems better with a smaller K so let's use 10.0.
+K = 1e2
 penalized_fitness(x::Vector{Float64}) = origfitness(x) + K * residual(x)
 
-# Let's run the optimizer. This problem seems harder to run for longer.
-res = bboptimize(penalized_fitness; SearchRange, MaxTime = 20.0);
+# Let's run the optimizer.
+res = bboptimize(penalized_fitness; SearchRange, MaxTime = 3.0);
 
 # The web page from above states that the optimum is at:
 #   (1.00000000, 4.74299963, 3.82114998, 1.37940829)
 # so let's check what we get with BBO:
 best = best_candidate(res)
-@assert isapprox(best[1], 1.0, atol = 1e-4)
-@assert isapprox(best[2], 4.74299963, atol = 1e-4)
-@assert isapprox(best[3], 3.82114998, atol = 1e-4)
-@assert isapprox(best[4], 1.37940829, atol = 1e-4)
+@assert isapprox(best[1], 1.0, atol = 1e-5)
+@assert isapprox(best[2], 4.74299963, atol = 1e-5)
+@assert isapprox(best[3], 3.82114998, atol = 1e-5)
+@assert isapprox(best[4], 1.37940829, atol = 1e-5)
 
 # This seems better than what is achieved on the web page above but we also
 # run many more function evaluations...
