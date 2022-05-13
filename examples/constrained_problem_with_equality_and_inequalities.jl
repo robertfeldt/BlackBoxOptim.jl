@@ -24,7 +24,7 @@ residual(x::Vector{Float64}) = l2(subpenalties(x))
 
 # To use a static penalty function we need to select a penalty constant K, which is typically large.
 # However, I tried for K from 10.0 and up to 1e4 and it seems better with a smaller K so let's use 10.0.
-K = 1e2
+K = 1e1
 penalized_fitness(x::Vector{Float64}) = origfitness(x) + K * residual(x)
 
 # Let's run the optimizer.
@@ -40,4 +40,4 @@ best = best_candidate(res)
 @assert isapprox(best[4], 1.37940829, atol = 1e-5)
 
 # This seems better than what is achieved on the web page above but we also
-# run many more function evaluations...
+# run a few more function evaluations so...
