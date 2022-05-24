@@ -416,8 +416,6 @@ function async_update_fitness!(eval::MultithreadEvaluator, candidates::Any; forc
     return job
 end
 
-sync_update_fitness(f::Any, job::Nothing, eval::MultithreadEvaluator) = nothing
-
 # Waits until MTFitnessEvalJob is fully processed.
 # Constantly monitors job.results for the new candidates and adds them
 # to the fitnesses archive.
@@ -474,8 +472,11 @@ function sync_update_fitness(f::Any, job::MTFitnessEvalJob, eval::MultithreadEva
     return job.candidates
 end
 
-update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any; force::Bool=false) =
-    sync_update_fitness(f, async_update_fitness!(eval, candidates, force=force), eval)
+function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any; force::Bool=false)
+    job = async_update_fitness!(eval, candidates, force=force)
+    isnothing(job) && return candidates # nothing to do
+    sync_update_fitness(f, job, eval)
+end
 
 update_fitness!(f::Any, eval::MultithreadEvaluator, candidate::Candidate; force::Bool=false) =
     update_fitness!(f, eval, (candidate,), force=force)[1]
