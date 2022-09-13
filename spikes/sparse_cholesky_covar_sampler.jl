@@ -6,8 +6,7 @@
 # This is not a general solution but it works for specifically my use case and
 # when the operator is *
 function Base.broadcast(op, v::Array{Tv,2}, A::SparseMatrixCSC{Tv,Ti}) where {Tv,Ti}
-  I, J = findn(A)
-  V = zeros(nnz(A))
+  I, J, V = findnz(A)
   vn, vm = size(v)
   if vn >= 1 && vm == 1
     for l in 1:nnz(A)
