@@ -74,7 +74,9 @@ const VegaLiteMetricOverTimePlotTemplate = """
 VegaLiteMetricOverTimePlot(; metric::String = "Fitness",
                            width::Integer = 800, height::Integer = 600,
                            kwargs...) =
-    RealtimePlot{:VegaLite}(VegaLiteMetricOverTimePlotTemplate; metric, width, height, kwargs...)
+    RealtimePlot{:VegaLite}(VegaLiteMetricOverTimePlotTemplate;
+                            metric=metric, width=width, height=height,
+                            kwargs...)
 
 """
     fitness_plot_callback(plot::RealtimePlot, oc::OptRunController)
