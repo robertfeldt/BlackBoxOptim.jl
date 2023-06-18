@@ -86,6 +86,10 @@ export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
         FrequencyAdapter, update!, frequencies,
         name
 
+if !isdefined(Base, :get_extension)
+    using Requires
+end
+
 module Utils
     using Random
 
@@ -150,7 +154,15 @@ include("compare_optimizers.jl")
 include(joinpath("problems", "single_objective.jl"))
 include(joinpath("problems", "multi_objective.jl"))
 
-# GUIs and front-ends
-include(joinpath("gui", "vega_lite_fitness_graph.jl"))
+# GUIs and front-ends (to really use it, one needs HTTP to enable BlackBoxOptimRealtimePlotServerExt)
+include(joinpath("gui", "realtime_plot.jl"))
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require Sockets = "6462fe0b-24de-5631-8697-dd941f90decc" begin
+            @require HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3" include("../ext/BlackBoxOptimRealtimePlotServerExt.jl")
+        end
+    end
+end
 
 end # module BlackBoxOptim
