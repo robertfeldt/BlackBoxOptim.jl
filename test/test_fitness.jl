@@ -1,16 +1,3 @@
-using Logging
-
-macro test_warns(expr)
-    quote
-        iob = IOBuffer()
-        with_logger(SimpleLogger(iob)) do
-            $(esc(expr))
-        end
-        flush(iob)
-        @test occursin(r"^┌ Warning:", String(take!(iob)))
-    end
-end
-
 @testset "Fitness" begin
     @testset "hat_compare() Float64" begin
         @test hat_compare(1.0, 2.0) == -1
@@ -255,16 +242,22 @@ end
 
         @testset "ϵ_index() warns when clamping large fitness values" begin
             # To address the issue reported here: https://github.com/robertfeldt/BlackBoxOptim.jl/issues/163
-            # We warn if the ϵ-box iindex has to be clamped since there are big risks with this, i.e.
+            # We warn if the ϵ-box index has to be clamped since there are big risks with this, i.e.
             # all fitness values that are large will end up in the same ϵ-box.
 
-            u = float(typemax(Int)) * 2.0 # Ensure large enough it will overflow Int
-            @test_warns BlackBoxOptim.ϵ_index(u, 1.0, Val{true})
-            @test_warns BlackBoxOptim.ϵ_index(u, 1.0, Val{false})
+            # test that too small/large fitness triggers warning
+            usmall = float(typemin(Int)) * 2.0
+            ubig = float(typemax(Int)) * 2.0
+            @test_logs (:warn, r"^Clamping the epsilon-box index") BlackBoxOptim.ϵ_index(ubig, 1.0, Val{true})
+            @test_logs (:warn, r"^Clamping the epsilon-box index") BlackBoxOptim.ϵ_index(ubig, 1.0, Val{false})
+            @test_logs (:warn, r"^Clamping the epsilon-box index") BlackBoxOptim.ϵ_index(usmall, 1.0, Val{true})
+            @test_logs (:warn, r"^Clamping the epsilon-box index") BlackBoxOptim.ϵ_index(usmall, 1.0, Val{false})
 
-            # But if the ϵ is higher we should be fine:
-            idx, dist = BlackBoxOptim.ϵ_index(u, 10.0, Val{true})
-            @test isa(idx, Int)
+            # But if the ϵ is higher we should be fine
+            @test BlackBoxOptim.ϵ_index(ubig, 10.0, Val{true}) isa Tuple{Int, typeof(ubig)}
+            @test BlackBoxOptim.ϵ_index(ubig, 10.0, Val{false}) isa Tuple{Int, typeof(ubig)}
+            @test BlackBoxOptim.ϵ_index(usmall, 10.0, Val{true}) isa Tuple{Int, typeof(usmall)}
+            @test BlackBoxOptim.ϵ_index(usmall, 10.0, Val{false}) isa Tuple{Int, typeof(usmall)}
         end
 
         @testset "IndexedTupleFitness" begin
