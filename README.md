@@ -47,7 +47,7 @@ If you want to use a different optimizer that can be specified with the `Method`
 bboptimize(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2, Method = :de_rand_1_bin)
 ```
 You can (this currently requires the master branch so `] add BlackBoxOptim#master`) give a starting (initial candidate) point for the search when calling `bboptimize` but beware
-that very little checking is done on it so be sure to provide a candidate of the right length and 
+that very little checking is done on it so be sure to provide a candidate of the right length and
 inside the search space:
 ```julia
 x0 = [1.0, 1.0] # starting point (aka initial candidate)
@@ -189,7 +189,7 @@ Some NES variants (separable or dx) can sometimes beat the DE optimizers in the 
 
 We maintain a [list of optimizers ranked by performance](examples/benchmarking/latest_toplist.csv) when tested on a large set of problems. From the list we can see that the adaptive differential evolution optimizers (`adaptive_de_rand_1_bin` and/or `adaptive_de_rand_1_bin_radiuslimited`) are typically on top when it comes to mean rank. The `generating_set_search` often gives best results (its `MedianLogTimesWorseFitness` is typically in the range `0.3`-`0.6`, which means its median fitness value is `10^0.3=2.0` to `10^0.6=4.0` times worse than the best fitness found on a problem) and is faster (ranked first on run time, typically) but it is not as robust as the DE optimizers and thus is ranked lower on mean rank (per problem).
 
-Overall we recommend one of the DE optimizers as a generally good choice since their runtime is often good and they are robust and works well both for simpler, separable problems as well as for more complex ones. They also tend to scale better to high-dimensional settings. Of course, optimizer performance varies depending on the problem and the dimensionality so YMMV. 
+Overall we recommend one of the DE optimizers as a generally good choice since their runtime is often good and they are robust and works well both for simpler, separable problems as well as for more complex ones. They also tend to scale better to high-dimensional settings. Of course, optimizer performance varies depending on the problem and the dimensionality so YMMV.
 
 # Acknowledgements
 
