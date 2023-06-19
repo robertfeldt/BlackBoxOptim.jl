@@ -127,49 +127,38 @@ hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,
 hat_compare(f1::NTuple{N,F}, f2::NTuple{N,F}, fs::EpsDominanceFitnessScheme{N,F,false}, expected::Int=0) where {N,F} =
     hat_compare_ϵ(f2, f1, fs.ϵ, expected)
 
-@generated function maxfloatint(::Type{F}) where F
-    setrounding(BigFloat, RoundDown) do
-        convert(F, BigFloat(typemax(Int)))
-    end
-end
+# maximal safe floating point number of type F
+# that allows conversion to integer type I
+safe_maxfloat(::Type{F}, ::Type{I}) where {F <: AbstractFloat, I <: Integer} =
+    prevfloat(convert(F, typemax(I)))
 
-function floorclamp(x::F) where F
-    if x > maxfloatint(F)
-        @warn "Clamping the epsilon-box index. Probably you need to increase the ϵ value of your fitness scheme."
-        typemax(Int)
-    else
-        floor(Int, x)
-    end
-end
+# minimal safe floating point number of type F
+# that allows conversion to integer type I
+safe_minfloat(::Type{F}, ::Type{I}) where {F <: AbstractFloat, I <: Integer} =
+    nextfloat(convert(F, typemin(I)))
 
-function ceilclamp(x::F) where F
-    if x > maxfloatint(F)
-        @warn "Clamping the epsilon-box index. Probably you need to increase the ϵ value of your fitness scheme."
-        typemax(Int)
-    else
-        ceil(Int, x)
-    end
-end
-
-# ϵ-index of the fitness component for minimizing scheme
-@inline function ϵ_index(u::F, ϵ::F, ::Type{Val{true}}) where F
+# ϵ-index of the fitness component
+@inline function ϵ_index(u::F, ϵ::F, ::Type{Val{MIN}}) where {F <: AbstractFloat, MIN}
     if isnan(u)
-        return (typemax(Int), zero(F))
+        return (ifelse(MIN, typemax(Int), typemin(Int)), zero(F))
     else
-        u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
-        ix = floorclamp(u_div_ϵ+10eps(F))
-        return (ix, max(zero(F), u_div_ϵ-ix))
-    end
-end
-
-# ϵ-index of the fitness component for maximizing scheme
-@inline function ϵ_index(u::F, ϵ::F, ::Type{Val{false}}) where F
-    if isnan(u)
-        return (typemin(Int), zero(F))
-    else
-        u_div_ϵ = clamp(u/ϵ, convert(F, typemin(Int)), convert(F, typemax(Int)))
-        ix = ceilclamp(u_div_ϵ)
-        return (ix, ix-u_div_ϵ)
+        minuu, maxuu = safe_minfloat(F, Int), safe_maxfloat(F, Int)
+        uu = u/ϵ # u in ϵ-units
+        if uu > maxuu
+            @warn "Clamping the epsilon-box index (value too large). Probably you need to increase the ϵ value of your fitness scheme."
+            return (typemax(Int), 0.0)
+        elseif uu < minuu
+            @warn "Clamping the epsilon-box index (value too small). Probably you need to increase the ϵ value of your fitness scheme."
+            return (typemin(Int), 0.0)
+        elseif MIN
+            # minimizing scheme
+            ix = floor(Int, min(uu + 10eps(F), maxuu))
+            return (ix, uu - ix)
+        else
+            # maximizing scheme
+            ix = ceil(Int, uu)
+            return (ix, ix - uu)
+        end
     end
 end
 
