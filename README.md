@@ -7,6 +7,9 @@ BlackBoxOptim.jl
 
 `BlackBoxOptim` is a global optimization package for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability. It also supports parallel evaluation to speed up optimization for functions that are slow to evaluate.
 
+We note that there are a few alternative Julia packages with similar goals that can be explored (if you know of other libraries to list here, please post an issue or submit a PR):
+- [PRIMA](https://github.com/libprima/prima.jl) is a Julia interface to a modern re-implementation of Powell's optimization algorithms (BOBYQA, COBYLA etc)
+
 # Installation
 ```julia
 using Pkg; Pkg.add("BlackBoxOptim")
