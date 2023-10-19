@@ -88,6 +88,8 @@ res2 = bboptimize(myproblem, two_good_guesses; NumDimensions = 2, SearchRange = 
 @assert isapprox(best_fitness(res2), myproblem(optimum); atol = 1e-30)
 ```
 
+Note that such solutions are not evaluated when added but rather when compared to other candidates during a search. Thus, depending on the number of optimization steps and population size (for population-based optimizers), it might take a certain number of steps before your provided solution is considered. If you want a more instant effect, investigate if a non population-based optimizers is more appropriate and gives better results.
+
 # Multi-objective optimization
 
 Multi-objective evaluation is supported by the BorgMOEA algorithm. Your fitness function should return a tuple of the objective values and you should indicate the fitness scheme to be (typically) Pareto fitness and specify the number of objectives. Otherwise the use is similar, here we optimize the Schaffer1 function:
