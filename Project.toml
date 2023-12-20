@@ -1,6 +1,6 @@
 name = "BlackBoxOptim"
 uuid = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
-version = "0.6.3"
+version = "0.6.4"
 
 [deps]
 CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"
