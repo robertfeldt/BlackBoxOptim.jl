@@ -439,10 +439,11 @@ function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_DI
 end
 
 function init_rng!(parameters::Parameters)
-    if parameters[:RandomizeRngSeed]
-        parameters[:RngSeed] = rand(1:1_000_000)
+    if haskey(parameters, :RandomizeRngSeed)
+        warn("Parameter RandomizeRngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim.")
+    elseif haskey(parameters, :RngSeed)
+        warn("Parameter RngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim.")
     end
-    Random.seed!(parameters[:RngSeed])
 end
 
 """

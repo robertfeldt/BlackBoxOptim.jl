@@ -32,9 +32,6 @@ const DefaultParameters = ParamsDict(
     :CallbackFunction => x -> x, # Function to callback to, here just the identity function.
     :CallbackInterval  => -1.0,  # Minimum number of seconds between consecutive callbacks. If <0.0 we never callback (which is the default).
 
-    :RandomizeRngSeed => true, # Randomize the RngSeed value before using any random numbers.
-    :RngSeed        => 1234,   # The specific random seed to set before any random numbers are generated. The seed is randomly selected if RandomizeRngSeed is true, and this parameter is updated with its actual value.
-
     :PopulationSize => 50
 )
 
