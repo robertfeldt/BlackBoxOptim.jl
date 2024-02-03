@@ -160,7 +160,13 @@ include(joinpath("gui", "realtime_plot.jl"))
 @static if !isdefined(Base, :get_extension)
     function __init__()
         @require Sockets = "6462fe0b-24de-5631-8697-dd941f90decc" begin
-            @require HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3" include("../ext/BlackBoxOptimRealtimePlotServerExt.jl")
+            @require HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3" begin
+                try
+                    include("../ext/BlackBoxOptimRealtimePlotServerExt.jl")
+                catch err
+                    println("Error during pre-compilation, when loading the gui extension, ", err)
+                end
+            end
         end
     end
 end
