@@ -157,18 +157,20 @@ include(joinpath("problems", "multi_objective.jl"))
 # GUIs and front-ends (to really use it, one needs HTTP to enable BlackBoxOptimRealtimePlotServerExt)
 include(joinpath("gui", "realtime_plot.jl"))
 
-@static if !isdefined(Base, :get_extension)
-    function __init__()
-        @require Sockets = "6462fe0b-24de-5631-8697-dd941f90decc" begin
-            @require HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3" begin
-                try
-                    include("../ext/BlackBoxOptimRealtimePlotServerExt.jl")
-                catch err
-                    println("Error during pre-compilation, when loading the gui extension, ", err)
-                end
-            end
-        end
-    end
-end
+# Some users are reporting pre-compilation problems when the code below is included
+# so for now we exclude it.
+#@static if !isdefined(Base, :get_extension)
+#    function __init__()
+#        @require Sockets = "6462fe0b-24de-5631-8697-dd941f90decc" begin
+#            @require HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3" begin
+#                try
+#                    include("../ext/BlackBoxOptimRealtimePlotServerExt.jl")
+#                catch err
+#                    println("Error during pre-compilation, when loading the gui extension, ", err)
+#                end
+#            end
+#        end
+#    end
+#end
 
 end # module BlackBoxOptim
