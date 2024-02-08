@@ -19,7 +19,7 @@ function format_time(t)
 end
 
 function unique_filename(prefix = "result", suffix = ".txt")
-  join([prefix, strftime("_%Y%m%d_%H%M%S_$(rand(1:int(1e6)))", time()), suffix])
+  join([prefix,Libc.strftime("_%Y%m%d_%H%M%S_$(rand(1:int(1e6)))", time()), suffix])
 end
 
 function csvfile(header; fileprefix = "experiment",
@@ -39,7 +39,7 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
   times = zeros(num_runs, num_problems)
   reason_counts = [Dict{ASCIIString, Int}() for i in 1:num_problems]
 
-  file_prefix = strftime("$(experiment)_%Y%m%d_%H%M%S", time())
+  file_prefix =Libc.strftime("$(experiment)_%Y%m%d_%H%M%S", time())
 
   run_csvfile = join([file_prefix, "_runs.csv"])
 
@@ -87,8 +87,8 @@ function repeated_runs(searchf, problem_set, num_runs = 10; experiment = "exp")
       end
 
       # Print to summary csv file
-      println(summary_csvfh, join([experiment, strftime("%Y-%m-%d", start_time),
-        strftime("%T", start_time), i, "\"$(name(prob))\"", dims, params,
+      println(summary_csvfh, join([experiment,Libc.strftime("%Y-%m-%d", start_time),
+       Libc.strftime("%T", start_time), i, "\"$(name(prob))\"", dims, params,
         times[i,pi], fevals[i,pi], "\"$(reason)\"", fbests[i,pi]], ","))
       flush(summary_csvfh)
     end

@@ -209,7 +209,7 @@ end
 function compare_optimizers(optimizers, problems, dim, numreps = 10;
   dataframe_mapper = identity)
 
-  timestamp = strftime("%Y%m%d_%H%M%S", time())
+  timestamp =Libc.strftime("%Y%m%d_%H%M%S", time())
   filename = "results_nlopt_$(timestamp).csv"
   res = DataFrame()
   its = 0

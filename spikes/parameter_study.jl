@@ -61,7 +61,7 @@ end
 @everywhere function one_run(args)
   run, prob, d, maxfevals, uf, s, mu, l = args
 
-  ts = strftime("%y%m%d,%H%M%S", time())
+  ts =Libc.strftime("%y%m%d,%H%M%S", time())
 
   tic()
   x, f, fevals = cmsa_es(d, prob;
@@ -81,7 +81,7 @@ end
 
 results = pmap(one_run_and_save, Params)
 
-fh = open(strftime("parameter_studies/%y%m%d_%H%M%S_$(machine).csv", time()), "w")
+fh = open(Libc.strftime("parameter_studies/%y%m%d_%H%M%S_$(machine).csv", time()), "w")
 println(fh, "Date,Time,RunID,Problem,N,Machine,Sampler,Utilities,Mu,Lambda,NumFuncEvals,ExecTime,Fitness")
 for i in 1:length(results)
   println(fh, results[i])

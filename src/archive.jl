@@ -194,7 +194,7 @@ function save_fitness_history_to_csv_file(a::Archive, filename = "fitness_histor
     for af in a.fitness_history
         mc = magnitude_class(af.fitness)
 
-        line = [line_prefix, strftime("%Y-%m-%d,%T", af.timestamp),
+        line = [line_prefix,Libc.strftime("%Y-%m-%d,%T", af.timestamp),
             af.timestamp-a.start_time,
             mc[1]*mc[2], af.num_fevals, af.fitness_improvement_ratio, af.fitness]
 
