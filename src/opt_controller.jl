@@ -373,7 +373,7 @@ function write_result(ctrl::OptRunController, filename = "")
     if isempty(filename)
         timestamp = Libc.strftime("%y%m%d_%H%M%S", floor(Int, ctrl.start_time))
         filename = "$(timestamp)_$(problem_summary(ctrl.evaluator))_$(name(ctrl.optimizer)).csv"
-        filename = replace(replace(filename, r"\s+", "_"), r"/", "_")
+        filename = replace(replace(filename, r"\s+" => "_"), r"/" => "_")
     end
     save_fitness_history_to_csv_file(ctrl.evaluator.archive, filename;
             header_prefix = "Problem,Dimension,Optimizer",

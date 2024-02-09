@@ -226,7 +226,7 @@ function run_with_params(of, n)
 
   prefix_header = "StartTime,ElapsedTime,Function,N,FitnessBest,TotalFuncEvals,TerminationReason"
   println(join([prefix_header, map((i) -> "x$(i)", 1:length(xb))], ","))
-  println(join([strftime("%Y%m%d-%H%M%S", start_time), elapsed, of, n, fb, fes, tr, xb], ","))
+  println(join([Libc.strftime("%Y%m%d-%H%M%S", start_time), elapsed, of, n, fb, fes, tr, xb], ","))
 end
 
 #of = rastrigin
